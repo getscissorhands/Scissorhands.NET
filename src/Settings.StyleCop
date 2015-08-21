@@ -5,6 +5,8 @@
             <Value>rel</Value>
             <Value>href</Value>
             <Value>templated</Value>
+            <Value>filepath</Value>
+            <Value>commandline</Value>
         </CollectionProperty>
         <StringProperty Name="Culture">en-GB</StringProperty>
     </GlobalSettings>
