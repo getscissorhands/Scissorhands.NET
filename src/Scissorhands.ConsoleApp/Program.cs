@@ -8,6 +8,9 @@ using Autofac;
 
 using CommandLine;
 
+using RazorEngine.Configuration;
+using RazorEngine.Templating;
+
 namespace Aliencube.Scissorhands.ConsoleApp
 {
     /// <summary>
@@ -34,7 +37,9 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
             var builder = new ContainerBuilder();
 
-            builder.RegisterInstance(options).As<ICommandOptions>();
+            RegisterCommandlineOptions(builder, options);
+            RegisterRazorEngine(builder);
+            RegisterServices(builder);
 
             _container = builder.Build();
 
@@ -64,6 +69,22 @@ namespace Aliencube.Scissorhands.ConsoleApp
                     Console.WriteLine("    {0}", ex.Message);
                 }
             }
+        }
+
+        private static void RegisterCommandlineOptions(ContainerBuilder builder, CommandOptions options)
+        {
+            builder.RegisterInstance(options).As<ICommandOptions>();
+        }
+
+        private static void RegisterRazorEngine(ContainerBuilder builder)
+        {
+            builder.RegisterType<TemplateServiceConfiguration>().As<ITemplateServiceConfiguration>();
+            builder.Register(c => RazorEngineService.Create(c.Resolve<ITemplateServiceConfiguration>())).As<IRazorEngineService>();
+        }
+
+        private static void RegisterServices(ContainerBuilder builder)
+        {
+            builder.RegisterType<PublishService>().As<IPublishService>();
         }
     }
 }

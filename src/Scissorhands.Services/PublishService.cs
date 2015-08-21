@@ -1,7 +1,12 @@
 ﻿using System;
+using System.IO;
+using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Interfaces;
+using Aliencube.Scissorhands.Services.Models;
+
+using RazorEngine.Templating;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -10,7 +15,12 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class PublishService : IPublishService
     {
+        private static readonly string ThemeBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Themes");
+        private static readonly string PostBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Posts");
+        private static readonly string PublishedBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Published");
+
         private readonly ICommandOptions _options;
+        private readonly IRazorEngineService _engine;
 
         private bool _disposed;
 
@@ -20,10 +30,13 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="options">
         /// The <see cref="CommandOptions" /> instance.
         /// </param>
+        /// <param name="engine">
+        /// The <see cref="RazorEngineService" /> instance.
+        /// </param>
         /// <exception cref="ArgumentException">
         /// Throws when the <c>options</c> instance is null.
         /// </exception>
-        public PublishService(ICommandOptions options)
+        public PublishService(ICommandOptions options, IRazorEngineService engine)
         {
             if (options == null)
             {
@@ -31,6 +44,13 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._options = options;
+
+            if (engine == null)
+            {
+                throw new ArgumentException("engine");
+            }
+
+            this._engine = engine;
         }
 
         /// <summary>
@@ -41,6 +61,33 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public bool Publish()
         {
+            // Gets post in Markdown and converts it to HTML.
+            var postpath = Path.Combine(PostBasePath, this._options.Theme, this._options.Post);
+            var post = "post";
+
+            // Sets page model.
+            var model = new PageModel();
+            model.Author = "author";
+            model.DateReleased = DateTime.UtcNow.ToLocalTime();
+
+            // Merge template.
+            var filepath = Path.Combine(ThemeBasePath, this._options.Theme, "master.cshtml");
+            string result;
+            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                var template = reader.ReadToEnd();
+                result = this._engine.RunCompile(template, this._options.Theme, typeof(PageModel), model);
+            }
+
+            // Publish post.
+            var publishpath = Path.Combine(PublishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
+            using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
+            using (var writer = new StreamWriter(stream, Encoding.UTF8))
+            {
+                writer.Write(result);
+            }
+
             return true;
         }
 
