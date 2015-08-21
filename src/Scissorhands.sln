@@ -5,6 +5,7 @@ VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "docs", "docs", "{12167ED3-2DC6-4299-8BEF-91CD333766DC}"
 	ProjectSection(SolutionItems) = preProject
+		Scissorhands.sln.DotSettings = Scissorhands.sln.DotSettings
 		Settings.StyleCop = Settings.StyleCop
 	EndProjectSection
 EndProject

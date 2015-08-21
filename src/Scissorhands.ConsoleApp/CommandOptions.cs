@@ -1,13 +1,17 @@
-﻿using CommandLine;
+﻿using Aliencube.Scissorhands.ConsoleApp.Interfaces;
+
+using CommandLine;
 using CommandLine.Text;
 
-namespace Scissorhands.ConsoleApp
+namespace Aliencube.Scissorhands.ConsoleApp
 {
     /// <summary>
     /// This represents the entity for commandline options.
     /// </summary>
-    public class CommandOptions
+    public class CommandOptions : ICommandOptions
     {
+        private bool _disposed;
+
         /// <summary>
         /// Gets or sets the post filepath to publish.
         /// </summary>
@@ -36,6 +40,19 @@ namespace Scissorhands.ConsoleApp
         public string GetUsage()
         {
             return HelpText.AutoBuild(this, current => HelpText.DefaultParsingErrorsHandler(this, current));
+        }
+    
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this._disposed)
+            {
+                return;
+            }
+
+            this._disposed = true;
         }
     }
 }
