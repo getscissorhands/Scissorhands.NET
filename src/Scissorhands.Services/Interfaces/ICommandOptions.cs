@@ -1,6 +1,6 @@
 using System;
 
-namespace Aliencube.Scissorhands.ConsoleApp.Interfaces
+namespace Aliencube.Scissorhands.Services.Interfaces
 {
     /// <summary>
     /// This provides interfaces to the <see cref="CommandOptions" /> class.

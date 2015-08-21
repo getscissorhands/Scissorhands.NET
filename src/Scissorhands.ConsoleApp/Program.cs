@@ -1,7 +1,8 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.ConsoleApp.Interfaces;
+using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.Services.Interfaces;
 
 using Autofac;
 

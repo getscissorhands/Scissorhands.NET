@@ -1,9 +1,9 @@
-﻿using Aliencube.Scissorhands.ConsoleApp.Interfaces;
+﻿using Aliencube.Scissorhands.Services.Interfaces;
 
 using CommandLine;
 using CommandLine.Text;
 
-namespace Aliencube.Scissorhands.ConsoleApp
+namespace Aliencube.Scissorhands.Services
 {
     /// <summary>
     /// This represents the entity for commandline options.

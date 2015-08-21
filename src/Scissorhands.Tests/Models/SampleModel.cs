@@ -1,13 +1,13 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace Scissorhands.Tests.Models
+﻿namespace Aliencube.Scissorhands.Tests.Models
 {
+    /// <summary>
+    /// This represents the sample model entity.
+    /// </summary>
     public class SampleModel
     {
+        /// <summary>
+        /// Gets or sets the name.
+        /// </summary>
         public string Name { get; set; }
     }
 }

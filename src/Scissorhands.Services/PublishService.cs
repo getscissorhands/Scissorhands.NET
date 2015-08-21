@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.ConsoleApp.Interfaces;
+using Aliencube.Scissorhands.Services.Interfaces;
 
-namespace Aliencube.Scissorhands.ConsoleApp
+namespace Aliencube.Scissorhands.Services
 {
     /// <summary>
     /// This represents the service entity for publishing.
