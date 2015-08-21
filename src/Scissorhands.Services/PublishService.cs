@@ -6,6 +6,8 @@ using System.Threading.Tasks;
 using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
 
+using MarkdownDeep;
+
 using RazorEngine.Templating;
 
 namespace Aliencube.Scissorhands.Services
@@ -63,12 +65,20 @@ namespace Aliencube.Scissorhands.Services
         {
             // Gets post in Markdown and converts it to HTML.
             var postpath = Path.Combine(PostBasePath, this._options.Theme, this._options.Post);
-            var post = "post";
+            string parsed;
+            using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                var md = new Markdown() { ExtraMode = true, SafeMode = false };
+                parsed = md.Transform(reader.ReadToEnd());
+            }
 
             // Sets page model.
             var model = new PageModel();
+            model.Title = "Title";
             model.Author = "author";
             model.DateReleased = DateTime.UtcNow.ToLocalTime();
+            model.Post = parsed;
 
             // Merge template.
             var filepath = Path.Combine(ThemeBasePath, this._options.Theme, "master.cshtml");
