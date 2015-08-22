@@ -1,12 +1,14 @@
 ﻿using System;
-using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Interfaces;
 
 using Autofac;
 
 using CommandLine;
+
+using MarkdownDeep;
 
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
@@ -43,16 +45,13 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
             _container = builder.Build();
 
-            Task.Run(async () => { await ExecuteAsync(); });
+            Execute();
         }
 
         /// <summary>
         /// Executes the application.
         /// </summary>
-        /// <returns>
-        /// Returns the <see cref="Task" />.
-        /// </returns>
-        private static async Task ExecuteAsync()
+        private static void Execute()
         {
             using (var scope = _container.BeginLifetimeScope())
             {
@@ -60,7 +59,7 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
                 try
                 {
-                    var result = await service.PublishAsync();
+                    var result = service.Process();
                 }
                 catch (Exception ex)
                 {
@@ -78,8 +77,16 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
         private static void RegisterRazorEngine(ContainerBuilder builder)
         {
-            builder.RegisterType<TemplateServiceConfiguration>().As<ITemplateServiceConfiguration>();
-            builder.Register(c => RazorEngineService.Create(c.Resolve<ITemplateServiceConfiguration>())).As<IRazorEngineService>();
+            builder.RegisterType<TemplateServiceConfiguration>()
+                   .As<ITemplateServiceConfiguration>()
+                   .WithProperty("BaseTemplateType", typeof(HtmlTemplate<>))
+                   .WithProperty("DisableTempFileLocking", true)
+                   .WithProperty("CachingProvider", new DefaultCachingProvider(t => { }));
+
+            builder.Register(c => RazorEngineService.Create(c.Resolve<ITemplateServiceConfiguration>()))
+                   .As<IRazorEngineService>();
+
+            builder.Register(c => new Markdown() { ExtraMode = true, SafeMode = false });
         }
 
         private static void RegisterServices(ContainerBuilder builder)

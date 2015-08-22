@@ -5,7 +5,7 @@ namespace Aliencube.Scissorhands.Services.Models
     /// <summary>
     /// This represents the model entity. This must be inherited.
     /// </summary>
-    public abstract class BaseModel
+    public abstract class BasePageModel
     {
         /// <summary>
         /// Gets or sets the title.
@@ -21,5 +21,10 @@ namespace Aliencube.Scissorhands.Services.Models
         /// Gets or sets the date released.
         /// </summary>
         public DateTime DateReleased { get; set; }
+
+        /// <summary>
+        /// Gets or sets the post.
+        /// </summary>
+        public string Post { get; set; }
     }
 }

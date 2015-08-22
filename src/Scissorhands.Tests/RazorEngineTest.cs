@@ -48,10 +48,7 @@ namespace Aliencube.Scissorhands.Tests
             string result;
             var config = new TemplateServiceConfiguration();
             using (var ts = RazorEngineService.Create(config))
-            //using (var stream = new FileStream(path, FileMode.Open, FileAccess.Read))
-            //using (var reader = new StreamReader(stream))
             {
-                //var template = reader.ReadToEnd();
                 result = ts.RunCompile(template, "key", typeof(SampleModel), model, null);
             }
 

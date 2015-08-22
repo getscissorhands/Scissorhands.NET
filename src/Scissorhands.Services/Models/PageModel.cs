@@ -3,11 +3,7 @@
     /// <summary>
     /// This represents the model entity for page.
     /// </summary>
-    public class PageModel : BaseModel
+    public class PageModel : BasePageModel
     {
-        /// <summary>
-        /// Gets or sets the post.
-        /// </summary>
-        public string Post { get; set; }
     }
 }
