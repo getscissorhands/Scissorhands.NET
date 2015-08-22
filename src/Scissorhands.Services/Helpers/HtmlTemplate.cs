@@ -11,7 +11,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
     public class HtmlTemplate<T> : TemplateBase<T> where T : class
     {
         /// <summary>
-        /// Initialises a new instance of the <see cref="HtmlTemplate{T}"/> class.
+        /// Initialises a new instance of the <see cref="HtmlTemplate{T}" /> class.
         /// </summary>
         public HtmlTemplate()
         {
