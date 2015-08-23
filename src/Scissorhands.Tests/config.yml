@@ -1,0 +1,66 @@
+# Notes:
+#   - Indent each level of configuration with 2 spaces. Do not use tabs!
+#   - All section names are case-sensitive.
+#   - Section names should be unique on each level.
+
+#-------------------------------#
+#    Directory Configuration    #
+#-------------------------------#
+
+directories:
+
+  # Base directory for themes
+  themes: Themes
+
+  # Base directory for posts written in Markdown
+  posts: Posts
+
+  # Base directory for published posts
+  published: Published
+
+#---------------------------#
+#    Theme Configuration    #
+#---------------------------#
+
+themes:
+  # Default theme configuration
+  - name: default
+
+    # Master layout file
+    master: master.cshtml
+
+    # Directory for CSS
+    css: css
+
+    # Directory for JavaScript
+    js: js
+
+    # Directory for images
+    images: images
+
+    # Directory for included template fiels for master
+    includes: includes
+
+#------------------------------#
+#    Contents Configuration    #
+#------------------------------#
+
+contents:
+
+  # Theme to use
+  theme: default
+
+  # Page settings
+  pages:
+
+    # Number of posts to display in one page
+    items: 10
+
+    # Page HTML filename format
+    format: page-{index}
+
+  # Directory for archived posts
+  archives: Archives
+
+  # Directory for tags
+  tags: Tags
