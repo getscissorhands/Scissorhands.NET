@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 namespace Aliencube.Scissorhands.Services.Models
 {
@@ -7,6 +8,14 @@ namespace Aliencube.Scissorhands.Services.Models
     /// </summary>
     public abstract class BasePageModel
     {
+        /// <summary>
+        /// Initialises a new instance of the <see cref="BasePageModel" /> class.
+        /// </summary>
+        protected BasePageModel()
+        {
+            this.Extensions = new Dictionary<Type, BaseExtensionModel>();
+        }
+
         /// <summary>
         /// Gets or sets the title.
         /// </summary>
@@ -26,5 +35,10 @@ namespace Aliencube.Scissorhands.Services.Models
         /// Gets or sets the post.
         /// </summary>
         public string Post { get; set; }
+
+        /// <summary>
+        /// Gets the list of <see cref="BaseExtensionModel" /> instances.
+        /// </summary>
+        public Dictionary<Type, BaseExtensionModel> Extensions { get; private set; }
     }
 }

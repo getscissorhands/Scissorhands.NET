@@ -83,16 +83,18 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CommandOptions.cs" />
+    <Compile Include="Interfaces\IYamlSettings.cs" />
     <Compile Include="Helpers\HtmlHelper.cs" />
     <Compile Include="Helpers\HtmlTemplate.cs" />
     <Compile Include="Interfaces\ICommandOptions.cs" />
     <Compile Include="Interfaces\IPublishService.cs" />
+    <Compile Include="Models\BaseExtensionModel.cs" />
     <Compile Include="Models\BasePageModel.cs" />
     <Compile Include="Configs\Contents.cs" />
     <Compile Include="Configs\Directories.cs" />
     <Compile Include="Models\PageModel.cs" />
     <Compile Include="Configs\Pages.cs" />
-    <Compile Include="Configs\Settings.cs" />
+    <Compile Include="Configs\YamlSettings.cs" />
     <Compile Include="Configs\Theme.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PublishService.cs" />

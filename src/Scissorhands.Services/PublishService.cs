@@ -3,6 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
 
@@ -17,19 +18,23 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class PublishService : IPublishService
     {
-        private static readonly string ThemeBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Themes");
-        private static readonly string PostBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Posts");
-        private static readonly string PublishedBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, @"Published");
-
+        private readonly IYamlSettings _settings;
         private readonly ICommandOptions _options;
         private readonly IRazorEngineService _engine;
         private readonly Markdown _md;
+
+        private string _themeBasePath;
+        private string _postBasePath;
+        private string _publishedBasePath;
 
         private bool _disposed;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="PublishService"/> class.
         /// </summary>
+        /// <param name="settings">
+        /// The <see cref="YamlSettings" /> instance.
+        /// </param>
         /// <param name="options">
         /// The <see cref="CommandOptions" /> instance.
         /// </param>
@@ -42,8 +47,15 @@ namespace Aliencube.Scissorhands.Services
         /// <exception cref="ArgumentException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
-        public PublishService(ICommandOptions options, IRazorEngineService engine, Markdown md)
+        public PublishService(IYamlSettings settings, ICommandOptions options, IRazorEngineService engine, Markdown md)
         {
+            if (settings == null)
+            {
+                throw new ArgumentException("settings");
+            }
+
+            this._settings = settings;
+
             if (options == null)
             {
                 throw new ArgumentException("options");
@@ -64,6 +76,8 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._md = md;
+
+            this.SetBasePaths();
         }
 
         /// <summary>
@@ -108,7 +122,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public string GetPost()
         {
-            var postpath = Path.Combine(PostBasePath, this._options.Post);
+            var postpath = Path.Combine(this._postBasePath, this._options.Post);
 
             using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -127,7 +141,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<string> GetPostAsync()
         {
-            var postpath = Path.Combine(PostBasePath, this._options.Post);
+            var postpath = Path.Combine(this._postBasePath, this._options.Post);
 
             using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -169,7 +183,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public string GetTemplate()
         {
-            var filepath = Path.Combine(ThemeBasePath, this._options.Theme, "master.cshtml");
+            var filepath = Path.Combine(this._themeBasePath, this._options.Theme, "master.cshtml");
 
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -187,7 +201,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<string> GetTemplateAsync()
         {
-            var filepath = Path.Combine(ThemeBasePath, this._options.Theme, "master.cshtml");
+            var filepath = Path.Combine(this._themeBasePath, this._options.Theme, "master.cshtml");
 
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -251,12 +265,12 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public bool Publish(string compiled)
         {
-            if (!Directory.Exists(PublishedBasePath))
+            if (!Directory.Exists(this._publishedBasePath))
             {
-                Directory.CreateDirectory(PublishedBasePath);
+                Directory.CreateDirectory(this._publishedBasePath);
             }
 
-            var publishpath = Path.Combine(PublishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
+            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
 
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
@@ -278,12 +292,12 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<bool> PublishAsync(string compiled)
         {
-            if (!Directory.Exists(PublishedBasePath))
+            if (!Directory.Exists(this._publishedBasePath))
             {
-                Directory.CreateDirectory(PublishedBasePath);
+                Directory.CreateDirectory(this._publishedBasePath);
             }
 
-            var publishpath = Path.Combine(PublishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
+            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
 
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
@@ -305,6 +319,13 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private void SetBasePaths()
+        {
+            this._themeBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Themes);
+            this._postBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Posts);
+            this._publishedBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Published);
         }
     }
 }

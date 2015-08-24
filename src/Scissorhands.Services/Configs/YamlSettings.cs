@@ -2,6 +2,8 @@
 using System.IO;
 using System.Reflection;
 
+using Aliencube.Scissorhands.Services.Interfaces;
+
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -10,12 +12,12 @@ namespace Aliencube.Scissorhands.Services.Configs
     /// <summary>
     /// This represents the entity for YAML settings.
     /// </summary>
-    public class Settings
+    public class YamlSettings : IYamlSettings
     {
         /// <summary>
-        /// Initialises a new instance of the <see cref="Settings" /> class.
+        /// Initialises a new instance of the <see cref="YamlSettings" /> class.
         /// </summary>
-        public Settings()
+        public YamlSettings()
         {
             this.Directories = new Directories();
             this.Themes = new List<Theme>() { new Theme() };
@@ -38,22 +40,22 @@ namespace Aliencube.Scissorhands.Services.Configs
         public Contents Contents { get; set; }
 
         /// <summary>
-        /// Loads <c>config.yml</c> into <see cref="Settings" />.
+        /// Loads <c>config.yml</c> into <see cref="YamlSettings" />.
         /// </summary>
         /// <returns>
-        /// Returns the <see cref="Settings" /> instance.
+        /// Returns the <see cref="YamlSettings" /> instance.
         /// </returns>
-        public static Settings Load()
+        public static YamlSettings Load()
         {
             var assembly = Assembly.GetExecutingAssembly();
             var configpath = string.Format(@"{0}\{1}", assembly.Location, "config.yml");
 
-            Settings settings;
+            YamlSettings settings;
             using (var stream = new FileStream(configpath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream))
             {
                 var deserialiser = new Deserializer(namingConvention: new CamelCaseNamingConvention());
-                settings = deserialiser.Deserialize<Settings>(reader);
+                settings = deserialiser.Deserialize<YamlSettings>(reader);
             }
 
             return settings;
