@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Aliencube.Scissorhands.Tests.Models
+namespace Aliencube.Scissorhands.Services.Tests.Models
 {
     public class Settings
     {

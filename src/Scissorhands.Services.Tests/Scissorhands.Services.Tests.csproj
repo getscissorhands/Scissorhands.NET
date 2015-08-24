@@ -7,8 +7,8 @@
     <ProjectGuid>{391F26D7-8323-4935-8341-2A92CD5BD2D2}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Aliencube.Scissorhands.Tests</RootNamespace>
-    <AssemblyName>Aliencube.Scissorhands.Tests</AssemblyName>
+    <RootNamespace>Aliencube.Scissorhands.Services.Tests</RootNamespace>
+    <AssemblyName>Aliencube.Scissorhands.Services.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>

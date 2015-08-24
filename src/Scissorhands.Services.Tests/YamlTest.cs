@@ -1,14 +1,14 @@
 ﻿using System.IO;
 using System.Reflection;
 
-using Aliencube.Scissorhands.Tests.Models;
+using Aliencube.Scissorhands.Services.Tests.Models;
 
 using NUnit.Framework;
 
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Aliencube.Scissorhands.Tests
+namespace Aliencube.Scissorhands.Services.Tests
 {
     [TestFixture]
     public class YamlTest

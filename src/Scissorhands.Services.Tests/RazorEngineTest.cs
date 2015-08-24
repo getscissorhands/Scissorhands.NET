@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 
-using Aliencube.Scissorhands.Tests.Models;
+using Aliencube.Scissorhands.Services.Tests.Models;
 
 using FluentAssertions;
 
@@ -10,7 +10,7 @@ using NUnit.Framework;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 
-namespace Aliencube.Scissorhands.Tests
+namespace Aliencube.Scissorhands.Services.Tests
 {
     /// <summary>
     /// This is the test class for <see cref="RazorEngine" />.

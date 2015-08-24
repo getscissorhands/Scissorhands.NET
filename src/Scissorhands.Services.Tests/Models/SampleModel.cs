@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.Tests.Models
+﻿namespace Aliencube.Scissorhands.Services.Tests.Models
 {
     /// <summary>
     /// This represents the sample model entity.
