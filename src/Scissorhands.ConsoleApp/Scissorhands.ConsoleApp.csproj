@@ -100,8 +100,7 @@
     <None Include="App.config">
       <SubType>Designer</SubType>
     </None>
-    <None Include="config.yml" />
-    <None Include="appveyor.yml" />
+    <EmbeddedResource Include="config.yml" />
     <None Include="packages.config" />
     <None Include="Posts\Hello-World.md">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>

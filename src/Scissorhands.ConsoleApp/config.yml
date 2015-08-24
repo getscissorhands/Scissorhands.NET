@@ -47,6 +47,9 @@ themes:
 
 contents:
 
+  # Theme to use
+  theme: default
+
   # Page settings
   pages:
 

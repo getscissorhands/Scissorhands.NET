@@ -38,7 +38,7 @@ themes:
     # Directory for images
     images: images
 
-    # Directory for included template fiels for master
+    # Directory for included template files for master
     includes: includes
 
 #------------------------------#
