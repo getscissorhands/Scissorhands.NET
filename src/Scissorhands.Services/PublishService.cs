@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -83,18 +85,26 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Processes posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The filename of the post to process.
+        /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public bool Process()
+        public bool Process(string postpath = null)
         {
-            var post = this.GetPost();
-            var model = this.GetModel<PageModel>(post);
             var template = this.GetTemplate();
-            var compiled = this.Compile(template, model);
-            var published = this.Publish(compiled);
+            var paths = this.GetPostPaths(this._options.Post);
 
-            return published;
+            foreach (var path in paths)
+            {
+                var post = this.GetPost();
+                var model = this.GetModel<PageModel>(post);
+                var compiled = this.Compile(template, model);
+                var published = this.Publish(compiled);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -105,13 +115,18 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<bool> ProcessAsync()
         {
-            var post = await this.GetPostAsync();
-            var model = this.GetModel<PageModel>(post);
             var template = await this.GetTemplateAsync();
-            var compiled = await this.CompileAsync(template, model);
-            var published = await this.PublishAsync(compiled);
+            var paths = this.GetPostPaths(this._options.Post);
 
-            return published;
+            foreach (var path in paths)
+            {
+                var post = await this.GetPostAsync();
+                var model = this.GetModel<PageModel>(post);
+                var compiled = await this.CompileAsync(template, model);
+                var published = await this.PublishAsync(compiled);
+            }
+
+            return true;
         }
 
         /// <summary>
@@ -319,6 +334,45 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private static bool IsMarkdownPost(string postpath, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                throw new ArgumentNullException("postpath");
+            }
+
+            if (string.IsNullOrWhiteSpace(extension))
+            {
+                throw new ArgumentNullException("extension");
+            }
+
+            var result = postpath.ToLowerInvariant().EndsWith(extension.ToLowerInvariant());
+            return result;
+        }
+
+        private IEnumerable<string> GetPostPaths(string postpath = null)
+        {
+            if (this.IsSinglePost(postpath))
+            {
+                return new List<string>() { postpath };
+            }
+
+            var paths = Directory.GetFiles(this._settings.Directories.Posts)
+                                 .Where(filepath => IsMarkdownPost(filepath, this._settings.Contents.Extension));
+            return paths;
+        }
+
+        private bool IsSinglePost(string postpath)
+        {
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                return false;
+            }
+
+            var result = IsMarkdownPost(postpath, this._settings.Contents.Extension);
+            return result;
         }
 
         private void SetBasePaths()

@@ -50,6 +50,9 @@ contents:
   # Theme to use
   theme: default
 
+  # Markdown file extension
+  extension: .md
+
   # Page settings
   pages:
 

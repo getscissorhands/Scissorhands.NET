@@ -13,18 +13,24 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// <summary>
         /// Processes posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The filename of the post to process.
+        /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        bool Process();
+        bool Process(string postpath = null);
 
         /// <summary>
         /// Processes posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The filename of the post to process.
+        /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        Task<bool> ProcessAsync();
+        Task<bool> ProcessAsync(string postpath = null);
 
         /// <summary>
         /// Gets the page model for razor template.

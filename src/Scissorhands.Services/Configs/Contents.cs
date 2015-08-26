@@ -11,6 +11,7 @@
         public Contents()
         {
             this.Theme = "default";
+            this.Extension = ".md";
             this.Pages = new Pages();
             this.Archives = "archives";
             this.Tags = "tags";
@@ -20,6 +21,11 @@
         /// Gets or sets the name of the theme. Default theme is <c>default</c>.
         /// </summary>
         public string Theme { get; set; }
+
+        /// <summary>
+        /// Gets or sets the markdown file extension. Default value is <c>.md</c>.
+        /// </summary>
+        public string Extension { get; set; }
 
         /// <summary>
         /// Gets or sets the <see cref="Pages" /> object.
