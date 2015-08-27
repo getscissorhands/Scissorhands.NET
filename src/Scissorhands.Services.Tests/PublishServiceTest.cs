@@ -31,6 +31,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         private Mock<IYamlSettings> _settings;
         private Mock<IRazorEngineService> _engine;
         private Markdown _md;
+        private Mock<IPublishHelper> _helper;
         private IPublishService _service;
 
         /// <summary>
@@ -54,7 +55,9 @@ namespace Aliencube.Scissorhands.Services.Tests
             this._engine = new Mock<IRazorEngineService>();
             this._md = new Markdown();
 
-            this._service = new PublishService(this._settings.Object, this._engine.Object, this._md);
+            this._helper = new Mock<IPublishHelper>();
+
+            this._service = new PublishService(this._settings.Object, this._engine.Object, this._md, this._helper.Object);
         }
 
         /// <summary>
@@ -78,15 +81,20 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="extension">
         /// The extension.
         /// </param>
+        /// <param name="html">
+        /// The HTML contents.
+        /// </param>
         [Test]
-        [TestCase("default", ".md")]
-        public void GivenThemeNameShouldReturnTemplate(string themeName, string extension)
+        [TestCase("default", ".md", "<html></html>")]
+        public void GivenThemeNameShouldReturnTemplate(string themeName, string extension, string html)
         {
             this._contents = new Contents() { Theme = themeName, Extension = extension };
 
+            this._helper.Setup(p => p.Read(It.IsAny<string>())).Returns(html);
+
             var template = this._service.GetTemplate(themeName);
             template.Should().NotBeNullOrWhiteSpace();
-            template.Should().Contain("<html").And.Contain("</html>");
+            template.Should().Be(html);
         }
     }
 }

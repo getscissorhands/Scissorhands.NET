@@ -6,6 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
+using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
 
@@ -23,6 +24,7 @@ namespace Aliencube.Scissorhands.Services
         private readonly IYamlSettings _settings;
         private readonly IRazorEngineService _engine;
         private readonly Markdown _md;
+        private readonly IPublishHelper _helper;
 
         private string _themeBasePath;
         private string _postBasePath;
@@ -42,31 +44,41 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="md">
         /// The <see cref="Markdown" /> instance.
         /// </param>
+        /// <param name="helper">
+        /// The <see cref="PublishHelper" /> instance.
+        /// </param>
         /// <exception cref="ArgumentException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
-        public PublishService(IYamlSettings settings, IRazorEngineService engine, Markdown md)
+        public PublishService(IYamlSettings settings, IRazorEngineService engine, Markdown md, IPublishHelper helper)
         {
             if (settings == null)
             {
-                throw new ArgumentException("settings");
+                throw new ArgumentNullException("settings");
             }
 
             this._settings = settings;
 
             if (engine == null)
             {
-                throw new ArgumentException("engine");
+                throw new ArgumentNullException("engine");
             }
 
             this._engine = engine;
 
             if (md == null)
             {
-                throw new ArgumentException("md");
+                throw new ArgumentNullException("md");
             }
 
             this._md = md;
+
+            if (helper == null)
+            {
+                throw new ArgumentNullException("helper");
+            }
+
+            this._helper = helper;
 
             this.SetBasePaths();
         }
@@ -155,13 +167,8 @@ namespace Aliencube.Scissorhands.Services
                     p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
 
             var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
-
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var template = reader.ReadToEnd();
-                return template;
-            }
+            var template = this._helper.Read(filepath);
+            return template;
         }
 
         /// <summary>
@@ -188,13 +195,8 @@ namespace Aliencube.Scissorhands.Services
                     p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
 
             var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
-
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var template = await reader.ReadToEndAsync();
-                return template;
-            }
+            var template = await this._helper.ReadAsync(filepath);
+            return template;
         }
 
         /// <summary>
@@ -213,13 +215,9 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentException("postpath");
             }
 
-            using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var doc = reader.ReadToEnd();
-                var post = this._md.Transform(doc);
-                return post;
-            }
+            var doc = this._helper.Read(postpath);
+            var post = this._md.Transform(doc);
+            return post;
         }
 
         /// <summary>
@@ -238,13 +236,9 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentException("postpath");
             }
 
-            using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var doc = await reader.ReadToEndAsync();
-                var post = this._md.Transform(doc);
-                return post;
-            }
+            var doc = await this._helper.ReadAsync(postpath);
+            var post = this._md.Transform(doc);
+            return post;
         }
 
         /// <summary>
@@ -362,18 +356,11 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentException("compiled");
             }
 
-            if (!Directory.Exists(this._publishedBasePath))
-            {
-                Directory.CreateDirectory(this._publishedBasePath);
-            }
+            this._helper.CreatePublishDirectory(this._publishedBasePath);
 
             var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
 
-            using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
-            {
-                writer.Write(compiled);
-            }
+            this._helper.Write(compiled, publishpath);
 
             return true;
         }
@@ -402,18 +389,11 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentException("compiled");
             }
 
-            if (!Directory.Exists(this._publishedBasePath))
-            {
-                Directory.CreateDirectory(this._publishedBasePath);
-            }
+            this._helper.CreatePublishDirectory(this._publishedBasePath);
 
             var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
 
-            using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
-            using (var writer = new StreamWriter(stream, Encoding.UTF8))
-            {
-                await writer.WriteAsync(compiled);
-            }
+            await this._helper.WriteAsync(compiled, publishpath);
 
             return true;
         }

@@ -83,6 +83,8 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CommandOptions.cs" />
+    <Compile Include="Interfaces\IPublishHelper.cs" />
+    <Compile Include="Helpers\PublishHelper.cs" />
     <Compile Include="Interfaces\IYamlSettings.cs" />
     <Compile Include="Helpers\HtmlHelper.cs" />
     <Compile Include="Helpers\HtmlTemplate.cs" />
