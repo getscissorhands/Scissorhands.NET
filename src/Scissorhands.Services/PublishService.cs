@@ -21,7 +21,6 @@ namespace Aliencube.Scissorhands.Services
     public class PublishService : IPublishService
     {
         private readonly IYamlSettings _settings;
-        private readonly ICommandOptions _options;
         private readonly IRazorEngineService _engine;
         private readonly Markdown _md;
 
@@ -37,9 +36,6 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="settings">
         /// The <see cref="YamlSettings" /> instance.
         /// </param>
-        /// <param name="options">
-        /// The <see cref="CommandOptions" /> instance.
-        /// </param>
         /// <param name="engine">
         /// The <see cref="RazorEngineService" /> instance.
         /// </param>
@@ -49,7 +45,7 @@ namespace Aliencube.Scissorhands.Services
         /// <exception cref="ArgumentException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
-        public PublishService(IYamlSettings settings, ICommandOptions options, IRazorEngineService engine, Markdown md)
+        public PublishService(IYamlSettings settings, IRazorEngineService engine, Markdown md)
         {
             if (settings == null)
             {
@@ -57,13 +53,6 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._settings = settings;
-
-            if (options == null)
-            {
-                throw new ArgumentException("options");
-            }
-
-            this._options = options;
 
             if (engine == null)
             {
