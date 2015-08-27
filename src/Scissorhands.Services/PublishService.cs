@@ -94,14 +94,19 @@ namespace Aliencube.Scissorhands.Services
         public bool Process(string postpath = null)
         {
             var template = this.GetTemplate();
-            var paths = this.GetPostPaths(this._options.Post);
+            var paths = this.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
-                var post = this.GetPost();
+                var post = this.GetPost(path);
                 var model = this.GetModel<PageModel>(post);
                 var compiled = this.Compile(template, model);
-                var published = this.Publish(compiled);
+                var published = this.Publish(path, compiled);
+
+                if (!published)
+                {
+                    return false;
+                }
             }
 
             return true;
@@ -110,34 +115,98 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Processes posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The filename of the post to process.
+        /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public async Task<bool> ProcessAsync()
+        public async Task<bool> ProcessAsync(string postpath = null)
         {
             var template = await this.GetTemplateAsync();
-            var paths = this.GetPostPaths(this._options.Post);
+            var paths = this.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
-                var post = await this.GetPostAsync();
+                var post = await this.GetPostAsync(path);
                 var model = this.GetModel<PageModel>(post);
                 var compiled = await this.CompileAsync(template, model);
-                var published = await this.PublishAsync(compiled);
+                var published = await this.PublishAsync(path, compiled);
+
+                if (!published)
+                {
+                    return false;
+                }
             }
 
             return true;
         }
 
         /// <summary>
+        /// Gets the razor template.
+        /// </summary>
+        /// <returns>
+        /// Returns the razor template.
+        /// </returns>
+        public string GetTemplate()
+        {
+            var theme = this._settings
+                            .Themes
+                            .SingleOrDefault(p => p.Name.Equals(this._settings.Contents.Theme, StringComparison.InvariantCultureIgnoreCase))
+                        ?? this._settings
+                               .Themes
+                               .Single(p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+
+            var filepath = Path.Combine(this._themeBasePath, this._settings.Contents.Theme, theme.Master);
+
+            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                var template = reader.ReadToEnd();
+                return template;
+            }
+        }
+
+        /// <summary>
+        /// Gets the razor template.
+        /// </summary>
+        /// <returns>
+        /// Returns the razor template.
+        /// </returns>
+        public async Task<string> GetTemplateAsync()
+        {
+            var theme = this._settings
+                            .Themes
+                            .SingleOrDefault(p => p.Name.Equals(this._settings.Contents.Theme, StringComparison.InvariantCultureIgnoreCase))
+                        ?? this._settings
+                               .Themes
+                               .Single(p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+
+            var filepath = Path.Combine(this._themeBasePath, this._settings.Contents.Theme, theme.Master);
+
+            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                var template = await reader.ReadToEndAsync();
+                return template;
+            }
+        }
+
+        /// <summary>
         /// Gets the post from the given post file written in Markdown.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <returns>
         /// Returns the HTML converted post.
         /// </returns>
-        public string GetPost()
+        public string GetPost(string postpath)
         {
-            var postpath = Path.Combine(this._postBasePath, this._options.Post);
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                throw new ArgumentException("postpath");
+            }
 
             using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -151,12 +220,18 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Gets the post from the given post file written in Markdown.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <returns>
         /// Returns the HTML converted post.
         /// </returns>
-        public async Task<string> GetPostAsync()
+        public async Task<string> GetPostAsync(string postpath)
         {
-            var postpath = Path.Combine(this._postBasePath, this._options.Post);
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                throw new ArgumentException("postpath");
+            }
 
             using (var stream = new FileStream(postpath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -181,6 +256,11 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public T GetModel<T>(string post) where T : BasePageModel
         {
+            if (string.IsNullOrWhiteSpace(post))
+            {
+                throw new ArgumentException("post");
+            }
+
             var model = Activator.CreateInstance<T>();
             model.Title = "Title";
             model.Author = "author";
@@ -188,42 +268,6 @@ namespace Aliencube.Scissorhands.Services
             model.Post = post;
 
             return model;
-        }
-
-        /// <summary>
-        /// Gets the razor template.
-        /// </summary>
-        /// <returns>
-        /// Returns the razor template.
-        /// </returns>
-        public string GetTemplate()
-        {
-            var filepath = Path.Combine(this._themeBasePath, this._options.Theme, "master.cshtml");
-
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var template = reader.ReadToEnd();
-                return template;
-            }
-        }
-
-        /// <summary>
-        /// Gets the razor template.
-        /// </summary>
-        /// <returns>
-        /// Returns the razor template.
-        /// </returns>
-        public async Task<string> GetTemplateAsync()
-        {
-            var filepath = Path.Combine(this._themeBasePath, this._options.Theme, "master.cshtml");
-
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var template = await reader.ReadToEndAsync();
-                return template;
-            }
         }
 
         /// <summary>
@@ -243,7 +287,17 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public string Compile<T>(string template, T model) where T : BasePageModel
         {
-            var compiled = this._engine.RunCompile(template, this._options.Theme, typeof(T), model);
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                throw new ArgumentException("template");
+            }
+
+            if (model == null)
+            {
+                throw new ArgumentException("model");
+            }
+
+            var compiled = this._engine.RunCompile(template, this._settings.Contents.Theme, typeof(T), model);
             return compiled;
         }
 
@@ -264,28 +318,51 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel
         {
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                throw new ArgumentException("template");
+            }
+
+            if (model == null)
+            {
+                throw new ArgumentException("model");
+            }
+
             string compiled = null;
-            await Task.Run(() => { compiled = this._engine.RunCompile(template, this._options.Theme, typeof(T), model); });
+            await Task.Run(() => { compiled = this.Compile(template, model); });
             return compiled;
         }
 
         /// <summary>
         /// Publishes the blog posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <param name="compiled">
         /// Template merged post data.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
         /// </returns>
-        public bool Publish(string compiled)
+        public bool Publish(string postpath, string compiled)
         {
+            if (string.IsNullOrWhiteSpace(compiled))
+            {
+                throw new ArgumentException("postpath");
+            }
+
+            if (string.IsNullOrWhiteSpace(compiled))
+            {
+                throw new ArgumentException("compiled");
+            }
+
             if (!Directory.Exists(this._publishedBasePath))
             {
                 Directory.CreateDirectory(this._publishedBasePath);
             }
 
-            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
+            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
 
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
@@ -299,20 +376,33 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Publishes the blog posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <param name="compiled">
         /// Template merged post data.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
         /// </returns>
-        public async Task<bool> PublishAsync(string compiled)
+        public async Task<bool> PublishAsync(string postpath, string compiled)
         {
+            if (string.IsNullOrWhiteSpace(compiled))
+            {
+                throw new ArgumentException("postpath");
+            }
+
+            if (string.IsNullOrWhiteSpace(compiled))
+            {
+                throw new ArgumentException("compiled");
+            }
+
             if (!Directory.Exists(this._publishedBasePath))
             {
                 Directory.CreateDirectory(this._publishedBasePath);
             }
 
-            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + this._options.Post.Replace(".md", ".html"));
+            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
 
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
@@ -336,6 +426,17 @@ namespace Aliencube.Scissorhands.Services
             this._disposed = true;
         }
 
+        private static bool IsSinglePost(string postpath, string extension)
+        {
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                return false;
+            }
+
+            var result = IsMarkdownPost(postpath, extension);
+            return result;
+        }
+
         private static bool IsMarkdownPost(string postpath, string extension)
         {
             if (string.IsNullOrWhiteSpace(postpath))
@@ -352,34 +453,31 @@ namespace Aliencube.Scissorhands.Services
             return result;
         }
 
-        private IEnumerable<string> GetPostPaths(string postpath = null)
-        {
-            if (this.IsSinglePost(postpath))
-            {
-                return new List<string>() { postpath };
-            }
-
-            var paths = Directory.GetFiles(this._settings.Directories.Posts)
-                                 .Where(filepath => IsMarkdownPost(filepath, this._settings.Contents.Extension));
-            return paths;
-        }
-
-        private bool IsSinglePost(string postpath)
-        {
-            if (string.IsNullOrWhiteSpace(postpath))
-            {
-                return false;
-            }
-
-            var result = IsMarkdownPost(postpath, this._settings.Contents.Extension);
-            return result;
-        }
-
         private void SetBasePaths()
         {
             this._themeBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Themes);
             this._postBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Posts);
             this._publishedBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Published);
+        }
+
+        private IEnumerable<string> GetPostPaths(string postpath = null)
+        {
+            IEnumerable<string> paths = new List<string>();
+            if (string.IsNullOrWhiteSpace(postpath))
+            {
+                paths = Directory.GetFiles(this._settings.Directories.Posts)
+                                 .Where(filepath => IsMarkdownPost(filepath, this._settings.Contents.Extension));
+            }
+            else
+            {
+                var path = Path.Combine(this._postBasePath, postpath);
+                if (IsSinglePost(path, this._settings.Contents.Extension))
+                {
+                    paths = new List<string>() { path };
+                }
+            }
+
+            return paths;
         }
     }
 }

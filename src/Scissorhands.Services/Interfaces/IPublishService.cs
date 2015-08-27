@@ -33,20 +33,6 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         Task<bool> ProcessAsync(string postpath = null);
 
         /// <summary>
-        /// Gets the page model for razor template.
-        /// </summary>
-        /// <param name="post">
-        /// Post data.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting <see cref="BasePageModel" />.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the page model for razor template.
-        /// </returns>
-        T GetModel<T>(string post) where T : BasePageModel;
-
-        /// <summary>
         /// Gets the razor template.
         /// </summary>
         /// <returns>
@@ -61,6 +47,42 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// Returns the razor template.
         /// </returns>
         Task<string> GetTemplateAsync();
+
+        /// <summary>
+        /// Gets the post from the given post file written in Markdown.
+        /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
+        /// <returns>
+        /// Returns the HTML converted post.
+        /// </returns>
+        string GetPost(string postpath);
+
+        /// <summary>
+        /// Gets the post from the given post file written in Markdown.
+        /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
+        /// <returns>
+        /// Returns the HTML converted post.
+        /// </returns>
+        Task<string> GetPostAsync(string postpath);
+
+        /// <summary>
+        /// Gets the page model for razor template.
+        /// </summary>
+        /// <param name="post">
+        /// Post data.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting <see cref="BasePageModel" />.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the page model for razor template.
+        /// </returns>
+        T GetModel<T>(string post) where T : BasePageModel;
 
         /// <summary>
         /// Compiles post model with template.
@@ -99,23 +121,29 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// <summary>
         /// Publishes the blog posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <param name="compiled">
         /// Template merged post data.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
         /// </returns>
-        bool Publish(string compiled);
+        bool Publish(string postpath, string compiled);
 
         /// <summary>
         /// Publishes the blog posts.
         /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post.
+        /// </param>
         /// <param name="compiled">
         /// Template merged post data.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
         /// </returns>
-        Task<bool> PublishAsync(string compiled);
+        Task<bool> PublishAsync(string postpath, string compiled);
     }
 }

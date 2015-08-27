@@ -5,13 +5,15 @@
     /// </summary>
     public class Theme
     {
+        private string _master;
+
         /// <summary>
         /// Initialises a new instance of the <see cref="Theme" /> class.
         /// </summary>
         public Theme()
         {
             this.Name = "default";
-            this.Master = "master.cshtml";
+            this._master = "master.cshtml";
             this.Css = "css";
             this.Js = "js";
             this.Images = "images";
@@ -27,7 +29,23 @@
         /// Gets or sets the filename of the master page. Default value is <c>master.cshtml</c>.
         /// </summary>
         /// <remarks>The file extension, <c>.cshtml</c> can be omitted. But if added, it must be <c>.cshtml</c>.</remarks>
-        public string Master { get; set; }
+        public string Master
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(this._master) && !this._master.ToLowerInvariant().EndsWith(".cshtml"))
+                {
+                    return this._master + ".cshtml";
+                }
+
+                return this._master;
+            }
+
+            set
+            {
+                this._master = value;
+            }
+        }
 
         /// <summary>
         /// Gets or sets the directory name for CSS. Default value is <c>css</c>.
