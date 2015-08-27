@@ -35,18 +35,24 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// <summary>
         /// Gets the razor template.
         /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        string GetTemplate();
+        string GetTemplate(string themeName);
 
         /// <summary>
         /// Gets the razor template.
         /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        Task<string> GetTemplateAsync();
+        Task<string> GetTemplateAsync(string themeName);
 
         /// <summary>
         /// Gets the post from the given post file written in Markdown.

@@ -82,7 +82,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public bool Process(string postpath = null)
         {
-            var template = this.GetTemplate();
+            var template = this.GetTemplate(this._settings.Contents.Theme);
             var paths = this.GetPostPaths(postpath);
 
             foreach (var path in paths)
@@ -112,7 +112,7 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task<bool> ProcessAsync(string postpath = null)
         {
-            var template = await this.GetTemplateAsync();
+            var template = await this.GetTemplateAsync(this._settings.Contents.Theme);
             var paths = this.GetPostPaths(postpath);
 
             foreach (var path in paths)
@@ -134,19 +134,27 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Gets the razor template.
         /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        public string GetTemplate()
+        public string GetTemplate(string themeName)
         {
-            var theme = this._settings
-                            .Themes
-                            .SingleOrDefault(p => p.Name.Equals(this._settings.Contents.Theme, StringComparison.InvariantCultureIgnoreCase))
-                        ?? this._settings
-                               .Themes
-                               .Single(p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+            var name = "default";
+            if (!string.IsNullOrWhiteSpace(themeName))
+            {
+                name = themeName;
+            }
 
-            var filepath = Path.Combine(this._themeBasePath, this._settings.Contents.Theme, theme.Master);
+            var theme =
+                this._settings.Themes.SingleOrDefault(
+                    p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                ?? this._settings.Themes.Single(
+                    p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+
+            var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
 
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
@@ -159,19 +167,27 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Gets the razor template.
         /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        public async Task<string> GetTemplateAsync()
+        public async Task<string> GetTemplateAsync(string themeName)
         {
-            var theme = this._settings
-                            .Themes
-                            .SingleOrDefault(p => p.Name.Equals(this._settings.Contents.Theme, StringComparison.InvariantCultureIgnoreCase))
-                        ?? this._settings
-                               .Themes
-                               .Single(p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+            var name = "default";
+            if (!string.IsNullOrWhiteSpace(themeName))
+            {
+                name = themeName;
+            }
 
-            var filepath = Path.Combine(this._themeBasePath, this._settings.Contents.Theme, theme.Master);
+            var theme =
+                this._settings.Themes.SingleOrDefault(
+                    p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
+                ?? this._settings.Themes.Single(
+                    p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
+
+            var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
 
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))

@@ -1,7 +1,7 @@
 ﻿using System.IO;
 using System.Reflection;
 
-using Aliencube.Scissorhands.Services.Tests.Models;
+using Aliencube.Scissorhands.Services.Configs;
 
 using FluentAssertions;
 
@@ -47,7 +47,7 @@ namespace Aliencube.Scissorhands.Services.Tests
             using (var reader = new StreamReader(stream))
             {
                 var deserialiser = new Deserializer(namingConvention: new CamelCaseNamingConvention());
-                var settings = deserialiser.Deserialize<Settings>(reader);
+                var settings = deserialiser.Deserialize<YamlSettings>(reader);
                 settings.Directories.Themes.Should().Be("Themes");
             }
         }
