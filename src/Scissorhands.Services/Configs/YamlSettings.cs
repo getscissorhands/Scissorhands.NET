@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Reflection;
+using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Interfaces;
 
@@ -94,13 +95,13 @@ namespace Aliencube.Scissorhands.Services.Configs
         }
 
         /// <summary>
-        /// Loads <c>config.yml</c> into <see cref="YamlSettings"/>.
+        /// Loads <c>config.yml</c> into <see cref="YamlSettings" />.
         /// </summary>
         /// <param name="filename">
         /// The filename. Default value is <c>config.yml</c>.
         /// </param>
         /// <returns>
-        /// Returns the <see cref="YamlSettings"/> instance.
+        /// Returns the <see cref="YamlSettings" /> instance.
         /// </returns>
         public static YamlSettings Load(string filename = "config.yml")
         {
@@ -119,6 +120,27 @@ namespace Aliencube.Scissorhands.Services.Configs
                 settings = deserialiser.Deserialize<YamlSettings>(reader);
             }
 
+            return settings;
+        }
+
+        /// <summary>
+        /// Loads <c>config.yml</c> into <see cref="YamlSettings" />.
+        /// </summary>
+        /// <param name="filename">
+        /// The filename. Default value is <c>config.yml</c>.
+        /// </param>
+        /// <returns>
+        /// Returns the <see cref="YamlSettings" /> instance.
+        /// </returns>
+        public static async Task<YamlSettings> LoadAsync(string filename = "config.yml")
+        {
+            if (string.IsNullOrWhiteSpace(filename))
+            {
+                throw new ArgumentNullException("filename");
+            }
+
+            YamlSettings settings = null;
+            await Task.Run(() => { settings = Load(filename); });
             return settings;
         }
 

@@ -61,5 +61,30 @@ namespace Aliencube.Scissorhands.Services.Tests
             this._settings.Should().NotBeNull();
             this._settings.Directories.Themes.Should().BeEquivalentTo("themes");
         }
+
+        /// <summary>
+        /// Tests whether <see cref="ArgumentNullException" /> is thrown when the <c>null</c> parameter is passed.
+        /// </summary>
+        [Test]
+        public void GivenNullFilenameShouldThrowArgumentNullExceptionAsync()
+        {
+            Action action = () => this._settings = YamlSettings.LoadAsync(null).Result;
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the <see cref="YamlSettings" /> instances is returned when a YAML filename is passed.
+        /// </summary>
+        [Test]
+        public async void GivenFilenameShouldReturnYamlSettingsAsync()
+        {
+            this._settings = await YamlSettings.LoadAsync();
+            this._settings.Should().NotBeNull();
+            this._settings.Directories.Themes.Should().BeEquivalentTo("themes");
+
+            this._settings = await YamlSettings.LoadAsync("config.yml");
+            this._settings.Should().NotBeNull();
+            this._settings.Directories.Themes.Should().BeEquivalentTo("themes");
+        }
     }
 }
