@@ -1,18 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
-
-using MarkdownDeep;
-
-using RazorEngine.Templating;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -22,35 +16,24 @@ namespace Aliencube.Scissorhands.Services
     public class PublishService : IPublishService
     {
         private readonly IYamlSettings _settings;
-        private readonly IRazorEngineService _engine;
-        private readonly Markdown _md;
-        private readonly IPublishHelper _helper;
-
-        private string _themeBasePath;
-        private string _postBasePath;
-        private string _publishedBasePath;
+        private readonly IPostHelper _postHelper;
+        private readonly IPublishHelper _publishHelper;
 
         private bool _disposed;
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="PublishService"/> class.
+        /// Initialises a new instance of the <see cref="PublishService" /> class.
         /// </summary>
         /// <param name="settings">
         /// The <see cref="YamlSettings" /> instance.
         /// </param>
-        /// <param name="engine">
-        /// The <see cref="RazorEngineService" /> instance.
+        /// <param name="postHelper">
+        /// The <see cref="PostHelper" /> instance.
         /// </param>
-        /// <param name="md">
-        /// The <see cref="Markdown" /> instance.
-        /// </param>
-        /// <param name="helper">
+        /// <param name="publishHelper">
         /// The <see cref="PublishHelper" /> instance.
         /// </param>
-        /// <exception cref="ArgumentException">
-        /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
-        /// </exception>
-        public PublishService(IYamlSettings settings, IRazorEngineService engine, Markdown md, IPublishHelper helper)
+        public PublishService(IYamlSettings settings, IPostHelper postHelper, IPublishHelper publishHelper)
         {
             if (settings == null)
             {
@@ -59,341 +42,137 @@ namespace Aliencube.Scissorhands.Services
 
             this._settings = settings;
 
-            if (engine == null)
+            if (postHelper == null)
             {
-                throw new ArgumentNullException("engine");
+                throw new ArgumentNullException("postHelper");
             }
 
-            this._engine = engine;
+            this._postHelper = postHelper;
 
-            if (md == null)
+            if (publishHelper == null)
             {
-                throw new ArgumentNullException("md");
+                throw new ArgumentNullException("publishHelper");
             }
 
-            this._md = md;
+            this._publishHelper = publishHelper;
 
-            if (helper == null)
-            {
-                throw new ArgumentNullException("helper");
-            }
-
-            this._helper = helper;
-
-            this.SetBasePaths();
+            this.PublishResults = new Dictionary<string, bool>();
         }
 
         /// <summary>
-        /// Processes posts.
+        /// Gets the list of publish results of posts.
+        /// </summary>
+        public IDictionary<string, bool> PublishResults { get; private set; }
+
+        /// <summary>
+        /// Publishes either a single post or entire blog posts.
         /// </summary>
         /// <param name="postpath">
-        /// The filename of the post to process.
+        /// The post path written in Markdown.
+        /// </param>
+        public void Publish(string postpath = null)
+        {
+            var template = this._postHelper.GetTemplate(this._settings.Contents.Theme);
+            var paths = this._postHelper.GetPostPaths(postpath);
+
+            foreach (var path in paths)
+            {
+                var post = this._postHelper.GetPost(path);
+                var model = this._postHelper.GetModel<PageModel>(post);
+                var compiled = this._publishHelper.Compile(template, model);
+                var published = this.Process(path, compiled);
+
+                this.SetPublishResult(path, published);
+            }
+        }
+
+        /// <summary>
+        /// Publishes either a single post or entire blog posts.
+        /// </summary>
+        /// <param name="postpath">
+        /// The post path written in Markdown.
+        /// </param>
+        /// <returns>
+        /// Returns the <see cref="Task" />.
+        /// </returns>
+        public async Task PublishAsync(string postpath = null)
+        {
+            var template = await this._postHelper.GetTemplateAsync(this._settings.Contents.Theme);
+            var paths = this._postHelper.GetPostPaths(postpath);
+
+            foreach (var path in paths)
+            {
+                var post = await this._postHelper.GetPostAsync(path);
+                var model = this._postHelper.GetModel<PageModel>(post);
+                var compiled = await this._publishHelper.CompileAsync(template, model);
+                var published = await this.ProcessAsync(path, compiled);
+
+                this.SetPublishResult(path, published);
+            }
+        }
+
+        /// <summary>
+        /// Processes the blog posts.
+        /// </summary>
+        /// <param name="postpath">
+        /// The full path of the post written in Markdown.
+        /// </param>
+        /// <param name="content">
+        /// Blog content converted in HTML.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public bool Process(string postpath = null)
+        public bool Process(string postpath, string content)
         {
-            var template = this.GetTemplate(this._settings.Contents.Theme);
-            var paths = this.GetPostPaths(postpath);
-
-            foreach (var path in paths)
+            if (string.IsNullOrWhiteSpace(postpath))
             {
-                var post = this.GetPost(path);
-                var model = this.GetModel<PageModel>(post);
-                var compiled = this.Compile(template, model);
-                var published = this.Publish(path, compiled);
-
-                if (!published)
-                {
-                    return false;
-                }
+                throw new ArgumentNullException("postpath");
             }
+
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                throw new ArgumentNullException("content");
+            }
+
+            this._publishHelper.CreatePublishDirectory(this._settings.PublishedBasePath);
+
+            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
+
+            this._publishHelper.Write(publishpath, content);
 
             return true;
         }
 
         /// <summary>
-        /// Processes posts.
+        /// Processes the blog posts.
         /// </summary>
         /// <param name="postpath">
-        /// The filename of the post to process.
+        /// The full path of the post written in Markdown.
+        /// </param>
+        /// <param name="content">
+        /// Blog content converted in HTML.
         /// </param>
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public async Task<bool> ProcessAsync(string postpath = null)
-        {
-            var template = await this.GetTemplateAsync(this._settings.Contents.Theme);
-            var paths = this.GetPostPaths(postpath);
-
-            foreach (var path in paths)
-            {
-                var post = await this.GetPostAsync(path);
-                var model = this.GetModel<PageModel>(post);
-                var compiled = await this.CompileAsync(template, model);
-                var published = await this.PublishAsync(path, compiled);
-
-                if (!published)
-                {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Gets the razor template.
-        /// </summary>
-        /// <param name="themeName">
-        /// The theme name.
-        /// </param>
-        /// <returns>
-        /// Returns the razor template.
-        /// </returns>
-        public string GetTemplate(string themeName)
-        {
-            var name = "default";
-            if (!string.IsNullOrWhiteSpace(themeName))
-            {
-                name = themeName;
-            }
-
-            var theme =
-                this._settings.Themes.SingleOrDefault(
-                    p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                ?? this._settings.Themes.Single(
-                    p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
-
-            var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
-            var template = this._helper.Read(filepath);
-            return template;
-        }
-
-        /// <summary>
-        /// Gets the razor template.
-        /// </summary>
-        /// <param name="themeName">
-        /// The theme name.
-        /// </param>
-        /// <returns>
-        /// Returns the razor template.
-        /// </returns>
-        public async Task<string> GetTemplateAsync(string themeName)
-        {
-            var name = "default";
-            if (!string.IsNullOrWhiteSpace(themeName))
-            {
-                name = themeName;
-            }
-
-            var theme =
-                this._settings.Themes.SingleOrDefault(
-                    p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                ?? this._settings.Themes.Single(
-                    p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
-
-            var filepath = Path.Combine(this._themeBasePath, theme.Name, theme.Master);
-            var template = await this._helper.ReadAsync(filepath);
-            return template;
-        }
-
-        /// <summary>
-        /// Gets the post from the given post file written in Markdown.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post.
-        /// </param>
-        /// <returns>
-        /// Returns the HTML converted post.
-        /// </returns>
-        public string GetPost(string postpath)
+        public async Task<bool> ProcessAsync(string postpath, string content)
         {
             if (string.IsNullOrWhiteSpace(postpath))
             {
-                throw new ArgumentException("postpath");
+                throw new ArgumentNullException("postpath");
             }
 
-            var doc = this._helper.Read(postpath);
-            var post = this._md.Transform(doc);
-            return post;
-        }
-
-        /// <summary>
-        /// Gets the post from the given post file written in Markdown.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post.
-        /// </param>
-        /// <returns>
-        /// Returns the HTML converted post.
-        /// </returns>
-        public async Task<string> GetPostAsync(string postpath)
-        {
-            if (string.IsNullOrWhiteSpace(postpath))
+            if (string.IsNullOrWhiteSpace(content))
             {
-                throw new ArgumentException("postpath");
+                throw new ArgumentNullException("content");
             }
 
-            var doc = await this._helper.ReadAsync(postpath);
-            var post = this._md.Transform(doc);
-            return post;
-        }
+            this._publishHelper.CreatePublishDirectory(this._settings.PublishedBasePath);
 
-        /// <summary>
-        /// Gets the page model for razor template.
-        /// </summary>
-        /// <param name="post">
-        /// Post data.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting <see cref="BasePageModel" />.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the page model for razor template.
-        /// </returns>
-        public T GetModel<T>(string post) where T : BasePageModel
-        {
-            if (string.IsNullOrWhiteSpace(post))
-            {
-                throw new ArgumentException("post");
-            }
+            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
 
-            var model = Activator.CreateInstance<T>();
-            model.Title = "Title";
-            model.Author = "author";
-            model.DateReleased = DateTime.UtcNow.ToLocalTime();
-            model.Post = post;
-
-            return model;
-        }
-
-        /// <summary>
-        /// Compiles post model with template.
-        /// </summary>
-        /// <param name="template">
-        /// Template string.
-        /// </param>
-        /// <param name="model">
-        /// The post model.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting the <see cref="BasePageModel" /> class.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the compiled string.
-        /// </returns>
-        public string Compile<T>(string template, T model) where T : BasePageModel
-        {
-            if (string.IsNullOrWhiteSpace(template))
-            {
-                throw new ArgumentException("template");
-            }
-
-            if (model == null)
-            {
-                throw new ArgumentException("model");
-            }
-
-            var compiled = this._engine.RunCompile(template, this._settings.Contents.Theme, typeof(T), model);
-            return compiled;
-        }
-
-        /// <summary>
-        /// Compiles post model with template.
-        /// </summary>
-        /// <param name="template">
-        /// Template string.
-        /// </param>
-        /// <param name="model">
-        /// The post model.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting the <see cref="BasePageModel" /> class.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the compiled string.
-        /// </returns>
-        public async Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel
-        {
-            if (string.IsNullOrWhiteSpace(template))
-            {
-                throw new ArgumentException("template");
-            }
-
-            if (model == null)
-            {
-                throw new ArgumentException("model");
-            }
-
-            string compiled = null;
-            await Task.Run(() => { compiled = this.Compile(template, model); });
-            return compiled;
-        }
-
-        /// <summary>
-        /// Publishes the blog posts.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post.
-        /// </param>
-        /// <param name="compiled">
-        /// Template merged post data.
-        /// </param>
-        /// <returns>
-        /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
-        /// </returns>
-        public bool Publish(string postpath, string compiled)
-        {
-            if (string.IsNullOrWhiteSpace(compiled))
-            {
-                throw new ArgumentException("postpath");
-            }
-
-            if (string.IsNullOrWhiteSpace(compiled))
-            {
-                throw new ArgumentException("compiled");
-            }
-
-            this._helper.CreatePublishDirectory(this._publishedBasePath);
-
-            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
-
-            this._helper.Write(compiled, publishpath);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Publishes the blog posts.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post.
-        /// </param>
-        /// <param name="compiled">
-        /// Template merged post data.
-        /// </param>
-        /// <returns>
-        /// Returns <c>True</c>, if published; otherwise returns <c>False</c>.
-        /// </returns>
-        public async Task<bool> PublishAsync(string postpath, string compiled)
-        {
-            if (string.IsNullOrWhiteSpace(compiled))
-            {
-                throw new ArgumentException("postpath");
-            }
-
-            if (string.IsNullOrWhiteSpace(compiled))
-            {
-                throw new ArgumentException("compiled");
-            }
-
-            this._helper.CreatePublishDirectory(this._publishedBasePath);
-
-            var publishpath = Path.Combine(this._publishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
-
-            await this._helper.WriteAsync(compiled, publishpath);
+            await this._publishHelper.WriteAsync(publishpath, content);
 
             return true;
         }
@@ -411,58 +190,14 @@ namespace Aliencube.Scissorhands.Services
             this._disposed = true;
         }
 
-        private static bool IsSinglePost(string postpath, string extension)
+        private void SetPublishResult(string postpath, bool published)
         {
-            if (string.IsNullOrWhiteSpace(postpath))
+            if (this.PublishResults.ContainsKey(postpath))
             {
-                return false;
+                this.PublishResults.Remove(postpath);
             }
 
-            var result = IsMarkdownPost(postpath, extension);
-            return result;
-        }
-
-        private static bool IsMarkdownPost(string postpath, string extension)
-        {
-            if (string.IsNullOrWhiteSpace(postpath))
-            {
-                throw new ArgumentNullException("postpath");
-            }
-
-            if (string.IsNullOrWhiteSpace(extension))
-            {
-                throw new ArgumentNullException("extension");
-            }
-
-            var result = postpath.ToLowerInvariant().EndsWith(extension.ToLowerInvariant());
-            return result;
-        }
-
-        private void SetBasePaths()
-        {
-            this._themeBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Themes);
-            this._postBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Posts);
-            this._publishedBasePath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, this._settings.Directories.Published);
-        }
-
-        private IEnumerable<string> GetPostPaths(string postpath = null)
-        {
-            IEnumerable<string> paths = new List<string>();
-            if (string.IsNullOrWhiteSpace(postpath))
-            {
-                paths = Directory.GetFiles(this._settings.Directories.Posts)
-                                 .Where(filepath => IsMarkdownPost(filepath, this._settings.Contents.Extension));
-            }
-            else
-            {
-                var path = Path.Combine(this._postBasePath, postpath);
-                if (IsSinglePost(path, this._settings.Contents.Extension))
-                {
-                    paths = new List<string>() { path };
-                }
-            }
-
-            return paths;
+            this.PublishResults.Add(postpath, published);
         }
     }
 }

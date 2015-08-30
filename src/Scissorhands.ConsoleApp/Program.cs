@@ -59,7 +59,7 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
                 try
                 {
-                    var result = service.Process();
+                    service.Publish(null);
                 }
                 catch (Exception ex)
                 {

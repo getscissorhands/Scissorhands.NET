@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Aliencube.Scissorhands.Services.Configs;
 
@@ -7,7 +8,7 @@ namespace Aliencube.Scissorhands.Services.Interfaces
     /// <summary>
     /// This provides interfaces to the <see cref="YamlSettings" /> class.
     /// </summary>
-    public interface IYamlSettings
+    public interface IYamlSettings : IDisposable
     {
         /// <summary>
         /// Gets or sets the directories.
@@ -23,5 +24,20 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// Gets or sets the contents.
         /// </summary>
         Contents Contents { get; set; }
+
+        /// <summary>
+        /// Gets the theme base path.
+        /// </summary>
+        string ThemeBasePath { get; }
+
+        /// <summary>
+        /// Gets the post base path.
+        /// </summary>
+        string PostBasePath { get; }
+
+        /// <summary>
+        /// Gets the published base path.
+        /// </summary>
+        string PublishedBasePath { get; }
     }
 }

@@ -3,7 +3,11 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Interfaces;
+using Aliencube.Scissorhands.Services.Models;
+
+using RazorEngine.Templating;
 
 namespace Aliencube.Scissorhands.Services.Helpers
 {
@@ -12,7 +16,36 @@ namespace Aliencube.Scissorhands.Services.Helpers
     /// </summary>
     public class PublishHelper : IPublishHelper
     {
+        private readonly IYamlSettings _settings;
+        private readonly IRazorEngineService _engine;
+
         private bool _disposed;
+
+        /// <summary>
+        /// Initialises a new instance of the <see cref="PublishHelper" /> class.
+        /// </summary>
+        /// <param name="settings">
+        /// The <see cref="YamlSettings" /> instance.
+        /// </param>
+        /// <param name="engine">
+        /// The <see cref="IRazorEngineService" /> instance.
+        /// </param>
+        public PublishHelper(IYamlSettings settings, IRazorEngineService engine)
+        {
+            if (settings == null)
+            {
+                throw new ArgumentNullException("settings");
+            }
+
+            this._settings = settings;
+
+            if (engine == null)
+            {
+                throw new ArgumentNullException("engine");
+            }
+
+            this._engine = engine;
+        }
 
         /// <summary>
         /// Reads the file
@@ -84,62 +117,125 @@ namespace Aliencube.Scissorhands.Services.Helpers
         }
 
         /// <summary>
-        /// Writes the contents to the designated path.
+        /// Writes the content to the designated path.
         /// </summary>
-        /// <param name="contents">
-        /// The contents.
-        /// </param>
         /// <param name="publishpath">
         /// The publish path.
         /// </param>
-        public void Write(string contents, string publishpath)
+        /// <param name="content">
+        /// The content.
+        /// </param>
+        public void Write(string publishpath, string content)
         {
-            if (string.IsNullOrWhiteSpace(contents))
-            {
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(publishpath))
             {
                 throw new ArgumentNullException("publishpath");
             }
 
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return;
+            }
+
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
-                writer.Write(contents);
+                writer.Write(content);
             }
         }
 
         /// <summary>
-        /// Writes the contents to the designated path.
+        /// Writes the content to the designated path.
         /// </summary>
-        /// <param name="contents">
-        /// The contents.
-        /// </param>
         /// <param name="publishpath">
         /// The publish path.
+        /// </param>
+        /// <param name="content">
+        /// The content.
         /// </param>
         /// <returns>
         /// Returns the <see cref="Task" />.
         /// </returns>
-        public async Task WriteAsync(string contents, string publishpath)
+        public async Task WriteAsync(string publishpath, string content)
         {
-            if (string.IsNullOrWhiteSpace(contents))
-            {
-                return;
-            }
-
             if (string.IsNullOrWhiteSpace(publishpath))
             {
                 throw new ArgumentNullException("publishpath");
             }
 
+            if (string.IsNullOrWhiteSpace(content))
+            {
+                return;
+            }
+
             using (var stream = new FileStream(publishpath, FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
-                await writer.WriteAsync(contents);
+                await writer.WriteAsync(content);
             }
+        }
+
+        /// <summary>
+        /// Compiles post model with template.
+        /// </summary>
+        /// <param name="template">
+        /// Template string.
+        /// </param>
+        /// <param name="model">
+        /// The post model.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the compiled string.
+        /// </returns>
+        public string Compile<T>(string template, T model) where T : BasePageModel
+        {
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                throw new ArgumentException("template");
+            }
+
+            if (model == null)
+            {
+                throw new ArgumentException("model");
+            }
+
+            var compiled = this._engine.RunCompile(template, this._settings.Contents.Theme, typeof(T), model);
+            return compiled;
+        }
+
+        /// <summary>
+        /// Compiles post model with template.
+        /// </summary>
+        /// <param name="template">
+        /// Template string.
+        /// </param>
+        /// <param name="model">
+        /// The post model.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the compiled string.
+        /// </returns>
+        public async Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel
+        {
+            if (string.IsNullOrWhiteSpace(template))
+            {
+                throw new ArgumentException("template");
+            }
+
+            if (model == null)
+            {
+                throw new ArgumentException("model");
+            }
+
+            string compiled = null;
+            await Task.Run(() => { compiled = this.Compile(template, model); });
+            return compiled;
         }
 
         /// <summary>

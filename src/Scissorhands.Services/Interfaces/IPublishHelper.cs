@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Helpers;
+using Aliencube.Scissorhands.Services.Models;
 
 namespace Aliencube.Scissorhands.Services.Interfaces
 {
@@ -41,28 +42,62 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         void CreatePublishDirectory(string publishDirectory);
 
         /// <summary>
-        /// Writes the contents to the designated path.
+        /// Writes the content to the designated path.
         /// </summary>
-        /// <param name="contents">
-        /// The contents.
-        /// </param>
         /// <param name="publishpath">
         /// The publish path.
         /// </param>
-        void Write(string contents, string publishpath);
+        /// <param name="content">
+        /// The content.
+        /// </param>
+        void Write(string publishpath, string content);
 
         /// <summary>
-        /// Writes the contents to the designated path.
+        /// Writes the content to the designated path.
         /// </summary>
-        /// <param name="contents">
-        /// The contents.
-        /// </param>
         /// <param name="publishpath">
         /// The publish path.
+        /// </param>
+        /// <param name="content">
+        /// The content.
         /// </param>
         /// <returns>
         /// Returns the <see cref="Task" />.
         /// </returns>
-        Task WriteAsync(string contents, string publishpath);
+        Task WriteAsync(string publishpath, string content);
+
+        /// <summary>
+        /// Compiles post model with template.
+        /// </summary>
+        /// <param name="template">
+        /// Template string.
+        /// </param>
+        /// <param name="model">
+        /// The post model.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the compiled string.
+        /// </returns>
+        string Compile<T>(string template, T model) where T : BasePageModel;
+
+        /// <summary>
+        /// Compiles post model with template.
+        /// </summary>
+        /// <param name="template">
+        /// Template string.
+        /// </param>
+        /// <param name="model">
+        /// The post model.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the compiled string.
+        /// </returns>
+        Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel;
     }
 }

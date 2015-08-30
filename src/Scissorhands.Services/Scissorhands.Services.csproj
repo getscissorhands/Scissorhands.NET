@@ -85,6 +85,7 @@
     <Compile Include="CommandOptions.cs" />
     <Compile Include="Interfaces\IPublishHelper.cs" />
     <Compile Include="Helpers\PublishHelper.cs" />
+    <Compile Include="Interfaces\IPostHelper.cs" />
     <Compile Include="Interfaces\IYamlSettings.cs" />
     <Compile Include="Helpers\HtmlHelper.cs" />
     <Compile Include="Helpers\HtmlTemplate.cs" />
@@ -99,6 +100,7 @@
     <Compile Include="Configs\YamlSettings.cs" />
     <Compile Include="Configs\Theme.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Helpers\PostHelper.cs" />
     <Compile Include="PublishService.cs" />
   </ItemGroup>
   <ItemGroup>
