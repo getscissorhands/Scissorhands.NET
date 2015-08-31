@@ -194,12 +194,12 @@ namespace Aliencube.Scissorhands.Services.Helpers
         {
             if (string.IsNullOrWhiteSpace(template))
             {
-                throw new ArgumentException("template");
+                throw new ArgumentNullException("template");
             }
 
             if (model == null)
             {
-                throw new ArgumentException("model");
+                throw new ArgumentNullException("model");
             }
 
             var compiled = this._engine.RunCompile(template, this._settings.Contents.Theme, typeof(T), model);
@@ -225,12 +225,12 @@ namespace Aliencube.Scissorhands.Services.Helpers
         {
             if (string.IsNullOrWhiteSpace(template))
             {
-                throw new ArgumentException("template");
+                throw new ArgumentNullException("template");
             }
 
             if (model == null)
             {
-                throw new ArgumentException("model");
+                throw new ArgumentNullException("model");
             }
 
             string compiled = null;

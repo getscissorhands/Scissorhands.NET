@@ -35,7 +35,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <param name="helper">
         /// The <see cref="PublishHelper" /> instance.
         /// </param>
-        /// <exception cref="ArgumentException">
+        /// <exception cref="ArgumentNullException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
         public PostHelper(IYamlSettings settings, Markdown md, IPublishHelper helper)
@@ -131,7 +131,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         {
             if (string.IsNullOrWhiteSpace(postpath))
             {
-                throw new ArgumentException("postpath");
+                throw new ArgumentNullException("postpath");
             }
 
             var doc = this._helper.Read(postpath);
@@ -152,7 +152,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         {
             if (string.IsNullOrWhiteSpace(postpath))
             {
-                throw new ArgumentException("postpath");
+                throw new ArgumentNullException("postpath");
             }
 
             var doc = await this._helper.ReadAsync(postpath);
@@ -176,7 +176,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         {
             if (string.IsNullOrWhiteSpace(post))
             {
-                throw new ArgumentException("post");
+                throw new ArgumentNullException("post");
             }
 
             var model = Activator.CreateInstance<T>();
