@@ -1,9 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-using Aliencube.Scissorhands.Services.Configs;
-
-namespace Aliencube.Scissorhands.Services.Interfaces
+namespace Aliencube.Scissorhands.Services.Configs
 {
     /// <summary>
     /// This provides interfaces to the <see cref="YamlSettings" /> class.

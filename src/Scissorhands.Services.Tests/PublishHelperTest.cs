@@ -3,7 +3,6 @@ using System.IO;
 
 using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
 
 using FluentAssertions;

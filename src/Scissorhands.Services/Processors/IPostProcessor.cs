@@ -1,16 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Models;
 
-namespace Aliencube.Scissorhands.Services.Interfaces
+namespace Aliencube.Scissorhands.Services.Processors
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="PostHelper" /> class.
+    /// This provides interfaces to the <see cref="PostProcessor" /> class.
     /// </summary>
-    public interface IPostHelper : IDisposable
+    public interface IPostProcessor : IProcessor
     {
         /// <summary>
         /// Gets the razor template.
@@ -56,6 +54,15 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// </returns>
         Task<string> GetPostAsync(string postpath);
 
+        /// <summary>
+        /// Gets the list of post paths.
+        /// </summary>
+        /// <param name="postpath">
+        /// The postpath for a single post.
+        /// </param>
+        /// <returns>
+        /// Returns the list of post paths.
+        /// </returns>
         IEnumerable<string> GetPostPaths(string postpath = null);
 
         /// <summary>

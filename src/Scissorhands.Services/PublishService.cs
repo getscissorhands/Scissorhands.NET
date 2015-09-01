@@ -5,8 +5,8 @@ using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
+using Aliencube.Scissorhands.Services.Processors;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -16,7 +16,7 @@ namespace Aliencube.Scissorhands.Services
     public class PublishService : IPublishService
     {
         private readonly IYamlSettings _settings;
-        private readonly IPostHelper _postHelper;
+        private readonly IPostProcessor _postProcessor;
         private readonly IPublishHelper _publishHelper;
 
         private bool _disposed;
@@ -27,13 +27,13 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="settings">
         /// The <see cref="YamlSettings" /> instance.
         /// </param>
-        /// <param name="postHelper">
-        /// The <see cref="PostHelper" /> instance.
+        /// <param name="postProcessor">
+        /// The <see cref="PostProcessor" /> instance.
         /// </param>
         /// <param name="publishHelper">
         /// The <see cref="PublishHelper" /> instance.
         /// </param>
-        public PublishService(IYamlSettings settings, IPostHelper postHelper, IPublishHelper publishHelper)
+        public PublishService(IYamlSettings settings, IPostProcessor postProcessor, IPublishHelper publishHelper)
         {
             if (settings == null)
             {
@@ -42,12 +42,12 @@ namespace Aliencube.Scissorhands.Services
 
             this._settings = settings;
 
-            if (postHelper == null)
+            if (postProcessor == null)
             {
-                throw new ArgumentNullException("postHelper");
+                throw new ArgumentNullException("postProcessor");
             }
 
-            this._postHelper = postHelper;
+            this._postProcessor = postProcessor;
 
             if (publishHelper == null)
             {
@@ -72,13 +72,13 @@ namespace Aliencube.Scissorhands.Services
         /// </param>
         public void Publish(string postpath = null)
         {
-            var template = this._postHelper.GetTemplate(this._settings.Contents.Theme);
-            var paths = this._postHelper.GetPostPaths(postpath);
+            var template = this._postProcessor.GetTemplate(this._settings.Contents.Theme);
+            var paths = this._postProcessor.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
-                var post = this._postHelper.GetPost(path);
-                var model = this._postHelper.GetModel<PageModel>(post);
+                var post = this._postProcessor.GetPost(path);
+                var model = this._postProcessor.GetModel<PageModel>(post);
                 var compiled = this._publishHelper.Compile(template, model);
                 var published = this.Process(path, compiled);
 
@@ -97,13 +97,13 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task PublishAsync(string postpath = null)
         {
-            var template = await this._postHelper.GetTemplateAsync(this._settings.Contents.Theme);
-            var paths = this._postHelper.GetPostPaths(postpath);
+            var template = await this._postProcessor.GetTemplateAsync(this._settings.Contents.Theme);
+            var paths = this._postProcessor.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
-                var post = await this._postHelper.GetPostAsync(path);
-                var model = this._postHelper.GetModel<PageModel>(post);
+                var post = await this._postProcessor.GetPostAsync(path);
+                var model = this._postProcessor.GetModel<PageModel>(post);
                 var compiled = await this._publishHelper.CompileAsync(template, model);
                 var published = await this.ProcessAsync(path, compiled);
 
@@ -135,13 +135,10 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentNullException("content");
             }
 
-            this._publishHelper.CreatePublishDirectory(this._settings.PublishedBasePath);
+            var items = new Dictionary<string, object>() { { "postpath", postpath }, { "content", content } };
+            var context = new ProcessContext(items);
 
-            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
-
-            this._publishHelper.Write(publishpath, content);
-
-            return true;
+            return this._postProcessor.Process(context);
         }
 
         /// <summary>
@@ -168,13 +165,10 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentNullException("content");
             }
 
-            this._publishHelper.CreatePublishDirectory(this._settings.PublishedBasePath);
+            var items = new Dictionary<string, object>() { { "postpath", postpath }, { "content", content } };
+            var context = new ProcessContext(items);
 
-            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
-
-            await this._publishHelper.WriteAsync(publishpath, content);
-
-            return true;
+            return await this._postProcessor.ProcessAsync(context);
         }
 
         /// <summary>

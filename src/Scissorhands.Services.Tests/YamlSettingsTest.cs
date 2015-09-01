@@ -1,7 +1,6 @@
 ﻿using System;
 
 using Aliencube.Scissorhands.Services.Configs;
-using Aliencube.Scissorhands.Services.Interfaces;
 
 using FluentAssertions;
 

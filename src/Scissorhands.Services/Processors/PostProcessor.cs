@@ -5,26 +5,24 @@ using System.Linq;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
-using Aliencube.Scissorhands.Services.Interfaces;
+using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Models;
 
 using MarkdownDeep;
 
-namespace Aliencube.Scissorhands.Services.Helpers
+namespace Aliencube.Scissorhands.Services.Processors
 {
     /// <summary>
     /// This represents the helper entity for posts.
     /// </summary>
-    public class PostHelper : IPostHelper
+    public class PostProcessor : BaseProcessor, IPostProcessor
     {
         private readonly IYamlSettings _settings;
         private readonly Markdown _md;
         private readonly IPublishHelper _helper;
 
-        private bool _disposed;
-
         /// <summary>
-        /// Initialises a new instance of the <see cref="PostHelper" /> class.
+        /// Initialises a new instance of the <see cref="PostProcessor" /> class.
         /// </summary>
         /// <param name="settings">
         /// The <see cref="YamlSettings" /> instance.
@@ -38,7 +36,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <exception cref="ArgumentNullException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
-        public PostHelper(IYamlSettings settings, Markdown md, IPublishHelper helper)
+        public PostProcessor(IYamlSettings settings, Markdown md, IPublishHelper helper)
         {
             if (settings == null)
             {
@@ -161,34 +159,6 @@ namespace Aliencube.Scissorhands.Services.Helpers
         }
 
         /// <summary>
-        /// Gets the page model for razor template.
-        /// </summary>
-        /// <param name="post">
-        /// Post data.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting <see cref="BasePageModel" />.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the page model for razor template.
-        /// </returns>
-        public T GetModel<T>(string post) where T : BasePageModel
-        {
-            if (string.IsNullOrWhiteSpace(post))
-            {
-                throw new ArgumentNullException("post");
-            }
-
-            var model = Activator.CreateInstance<T>();
-            model.Title = "Title";
-            model.Author = "author";
-            model.DateReleased = DateTime.UtcNow.ToLocalTime();
-            model.Post = post;
-
-            return model;
-        }
-
-        /// <summary>
         /// Gets the list of post paths.
         /// </summary>
         /// <param name="postpath">
@@ -218,16 +188,109 @@ namespace Aliencube.Scissorhands.Services.Helpers
         }
 
         /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// Gets the page model for razor template.
         /// </summary>
-        public void Dispose()
+        /// <param name="post">
+        /// Post data.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting <see cref="BasePageModel" />.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the page model for razor template.
+        /// </returns>
+        public T GetModel<T>(string post) where T : BasePageModel
         {
-            if (this._disposed)
+            if (string.IsNullOrWhiteSpace(post))
             {
-                return;
+                throw new ArgumentNullException("post");
             }
 
-            this._disposed = true;
+            var model = Activator.CreateInstance<T>();
+            model.Title = "Title";
+            model.Author = "author";
+            model.DateReleased = DateTime.UtcNow.ToLocalTime();
+            model.Post = post;
+
+            return model;
+        }
+
+        /// <summary>
+        /// Processes the blog posts.
+        /// </summary>
+        /// <param name="context">
+        /// The context.
+        /// </param>
+        /// <returns>
+        /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
+        /// </returns>
+        public override bool Process(ProcessContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException("context");
+            }
+
+            if (!context.Items.ContainsKey("postpath"))
+            {
+                throw new ContextNotFoundException("postpath");
+            }
+
+            var postpath = (string)context.Items["postpath"];
+
+            if (!context.Items.ContainsKey("content"))
+            {
+                throw new ContextNotFoundException("postpath");
+            }
+
+            var content = (string)context.Items["content"];
+
+            this._helper.CreatePublishDirectory(this._settings.PublishedBasePath);
+
+            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
+
+            this._helper.Write(publishpath, content);
+
+            return true;
+        }
+
+        /// <summary>
+        /// Processes the blog posts.
+        /// </summary>
+        /// <param name="context">
+        /// The context.
+        /// </param>
+        /// <returns>
+        /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
+        /// </returns>
+        public override async Task<bool> ProcessAsync(ProcessContext context)
+        {
+            if (context == null)
+            {
+                throw new ArgumentNullException("context");
+            }
+
+            if (!context.Items.ContainsKey("postpath"))
+            {
+                throw new ContextNotFoundException("postpath");
+            }
+
+            var postpath = (string)context.Items["postpath"];
+
+            if (!context.Items.ContainsKey("content"))
+            {
+                throw new ContextNotFoundException("postpath");
+            }
+
+            var content = (string)context.Items["content"];
+
+            this._helper.CreatePublishDirectory(this._settings.PublishedBasePath);
+
+            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
+
+            await this._helper.WriteAsync(publishpath, content);
+
+            return true;
         }
 
         private static bool IsSinglePost(string postpath, string extension)

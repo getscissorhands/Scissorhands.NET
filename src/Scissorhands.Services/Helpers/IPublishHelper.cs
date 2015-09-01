@@ -1,10 +1,9 @@
 using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Models;
 
-namespace Aliencube.Scissorhands.Services.Interfaces
+namespace Aliencube.Scissorhands.Services.Helpers
 {
     /// <summary>
     /// This provides interfaces to the <see cref="PublishHelper" /> class.

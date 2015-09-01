@@ -4,7 +4,6 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
-using Aliencube.Scissorhands.Services.Interfaces;
 using Aliencube.Scissorhands.Services.Models;
 
 using RazorEngine.Templating;

@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-namespace Aliencube.Scissorhands.Services.Interfaces
+namespace Aliencube.Scissorhands.Services
 {
     /// <summary>
     /// This provides interfaces to the <see cref="PublishService" /> class.

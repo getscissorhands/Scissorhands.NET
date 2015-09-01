@@ -2,7 +2,6 @@
 
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Interfaces;
 
 using Autofac;
 

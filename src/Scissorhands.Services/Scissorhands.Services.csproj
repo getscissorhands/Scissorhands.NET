@@ -83,14 +83,15 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="CommandOptions.cs" />
-    <Compile Include="Interfaces\IPublishHelper.cs" />
+    <Compile Include="Helpers\IPublishHelper.cs" />
     <Compile Include="Helpers\PublishHelper.cs" />
-    <Compile Include="Interfaces\IPostHelper.cs" />
-    <Compile Include="Interfaces\IYamlSettings.cs" />
+    <Compile Include="Processors\ContextNotFoundException.cs" />
+    <Compile Include="Processors\IPostProcessor.cs" />
+    <Compile Include="Configs\IYamlSettings.cs" />
     <Compile Include="Helpers\HtmlHelper.cs" />
     <Compile Include="Helpers\HtmlTemplate.cs" />
-    <Compile Include="Interfaces\ICommandOptions.cs" />
-    <Compile Include="Interfaces\IPublishService.cs" />
+    <Compile Include="ICommandOptions.cs" />
+    <Compile Include="IPublishService.cs" />
     <Compile Include="Models\BaseExtensionModel.cs" />
     <Compile Include="Models\BasePageModel.cs" />
     <Compile Include="Configs\Contents.cs" />
@@ -99,8 +100,11 @@
     <Compile Include="Configs\Pages.cs" />
     <Compile Include="Configs\YamlSettings.cs" />
     <Compile Include="Configs\Theme.cs" />
+    <Compile Include="Processors\IProcessor.cs" />
+    <Compile Include="Processors\ProcessContext.cs" />
+    <Compile Include="Processors\BaseProcessor.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Helpers\PostHelper.cs" />
+    <Compile Include="Processors\PostProcessor.cs" />
     <Compile Include="PublishService.cs" />
   </ItemGroup>
   <ItemGroup>

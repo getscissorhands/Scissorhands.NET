@@ -1,6 +1,4 @@
-﻿using Aliencube.Scissorhands.Services.Interfaces;
-
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 
 namespace Aliencube.Scissorhands.Services
