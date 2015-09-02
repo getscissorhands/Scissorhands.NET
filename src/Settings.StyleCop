@@ -4,6 +4,8 @@
             <Value>commandline</Value>
             <Value>filepath</Value>
             <Value>postpath</Value>
+            <Value>dest</Value>
+            <Value>str</Value>
         </CollectionProperty>
         <StringProperty Name="Culture">en-GB</StringProperty>
     </GlobalSettings>

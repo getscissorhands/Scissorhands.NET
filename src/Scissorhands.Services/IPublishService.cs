@@ -22,34 +22,37 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="postpath">
         /// The post path written in Markdown.
         /// </param>
+        /// <returns>
+        /// Returns the <see cref="Task" />.
+        /// </returns>
         Task PublishAsync(string postpath = null);
 
-        /// <summary>
-        /// Processes the blog posts.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post written in Markdown.
-        /// </param>
-        /// <param name="content">
-        /// Blog content converted in HTML.
-        /// </param>
-        /// <returns>
-        /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
-        /// </returns>
-        bool Process(string postpath, string content);
+        ///// <summary>
+        ///// Processes the blog posts.
+        ///// </summary>
+        ///// <param name="postpath">
+        ///// The full path of the post written in Markdown.
+        ///// </param>
+        ///// <param name="content">
+        ///// Blog content converted in HTML.
+        ///// </param>
+        ///// <returns>
+        ///// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
+        ///// </returns>
+        //bool Process(string postpath, string content);
 
-        /// <summary>
-        /// Processes the blog posts.
-        /// </summary>
-        /// <param name="postpath">
-        /// The full path of the post written in Markdown.
-        /// </param>
-        /// <param name="content">
-        /// Blog content converted in HTML.
-        /// </param>
-        /// <returns>
-        /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
-        /// </returns>
-        Task<bool> ProcessAsync(string postpath, string content);
+        ///// <summary>
+        ///// Processes the blog posts.
+        ///// </summary>
+        ///// <param name="postpath">
+        ///// The full path of the post written in Markdown.
+        ///// </param>
+        ///// <param name="content">
+        ///// Blog content converted in HTML.
+        ///// </param>
+        ///// <returns>
+        ///// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
+        ///// </returns>
+        //Task<bool> ProcessAsync(string postpath, string content);
     }
 }

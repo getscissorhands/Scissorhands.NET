@@ -14,7 +14,7 @@ using NUnit.Framework;
 using RazorEngine.Configuration;
 using RazorEngine.Templating;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Aliencube.Scissorhands.Services.Tests.Helpers
 {
     /// <summary>
     /// This represents the test entity for the <see cref="PublishHelper" /> class.

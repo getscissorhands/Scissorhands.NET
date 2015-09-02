@@ -7,6 +7,7 @@ using System.Threading.Tasks;
 using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Models;
+using Aliencube.Scissorhands.Services.Wrappers;
 
 using MarkdownDeep;
 
@@ -18,7 +19,7 @@ namespace Aliencube.Scissorhands.Services.Processors
     public class PostProcessor : BaseProcessor, IPostProcessor
     {
         private readonly IYamlSettings _settings;
-        private readonly Markdown _md;
+        private readonly IMarkdownWrapper _md;
         private readonly IPublishHelper _helper;
 
         /// <summary>
@@ -36,7 +37,7 @@ namespace Aliencube.Scissorhands.Services.Processors
         /// <exception cref="ArgumentNullException">
         /// Throws when the <c>options</c>, <c>engine</c> or <c>md</c> instance is null.
         /// </exception>
-        public PostProcessor(IYamlSettings settings, Markdown md, IPublishHelper helper)
+        public PostProcessor(IYamlSettings settings, IMarkdownWrapper md, IPublishHelper helper)
         {
             if (settings == null)
             {
@@ -154,7 +155,9 @@ namespace Aliencube.Scissorhands.Services.Processors
             }
 
             var doc = await this._helper.ReadAsync(postpath);
-            var post = this._md.Transform(doc);
+
+            string post = null;
+            await Task.Run(() => { post = this._md.Transform(doc); });
             return post;
         }
 

@@ -2,6 +2,7 @@
 
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.Services.Helpers;
+using Aliencube.Scissorhands.Services.Wrappers;
 
 using Autofac;
 
@@ -85,7 +86,8 @@ namespace Aliencube.Scissorhands.ConsoleApp
             builder.Register(c => RazorEngineService.Create(c.Resolve<ITemplateServiceConfiguration>()))
                    .As<IRazorEngineService>();
 
-            builder.Register(c => new Markdown() { ExtraMode = true, SafeMode = false });
+            var md = new Markdown() { ExtraMode = true, SafeMode = false };
+            builder.RegisterType<MarkdownWrapper>().As<IMarkdownWrapper>().WithParameter("md", md);
         }
 
         private static void RegisterServices(ContainerBuilder builder)

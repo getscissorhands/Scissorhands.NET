@@ -116,11 +116,13 @@
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
     <Compile Include="Models\SampleModel.cs" />
-    <Compile Include="PublishHelperTest.cs" />
+    <Compile Include="Processors\PostProcessorTest.cs" />
+    <Compile Include="Helpers\PublishHelperTest.cs" />
+    <Compile Include="Processors\ProcessorHelper.cs" />
     <Compile Include="PublishServiceTest.cs" />
     <Compile Include="RazorEngineTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="YamlSettingsTest.cs" />
+    <Compile Include="Configs\YamlSettingsTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="config.yml">
@@ -143,9 +145,7 @@
       <Name>Scissorhands.Services</Name>
     </ProjectReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

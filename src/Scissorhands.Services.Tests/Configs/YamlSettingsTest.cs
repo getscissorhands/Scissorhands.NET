@@ -6,7 +6,7 @@ using FluentAssertions;
 
 using NUnit.Framework;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Aliencube.Scissorhands.Services.Tests.Configs
 {
     /// <summary>
     /// This represents the test entity for the <see cref="YamlSettings" /> class.

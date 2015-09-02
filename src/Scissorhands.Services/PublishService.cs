@@ -123,7 +123,7 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public bool Process(string postpath, string content)
+        private bool Process(string postpath, string content)
         {
             if (string.IsNullOrWhiteSpace(postpath))
             {
@@ -153,7 +153,7 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>
         /// Returns <c>True</c>, if processed; otherwise returns <c>False</c>.
         /// </returns>
-        public async Task<bool> ProcessAsync(string postpath, string content)
+        private async Task<bool> ProcessAsync(string postpath, string content)
         {
             if (string.IsNullOrWhiteSpace(postpath))
             {
