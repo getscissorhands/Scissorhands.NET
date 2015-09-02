@@ -1,15 +1,15 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 
 using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
+using Aliencube.Scissorhands.Services.Processors;
 
-using MarkdownDeep;
+using FluentAssertions;
 
 using Moq;
 
 using NUnit.Framework;
-
-using RazorEngine.Templating;
 
 namespace Aliencube.Scissorhands.Services.Tests
 {
@@ -23,8 +23,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         private List<Theme> _themes;
         private Contents _contents;
         private Mock<IYamlSettings> _settings;
-        private Mock<IRazorEngineService> _engine;
-        private Markdown _md;
+        private Mock<IPostProcessor> _processor;
         private Mock<IPublishHelper> _helper;
         private IPublishService _service;
 
@@ -40,18 +39,18 @@ namespace Aliencube.Scissorhands.Services.Tests
                                    new Theme() { Name = "default", Master = "master.cshtml" },
                                    new Theme() { Name = "second", Master = "master.cshtml" },
                                };
+            this._contents = new Contents() { Theme = "default" };
 
             this._settings = new Mock<IYamlSettings>();
             this._settings.SetupGet(p => p.Directories).Returns(this._directories);
             this._settings.SetupGet(p => p.Themes).Returns(this._themes);
             this._settings.SetupGet(p => p.Contents).Returns(this._contents);
 
-            this._engine = new Mock<IRazorEngineService>();
-            this._md = new Markdown();
+            this._processor = new Mock<IPostProcessor>();
 
             this._helper = new Mock<IPublishHelper>();
 
-            this._service = new PublishService(this._settings.Object, null, this._helper.Object);
+            this._service = new PublishService(this._settings.Object, this._processor.Object, this._helper.Object);
         }
 
         /// <summary>
@@ -67,28 +66,19 @@ namespace Aliencube.Scissorhands.Services.Tests
         }
 
         /// <summary>
-        /// Tests whether template is returned or not.
+        /// Test whether <see cref="ArgumentNullException" /> is thrown when null parameter is passed.
         /// </summary>
-        /// <param name="themeName">
-        /// The theme name.
-        /// </param>
-        /// <param name="extension">
-        /// The extension.
-        /// </param>
-        /// <param name="html">
-        /// The HTML contents.
-        /// </param>
         [Test]
-        [TestCase("default", ".md", "<html></html>")]
-        public void GivenThemeNameShouldReturnTemplate(string themeName, string extension, string html)
+        public void GivenNullParameterShouldThrowArgumentNullException()
         {
-            this._contents = new Contents() { Theme = themeName, Extension = extension };
+            Action action = () => this._service = new PublishService(null, this._processor.Object, this._helper.Object);
+            action.ShouldThrow<ArgumentNullException>();
 
-            this._helper.Setup(p => p.Read(It.IsAny<string>())).Returns(html);
+            action = () => this._service = new PublishService(this._settings.Object, null, this._helper.Object);
+            action.ShouldThrow<ArgumentNullException>();
 
-            //var template = this._service.GetTemplate(themeName);
-            //template.Should().NotBeNullOrWhiteSpace();
-            //template.Should().Be(html);
+            action = () => this._service = new PublishService(this._settings.Object, this._processor.Object, null);
+            action.ShouldThrow<ArgumentNullException>();
         }
     }
 }

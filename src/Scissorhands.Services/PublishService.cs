@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Configs;
@@ -112,6 +111,19 @@ namespace Aliencube.Scissorhands.Services
         }
 
         /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this._disposed)
+            {
+                return;
+            }
+
+            this._disposed = true;
+        }
+
+        /// <summary>
         /// Processes the blog posts.
         /// </summary>
         /// <param name="postpath">
@@ -169,19 +181,6 @@ namespace Aliencube.Scissorhands.Services
             var context = new ProcessContext(items);
 
             return await this._postProcessor.ProcessAsync(context);
-        }
-
-        /// <summary>
-        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
-        /// </summary>
-        public void Dispose()
-        {
-            if (this._disposed)
-            {
-                return;
-            }
-
-            this._disposed = true;
         }
 
         private void SetPublishResult(string postpath, bool published)
