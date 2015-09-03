@@ -104,7 +104,7 @@ namespace Aliencube.Scissorhands.Services.Configs
         {
             if (string.IsNullOrWhiteSpace(filename))
             {
-                throw new ArgumentNullException("filename");
+                filename = "config.yml";
             }
 
             var configpath = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, filename);

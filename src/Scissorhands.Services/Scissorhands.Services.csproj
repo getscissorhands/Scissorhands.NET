@@ -82,7 +82,7 @@
     <Compile Include="..\SharedAssemblyInfo.cs">
       <Link>Properties\SharedAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="CommandOptions.cs" />
+    <Compile Include="Configs\CommandOptions.cs" />
     <Compile Include="Helpers\IPublishHelper.cs" />
     <Compile Include="Helpers\PublishHelper.cs" />
     <Compile Include="Processors\ContextNotFoundException.cs" />
@@ -90,7 +90,7 @@
     <Compile Include="Configs\IYamlSettings.cs" />
     <Compile Include="Helpers\HtmlHelper.cs" />
     <Compile Include="Helpers\HtmlTemplate.cs" />
-    <Compile Include="ICommandOptions.cs" />
+    <Compile Include="Configs\ICommandOptions.cs" />
     <Compile Include="IPublishService.cs" />
     <Compile Include="Models\BaseExtensionModel.cs" />
     <Compile Include="Models\BasePageModel.cs" />
