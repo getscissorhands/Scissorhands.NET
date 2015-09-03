@@ -92,7 +92,7 @@ namespace Aliencube.Scissorhands.Services.Tests.Processors
 
             this._processor = new PostProcessor(this._settings.Object, this._md.Object, this._helper.Object);
 
-            var template = this._processor.GetTemplate(themeName);
+            var template = this._processor.GetTemplate(themeName, TemplateType.Post);
             template.Should().NotBeNullOrWhiteSpace();
             template.Should().Be(contents);
         }
@@ -126,7 +126,7 @@ namespace Aliencube.Scissorhands.Services.Tests.Processors
 
             this._processor = new PostProcessor(this._settings.Object, this._md.Object, this._helper.Object);
 
-            var template = await this._processor.GetTemplateAsync(themeName);
+            var template = await this._processor.GetTemplateAsync(themeName, TemplateType.Post);
             template.Should().NotBeNullOrWhiteSpace();
             template.Should().Be(contents);
         }

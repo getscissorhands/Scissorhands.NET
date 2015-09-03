@@ -6,6 +6,9 @@
     public class Theme
     {
         private string _master;
+        private string _page;
+        private string _post;
+        private string _tag;
 
         /// <summary>
         /// Initialises a new instance of the <see cref="Theme" /> class.
@@ -14,6 +17,9 @@
         {
             this.Name = "default";
             this._master = "master.cshtml";
+            this._page = "page.cshtml";
+            this._post = "post.cshtml";
+            this._tag = "tag.cshtml";
             this.Css = "css";
             this.Js = "js";
             this.Images = "images";
@@ -44,6 +50,72 @@
             set
             {
                 this._master = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the filename of the generic page. Default value is <c>page.cshtml</c>.
+        /// </summary>
+        /// <remarks>The file extension, <c>.cshtml</c> can be omitted. But if added, it must be <c>.cshtml</c>.</remarks>
+        public string Page
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(this._page) && !this._page.ToLowerInvariant().EndsWith(".cshtml"))
+                {
+                    return this._page + ".cshtml";
+                }
+
+                return this._page;
+            }
+
+            set
+            {
+                this._page = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the filename of the post page. Default value is <c>post.cshtml</c>.
+        /// </summary>
+        /// <remarks>The file extension, <c>.cshtml</c> can be omitted. But if added, it must be <c>.cshtml</c>.</remarks>
+        public string Post
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(this._post) && !this._post.ToLowerInvariant().EndsWith(".cshtml"))
+                {
+                    return this._post + ".cshtml";
+                }
+
+                return this._post;
+            }
+
+            set
+            {
+                this._post = value;
+            }
+        }
+
+        /// <summary>
+        /// Gets or sets the filename of the tag page. Default value is <c>tag.cshtml</c>.
+        /// </summary>
+        /// <remarks>The file extension, <c>.cshtml</c> can be omitted. But if added, it must be <c>.cshtml</c>.</remarks>
+        public string Tag
+        {
+            get
+            {
+                if (!string.IsNullOrWhiteSpace(this._tag) && !this._tag.ToLowerInvariant().EndsWith(".cshtml"))
+                {
+                    return this._tag + ".cshtml";
+                }
+
+                return this._tag;
+            }
+
+            set
+            {
+                this._tag = value;
             }
         }
 

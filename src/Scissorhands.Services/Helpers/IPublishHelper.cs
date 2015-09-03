@@ -66,21 +66,12 @@ namespace Aliencube.Scissorhands.Services.Helpers
         Task WriteAsync(string publishpath, string content);
 
         /// <summary>
-        /// Compiles post model with template.
+        /// Sets the layout.
         /// </summary>
-        /// <param name="template">
-        /// Template string.
+        /// <param name="layout">
+        /// The master template.
         /// </param>
-        /// <param name="model">
-        /// The post model.
-        /// </param>
-        /// <typeparam name="T">
-        /// Type inheriting the <see cref="BasePageModel" /> class.
-        /// </typeparam>
-        /// <returns>
-        /// Returns the compiled string.
-        /// </returns>
-        string Compile<T>(string template, T model) where T : BasePageModel;
+        void SetLayout(string layout);
 
         /// <summary>
         /// Compiles post model with template.
@@ -88,6 +79,9 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <param name="template">
         /// Template string.
         /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
         /// <param name="model">
         /// The post model.
         /// </param>
@@ -97,6 +91,26 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <returns>
         /// Returns the compiled string.
         /// </returns>
-        Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel;
+        string Compile<T>(string template, TemplateType templateType, T model) where T : BasePageModel;
+
+        /// <summary>
+        /// Compiles post model with template.
+        /// </summary>
+        /// <param name="template">
+        /// Template string.
+        /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
+        /// <param name="model">
+        /// The post model.
+        /// </param>
+        /// <typeparam name="T">
+        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// </typeparam>
+        /// <returns>
+        /// Returns the compiled string.
+        /// </returns>
+        Task<string> CompileAsync<T>(string template, TemplateType templateType, T model) where T : BasePageModel;
     }
 }

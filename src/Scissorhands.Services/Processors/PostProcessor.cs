@@ -62,15 +62,15 @@ namespace Aliencube.Scissorhands.Services.Processors
         }
 
         /// <summary>
-        /// Gets the razor template.
+        /// Gets the theme corresponding to the theme name.
         /// </summary>
         /// <param name="themeName">
         /// The theme name.
         /// </param>
         /// <returns>
-        /// Returns the razor template.
+        /// Returns the <see cref="Theme" />.
         /// </returns>
-        public string GetTemplate(string themeName)
+        public Theme GetTheme(string themeName)
         {
             var name = "default";
             if (!string.IsNullOrWhiteSpace(themeName))
@@ -84,7 +84,27 @@ namespace Aliencube.Scissorhands.Services.Processors
                 ?? this._settings.Themes.Single(
                     p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
 
-            var filepath = Path.Combine(this._settings.ThemeBasePath, theme.Name, theme.Master);
+            return theme;
+        }
+
+        /// <summary>
+        /// Gets the razor template.
+        /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
+        /// <returns>
+        /// Returns the razor template.
+        /// </returns>
+        public string GetTemplate(string themeName, TemplateType templateType)
+        {
+            var theme = this.GetTheme(themeName);
+            var templateName = GetTemplateName(theme, templateType);
+
+            var filepath = Path.Combine(this._settings.ThemeBasePath, theme.Name, templateName);
             var template = this._helper.Read(filepath);
             return template;
         }
@@ -95,24 +115,18 @@ namespace Aliencube.Scissorhands.Services.Processors
         /// <param name="themeName">
         /// The theme name.
         /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        public async Task<string> GetTemplateAsync(string themeName)
+        public async Task<string> GetTemplateAsync(string themeName, TemplateType templateType)
         {
-            var name = "default";
-            if (!string.IsNullOrWhiteSpace(themeName))
-            {
-                name = themeName;
-            }
+            var theme = this.GetTheme(themeName);
+            var templateName = GetTemplateName(theme, templateType);
 
-            var theme =
-                this._settings.Themes.SingleOrDefault(
-                    p => p.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase))
-                ?? this._settings.Themes.Single(
-                    p => p.Name.Equals("default", StringComparison.InvariantCultureIgnoreCase));
-
-            var filepath = Path.Combine(this._settings.ThemeBasePath, theme.Name, theme.Master);
+            var filepath = Path.Combine(this._settings.ThemeBasePath, theme.Name, templateName);
             var template = await this._helper.ReadAsync(filepath);
             return template;
         }
@@ -279,6 +293,7 @@ namespace Aliencube.Scissorhands.Services.Processors
             }
 
             var postpath = (string)context.Items["postpath"];
+            var postname = (new FileInfo(postpath)).Name;
 
             if (!context.Items.ContainsKey("content"))
             {
@@ -289,11 +304,39 @@ namespace Aliencube.Scissorhands.Services.Processors
 
             this._helper.CreatePublishDirectory(this._settings.PublishedBasePath);
 
-            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postpath.Replace(this._settings.Contents.Extension, ".html"));
+            var publishpath = Path.Combine(this._settings.PublishedBasePath, "date-released-" + postname.Replace(this._settings.Contents.Extension, ".html"));
 
             await this._helper.WriteAsync(publishpath, content);
 
             return true;
+        }
+
+        private static string GetTemplateName(Theme theme, TemplateType templateType)
+        {
+            string templateName = null;
+            switch (templateType)
+            {
+                case TemplateType.Layout:
+                    templateName = theme.Master;
+                    break;
+
+                case TemplateType.Page:
+                    templateName = theme.Page;
+                    break;
+
+                case TemplateType.Post:
+                    templateName = theme.Post;
+                    break;
+
+                case TemplateType.Tag:
+                    templateName = theme.Tag;
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Invalid template type");
+            }
+
+            return templateName;
         }
 
         private static bool IsSinglePost(string postpath, string extension)

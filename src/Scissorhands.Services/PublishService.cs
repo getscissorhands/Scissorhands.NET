@@ -71,14 +71,19 @@ namespace Aliencube.Scissorhands.Services
         /// </param>
         public void Publish(string postpath = null)
         {
-            var template = this._postProcessor.GetTemplate(this._settings.Contents.Theme);
+            var layout = this._postProcessor.GetTemplate(this._settings.Contents.Theme, TemplateType.Layout);
+            this._publishHelper.SetLayout(layout);
+
+            var template = this._postProcessor.GetTemplate(this._settings.Contents.Theme, TemplateType.Post);
+            template = this.AddLayoutHeader(template);
+
             var paths = this._postProcessor.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
                 var post = this._postProcessor.GetPost(path);
                 var model = this._postProcessor.GetModel<PageModel>(post);
-                var compiled = this._publishHelper.Compile(template, model);
+                var compiled = this._publishHelper.Compile(template, TemplateType.Post, model);
                 var published = this.Process(path, compiled);
 
                 this.SetPublishResult(path, published);
@@ -96,14 +101,19 @@ namespace Aliencube.Scissorhands.Services
         /// </returns>
         public async Task PublishAsync(string postpath = null)
         {
-            var template = await this._postProcessor.GetTemplateAsync(this._settings.Contents.Theme);
+            var layout = await this._postProcessor.GetTemplateAsync(this._settings.Contents.Theme, TemplateType.Layout);
+            this._publishHelper.SetLayout(layout);
+
+            var template = await this._postProcessor.GetTemplateAsync(this._settings.Contents.Theme, TemplateType.Post);
+            template = this.AddLayoutHeader(template);
+
             var paths = this._postProcessor.GetPostPaths(postpath);
 
             foreach (var path in paths)
             {
                 var post = await this._postProcessor.GetPostAsync(path);
                 var model = this._postProcessor.GetModel<PageModel>(post);
-                var compiled = await this._publishHelper.CompileAsync(template, model);
+                var compiled = await this._publishHelper.CompileAsync(template, TemplateType.Post, model);
                 var published = await this.ProcessAsync(path, compiled);
 
                 this.SetPublishResult(path, published);
@@ -121,6 +131,17 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private string AddLayoutHeader(string template)
+        {
+            var layoutAddedTemplate = string.Format(
+                                          "@{{ Layout = \"{0}-{1}\"; }} {2}",
+                                          this._settings.Contents.Theme,
+                                          TemplateType.Layout,
+                                          template);
+
+            return layoutAddedTemplate;
         }
 
         /// <summary>

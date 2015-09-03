@@ -103,6 +103,7 @@
     <Compile Include="Processors\IProcessor.cs" />
     <Compile Include="Processors\ProcessContext.cs" />
     <Compile Include="Processors\BaseProcessor.cs" />
+    <Compile Include="TemplateType.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Processors\PostProcessor.cs" />
     <Compile Include="PublishService.cs" />

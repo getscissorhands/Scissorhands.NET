@@ -175,10 +175,30 @@ namespace Aliencube.Scissorhands.Services.Helpers
         }
 
         /// <summary>
+        /// Sets the layout.
+        /// </summary>
+        /// <param name="layout">
+        /// The master template.
+        /// </param>
+        public void SetLayout(string layout)
+        {
+            if (string.IsNullOrWhiteSpace(layout))
+            {
+                throw new ArgumentNullException("layout");
+            }
+
+            var key = string.Format("{0}-{1}", this._settings.Contents.Theme, TemplateType.Layout);
+            this._engine.Compile(layout, key);
+        }
+
+        /// <summary>
         /// Compiles post model with template.
         /// </summary>
         /// <param name="template">
         /// Template string.
+        /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
         /// </param>
         /// <param name="model">
         /// The post model.
@@ -189,7 +209,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <returns>
         /// Returns the compiled string.
         /// </returns>
-        public string Compile<T>(string template, T model) where T : BasePageModel
+        public string Compile<T>(string template, TemplateType templateType, T model) where T : BasePageModel
         {
             if (string.IsNullOrWhiteSpace(template))
             {
@@ -201,7 +221,8 @@ namespace Aliencube.Scissorhands.Services.Helpers
                 throw new ArgumentNullException("model");
             }
 
-            var compiled = this._engine.RunCompile(template, this._settings.Contents.Theme, typeof(T), model);
+            var key = string.Format("{0}-{1}", this._settings.Contents.Theme, templateType);
+            var compiled = this._engine.RunCompile(template, key, typeof(T), model);
             return compiled;
         }
 
@@ -211,16 +232,19 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <param name="template">
         /// Template string.
         /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
         /// <param name="model">
         /// The post model.
         /// </param>
         /// <typeparam name="T">
-        /// Type inheriting the <see cref="BasePageModel" /> class.
+        /// Type inheriting the <see cref="BasePageModel"/> class.
         /// </typeparam>
         /// <returns>
         /// Returns the compiled string.
         /// </returns>
-        public async Task<string> CompileAsync<T>(string template, T model) where T : BasePageModel
+        public async Task<string> CompileAsync<T>(string template, TemplateType templateType, T model) where T : BasePageModel
         {
             if (string.IsNullOrWhiteSpace(template))
             {
@@ -233,7 +257,7 @@ namespace Aliencube.Scissorhands.Services.Helpers
             }
 
             string compiled = null;
-            await Task.Run(() => { compiled = this.Compile(template, model); });
+            await Task.Run(() => { compiled = this.Compile(template, templateType, model); });
             return compiled;
         }
 

@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Models;
 
 namespace Aliencube.Scissorhands.Services.Processors
@@ -11,15 +12,29 @@ namespace Aliencube.Scissorhands.Services.Processors
     public interface IPostProcessor : IProcessor
     {
         /// <summary>
-        /// Gets the razor template.
+        /// Gets the theme corresponding to the theme name.
         /// </summary>
         /// <param name="themeName">
         /// The theme name.
         /// </param>
         /// <returns>
+        /// Returns the <see cref="Theme" />.
+        /// </returns>
+        Theme GetTheme(string themeName);
+
+            /// <summary>
+        /// Gets the razor template.
+        /// </summary>
+        /// <param name="themeName">
+        /// The theme name.
+        /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
+        /// <returns>
         /// Returns the razor template.
         /// </returns>
-        string GetTemplate(string themeName);
+        string GetTemplate(string themeName, TemplateType templateType);
 
         /// <summary>
         /// Gets the razor template.
@@ -27,10 +42,13 @@ namespace Aliencube.Scissorhands.Services.Processors
         /// <param name="themeName">
         /// The theme name.
         /// </param>
+        /// <param name="templateType">
+        /// The <see cref="TemplateType" /> value.
+        /// </param>
         /// <returns>
         /// Returns the razor template.
         /// </returns>
-        Task<string> GetTemplateAsync(string themeName);
+        Task<string> GetTemplateAsync(string themeName, TemplateType templateType);
 
         /// <summary>
         /// Gets the post from the given post file written in Markdown.

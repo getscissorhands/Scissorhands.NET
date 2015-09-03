@@ -263,13 +263,13 @@ namespace Aliencube.Scissorhands.Services.Tests.Helpers
                                 Post = "<h1>Hello World</h1>"
                             };
 
-            Action action = () => this._helper.Compile(null, model);
+            Action action = () => this._helper.Compile(null, TemplateType.Post, model);
             action.ShouldThrow<ArgumentNullException>();
 
-            action = () => this._helper.Compile(template, (PageModel)null);
+            action = () => this._helper.Compile(template, TemplateType.Post, (PageModel)null);
             action.ShouldThrow<ArgumentNullException>();
 
-            var compiled = this._helper.Compile(template, model);
+            var compiled = this._helper.Compile(template, TemplateType.Post, model);
             compiled.Should().NotBeNullOrWhiteSpace();
             compiled.Should().ContainEquivalentOf(model.Title);
             compiled.Should().ContainEquivalentOf(model.Post);
@@ -299,13 +299,13 @@ namespace Aliencube.Scissorhands.Services.Tests.Helpers
                             };
 
             string compiled;
-            Action action = () => compiled = this._helper.CompileAsync(null, model).Result;
+            Action action = () => compiled = this._helper.CompileAsync(null, TemplateType.Post, model).Result;
             action.ShouldThrow<ArgumentNullException>();
 
-            action = () => compiled = this._helper.CompileAsync(template, (PageModel)null).Result;
+            action = () => compiled = this._helper.CompileAsync(template, TemplateType.Post, (PageModel)null).Result;
             action.ShouldThrow<ArgumentNullException>();
 
-            compiled = await this._helper.CompileAsync(template, model);
+            compiled = await this._helper.CompileAsync(template, TemplateType.Post, model);
             compiled.Should().NotBeNullOrWhiteSpace();
             compiled.Should().ContainEquivalentOf(model.Title);
             compiled.Should().ContainEquivalentOf(model.Post);

@@ -89,7 +89,7 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
         private static void RegisterSettings(ContainerBuilder builder)
         {
-            builder.Register(async c => await YamlSettings.LoadAsync()).As<IYamlSettings>();
+            builder.Register(c => YamlSettings.Load()).As<IYamlSettings>();
         }
 
         private static void RegisterRazorEngine(ContainerBuilder builder)
