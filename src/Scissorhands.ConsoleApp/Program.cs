@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.Services.Configs;
 using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Interfaces;
+using Aliencube.Scissorhands.Services.Processors;
+using Aliencube.Scissorhands.Services.Wrappers;
 
 using Autofac;
 
@@ -39,27 +42,41 @@ namespace Aliencube.Scissorhands.ConsoleApp
 
             var builder = new ContainerBuilder();
 
-            RegisterCommandlineOptions(builder, options);
+            RegisterSettings(builder);
             RegisterRazorEngine(builder);
+            RegisterHelpers(builder);
+            RegisterProcessors(builder);
             RegisterServices(builder);
 
             _container = builder.Build();
 
-            Execute();
+            Execute(options).Wait();
         }
 
         /// <summary>
         /// Executes the application.
         /// </summary>
-        private static void Execute()
+        /// <param name="options">
+        /// The <see cref="CommandOptions"/> instance.
+        /// </param>
+        /// <returns>
+        /// Returns the <see cref="Task" />.
+        /// </returns>
+        private static async Task Execute(ICommandOptions options)
         {
+            string postpath = null;
+            if (options != null)
+            {
+                postpath = options.Post;
+            }
+
             using (var scope = _container.BeginLifetimeScope())
             {
                 var service = scope.Resolve<IPublishService>();
 
                 try
                 {
-                    var result = service.Process();
+                    await service.PublishAsync(postpath);
                 }
                 catch (Exception ex)
                 {
@@ -70,9 +87,9 @@ namespace Aliencube.Scissorhands.ConsoleApp
             }
         }
 
-        private static void RegisterCommandlineOptions(ContainerBuilder builder, CommandOptions options)
+        private static void RegisterSettings(ContainerBuilder builder)
         {
-            builder.RegisterInstance(options).As<ICommandOptions>();
+            builder.Register(c => YamlSettings.Load()).As<IYamlSettings>();
         }
 
         private static void RegisterRazorEngine(ContainerBuilder builder)
@@ -86,7 +103,18 @@ namespace Aliencube.Scissorhands.ConsoleApp
             builder.Register(c => RazorEngineService.Create(c.Resolve<ITemplateServiceConfiguration>()))
                    .As<IRazorEngineService>();
 
-            builder.Register(c => new Markdown() { ExtraMode = true, SafeMode = false });
+            var md = new Markdown() { ExtraMode = true, SafeMode = false };
+            builder.RegisterType<MarkdownWrapper>().As<IMarkdownWrapper>().WithParameter("md", md);
+        }
+
+        private static void RegisterHelpers(ContainerBuilder builder)
+        {
+            builder.RegisterType<PublishHelper>().As<IPublishHelper>();
+        }
+
+        private static void RegisterProcessors(ContainerBuilder builder)
+        {
+            builder.RegisterType<PostProcessor>().As<IPostProcessor>();
         }
 
         private static void RegisterServices(ContainerBuilder builder)

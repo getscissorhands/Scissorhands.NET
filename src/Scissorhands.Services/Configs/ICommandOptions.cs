@@ -1,6 +1,6 @@
 using System;
 
-namespace Aliencube.Scissorhands.Services.Interfaces
+namespace Aliencube.Scissorhands.Services.Configs
 {
     /// <summary>
     /// This provides interfaces to the <see cref="CommandOptions" /> class.
@@ -11,11 +11,6 @@ namespace Aliencube.Scissorhands.Services.Interfaces
         /// Gets or sets the post filepath to publish.
         /// </summary>
         string Post { get; set; }
-
-        /// <summary>
-        /// Gets or sets the theme name to apply.
-        /// </summary>
-        string Theme { get; set; }
 
         /// <summary>
         /// Gets the usage from the helper text of each option.

@@ -1,12 +1,11 @@
 <StyleCopSettings Version="105">
     <GlobalSettings>
         <CollectionProperty Name="RecognizedWords">
-            <Value>startup</Value>
-            <Value>rel</Value>
-            <Value>href</Value>
-            <Value>templated</Value>
-            <Value>filepath</Value>
             <Value>commandline</Value>
+            <Value>filepath</Value>
+            <Value>postpath</Value>
+            <Value>dest</Value>
+            <Value>str</Value>
         </CollectionProperty>
         <StringProperty Name="Culture">en-GB</StringProperty>
     </GlobalSettings>

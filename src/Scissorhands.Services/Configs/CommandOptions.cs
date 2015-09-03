@@ -1,9 +1,7 @@
-﻿using Aliencube.Scissorhands.Services.Interfaces;
-
-using CommandLine;
+﻿using CommandLine;
 using CommandLine.Text;
 
-namespace Aliencube.Scissorhands.Services
+namespace Aliencube.Scissorhands.Services.Configs
 {
     /// <summary>
     /// This represents the entity for commandline options.
@@ -20,15 +18,6 @@ namespace Aliencube.Scissorhands.Services
             HelpText = "Filename of the post to publish. If omitted, entire posts will be processed.",
             DefaultValue = null)]
         public string Post { get; set; }
-
-        /// <summary>
-        /// Gets or sets the theme name to apply.
-        /// </summary>
-        [Option('t', "theme",
-            Required = false,
-            HelpText = "Theme for post to apply",
-            DefaultValue = "default")]
-        public string Theme { get; set; }
 
         /// <summary>
         /// Gets the usage from the helper text of each option.
