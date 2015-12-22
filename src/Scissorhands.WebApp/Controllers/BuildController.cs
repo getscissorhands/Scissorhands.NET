@@ -1,16 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Microsoft.AspNet.Mvc;
-
-// For more information on enabling MVC for empty projects, visit http://go.microsoft.com/fwlink/?LinkID=397860
+﻿using Microsoft.AspNet.Mvc;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
+    /// <summary>
+    /// This represents the controller entity for build.
+    /// </summary>
     public class BuildController : Controller
     {
-        // GET: /<controller>/
+        /// <summary>
+        /// Processes /build/index.
+        /// </summary>
+        /// <returns>Returns the view model.</returns>
         public IActionResult Index()
         {
             return this.View();

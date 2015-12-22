@@ -1,10 +1,10 @@
-﻿using Microsoft.AspNet.Builder;
+﻿using Aliencube.Scissorhands.WebApp.Models;
+
+using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-
-using Aliencube.Scissorhands.WebApp.Models;
 
 namespace Aliencube.Scissorhands.WebApp
 {
@@ -17,13 +17,26 @@ namespace Aliencube.Scissorhands.WebApp
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
         /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
+        public Startup(IHostingEnvironment env)
+            : this(env, null)
+        {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Startup"/> class.
+        /// </summary>
+        /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
         /// <param name="args">List of arguments from the command line.</param>
         public Startup(IHostingEnvironment env, string[] args)
         {
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
-                .AddCommandLine(args)
                 .AddEnvironmentVariables();
+
+            if (args != null && args.Length > 0)
+            {
+                builder.AddCommandLine(args);
+            }
 
             this.Configuration = builder.Build();
         }
@@ -39,13 +52,13 @@ namespace Aliencube.Scissorhands.WebApp
         /// <param name="args">List of arguments.</param>
         public static void Main(string[] args) => WebApplication.Run<Startup>(args);
 
-        // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         /// <summary>
         /// Configures modules.
         /// </summary>
         /// <param name="app"><see cref="IApplicationBuilder"/> instance.</param>
         /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
         /// <param name="logger"><see cref="ILoggerFactory"/> instance.</param>
+        /// <remarks>This method gets called by the runtime. Use this method to configure the HTTP request pipeline.</remarks>
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory logger)
         {
             logger.AddConsole(this.Configuration.GetSection("Logging"));
@@ -61,8 +74,12 @@ namespace Aliencube.Scissorhands.WebApp
                 app.UseExceptionHandler("/Home/Error");
             }
 
-            // server == iis
-            app.UseIISPlatformHandler();
+            var settings = this.Configuration.Get<WebAppSettings>("WebAppSettings");
+
+            if (settings.Server == ServerType.Iis)
+            {
+                app.UseIISPlatformHandler();
+            }
 
             app.UseStaticFiles();
 
@@ -84,6 +101,7 @@ namespace Aliencube.Scissorhands.WebApp
             services.AddMvc();
 
             // Add app settings.
+            services.Configure<Logging>(this.Configuration.GetSection("Logging"));
             services.Configure<WebAppSettings>(this.Configuration.GetSection("WebAppSettings"));
         }
     }
