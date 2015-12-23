@@ -1,3 +1,4 @@
+using System;
 using System.Threading.Tasks;
 
 namespace Aliencube.Scissorhands.Services
@@ -5,7 +6,7 @@ namespace Aliencube.Scissorhands.Services
     /// <summary>
     /// This provides interfaces to the <see cref="MarkdownService"/> class.
     /// </summary>
-    public interface IMarkdownService
+    public interface IMarkdownService : IDisposable
     {
         /// <summary>
         /// Reads file and return the content as string.

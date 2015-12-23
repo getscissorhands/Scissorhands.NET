@@ -9,6 +9,8 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class MarkdownService : IMarkdownService
     {
+        private bool _disposed;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownService"/> class.
         /// </summary>
@@ -34,6 +36,19 @@ namespace Aliencube.Scissorhands.Services
                 var contents = await reader.ReadToEndAsync();
                 return contents;
             }
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this._disposed)
+            {
+                return;
+            }
+
+            this._disposed = true;
         }
     }
 }
