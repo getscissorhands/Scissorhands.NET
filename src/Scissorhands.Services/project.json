@@ -21,5 +21,6 @@
   },
 
   "dependencies": {
+    "CommonMark.NET": "0.10.0"
   }
 }
