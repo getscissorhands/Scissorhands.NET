@@ -1,6 +1,9 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+
+using Aliencube.Scissorhands.Services.Helpers;
 
 using CommonMark;
 
@@ -11,13 +14,22 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class MarkdownService : IMarkdownService
     {
+        private readonly IFileHelper _helper;
+
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownService"/> class.
         /// </summary>
-        public MarkdownService()
+        /// <param name="helper"><see cref="IFileHelper"/> instance.</param>
+        public MarkdownService(IFileHelper helper)
         {
+            if (helper == null)
+            {
+                throw new ArgumentNullException(nameof(helper));
+            }
+
+            this._helper = helper;
         }
 
         /// <summary>
