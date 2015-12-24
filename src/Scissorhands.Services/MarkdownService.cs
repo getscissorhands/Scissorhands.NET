@@ -2,6 +2,8 @@
 using System.Text;
 using System.Threading.Tasks;
 
+using CommonMark;
+
 namespace Aliencube.Scissorhands.Services
 {
     /// <summary>
@@ -36,6 +38,44 @@ namespace Aliencube.Scissorhands.Services
                 var contents = await reader.ReadToEndAsync();
                 return contents;
             }
+        }
+
+        /// <summary>
+        /// Parses the markdown string to HTML string.
+        /// </summary>
+        /// <param name="markdown">Markdown string.</param>
+        /// <returns>Returns HTML string parsed.</returns>
+        public string Parse(string markdown)
+        {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                return null;
+            }
+
+            var parsed = CommonMarkConverter.Convert(markdown);
+            return parsed;
+        }
+
+        /// <summary>
+        /// Converts the markdown file to HTML string.
+        /// </summary>
+        /// <param name="filepath">Fully qualified file path.</param>
+        /// <returns>Returns HTML string converted from the markdown file.</returns>
+        public async Task<string> ConvertAsync(string filepath)
+        {
+            if (string.IsNullOrWhiteSpace(filepath))
+            {
+                return null;
+            }
+
+            var markdown = await this.ReadAsync(filepath);
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                return null;
+            }
+
+            var parsed = this.Parse(markdown);
+            return await Task.FromResult(parsed);
         }
 
         /// <summary>

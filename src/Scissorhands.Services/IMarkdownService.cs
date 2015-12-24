@@ -14,5 +14,19 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="filepath">Fully qualified file path.</param>
         /// <returns>Returns the content as string.</returns>
         Task<string> ReadAsync(string filepath);
+
+        /// <summary>
+        /// Parses the markdown string to HTML string.
+        /// </summary>
+        /// <param name="markdown">Markdown string.</param>
+        /// <returns>Returns HTML string parsed.</returns>
+        string Parse(string markdown);
+
+        /// <summary>
+        /// Converts the markdown file to HTML string.
+        /// </summary>
+        /// <param name="filepath">Fully qualified file path.</param>
+        /// <returns>Returns HTML string converted from the markdown file.</returns>
+        Task<string> ConvertAsync(string filepath);
     }
 }
