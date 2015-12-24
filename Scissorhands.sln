@@ -3,19 +3,25 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.24720.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{9933A043-50A3-4DC8-9B47-BEC79109F4D6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{D6E67661-18CA-4D46-A7A8-E2B4AD9767D4}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8E878B5D-41EC-43E1-8CB8-AE2C2FF0F2CD}"
 	ProjectSection(SolutionItems) = preProject
+		global.json = global.json
 		README.md = README.md
 		Scissorhands.sln.DotSettings = Scissorhands.sln.DotSettings
 		Settings.StyleCop = Settings.StyleCop
-		SharedAssemblyInfo.cs = SharedAssemblyInfo.cs
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{F5A4E190-D798-41D9-BE2D-1D0B0364FB5A}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scissorhands.ConsoleApp", "src\Scissorhands.ConsoleApp\Scissorhands.ConsoleApp.xproj", "{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F}"
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{FFA6327B-2374-4D35-8726-B3C850AD3471}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scissorhands.WebApp", "src\Scissorhands.WebApp\Scissorhands.WebApp.xproj", "{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scissorhands.WebApp", "src\Scissorhands.WebApp\Scissorhands.WebApp.csproj", "{9CF9A345-0268-461F-B488-0A2FEA526D7E}"
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scissorhands.Services", "src\Scissorhands.Services\Scissorhands.Services.xproj", "{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{B90EED33-C013-4765-9192-EED33E291676}"
+EndProject
+Project("{8BB2217D-0F2D-49D1-97BC-3654ED321F3B}") = "Scissorhands.Services.Tests", "test\Scissorhands.Services.Tests\Scissorhands.Services.Tests.xproj", "{9292581D-7146-4FF7-860C-57FF2FB510F3}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,15 +29,30 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{9CF9A345-0268-461F-B488-0A2FEA526D7E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9CF9A345-0268-461F-B488-0A2FEA526D7E}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9CF9A345-0268-461F-B488-0A2FEA526D7E}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9CF9A345-0268-461F-B488-0A2FEA526D7E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9292581D-7146-4FF7-860C-57FF2FB510F3}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9292581D-7146-4FF7-860C-57FF2FB510F3}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9292581D-7146-4FF7-860C-57FF2FB510F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9292581D-7146-4FF7-860C-57FF2FB510F3}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{9CF9A345-0268-461F-B488-0A2FEA526D7E} = {F5A4E190-D798-41D9-BE2D-1D0B0364FB5A}
+		{FB12E8E4-4560-4AB7-99B4-06F684ECCB1F} = {D6E67661-18CA-4D46-A7A8-E2B4AD9767D4}
+		{97BCFC87-8CD8-4C6A-B9FA-33D5AFDE8E0F} = {D6E67661-18CA-4D46-A7A8-E2B4AD9767D4}
+		{1ED7FEAB-DDF6-4DFE-BA0B-2D6F78812023} = {D6E67661-18CA-4D46-A7A8-E2B4AD9767D4}
+		{9292581D-7146-4FF7-860C-57FF2FB510F3} = {B90EED33-C013-4765-9192-EED33E291676}
 	EndGlobalSection
 EndGlobal
