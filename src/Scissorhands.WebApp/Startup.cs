@@ -1,4 +1,4 @@
-﻿using Aliencube.Scissorhands.WebApp.Models;
+﻿using Aliencube.Scissorhands.Models;
 
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
