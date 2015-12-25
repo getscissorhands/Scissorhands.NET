@@ -11,7 +11,6 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
     /// </summary>
     public class MarkdownServiceFixture : IDisposable
     {
-        private readonly Mock<IFileHelper> _helper;
         private bool _disposed;
 
         /// <summary>
@@ -19,14 +18,17 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// </summary>
         public MarkdownServiceFixture()
         {
-            this._helper = new Mock<IFileHelper>();
-            this._helper.Setup(p => p.GetName(It.IsAny<string>())).Returns("Hello World");
-
-            this.MarkdownService = new MarkdownService(this._helper.Object);
+            this.FileHelper = new Mock<IFileHelper>();
+            this.MarkdownService = new MarkdownService(this.FileHelper.Object);
         }
 
         /// <summary>
-        /// Gets the markdown service.
+        /// Gets the <see cref="Mock{IFileHelper}"/> instance.
+        /// </summary>
+        public Mock<IFileHelper> FileHelper { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IMarkdownService"/> instance.
         /// </summary>
         public IMarkdownService MarkdownService { get; }
 

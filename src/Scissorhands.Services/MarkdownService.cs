@@ -1,6 +1,4 @@
 ﻿using System;
-using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Helpers;
@@ -33,26 +31,6 @@ namespace Aliencube.Scissorhands.Services
         }
 
         /// <summary>
-        /// Reads file and return the content as string.
-        /// </summary>
-        /// <param name="filepath">Fully qualified file path.</param>
-        /// <returns>Returns the content as string.</returns>
-        public async Task<string> ReadAsync(string filepath)
-        {
-            if (string.IsNullOrWhiteSpace(filepath))
-            {
-                return null;
-            }
-
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var contents = await reader.ReadToEndAsync();
-                return contents;
-            }
-        }
-
-        /// <summary>
         /// Parses the markdown string to HTML string.
         /// </summary>
         /// <param name="markdown">Markdown string.</param>
@@ -80,14 +58,14 @@ namespace Aliencube.Scissorhands.Services
                 return null;
             }
 
-            var markdown = await this.ReadAsync(filepath);
+            var markdown = await this._helper.ReadAsync(filepath).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 return null;
             }
 
             var parsed = this.Parse(markdown);
-            return await Task.FromResult(parsed);
+            return await Task.FromResult(parsed).ConfigureAwait(false);
         }
 
         /// <summary>

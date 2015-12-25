@@ -1,6 +1,11 @@
-﻿using Aliencube.Scissorhands.Services.Tests.Fixtures;
+﻿using System.Threading.Tasks;
+
+using Aliencube.Scissorhands.Services.Helpers;
+using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
+
+using Moq;
 
 using Xunit;
 
@@ -11,7 +16,10 @@ namespace Aliencube.Scissorhands.Services.Tests
     /// </summary>
     public class MarkdownServiceTest : IClassFixture<MarkdownServiceFixture>
     {
+        private readonly Mock<IFileHelper> _helper;
         private readonly IMarkdownService _service;
+
+        private string _markdown;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownServiceTest"/> class.
@@ -19,31 +27,8 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="MarkdownServiceFixture"/> instance.</param>
         public MarkdownServiceTest(MarkdownServiceFixture fixture)
         {
+            this._helper = fixture.FileHelper;
             this._service = fixture.MarkdownService;
-        }
-
-        /// <summary>
-        /// Tests whether the given file path returns null or not.
-        /// </summary>
-        /// <param name="filepath">Fully qualified file path.</param>
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        public async void Given_Filepath_Should_Return_NullRead(string filepath)
-        {
-            var result = await this._service.ReadAsync(filepath);
-            result.Should().BeNull();
-        }
-
-        /// <summary>
-        /// Tests whether the given file path returns content or not.
-        /// </summary>
-        [Fact]
-        public async void Given_Filepath_Should_Return_Content()
-        {
-            var filepath = "project.json";
-            var result = await this._service.ReadAsync(filepath);
-            result.Should().StartWithEquivalent("{");
         }
 
         /// <summary>
@@ -65,8 +50,8 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_Markdown_Should_Return_ParsedHtml()
         {
-            var markdown = "**Hello World**";
-            var parsed = this._service.Parse(markdown);
+            this._markdown = "**Hello World**";
+            var parsed = this._service.Parse(this._markdown);
             parsed.Should().ContainEquivalentOf("<strong>Hello World</strong>");
         }
 
@@ -76,10 +61,24 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="filepath">Fully qualified file path.</param>
         [Theory]
         [InlineData(null)]
+        [InlineData("")]
+        public async void Given_NullOrEmptyFilepath_Should_Return_NullConverted(string filepath)
+        {
+            var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
+            converted.Should().BeNull();
+        }
+
+        /// <summary>
+        /// Tests whether the given file path returns null or not.
+        /// </summary>
+        /// <param name="filepath">Fully qualified file path.</param>
+        [Theory]
         [InlineData("blank.md")]
         public async void Given_Filepath_Should_Return_NullConverted(string filepath)
         {
-            var converted = await this._service.ConvertAsync(filepath);
+            this._markdown = null;
+            this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
+            var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
             converted.Should().BeNull();
         }
 
@@ -91,7 +90,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         [InlineData("hello-world.md")]
         public async void Given_Filepath_Should_Return_ParsedHtml(string filepath)
         {
-            var converted = await this._service.ConvertAsync(filepath);
+            this._markdown = "**Hello World**";
+            this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
+            var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
             converted.Should().ContainEquivalentOf("<strong>Hello World</strong>");
         }
     }

@@ -1,4 +1,8 @@
-﻿namespace Aliencube.Scissorhands.Services.Helpers
+﻿using System.IO;
+using System.Text;
+using System.Threading.Tasks;
+
+namespace Aliencube.Scissorhands.Services.Helpers
 {
     /// <summary>
     /// This represents the helper entity for files.
@@ -8,13 +12,23 @@
         private bool _disposed;
 
         /// <summary>
-        /// Gets the name.
+        /// Reads file and return the content as string.
         /// </summary>
-        /// <param name="name">The name.</param>
-        /// <returns>Returns the name.</returns>
-        public string GetName(string name)
+        /// <param name="filepath">Fully qualified file path.</param>
+        /// <returns>Returns the content as string.</returns>
+        public async Task<string> ReadAsync(string filepath)
         {
-            return name;
+            if (string.IsNullOrWhiteSpace(filepath))
+            {
+                return null;
+            }
+
+            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            using (var reader = new StreamReader(stream, Encoding.UTF8))
+            {
+                var contents = await reader.ReadToEndAsync().ConfigureAwait(false);
+                return contents;
+            }
         }
 
         /// <summary>
