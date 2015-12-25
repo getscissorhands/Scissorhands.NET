@@ -37,8 +37,8 @@ namespace Aliencube.Scissorhands.WebApp.Configs
 
         private static void RegisterAppSettings(ContainerBuilder builder, IConfiguration configuration)
         {
-            builder.RegisterInstance(configuration.Get<Logging>("Logging")).InstancePerLifetimeScope();
-            builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).InstancePerLifetimeScope();
+            builder.RegisterInstance(configuration.Get<Logging>("Logging")).SingleInstance();
+            builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).SingleInstance();
         }
 
         private static void RegisterHelpers(ContainerBuilder builder)

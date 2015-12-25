@@ -1,4 +1,6 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using Aliencube.Scissorhands.WebApp.ViewModels.Post;
+
+using Microsoft.AspNet.Mvc;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
@@ -24,7 +26,8 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         [Route("write", Name = "write")]
         public IActionResult Write()
         {
-            return this.View();
+            var vm = new PostFormViewModel();
+            return this.View(vm);
         }
 
         /// <summary>
@@ -50,9 +53,11 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// <summary>
         /// Processes /post/save.
         /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
         [Route("save")]
-        public IActionResult Save()
+        [HttpPost]
+        public IActionResult Save(PostFormViewModel model)
         {
             return this.View();
         }

@@ -1,5 +1,26 @@
-﻿@{
+﻿@model Aliencube.Scissorhands.WebApp.ViewModels.Post.PostFormViewModel
+@{
     ViewBag.Title = "Write Post";
 }
 
 <h2>@ViewBag.Title</h2>
+
+<form asp-controller="post" asp-action="save" method="post">
+    <ul>
+        <li>
+            <label asp-for="Title"></label>
+            <input asp-for="Title"/>
+        </li>
+        <li>
+            <label asp-for="Slug"></label>
+            <input asp-for="Slug"/>
+        </li>
+        <li>
+            <label asp-for="Body"></label>
+            <textarea asp-for="Body"></textarea>
+        </li>
+        <li>
+            <button type="submit">Submit</button>
+        </li>
+    </ul>
+</form>
