@@ -25,7 +25,7 @@ namespace Aliencube.Scissorhands.ConsoleApp
             var startup = new Startup(env, args);
             var logger = new LoggerFactory();
             Action<IApplicationBuilder, IHostingEnvironment, ILoggerFactory> app = startup.Configure;
-            Action<IServiceCollection> services = startup.ConfigureServices;
+            Func<IServiceCollection, IServiceProvider> services = startup.ConfigureServices;
 
             var server = TestServer.Create((builder) => app(builder, env, logger), services);
             var client = server.CreateClient();
