@@ -53,12 +53,17 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Gets the post path for view.
         /// </summary>
-        /// <param name="viewContext"><see cref="ViewContext"/> instance.</param>
+        /// <param name="themeName">Theme name.</param>
         /// <returns>Returns the post path for view.</returns>
-        public string GetPost(ViewContext viewContext)
+        public string GetPost(string themeName = null)
         {
-            var themepath = this.GetThemePath(viewContext);
-            var post = $"{themepath}/Post/Post.cshtml";
+            var theme = themeName;
+            if (string.IsNullOrWhiteSpace(theme))
+            {
+                theme = this._settings.Theme;
+            }
+
+            var post = $"~/Themes/{theme}/Post/Post.cshtml";
             return post;
         }
 

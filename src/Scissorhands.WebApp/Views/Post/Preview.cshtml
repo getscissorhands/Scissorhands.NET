@@ -6,7 +6,7 @@
 @inject IThemeService Theme
 
 @{
-    var partial = Theme.GetPost(this.ViewContext);
+    var partial = Theme.GetPost(Model.Theme);
 }
 
 @Html.Partial(partial, Model)

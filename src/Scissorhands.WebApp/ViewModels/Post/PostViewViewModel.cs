@@ -6,6 +6,11 @@
     public class PostViewViewModel
     {
         /// <summary>
+        /// Gets or sets the theme.
+        /// </summary>
+        public string Theme { get; set; }
+
+        /// <summary>
         /// Gets or sets the markdown.
         /// </summary>
         public string Markdown { get; set; }

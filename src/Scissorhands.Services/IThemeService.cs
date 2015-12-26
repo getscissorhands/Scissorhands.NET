@@ -19,8 +19,8 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Gets the post path for view.
         /// </summary>
-        /// <param name="viewContext"><see cref="ViewContext"/> instance.</param>
+        /// <param name="themeName">Theme name.</param>
         /// <returns>Returns the post path for view.</returns>
-        string GetPost(ViewContext viewContext);
+        string GetPost(string themeName = null);
     }
 }
