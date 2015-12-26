@@ -49,6 +49,7 @@ namespace Aliencube.Scissorhands.WebApp.Configs
         private static void RegisterServices(ContainerBuilder builder)
         {
             builder.RegisterType<MarkdownService>().As<IMarkdownService>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<ThemeService>().As<IThemeService>().PropertiesAutowired().InstancePerLifetimeScope();
         }
     }
 }

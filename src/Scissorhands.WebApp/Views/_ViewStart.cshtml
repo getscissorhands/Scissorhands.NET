@@ -1,3 +1,8 @@
-﻿@{
-    Layout = "_Layout";
+﻿@using Aliencube.Scissorhands.Services
+
+@inject IThemeService ThemeService
+
+@{
+    var layout = ThemeService.GetLayout(this.ViewContext);
+    Layout = layout;
 }

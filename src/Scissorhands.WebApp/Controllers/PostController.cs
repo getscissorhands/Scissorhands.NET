@@ -71,7 +71,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             var markdown = model.Body;
             var html = this._markdownService.Parse(model.Body);
 
-            var vm = new PostPreviewViewModel() { Markdown = markdown, Html = html };
+            var vm = new PostViewViewModel() { Markdown = markdown, Html = html };
             return this.View(vm);
         }
 

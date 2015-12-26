@@ -3,7 +3,7 @@
     /// <summary>
     /// This represents the view model entity for post preview.
     /// </summary>
-    public class PostPreviewViewModel
+    public class PostViewViewModel
     {
         /// <summary>
         /// Gets or sets the markdown.
