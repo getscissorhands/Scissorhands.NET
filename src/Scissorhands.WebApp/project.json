@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "description": "Scissorhands.WebApp Web Application",
   "authors": [ "Justin Yoo" ],
@@ -20,6 +20,9 @@
   },
 
   "dependencies": {
+    "Autofac": "4.0.0-rc1-177",
+    "Autofac.Extensions.DependencyInjection": "4.0.0-rc1-177",
+    "FluentAssertions": "4.1.1",
     "Microsoft.AspNet.Diagnostics": "1.0.0-rc1-final",
     "Microsoft.AspNet.IISPlatformHandler": "1.0.0-rc1-final",
     "Microsoft.AspNet.Mvc": "6.0.0-rc1-final",
@@ -32,7 +35,9 @@
     "Microsoft.Extensions.Logging": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
-    "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-rc1-final"
+    "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-rc1-final",
+    "Scissorhands.Models": "1.0.0-*",
+    "Scissorhands.Services": "1.0.0-*"
   },
 
   "exclude": [

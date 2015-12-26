@@ -1,4 +1,9 @@
-﻿using Aliencube.Scissorhands.WebApp.Models;
+﻿using System;
+
+using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.WebApp.Configs;
+
+using Autofac;
 
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
@@ -95,14 +100,13 @@ namespace Aliencube.Scissorhands.WebApp
         /// </summary>
         /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
         /// <remarks>This method gets called by the runtime. Use this method to add services to the container.</remarks>
-        public void ConfigureServices(IServiceCollection services)
+        public IServiceProvider ConfigureServices(IServiceCollection services)
         {
             // Add framework services.
             services.AddMvc();
 
-            // Add app settings.
-            services.Configure<Logging>(this.Configuration.GetSection("Logging"));
-            services.Configure<WebAppSettings>(this.Configuration.GetSection("WebAppSettings"));
+            var container = DependencyConfig.Register(services, this.Configuration);
+            return container.Resolve<IServiceProvider>();
         }
     }
 }

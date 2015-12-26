@@ -1,4 +1,9 @@
-﻿using Microsoft.AspNet.Mvc;
+﻿using System;
+
+using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.WebApp.ViewModels.Post;
+
+using Microsoft.AspNet.Mvc;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
@@ -8,6 +13,22 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
     [Route("post")]
     public class PostController : Controller
     {
+        private readonly IMarkdownService _markdownService;
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="PostController"/> class.
+        /// </summary>
+        /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
+        public PostController(IMarkdownService markdownService)
+        {
+            if (markdownService == null)
+            {
+                throw new ArgumentNullException(nameof(markdownService));
+            }
+
+            this._markdownService = markdownService;
+        }
+
         /// <summary>
         /// Processes /post/index.
         /// </summary>
@@ -24,7 +45,8 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         [Route("write", Name = "write")]
         public IActionResult Write()
         {
-            return this.View();
+            var vm = new PostFormViewModel();
+            return this.View(vm);
         }
 
         /// <summary>
@@ -40,21 +62,30 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// <summary>
         /// Processes /post/preview.
         /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
         [Route("preview")]
-        public IActionResult Preview()
+        [HttpPost]
+        public IActionResult Preview(PostFormViewModel model)
         {
-            return this.View();
+            var markdown = model.Body;
+            var html = this._markdownService.Parse(model.Body);
+
+            var vm = new PostPreviewViewModel() { Markdown = markdown, Html = html };
+            return this.View(vm);
         }
 
         /// <summary>
-        /// Processes /post/save.
+        /// Processes /post/publish.
         /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
-        [Route("save")]
-        public IActionResult Save()
+        [Route("publish")]
+        [HttpPost]
+        public IActionResult Publish(PostFormViewModel model)
         {
-            return this.View();
+            var vm = model;
+            return this.View(vm);
         }
 
         /// <summary>
