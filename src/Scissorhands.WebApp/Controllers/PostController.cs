@@ -1,5 +1,6 @@
 ﻿using System;
 
+using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.WebApp.ViewModels.Post;
 
@@ -13,14 +14,23 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
     [Route("post")]
     public class PostController : Controller
     {
+        private readonly WebAppSettings _settings;
         private readonly IMarkdownService _markdownService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
+        /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
-        public PostController(IMarkdownService markdownService)
+        public PostController(WebAppSettings settings, IMarkdownService markdownService)
         {
+            if (settings == null)
+            {
+                throw new ArgumentNullException(nameof(settings));
+            }
+
+            this._settings = settings;
+
             if (markdownService == null)
             {
                 throw new ArgumentNullException(nameof(markdownService));
@@ -71,7 +81,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             var markdown = model.Body;
             var html = this._markdownService.Parse(model.Body);
 
-            var vm = new PostPreviewViewModel() { Markdown = markdown, Html = html };
+            var vm = new PostViewViewModel() { Theme = this._settings.Theme, Markdown = markdown, Html = html };
             return this.View(vm);
         }
 

@@ -3,8 +3,13 @@
     /// <summary>
     /// This represents the view model entity for post preview.
     /// </summary>
-    public class PostPreviewViewModel
+    public class PostViewViewModel
     {
+        /// <summary>
+        /// Gets or sets the theme.
+        /// </summary>
+        public string Theme { get; set; }
+
         /// <summary>
         /// Gets or sets the markdown.
         /// </summary>

@@ -1,7 +1,12 @@
-﻿@model Aliencube.Scissorhands.WebApp.ViewModels.Post.PostPreviewViewModel
+﻿@using Aliencube.Scissorhands.Services
+@using Aliencube.Scissorhands.WebApp.ViewModels.Post
+
+@model PostViewViewModel
+
+@inject IThemeService Theme
+
 @{
+    var partial = Theme.GetPost(Model.Theme);
 }
 
-<div class="row">
-    @Html.Raw(Model.Html)
-</div>
+@Html.Partial(partial, Model)

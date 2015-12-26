@@ -8,6 +8,11 @@
         /// <summary>
         /// Gets or sets the server.
         /// </summary>
-        public ServerType Server { get; set; }
+        public virtual ServerType Server { get; set; }
+
+        /// <summary>
+        /// Gets or sets the theme.
+        /// </summary>
+        public virtual string Theme { get; set; }
     }
 }

@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "description": "Scissorhands.Services Class Library",
   "authors": [ "Justin Yoo" ],
@@ -21,6 +21,8 @@
   },
 
   "dependencies": {
-    "CommonMark.NET": "0.10.0"
+    "CommonMark.NET": "0.10.0",
+    "Microsoft.AspNet.Mvc.Razor": "6.0.0-rc1-final",
+    "Scissorhands.Models": "1.0.0-*"
   }
 }
