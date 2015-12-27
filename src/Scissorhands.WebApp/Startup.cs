@@ -66,33 +66,9 @@ namespace Aliencube.Scissorhands.WebApp
         /// <remarks>This method gets called by the runtime. Use this method to configure the HTTP request pipeline.</remarks>
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory logger)
         {
-            logger.AddConsole(this.Configuration.GetSection("Logging"));
-            logger.AddDebug();
-
-            if (env.IsDevelopment())
-            {
-                app.UseBrowserLink();
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            var settings = this.Configuration.Get<WebAppSettings>("WebAppSettings");
-
-            if (settings.Server == ServerType.Iis)
-            {
-                app.UseIISPlatformHandler();
-            }
-
-            app.UseStaticFiles();
-
-            app.UseMvc(
-                routes =>
-                    {
-                        routes.MapRoute(name: "default", template: "{controller=Home}/{action=Index}/{id?}");
-                    });
+            LoggerConfig.Register(logger, this.Configuration);
+            EnvironmentConfig.Register(app, env);
+            WebServerConfig.Register(app, this.Configuration);
         }
 
         /// <summary>
@@ -105,6 +81,7 @@ namespace Aliencube.Scissorhands.WebApp
             // Add framework services.
             services.AddMvc();
 
+            // Add dependencies.
             var container = DependencyConfig.Register(services, this.Configuration);
             return container.Resolve<IServiceProvider>();
         }
