@@ -1,12 +1,9 @@
-﻿using Aliencube.Scissorhands.Models;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
+﻿using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
 
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Routing;
-
-using Moq;
 
 using Xunit;
 
@@ -17,11 +14,11 @@ namespace Aliencube.Scissorhands.Services.Tests
     /// </summary>
     public class ThemeServiceTest : IClassFixture<ThemeServiceFixture>
     {
-        private readonly Mock<WebAppSettings> _settings;
-        private readonly IThemeService _service;
-
-        private readonly RouteData _routeData;
         private readonly string _defaultThemeName;
+        private readonly IThemeService _service;
+        private readonly RouteData _routeData;
+
+        private ViewContext _context;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThemeServiceTest"/> class.
@@ -29,25 +26,19 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="ThemeServiceFixture"/> instance.</param>
         public ThemeServiceTest(ThemeServiceFixture fixture)
         {
-            this._settings = fixture.WebAppSettings;
+            this._defaultThemeName = fixture.DefaultThemeName;
             this._service = fixture.ThemeService;
 
             this._routeData = new RouteData();
-
-            this._defaultThemeName = "default";
-            this._settings.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
         }
 
         [Theory]
         [InlineData("", "")]
         public void Given_EmptyController_Should_Return_DefaultLayout(string controllerName, string actionName)
         {
-            this._routeData.Values.Add("controller", controllerName);
-            this._routeData.Values.Add("action", actionName);
+            this.SetViewContext(controllerName, actionName);
 
-            var context = new ViewContext { RouteData = this._routeData };
-
-            var layout = this._service.GetLayout(context);
+            var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
@@ -55,12 +46,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         [InlineData("home", "")]
         public void Given_DifferentController_Should_Return_DefaultLayout(string controllerName, string actionName)
         {
-            this._routeData.Values.Add("controller", controllerName);
-            this._routeData.Values.Add("action", actionName);
+            this.SetViewContext(controllerName, actionName);
 
-            var context = new ViewContext { RouteData = this._routeData };
-
-            var layout = this._service.GetLayout(context);
+            var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
@@ -68,12 +56,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         [InlineData("post", "test")]
         public void Given_DifferentAction_Should_Return_DefaultLayout(string controllerName, string actionName)
         {
-            this._routeData.Values.Add("controller", controllerName);
-            this._routeData.Values.Add("action", actionName);
+            this.SetViewContext(controllerName, actionName);
 
-            var context = new ViewContext { RouteData = this._routeData };
-
-            var layout = this._service.GetLayout(context);
+            var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
@@ -81,12 +66,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         [InlineData("post", "")]
         public void Given_EmptyAction_Should_Return_ThemeLayout(string controllerName, string actionName)
         {
-            this._routeData.Values.Add("controller", controllerName);
-            this._routeData.Values.Add("action", actionName);
+            this.SetViewContext(controllerName, actionName);
 
-            var context = new ViewContext { RouteData = this._routeData };
-
-            var layout = this._service.GetLayout(context);
+            var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
 
@@ -94,12 +76,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         [InlineData("post", "preview")]
         public void Given_ViewContext_Should_Return_ThemeLayout(string controllerName, string actionName)
         {
-            this._routeData.Values.Add("controller", controllerName);
-            this._routeData.Values.Add("action", actionName);
+            this.SetViewContext(controllerName, actionName);
 
-            var context = new ViewContext { RouteData = this._routeData };
-
-            var layout = this._service.GetLayout(context);
+            var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
 
@@ -118,6 +97,14 @@ namespace Aliencube.Scissorhands.Services.Tests
         {
             var postpath = this._service.GetPost(themeName);
             postpath.Should().BeEquivalentTo($"~/themes/{themeName}/post/post.cshtml");
+        }
+
+        private void SetViewContext(string controllerName, string actionName)
+        {
+            this._routeData.Values.Add("controller", controllerName);
+            this._routeData.Values.Add("action", actionName);
+
+            this._context = new ViewContext { RouteData = this._routeData };
         }
     }
 }
