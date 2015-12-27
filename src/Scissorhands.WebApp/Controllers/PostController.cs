@@ -1,10 +1,15 @@
 ﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.WebApp.ViewModels.Post;
 
 using Microsoft.AspNet.Mvc;
+using Microsoft.AspNet.Mvc.Rendering;
+using Microsoft.AspNet.Mvc.ViewEngines;
+using Microsoft.AspNet.Mvc.ViewFeatures;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
@@ -92,10 +97,14 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// <returns>Returns the view model.</returns>
         [Route("publish")]
         [HttpPost]
-        public IActionResult Publish(PostFormViewModel model)
+        public async Task<IActionResult> Publish(PostFormViewModel model)
         {
-            var vm = model;
-            return this.View(vm);
+            var markdown = model.Body;
+            var html = this._markdownService.Parse(model.Body);
+
+            var vm = new PostViewViewModel() { Theme = this._settings.Theme, Markdown = markdown, Html = html };
+            var result = await this.RenderPartialViewToString(vm).ConfigureAwait(false);
+            return this.View(model);
         }
 
         /// <summary>
@@ -116,6 +125,38 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         public IActionResult PostView()
         {
             return this.View();
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="model"></param>
+        /// <returns></returns>
+        /// <remarks>http://stackoverflow.com/questions/31905624/where-are-the-controllercontext-and-viewengines-properties-in-mvc-6-controller#31906578</remarks>
+        private async Task<string> RenderPartialViewToString(object model)
+        {
+            var viewName = "Build";
+
+            this.ViewData.Model = model;
+
+            string result = null;
+            using (var writer = new StringWriter())
+            {
+                var viewEngine = this.Resolver.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
+                if (viewEngine == null)
+                {
+                    return null;
+                }
+
+                var viewResult = viewEngine.FindPartialView(this.ActionContext, viewName);
+                var viewContext = new ViewContext(this.ActionContext, viewResult.View, this.ViewData, this.TempData, writer, new HtmlHelperOptions());
+
+                await viewResult.View.RenderAsync(viewContext).ConfigureAwait(false);
+
+                result = writer.GetStringBuilder().ToString();
+            }
+
+            return result;
         }
     }
 }

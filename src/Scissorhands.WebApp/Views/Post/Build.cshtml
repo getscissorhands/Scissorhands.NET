@@ -1,5 +1,12 @@
-﻿@{
-    ViewBag.Title = "Build Post";
+﻿@using Aliencube.Scissorhands.Services
+@using Aliencube.Scissorhands.WebApp.ViewModels.Post
+
+@model PostViewViewModel
+
+@inject IThemeService Theme
+
+@{
+    var partial = Theme.GetPost(Model.Theme);
 }
 
-<h2>@ViewBag.Title</h2>
+@Html.Partial(partial, Model)
