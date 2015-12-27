@@ -18,9 +18,18 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// </summary>
         public ThemeServiceFixture()
         {
+            this.DefaultThemeName = "default";
+
             this.WebAppSettings = new Mock<WebAppSettings>();
+            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
+
             this.ThemeService = new ThemeService(this.WebAppSettings.Object);
         }
+
+        /// <summary>
+        /// Gets or sets the default theme name.
+        /// </summary>
+        public string DefaultThemeName { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
