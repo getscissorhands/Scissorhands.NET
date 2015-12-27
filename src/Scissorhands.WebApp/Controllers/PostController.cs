@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services;
-using Aliencube.Scissorhands.WebApp.ViewModels.Post;
+using Aliencube.Scissorhands.ViewModels.Post;
 
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;

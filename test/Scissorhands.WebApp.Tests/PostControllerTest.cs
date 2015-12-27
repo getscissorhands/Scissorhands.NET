@@ -1,7 +1,7 @@
 ﻿using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.ViewModels.Post;
 using Aliencube.Scissorhands.WebApp.Controllers;
 using Aliencube.Scissorhands.WebApp.Tests.Fixtures;
-using Aliencube.Scissorhands.WebApp.ViewModels.Post;
 
 using FluentAssertions;
 
