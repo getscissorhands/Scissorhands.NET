@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Helpers;
@@ -10,9 +8,11 @@ namespace Aliencube.Scissorhands.Services
     /// <summary>
     /// This represents the service entity for build.
     /// </summary>
-    public class BuildService
+    public class BuildService : IBuildService
     {
         private readonly IFileHelper _fileHelper;
+
+        private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="BuildService"/> class.
@@ -29,20 +29,64 @@ namespace Aliencube.Scissorhands.Services
         }
 
         /// <summary>
-        /// The build.
+        /// Builds the entire blog.
         /// </summary>
-        public void Build()
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        public async Task BuildAsync()
         {
+            await this.BuildIndiciesAsync().ConfigureAwait(false);
+            await this.BuildPostsAsync().ConfigureAwait(false);
         }
 
-        public async Task<string> PublishMarkdown(string markdown)
+        /// <summary>
+        /// Builds all index pages including pagination.
+        /// </summary>
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        public async Task<string> BuildIndiciesAsync()
         {
             throw new NotImplementedException();
         }
 
-        public async Task<string> PublishPost(string markdown)
+        /// <summary>
+        /// Builds all posts.
+        /// </summary>
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        public async Task<string> BuildPostsAsync()
         {
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Publishes the markdown as a file.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        public async Task<string> PublishMarkdownAsync(string markdown)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Publishes the HTML post as a file.
+        /// </summary>
+        /// <param name="html">Content in HTML format.</param>
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        public async Task<string> PublishPostAsync(string html)
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        public void Dispose()
+        {
+            if (this._disposed)
+            {
+                return;
+            }
+
+            this._disposed = true;
         }
     }
 }
