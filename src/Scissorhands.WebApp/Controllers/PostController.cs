@@ -16,7 +16,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
     /// <summary>
     /// This represents the controller entity for post.
     /// </summary>
-    [Route("post")]
+    [Route("admin/post")]
     public class PostController : Controller
     {
         private readonly WebAppSettings _settings;

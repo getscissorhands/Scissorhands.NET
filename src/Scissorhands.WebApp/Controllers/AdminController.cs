@@ -5,7 +5,8 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
     /// <summary>
     /// This represents the controller entity for home.
     /// </summary>
-    public class HomeController : Controller
+    [Route("admin")]
+    public class AdminController : Controller
     {
         /// <summary>
         /// Processes /home/index.
@@ -20,6 +21,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// Processes /home/about.
         /// </summary>
         /// <returns>Returns the view model.</returns>
+        [Route("about")]
         public IActionResult About()
         {
             this.ViewData["Message"] = "Your application description page.";
@@ -31,6 +33,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// Processes /home/contact.
         /// </summary>
         /// <returns>Returns the view model.</returns>
+        [Route("contact")]
         public IActionResult Contact()
         {
             this.ViewData["Message"] = "Your contact page.";
@@ -42,6 +45,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// Processes /home/error.
         /// </summary>
         /// <returns>Returns the view model.</returns>
+        [Route("error")]
         public IActionResult Error()
         {
             return this.View();
