@@ -14,7 +14,14 @@ namespace Aliencube.Scissorhands.Services
     public interface IPublishService : IDisposable
     {
         /// <summary>
-        /// Gets the HTML to be published.
+        /// Publishes the markdown as a file.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <returns>Returns the Markdown file path in a virtual path format.</returns>
+        Task<string> PublishMarkdownAsync(string markdown);
+
+        /// <summary>
+        /// Gets the post HTML to be published.
         /// </summary>
         /// <param name="resolver"><see cref="IServiceProvider"/> instance.</param>
         /// <param name="actionContext"><see cref="ActionContext"/> instance.</param>
@@ -22,6 +29,13 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="viewData"><see cref="ViewDataDictionary"/> instance.</param>
         /// <param name="tempData"><see cref="ITempDataDictionary"/> instance.</param>
         /// <returns>Returns HTML to be published.</returns>
-        Task<string> GetPublishHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData);
+        Task<string> GetPostHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData);
+
+        /// <summary>
+        /// Publishes the HTML post as a file.
+        /// </summary>
+        /// <param name="html">Content in HTML format.</param>
+        /// <returns>Returns the HTML file path.</returns>
+        Task<string> PublishPostAsync(string html);
     }
 }
