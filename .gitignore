@@ -196,3 +196,5 @@ FakesAssemblies/
 *.opt
 
 project.lock.json
+*.bak
+*.org
