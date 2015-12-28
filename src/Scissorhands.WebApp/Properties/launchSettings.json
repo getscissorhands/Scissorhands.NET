@@ -18,6 +18,8 @@
     },
     "web": {
       "commandName": "web",
+      "launchBrowser": true,
+      "launchUrl": "admin",
       "environmentVariables": {
         "Hosting:Environment": "Development"
       }
