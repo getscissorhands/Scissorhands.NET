@@ -25,9 +25,7 @@ namespace Aliencube.Scissorhands.WebApp.Tests.Fixtures
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.BuildService = new Mock<IBuildService>();
-
-            this.Controller = new PostController(this.WebAppSettings.Object, this.MarkdownService.Object, this.PublishService.Object, this.BuildService.Object);
+            this.Controller = new PostController(this.WebAppSettings.Object, this.MarkdownService.Object, this.PublishService.Object);
         }
 
         /// <summary>
@@ -49,10 +47,5 @@ namespace Aliencube.Scissorhands.WebApp.Tests.Fixtures
         /// Gets the <see cref="Mock{IPublishService}"/> instance.
         /// </summary>
         public Mock<IPublishService> PublishService { get; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{IBuildService}"/> instance.
-        /// </summary>
-        public Mock<IBuildService> BuildService { get; }
     }
 }
