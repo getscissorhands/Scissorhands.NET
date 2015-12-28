@@ -57,26 +57,6 @@ namespace Aliencube.Scissorhands.Services
         }
 
         /// <summary>
-        /// Publishes the markdown as a file.
-        /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
-        /// <returns>Returns the <see cref="Task"/>.</returns>
-        public async Task<string> PublishMarkdownAsync(string markdown)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Publishes the HTML post as a file.
-        /// </summary>
-        /// <param name="html">Content in HTML format.</param>
-        /// <returns>Returns the <see cref="Task"/>.</returns>
-        public async Task<string> PublishPostAsync(string html)
-        {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()

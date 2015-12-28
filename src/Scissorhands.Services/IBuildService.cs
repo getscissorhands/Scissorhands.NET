@@ -25,19 +25,5 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <returns>Returns the <see cref="Task"/>.</returns>
         Task<string> BuildPostsAsync();
-
-        /// <summary>
-        /// Publishes the markdown as a file.
-        /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
-        /// <returns>Returns the <see cref="Task"/>.</returns>
-        Task<string> PublishMarkdownAsync(string markdown);
-
-        /// <summary>
-        /// Publishes the HTML post as a file.
-        /// </summary>
-        /// <param name="html">Content in HTML format.</param>
-        /// <returns>Returns the <see cref="Task"/>.</returns>
-        Task<string> PublishPostAsync(string html);
     }
 }
