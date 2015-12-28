@@ -3,6 +3,7 @@ using System.IO;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Services.Exceptions;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
 
@@ -64,10 +65,20 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
         public async Task<string> PublishMarkdownAsync(string markdown)
         {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                throw new ArgumentNullException(nameof(markdown));
+            }
+
             var markdownpath = $"~{this._settings.MarkdownPath}/markdown.md";
             var filepath = this._env.MapPath(markdownpath);
 
-            await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
+            var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
+            if (!written)
+            {
+                throw new PublishFailedException("Markdown not published");
+            }
+
             return markdownpath;
         }
 
