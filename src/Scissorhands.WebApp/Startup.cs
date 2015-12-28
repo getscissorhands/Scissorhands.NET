@@ -34,6 +34,8 @@ namespace Aliencube.Scissorhands.WebApp
         /// <param name="args">List of arguments from the command line.</param>
         public Startup(IHostingEnvironment env, string[] args)
         {
+            this.HostingEnvironment = env;
+
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables();
@@ -47,9 +49,14 @@ namespace Aliencube.Scissorhands.WebApp
         }
 
         /// <summary>
-        /// Gets or sets the configuration.
+        /// Gets the hosting environment.
         /// </summary>
-        public IConfigurationRoot Configuration { get; set; }
+        public IHostingEnvironment HostingEnvironment { get; }
+
+        /// <summary>
+        /// Gets the configuration.
+        /// </summary>
+        public IConfigurationRoot Configuration { get; }
 
         /// <summary>
         /// Defines the main entry point of the console application.
@@ -82,7 +89,7 @@ namespace Aliencube.Scissorhands.WebApp
             services.AddMvc();
 
             // Add dependencies.
-            var container = DependencyConfig.Register(services, this.Configuration);
+            var container = DependencyConfig.Register(services, this.HostingEnvironment, this.Configuration);
             return container.Resolve<IServiceProvider>();
         }
     }
