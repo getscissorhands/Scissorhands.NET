@@ -22,7 +22,6 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         private readonly WebAppSettings _settings;
         private readonly IMarkdownService _markdownService;
         private readonly IPublishService _publishService;
-        private readonly IBuildService _buildService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
@@ -30,8 +29,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        /// <param name="buildService"><see cref="IBuildService"/> instance.</param>
-        public PostController(WebAppSettings settings, IMarkdownService markdownService, IPublishService publishService, IBuildService buildService)
+        public PostController(WebAppSettings settings, IMarkdownService markdownService, IPublishService publishService)
         {
             if (settings == null)
             {
@@ -53,13 +51,6 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             }
 
             this._publishService = publishService;
-
-            if (buildService == null)
-            {
-                throw new ArgumentNullException(nameof(buildService));
-            }
-
-            this._buildService = buildService;
         }
 
         /// <summary>
@@ -117,23 +108,21 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Publish(PostFormViewModel model)
         {
-            var markdownpath = await this._buildService.PublishMarkdownAsync(model.Body).ConfigureAwait(false);
-            var parsedHtml = this._markdownService.Parse(model.Body);
+            var vm = new PostPublishViewModel() { Theme = this._settings.Theme };
 
-            var vm = new PostPublishViewModel()
-                         {
-                             Theme = this._settings.Theme,
-                             Html = parsedHtml,
-                             Markdownpath = markdownpath
-                         };
+            var parsedHtml = this._markdownService.Parse(model.Body);
+            vm.Html = parsedHtml;
+
+            var markdownpath = await this._publishService.PublishMarkdownAsync(model.Body).ConfigureAwait(false);
+            vm.Markdownpath = markdownpath;
 
             var html = await this._publishService
-                                 .GetPublishHtmlAsync(this.Resolver, this.ActionContext, vm, this.ViewData, this.TempData)
+                                 .GetPostHtmlAsync(this.Resolver, this.ActionContext, vm, this.ViewData, this.TempData)
                                  .ConfigureAwait(false);
 
-            var postpath = await this._buildService.PublishPostAsync(html).ConfigureAwait(false);
-
+            var postpath = await this._publishService.PublishPostAsync(html).ConfigureAwait(false);
             vm.Postpath = postpath;
+
             return this.View(vm);
         }
 
