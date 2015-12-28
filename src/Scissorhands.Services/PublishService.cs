@@ -93,6 +93,31 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>Returns HTML to be published.</returns>
         public async Task<string> GetPostHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData)
         {
+            if (resolver == null)
+            {
+                throw new ArgumentNullException(nameof(resolver));
+            }
+
+            if (actionContext == null)
+            {
+                throw new ArgumentNullException(nameof(actionContext));
+            }
+
+            if (viewModel == null)
+            {
+                throw new ArgumentNullException(nameof(viewModel));
+            }
+
+            if (viewData == null)
+            {
+                throw new ArgumentNullException(nameof(viewData));
+            }
+
+            if (tempData == null)
+            {
+                throw new ArgumentNullException(nameof(tempData));
+            }
+
             using (var writer = new StringWriter())
             {
                 viewData.Model = viewModel;
@@ -104,6 +129,11 @@ namespace Aliencube.Scissorhands.Services
                 }
 
                 var viewResult = viewEngine.FindPartialView(actionContext, ViewName);
+                if (viewResult == null)
+                {
+                    return null;
+                }
+
                 var viewContext = new ViewContext(actionContext, viewResult.View, viewData, tempData, writer, new HtmlHelperOptions());
 
                 await viewResult.View.RenderAsync(viewContext).ConfigureAwait(false);
