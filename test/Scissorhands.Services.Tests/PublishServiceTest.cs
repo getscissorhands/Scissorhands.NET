@@ -1,11 +1,14 @@
 ﻿using System;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services.Exceptions;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
+
+using Microsoft.AspNet.Hosting;
 
 using Moq;
 
@@ -18,6 +21,8 @@ namespace Aliencube.Scissorhands.Services.Tests
     /// </summary>
     public class PublishServiceTest : IClassFixture<PublishServiceFixture>
     {
+        private readonly Mock<IHostingEnvironment> _env;
+        private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly IPublishService _service;
 
@@ -27,8 +32,36 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="PublishServiceFixture"/> instance.</param>
         public PublishServiceTest(PublishServiceFixture fixture)
         {
+            this._env = fixture.HostingEnvironment;
+            this._settings = fixture.WebAppSettings;
             this._fileHelper = fixture.FileHelper;
             this._service = fixture.PublishService;
+        }
+
+        /// <summary>
+        /// Tests whether constructor should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
+        {
+            Action action1 = () => { var service = new PublishService(null, this._settings.Object, this._fileHelper.Object); };
+            action1.ShouldThrow<ArgumentNullException>();
+
+            Action action2 = () => { var service = new PublishService(this._env.Object, null, this._fileHelper.Object); };
+            action2.ShouldThrow<ArgumentNullException>();
+
+            Action action3 = () => { var service = new PublishService(this._env.Object, this._settings.Object, null); };
+            action3.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether constructor should NOT throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_Parameters_Constructor_ShouldThrow_NoException()
+        {
+            Action action = () => { var service = new PublishService(this._env.Object, this._settings.Object, this._fileHelper.Object); };
+            action.ShouldNotThrow<Exception>();
         }
 
         /// <summary>

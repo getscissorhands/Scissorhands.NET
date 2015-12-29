@@ -1,9 +1,14 @@
-﻿using Aliencube.Scissorhands.Services.Tests.Fixtures;
+﻿using System;
+
+using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
 
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Routing;
+
+using Moq;
 
 using Xunit;
 
@@ -15,6 +20,7 @@ namespace Aliencube.Scissorhands.Services.Tests
     public class ThemeServiceTest : IClassFixture<ThemeServiceFixture>
     {
         private readonly string _defaultThemeName;
+        private readonly Mock<WebAppSettings> _settings;
         private readonly IThemeService _service;
         private readonly RouteData _routeData;
 
@@ -27,14 +33,40 @@ namespace Aliencube.Scissorhands.Services.Tests
         public ThemeServiceTest(ThemeServiceFixture fixture)
         {
             this._defaultThemeName = fixture.DefaultThemeName;
+            this._settings = fixture.WebAppSettings;
             this._service = fixture.ThemeService;
 
             this._routeData = new RouteData();
         }
 
+        /// <summary>
+        /// Tests whether the constructor should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
+        {
+            Action action = () => { var service = new ThemeService(null); };
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the constructor should NOT throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_Parameter_Constructor_ShouldThrow_NoException()
+        {
+            Action action = () => { var service = new ThemeService(this._settings.Object); };
+            action.ShouldNotThrow<Exception>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="controllerName">Controller name.</param>
+        /// <param name="actionName">Action name.</param>
         [Theory]
         [InlineData("", "")]
-        public void Given_EmptyController_Should_Return_DefaultLayout(string controllerName, string actionName)
+        public void Given_EmptyController_GetLayout_ShouldReturn_DefaultLayout(string controllerName, string actionName)
         {
             this.SetViewContext(controllerName, actionName);
 
@@ -42,9 +74,14 @@ namespace Aliencube.Scissorhands.Services.Tests
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="controllerName">Controller name.</param>
+        /// <param name="actionName">Action name.</param>
         [Theory]
         [InlineData("home", "")]
-        public void Given_DifferentController_Should_Return_DefaultLayout(string controllerName, string actionName)
+        public void Given_DifferentController_GetLayout_ShouldReturn_DefaultLayout(string controllerName, string actionName)
         {
             this.SetViewContext(controllerName, actionName);
 
@@ -52,9 +89,14 @@ namespace Aliencube.Scissorhands.Services.Tests
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="controllerName">Controller name.</param>
+        /// <param name="actionName">Action name.</param>
         [Theory]
         [InlineData("post", "test")]
-        public void Given_DifferentAction_Should_Return_DefaultLayout(string controllerName, string actionName)
+        public void Given_DifferentAction_GetLayout_ShouldReturn_DefaultLayout(string controllerName, string actionName)
         {
             this.SetViewContext(controllerName, actionName);
 
@@ -62,9 +104,14 @@ namespace Aliencube.Scissorhands.Services.Tests
             layout.Should().BeEquivalentTo("~/Views/Shared/_Layout.cshtml");
         }
 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="controllerName">Controller name.</param>
+        /// <param name="actionName">Action name.</param>
         [Theory]
         [InlineData("post", "")]
-        public void Given_EmptyAction_Should_Return_ThemeLayout(string controllerName, string actionName)
+        public void Given_EmptyAction_GetLayout_ShouldReturn_ThemeLayout(string controllerName, string actionName)
         {
             this.SetViewContext(controllerName, actionName);
 
@@ -72,28 +119,41 @@ namespace Aliencube.Scissorhands.Services.Tests
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="controllerName">Controller name.</param>
+        /// <param name="actionName">Action name.</param>
         [Theory]
         [InlineData("post", "preview")]
-        public void Given_ViewContext_Should_Return_ThemeLayout(string controllerName, string actionName)
+        public void Given_ViewContext_GetLayout_ShouldReturn_ThemeLayout(string controllerName, string actionName)
         {
             this.SetViewContext(controllerName, actionName);
 
             var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
-
+ 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="themeName">Theme name.</param>
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public void Given_NullThemeName_Should_Return_DefaultThemePostPath(string themeName)
+        public void Given_NullThemeName_GetPost_ShouldReturn_DefaultThemePostPath(string themeName)
         {
             var postpath = this._service.GetPost(themeName);
             postpath.Should().BeEquivalentTo($"~/themes/{this._defaultThemeName}/post/post.cshtml");
         }
 
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="themeName">Theme name.</param>
         [Theory]
         [InlineData("test")]
-        public void Given_ThemeName_Should_Return_ThemePostPath(string themeName)
+        public void Given_ThemeName_GetPost_ShouldReturn_ThemePostPath(string themeName)
         {
             var postpath = this._service.GetPost(themeName);
             postpath.Should().BeEquivalentTo($"~/themes/{themeName}/post/post.cshtml");

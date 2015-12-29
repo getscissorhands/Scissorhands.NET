@@ -1,4 +1,5 @@
-﻿using System.Threading.Tasks;
+﻿using System;
+using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Tests.Fixtures;
@@ -32,13 +33,33 @@ namespace Aliencube.Scissorhands.Services.Tests
         }
 
         /// <summary>
+        /// Tests whether constructor should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
+        {
+            Action action = () => { var service = new MarkdownService(null); };
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether constructor should NOT throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_Parameters_Constructor_ShouldThrow_NoException()
+        {
+            Action action = () => { var service = new MarkdownService(this._helper.Object); };
+            action.ShouldNotThrow<Exception>();
+        }
+
+        /// <summary>
         /// Tests whether the given markdown returns null or not.
         /// </summary>
         /// <param name="markdown">Markdown string.</param>
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public void Given_Markdown_Should_Return_NullConverted(string markdown)
+        public void Given_Markdown_Parse_ShouldReturn_NullConverted(string markdown)
         {
             var parsed = this._service.Parse(markdown);
             parsed.Should().BeNull();
@@ -48,7 +69,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// Tests whether the given markdown returns parsed HTML or not.
         /// </summary>
         [Fact]
-        public void Given_Markdown_Should_Return_ParsedHtml()
+        public void Given_Markdown_Parse_Should_Return_ParsedHtml()
         {
             this._markdown = "**Hello World**";
             var parsed = this._service.Parse(this._markdown);
@@ -62,7 +83,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public async void Given_NullOrEmptyFilepath_Should_Return_NullConverted(string filepath)
+        public async void Given_NullOrEmptyFilepath_ConvertAsync_ShouldReturn_NullConverted(string filepath)
         {
             var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
             converted.Should().BeNull();
@@ -74,7 +95,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="filepath">Fully qualified file path.</param>
         [Theory]
         [InlineData("blank.md")]
-        public async void Given_Filepath_Should_Return_NullConverted(string filepath)
+        public async void Given_Filepath_ConvertAsync_ShouldReturn_NullConverted(string filepath)
         {
             this._markdown = null;
             this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
@@ -88,7 +109,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="filepath">Fully qualified file path.</param>
         [Theory]
         [InlineData("hello-world.md")]
-        public async void Given_Filepath_Should_Return_ParsedHtml(string filepath)
+        public async void Given_Filepath_ConvertAsync_ShouldReturn_ParsedHtml(string filepath)
         {
             this._markdown = "**Hello World**";
             this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
