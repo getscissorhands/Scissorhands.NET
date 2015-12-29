@@ -150,10 +150,20 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>Returns the HTML file path.</returns>
         public async Task<string> PublishPostAsync(string html)
         {
+            if (string.IsNullOrWhiteSpace(html))
+            {
+                throw new ArgumentNullException(nameof(html));
+            }
+
             var htmlpath = $"{this._settings.HtmlPath}/post.html";
             var filepath = Path.Combine(this._env.WebRootPath, htmlpath);
 
-            await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
+            var written = await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
+            if (!written)
+            {
+                throw new PublishFailedException("Post not published");
+            }
+
             return htmlpath;
         }
 
