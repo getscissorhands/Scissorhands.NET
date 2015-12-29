@@ -11,6 +11,7 @@ using Aliencube.Scissorhands.WebApp.Tests.Fixtures;
 using FluentAssertions;
 
 using Microsoft.AspNet.Mvc;
+using Microsoft.AspNet.Mvc.ViewFeatures;
 
 using Moq;
 
@@ -126,6 +127,43 @@ namespace Aliencube.Scissorhands.WebApp.Tests
             var result = await this._controller.Publish(null).ConfigureAwait(false) as HttpStatusCodeResult;
             result.Should().NotBeNull();
             result.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        }
+
+        /// <summary>
+        /// Tests whether the action should return <see cref="ViewResult"/> instance or not.
+        /// </summary>
+        /// <param name="markdown">String value in Markdown format.</param>
+        /// <param name="html">String value in HTML format.</param>
+        /// <param name="markdownpath">Path of the Markdown file.</param>
+        /// <param name="htmlpath">Path of the HTML post file.</param>
+        [Theory]
+        [InlineData("**Hello World", "<p>Joe Bloggs</p>", "~/Posts/markdown.md", "/posts/post.html")]
+        public async void Given_Model_Publish_ShouldReturn_ViewResult(string markdown, string html, string markdownpath, string htmlpath)
+        {
+            this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._publishService.Setup(p => p.PublishMarkdownAsync(It.IsAny<string>())).Returns(Task.FromResult(markdownpath));
+            this._publishService.Setup(
+                p =>
+                p.GetPostHtmlAsync(
+                    It.IsAny<IServiceProvider>(),
+                    It.IsAny<ActionContext>(),
+                    It.IsAny<PostPublishViewModel>(),
+                    It.IsAny<ViewDataDictionary>(),
+                    It.IsAny<ITempDataDictionary>())).Returns(Task.FromResult(html));
+            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>())).Returns(Task.FromResult(htmlpath));
+
+            var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
+
+            var result = await this._controller.Publish(model).ConfigureAwait(false) as ViewResult;
+            result.Should().NotBeNull();
+
+            var vm = result.ViewData.Model as PostPublishViewModel;
+            vm.Should().NotBeNull();
+
+            vm.Theme.Should().Be(this._defaultThemeName);
+            vm.Markdownpath.Should().Be(markdownpath);
+            vm.Postpath.Should().Be(htmlpath);
+            vm.Html.Should().Be(html);
         }
     }
 }
