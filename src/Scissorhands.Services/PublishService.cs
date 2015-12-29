@@ -70,7 +70,9 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentNullException(nameof(markdown));
             }
 
-            var markdownpath = $"~{this._settings.MarkdownPath}/markdown.md";
+            this.SetPostDirectory();
+
+            var markdownpath = $"{this._settings.MarkdownPath}/markdown.md";
             var filepath = this._env.MapPath(markdownpath);
 
             var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
@@ -155,6 +157,8 @@ namespace Aliencube.Scissorhands.Services
                 throw new ArgumentNullException(nameof(html));
             }
 
+            this.SetPostDirectory();
+
             var htmlpath = $"{this._settings.HtmlPath}/post.html";
             var filepath = Path.Combine(this._env.WebRootPath, htmlpath);
 
@@ -178,6 +182,15 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private void SetPostDirectory()
+        {
+            var directorypath = this._env.MapPath(this._settings.MarkdownPath);
+            if (!Directory.Exists(directorypath))
+            {
+                Directory.CreateDirectory(directorypath);
+            }
         }
     }
 }
