@@ -35,7 +35,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// Tests whether the method should throw an exception or not.
         /// </summary>
         [Fact]
-        public void Given_NullMarkdown_ShouldThrow_ArgumentNullException()
+        public void Given_NullMarkdown_PublishMarkdownAsync_ShouldThrow_ArgumentNullException()
         {
             Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
@@ -45,7 +45,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// Tests whether the method should throw an exception or not.
         /// </summary>
         [Fact]
-        public void Given_FalseWritingSync_ShouldThrow_PublishFailedException()
+        public void Given_FalseWritingSync_PublishMarkdownAsync_ShouldThrow_PublishFailedException()
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
@@ -59,12 +59,48 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="markdownpath">File path.</param>
         [Theory]
         [InlineData("~/Posts/markdown.md")]
-        public async void Given_Markdown_ShouldReturn_Filepath(string markdownpath)
+        public async void Given_Markdown_PublishMarkdownAsync_ShouldReturn_Filepath(string markdownpath)
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
             var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false);
             result.Should().Be(markdownpath);
+        }
+
+        /// <summary>
+        /// Tests whether the method should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullHtml_PublishPostAsync_ShouldThrow_ArgumentNullException()
+        {
+            Func<Task> func = async () => { var result = await this._service.PublishPostAsync(null).ConfigureAwait(false); };
+            func.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_FalseWritingSync_PublishPostAsync_ShouldThrow_PublishFailedException()
+        {
+            this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
+
+            Func<Task> func = async () => { var result = await this._service.PublishPostAsync("**Hello World**").ConfigureAwait(false); };
+            func.ShouldThrow<PublishFailedException>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return value or not.
+        /// </summary>
+        /// <param name="htmlpath">File path.</param>
+        [Theory]
+        [InlineData("/posts/post.html")]
+        public async void Given_Markdown_PublishPostAsync_ShouldReturn_Filepath(string htmlpath)
+        {
+            this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+
+            var result = await this._service.PublishPostAsync("<strong>Hello World</strong>").ConfigureAwait(false);
+            result.Should().Be(htmlpath);
         }
     }
 }
