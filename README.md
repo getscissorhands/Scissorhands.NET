@@ -4,9 +4,10 @@ A markdown based static blog engine in .NET
 # Dev setup
 ## OSX
 
-### #1 Install .NET CLI
-
-Go to dotnet.github.io and download/install .NET CLI
+### #1 Install packages
+- Mono: http://www.mono-project.com/download/
+- .NET CLI: http://dotnet.github.io
+- ASP.NET RC: https://get.asp.net/
 
 ### #2 Update feed setting
 
@@ -42,3 +43,11 @@ Feeds used:
     https://www.myget.org/F/aspnet-contrib/api/v3/flatcontainer/
     https://www.nuget.org/api/v2/
 ```
+
+### #4 Run website
+```
+cd src/Scissorhands.WebApp
+dnx web
+```
+
+Open localhost:5000 on your browser.
