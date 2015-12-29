@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
@@ -92,6 +93,11 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         [HttpPost]
         public IActionResult Preview(PostFormViewModel model)
         {
+            if (model == null)
+            {
+                return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
+            }
+
             var markdown = model.Body;
             var html = this._markdownService.Parse(model.Body);
 
@@ -108,6 +114,11 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         [HttpPost]
         public async Task<IActionResult> Publish(PostFormViewModel model)
         {
+            if (model == null)
+            {
+                return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
+            }
+
             var vm = new PostPublishViewModel() { Theme = this._settings.Theme };
 
             var parsedHtml = this._markdownService.Parse(model.Body);
