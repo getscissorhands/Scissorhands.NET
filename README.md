@@ -4,11 +4,11 @@ A markdown based static blog engine in .NET
 # Dev setup
 ## OSX
 
-1. Install .NET CLI
+### #1 Install .NET CLI
 
 Go to dotnet.github.io and download/install .NET CLI
 
-2. Update feed setting
+### #2 Update feed setting
 
 Create a file `~/.config/Nuget/NuGet.config` and copy/paste below
 
@@ -28,7 +28,7 @@ Create a file `~/.config/Nuget/NuGet.config` and copy/paste below
 
 This file will be automatically picked up by .NET CLI
 
-3. Restore project
+### #3 Restore project
 
 Run `dotnet restore`
 
