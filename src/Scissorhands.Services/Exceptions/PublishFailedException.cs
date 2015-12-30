@@ -11,7 +11,7 @@ namespace Aliencube.Scissorhands.Services.Exceptions
     /// <summary>
     /// This represents the exception entity thrown on publish failure.
     /// </summary>
-    public class PublishFailedException : InvalidOperationException
+    public class PublishFailedException : ApplicationException
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishFailedException"/> class.

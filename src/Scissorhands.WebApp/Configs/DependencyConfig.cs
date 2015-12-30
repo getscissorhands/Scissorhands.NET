@@ -8,7 +8,6 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.WebApp.Configs
 {

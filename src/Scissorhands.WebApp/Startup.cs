@@ -1,6 +1,5 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.WebApp.Configs;
 
 using Autofac;
@@ -53,8 +52,6 @@ namespace Aliencube.Scissorhands.WebApp
         /// Gets the hosting environment.
         /// </summary>
         public IHostingEnvironment HostingEnvironment { get; }
-
-        public IApplicationEnvironment ApplicationEnvironment { get; set; }
 
         /// <summary>
         /// Gets the configuration.

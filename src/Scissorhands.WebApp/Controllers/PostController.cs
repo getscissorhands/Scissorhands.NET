@@ -1,5 +1,4 @@
 ﻿using System;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -10,9 +9,6 @@ using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.ViewModels.Post;
 
 using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.Rendering;
-using Microsoft.AspNet.Mvc.ViewEngines;
-using Microsoft.AspNet.Mvc.ViewFeatures;
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Newtonsoft.Json;

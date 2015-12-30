@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-
-namespace Aliencube.Scissorhands.Services.Extensions
+﻿namespace Aliencube.Scissorhands.Services.Extensions
 {
     public static class StringExtensions
     {
@@ -18,6 +13,5 @@ namespace Aliencube.Scissorhands.Services.Extensions
             var result = chars[0].Equals(check);
             return result;
         }
-
     }
 }
