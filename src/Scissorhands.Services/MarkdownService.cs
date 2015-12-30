@@ -12,22 +12,22 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class MarkdownService : IMarkdownService
     {
-        private readonly IFileHelper _helper;
+        private readonly IFileHelper _fileHelper;
 
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownService"/> class.
         /// </summary>
-        /// <param name="helper"><see cref="IFileHelper"/> instance.</param>
-        public MarkdownService(IFileHelper helper)
+        /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
+        public MarkdownService(IFileHelper fileHelper)
         {
-            if (helper == null)
+            if (fileHelper == null)
             {
-                throw new ArgumentNullException(nameof(helper));
+                throw new ArgumentNullException(nameof(fileHelper));
             }
 
-            this._helper = helper;
+            this._fileHelper = fileHelper;
         }
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace Aliencube.Scissorhands.Services
                 return null;
             }
 
-            var markdown = await this._helper.ReadAsync(filepath).ConfigureAwait(false);
+            var markdown = await this._fileHelper.ReadAsync(filepath).ConfigureAwait(false);
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 return null;

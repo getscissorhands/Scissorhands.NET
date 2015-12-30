@@ -1,6 +1,11 @@
 ﻿using System;
 
+using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services.Helpers;
+
+using Microsoft.AspNet.Hosting;
+
+using Moq;
 
 namespace Aliencube.Scissorhands.Services.Tests.Fixtures
 {
@@ -16,8 +21,22 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// </summary>
         public FileHelperFixture()
         {
-            this.FileHelper = new FileHelper();
+            this.HostingEnvironment = new Mock<IHostingEnvironment>();
+
+            this.WebAppSettings = new Mock<WebAppSettings>();
+
+            this.FileHelper = new FileHelper(this.HostingEnvironment.Object, this.WebAppSettings.Object);
         }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IHostingEnvironment}"/> instance.
+        /// </summary>
+        public Mock<IHostingEnvironment> HostingEnvironment { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
+        /// </summary>
+        public Mock<WebAppSettings> WebAppSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="IFileHelper"/> instance.

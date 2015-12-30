@@ -14,5 +14,15 @@
         /// Gets or sets the theme.
         /// </summary>
         public virtual string Theme { get; set; }
+
+        /// <summary>
+        /// Gets or sets the directory path where Markdown files are stored.
+        /// </summary>
+        public virtual string MarkdownPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the directory path where HTML posts are stored.
+        /// </summary>
+        public virtual string HtmlPath { get; set; }
     }
 }

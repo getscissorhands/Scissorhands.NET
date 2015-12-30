@@ -1,6 +1,5 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.WebApp.Configs;
 
 using Autofac;
@@ -10,6 +9,7 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.WebApp
 {
@@ -34,6 +34,8 @@ namespace Aliencube.Scissorhands.WebApp
         /// <param name="args">List of arguments from the command line.</param>
         public Startup(IHostingEnvironment env, string[] args)
         {
+            this.HostingEnvironment = env;
+
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
                 .AddEnvironmentVariables();
@@ -47,9 +49,14 @@ namespace Aliencube.Scissorhands.WebApp
         }
 
         /// <summary>
-        /// Gets or sets the configuration.
+        /// Gets the hosting environment.
         /// </summary>
-        public IConfigurationRoot Configuration { get; set; }
+        public IHostingEnvironment HostingEnvironment { get; }
+
+        /// <summary>
+        /// Gets the configuration.
+        /// </summary>
+        public IConfigurationRoot Configuration { get; }
 
         /// <summary>
         /// Defines the main entry point of the console application.
@@ -66,33 +73,9 @@ namespace Aliencube.Scissorhands.WebApp
         /// <remarks>This method gets called by the runtime. Use this method to configure the HTTP request pipeline.</remarks>
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory logger)
         {
-            logger.AddConsole(this.Configuration.GetSection("Logging"));
-            logger.AddDebug();
-
-            if (env.IsDevelopment())
-            {
-                app.UseBrowserLink();
-                app.UseDeveloperExceptionPage();
-            }
-            else
-            {
-                app.UseExceptionHandler("/Home/Error");
-            }
-
-            var settings = this.Configuration.Get<WebAppSettings>("WebAppSettings");
-
-            if (settings.Server == ServerType.Iis)
-            {
-                app.UseIISPlatformHandler();
-            }
-
-            app.UseStaticFiles();
-
-            app.UseMvc(
-                routes =>
-                    {
-                        routes.MapRoute(name: "default", template: "{controller=Home}/{action=Index}/{id?}");
-                    });
+            LoggerConfig.Register(logger, this.Configuration);
+            EnvironmentConfig.Register(app, env);
+            WebServerConfig.Register(app, this.Configuration);
         }
 
         /// <summary>
@@ -105,7 +88,8 @@ namespace Aliencube.Scissorhands.WebApp
             // Add framework services.
             services.AddMvc();
 
-            var container = DependencyConfig.Register(services, this.Configuration);
+            // Add dependencies.
+            var container = DependencyConfig.Register(services, this.HostingEnvironment, this.Configuration);
             return container.Resolve<IServiceProvider>();
         }
     }

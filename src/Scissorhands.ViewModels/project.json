@@ -1,6 +1,6 @@
-{
+﻿{
   "version": "1.0.0-*",
-  "description": "Scissorhands.Services Class Library",
+  "description": "Scissorhands.ViewModels Class Library",
   "authors": [ "Justin Yoo" ],
   "tags": [ "" ],
   "projectUrl": "",
@@ -18,12 +18,5 @@
         "System.Threading": "4.0.11-beta-23516"
       }
     }
-  },
-
-  "dependencies": {
-    "CommonMark.NET": "0.10.0",
-    "Microsoft.AspNet.Mvc.Razor": "6.0.0-rc1-final",
-    "Scissorhands.Models": "1.0.0-*",
-    "Scissorhands.ViewModels": "1.0.0-*"
   }
 }

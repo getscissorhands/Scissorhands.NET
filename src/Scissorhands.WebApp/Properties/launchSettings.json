@@ -11,12 +11,15 @@
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
+      "launchUrl": "admin",
       "environmentVariables": {
         "Hosting:Environment": "Development"
       }
     },
     "web": {
       "commandName": "web",
+      "launchBrowser": true,
+      "launchUrl": "admin",
       "environmentVariables": {
         "Hosting:Environment": "Development"
       }
