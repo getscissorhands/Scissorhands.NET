@@ -38,7 +38,8 @@
     "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-rc1-final",
     "Scissorhands.Models": "1.0.0-*",
     "Scissorhands.Services": "1.0.0-*",
-    "Scissorhands.ViewModels": "1.0.0-*"
+    "Scissorhands.ViewModels": "1.0.0-*",
+    "System.Net.Http": "4.0.1-beta-23516"
   },
 
   "exclude": [

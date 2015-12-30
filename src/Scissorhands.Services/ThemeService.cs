@@ -34,7 +34,7 @@ namespace Aliencube.Scissorhands.Services
 
             this._controllers = new Dictionary<string, List<string>>
                                     {
-                                        { "post", new List<string>() { "preview", "publish" } },
+                                        { "Post", new List<string>() { "Preview", "PublishHtml" } },
                                     };
         }
 

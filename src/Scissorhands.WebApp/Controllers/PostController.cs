@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
@@ -11,6 +13,8 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Mvc.ViewEngines;
 using Microsoft.AspNet.Mvc.ViewFeatures;
+
+using Newtonsoft.Json;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
@@ -98,10 +102,11 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var markdown = model.Body;
-            var html = this._markdownService.Parse(model.Body);
+            var vm = new PostViewViewModel() { Theme = this._settings.Theme };
 
-            var vm = new PostViewViewModel() { Theme = this._settings.Theme, Markdown = markdown, Html = html };
+            var parsedHtml = this._markdownService.Parse(model.Body);
+            vm.Html = parsedHtml;
+
             return this.View(vm);
         }
 
@@ -119,21 +124,41 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = new PostPublishViewModel() { Theme = this._settings.Theme };
+            var vm = new PostPublishViewModel() { Theme = this._settings.Theme, Markdown = model.Body };
 
             var parsedHtml = this._markdownService.Parse(model.Body);
             vm.Html = parsedHtml;
 
-            var markdownpath = await this._publishService.PublishMarkdownAsync(model.Body).ConfigureAwait(false);
+            var markdownpath = await this._publishService.PublishMarkdownAsync(vm.Markdown).ConfigureAwait(false);
             vm.Markdownpath = markdownpath;
 
-            var html = await this._publishService
-                                 .GetPostHtmlAsync(this.Resolver, this.ActionContext, vm, this.ViewData, this.TempData)
-                                 .ConfigureAwait(false);
+            string html;
+            using (var client = new HttpClient())
+            using (var content = new StringContent(JsonConvert.SerializeObject(vm), Encoding.UTF8))
+            {
+                client.BaseAddress = new Uri(string.Join("://", this.Request.IsHttps ? "https" : "http", this.Request.Host.Value));
+                content.Headers.ContentType.MediaType = "application/json";
+                content.Headers.ContentType.CharSet = "utf-8";
+                var response = await client.PostAsync("/admin/post/publish/html", content).ConfigureAwait(false);
+                html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+            }
 
             var postpath = await this._publishService.PublishPostAsync(html).ConfigureAwait(false);
             vm.Postpath = postpath;
 
+            return this.View(vm);
+        }
+
+        [Route("publish/html")]
+        [HttpPost]
+        public async Task<IActionResult> PublishHtml([FromBody] PostPublishViewModel model)
+        {
+            if (model == null)
+            {
+                return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
+            }
+
+            var vm = model;
             return this.View(vm);
         }
 
@@ -155,38 +180,6 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         public IActionResult PostView()
         {
             return this.View();
-        }
-
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="model"></param>
-        /// <returns></returns>
-        /// <remarks>http://stackoverflow.com/questions/31905624/where-are-the-controllercontext-and-viewengines-properties-in-mvc-6-controller#31906578</remarks>
-        private async Task<string> RenderPartialViewToString(object model)
-        {
-            var viewName = "Build";
-
-            this.ViewData.Model = model;
-
-            string result = null;
-            using (var writer = new StringWriter())
-            {
-                var viewEngine = this.Resolver.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
-                if (viewEngine == null)
-                {
-                    return null;
-                }
-
-                var viewResult = viewEngine.FindPartialView(this.ActionContext, viewName);
-                var viewContext = new ViewContext(this.ActionContext, viewResult.View, this.ViewData, this.TempData, writer, new HtmlHelperOptions());
-
-                await viewResult.View.RenderAsync(viewContext).ConfigureAwait(false);
-
-                result = writer.GetStringBuilder().ToString();
-            }
-
-            return result;
         }
     }
 }
