@@ -195,6 +195,9 @@ FakesAssemblies/
 # Visual Studio 6 workspace options file
 *.opt
 
+# Scissorhands.NET specific rules
 project.lock.json
 *.bak
 *.org
+
+**/wwwroot/posts
