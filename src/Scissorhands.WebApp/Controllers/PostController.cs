@@ -13,6 +13,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Mvc.ViewEngines;
 using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.Extensions.PlatformAbstractions;
 
 using Newtonsoft.Json;
 
@@ -129,7 +130,9 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             var parsedHtml = this._markdownService.Parse(model.Body);
             vm.Html = parsedHtml;
 
-            var markdownpath = await this._publishService.PublishMarkdownAsync(vm.Markdown).ConfigureAwait(false);
+            var appEnv = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
+
+            var markdownpath = await this._publishService.PublishMarkdownAsync(vm.Markdown, this.Resolver).ConfigureAwait(false);
             vm.Markdownpath = markdownpath;
 
             string html;
@@ -143,7 +146,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
                 html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
             }
 
-            var postpath = await this._publishService.PublishPostAsync(html).ConfigureAwait(false);
+            var postpath = await this._publishService.PublishPostAsync(html, this.Resolver).ConfigureAwait(false);
             vm.Postpath = postpath;
 
             return this.View(vm);

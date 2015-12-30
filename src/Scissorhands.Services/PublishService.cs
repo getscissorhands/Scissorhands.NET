@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services.Exceptions;
+using Aliencube.Scissorhands.Services.Extensions;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
 
@@ -12,6 +13,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Mvc.ViewEngines;
 using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -63,17 +65,28 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        public async Task<string> PublishMarkdownAsync(string markdown)
+        public async Task<string> PublishMarkdownAsync(string markdown, IServiceProvider provider)
         {
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 throw new ArgumentNullException(nameof(markdown));
             }
 
-            this.SetPostDirectory();
+            if (provider == null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
+            var env = provider.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
+            if (env == null)
+            {
+                throw new InvalidOperationException("ApplicationEnvironment not set");
+            }
+
+            this.SetPostDirectory(this._settings.MarkdownPath, env);
 
             var markdownpath = $"{this._settings.MarkdownPath}/markdown.md";
-            var filepath = this._env.MapPath(markdownpath);
+            var filepath = Path.Combine(new[] { env.ApplicationBasePath, "wwwroot", TrimDirectoryPath(markdownpath) });
 
             var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
             if (!written)
@@ -150,17 +163,28 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
         /// <returns>Returns the HTML file path.</returns>
-        public async Task<string> PublishPostAsync(string html)
+        public async Task<string> PublishPostAsync(string html, IServiceProvider provider)
         {
             if (string.IsNullOrWhiteSpace(html))
             {
                 throw new ArgumentNullException(nameof(html));
             }
 
-            this.SetPostDirectory();
+            if (provider == null)
+            {
+                throw new ArgumentNullException(nameof(provider));
+            }
+
+            var env = provider.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
+            if (env == null)
+            {
+                throw new InvalidOperationException("ApplicationEnvironment not set");
+            }
+
+            this.SetPostDirectory(this._settings.HtmlPath, env);
 
             var htmlpath = $"{this._settings.HtmlPath}/post.html";
-            var filepath = Path.Combine(this._env.WebRootPath, htmlpath);
+            var filepath = Path.Combine(new[] { env.ApplicationBasePath, "wwwroot", TrimDirectoryPath(htmlpath) });
 
             var written = await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
             if (!written)
@@ -184,12 +208,43 @@ namespace Aliencube.Scissorhands.Services
             this._disposed = true;
         }
 
-        private void SetPostDirectory()
+        private static string TrimDirectoryPath(string directorypath)
         {
-            var directorypath = this._env.MapPath(this._settings.MarkdownPath);
-            if (!Directory.Exists(directorypath))
+            var path = directorypath.Replace('/', Path.DirectorySeparatorChar);
+            if (path.StartsWith(Path.DirectorySeparatorChar))
             {
-                Directory.CreateDirectory(directorypath);
+                path = path.Substring(1);
+            }
+
+            return path;
+        }
+
+        private void SetPostDirectory(string directorypath, IApplicationEnvironment env)
+        {
+            if (string.IsNullOrWhiteSpace(directorypath))
+            {
+                throw new ArgumentNullException(nameof(directorypath));
+            }
+
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
+
+            var trimmed = TrimDirectoryPath(directorypath);
+
+            var combined =
+                Path.Combine(
+                    new[]
+                        {
+                            env.ApplicationBasePath,
+                            "wwwroot",
+                            trimmed,
+                        });
+
+            if (!Directory.Exists(combined))
+            {
+                Directory.CreateDirectory(combined);
             }
         }
     }

@@ -10,6 +10,7 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.WebApp
 {
@@ -52,6 +53,8 @@ namespace Aliencube.Scissorhands.WebApp
         /// Gets the hosting environment.
         /// </summary>
         public IHostingEnvironment HostingEnvironment { get; }
+
+        public IApplicationEnvironment ApplicationEnvironment { get; set; }
 
         /// <summary>
         /// Gets the configuration.

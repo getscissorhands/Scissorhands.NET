@@ -26,6 +26,8 @@ namespace Aliencube.Scissorhands.Services.Tests
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly IPublishService _service;
 
+        private readonly Mock<IServiceProvider> _provider;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishServiceTest"/> class.
         /// </summary>
@@ -36,6 +38,8 @@ namespace Aliencube.Scissorhands.Services.Tests
             this._settings = fixture.WebAppSettings;
             this._fileHelper = fixture.FileHelper;
             this._service = fixture.PublishService;
+
+            this._provider = new Mock<IServiceProvider>();
         }
 
         /// <summary>
@@ -70,7 +74,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_NullMarkdown_PublishMarkdownAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null, this._provider.Object).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
@@ -82,7 +86,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**", this._provider.Object).ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
@@ -96,7 +100,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false);
+            var result = await this._service.PublishMarkdownAsync("**Hello World**", this._provider.Object).ConfigureAwait(false);
             result.Should().Be(markdownpath);
         }
 
@@ -106,7 +110,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_NullHtml_PublishPostAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishPostAsync(null).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishPostAsync(null, this._provider.Object).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
@@ -118,7 +122,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishPostAsync("**Hello World**").ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishPostAsync("**Hello World**", this._provider.Object).ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
@@ -132,7 +136,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         {
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishPostAsync("<strong>Hello World</strong>").ConfigureAwait(false);
+            var result = await this._service.PublishPostAsync("<strong>Hello World</strong>", this._provider.Object).ConfigureAwait(false);
             result.Should().Be(htmlpath);
         }
     }

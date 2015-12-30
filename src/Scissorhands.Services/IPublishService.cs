@@ -18,7 +18,7 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        Task<string> PublishMarkdownAsync(string markdown);
+        Task<string> PublishMarkdownAsync(string markdown, IServiceProvider provider);
 
         /// <summary>
         /// Gets the post HTML to be published.
@@ -36,6 +36,6 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
         /// <returns>Returns the HTML file path.</returns>
-        Task<string> PublishPostAsync(string html);
+        Task<string> PublishPostAsync(string html, IServiceProvider provider);
     }
 }
