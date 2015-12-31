@@ -3,8 +3,6 @@
 using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services.Helpers;
 
-using Microsoft.AspNet.Hosting;
-
 using Moq;
 
 namespace Aliencube.Scissorhands.Services.Tests.Fixtures
@@ -23,28 +21,20 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         {
             this.DefaultThemeName = "default";
 
-            this.HostingEnvironment = new Mock<IHostingEnvironment>();
-            this.HostingEnvironment.SetupGet(p => p.WebRootPath).Returns(@"C:\wwwroot");
-
             this.WebAppSettings = new Mock<WebAppSettings>();
             this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
-            this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/Posts");
+            this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
 
             this.FileHelper = new Mock<IFileHelper>();
 
-            this.PublishService = new PublishService(this.HostingEnvironment.Object, this.WebAppSettings.Object, this.FileHelper.Object);
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.FileHelper.Object);
         }
 
         /// <summary>
         /// Gets or sets the default theme name.
         /// </summary>
         public string DefaultThemeName { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{IHostingEnvironment}"/> instance..
-        /// </summary>
-        public Mock<IHostingEnvironment> HostingEnvironment { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance..
