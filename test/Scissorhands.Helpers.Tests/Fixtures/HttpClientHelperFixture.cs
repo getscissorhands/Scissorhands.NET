@@ -1,5 +1,9 @@
 ﻿using System;
 
+using Microsoft.AspNet.Http;
+
+using Moq;
+
 namespace Scissorhands.Helpers.Tests.Fixtures
 {
     /// <summary>
@@ -15,12 +19,19 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         public HttpClientHelperFixture()
         {
             this.HttpClientHelper = new HttpClientHelper();
+
+            this.HttpRequest = new Mock<HttpRequest>();
         }
 
         /// <summary>
         /// Gets the <see cref="HttpClientHelper"/> instance.
         /// </summary>
         public HttpClientHelper HttpClientHelper { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{HttpRequest}"/> instance.
+        /// </summary>
+        public Mock<HttpRequest> HttpRequest { get; }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.

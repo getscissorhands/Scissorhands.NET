@@ -51,15 +51,15 @@ namespace Scissorhands.Helpers
             }
 
             var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8)
-            {
-                Headers =
+                              {
+                                  Headers =
                                       {
                                           ContentType = new MediaTypeHeaderValue(MediaType)
                                                             {
                                                                 CharSet = CharSet
                                                             }
                                       }
-            };
+                              };
             return content;
         }
 
