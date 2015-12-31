@@ -2,14 +2,17 @@
 using System.Net;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Models.Posts;
 using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
 using Aliencube.Scissorhands.WebApp.Controllers;
 using Aliencube.Scissorhands.WebApp.Tests.Fixtures;
 
 using FluentAssertions;
 
+using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.ViewFeatures;
 using Microsoft.Extensions.PlatformAbstractions;
@@ -27,9 +30,16 @@ namespace Aliencube.Scissorhands.WebApp.Tests
     {
         private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
-        private readonly Mock<IMarkdownService> _markdownService;
+        private readonly Mock<IMarkdownHelper> _markdownHelper;
         private readonly Mock<IPublishService> _publishService;
         private readonly PostController _controller;
+
+        private readonly Mock<IApplicationEnvironment> _applicationEnvironment;
+        private readonly Mock<IUrlHelper> _urlHelper;
+        private readonly Mock<IServiceProvider> _requestServices;
+        private readonly Mock<HttpContext> _httpContext;
+        private readonly ActionContext _actionContext;
+        private readonly Mock<ITempDataDictionary> _tempData;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostControllerTest"/> class.
@@ -39,9 +49,16 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         {
             this._defaultThemeName = fixture.DefaultThemeName;
             this._settings = fixture.WebAppSettings;
-            this._markdownService = fixture.MarkdownService;
+            this._markdownHelper = fixture.MarkdownHelper;
             this._publishService = fixture.PublishService;
             this._controller = fixture.Controller;
+
+            this._applicationEnvironment = fixture.ApplicationEnvironment;
+            this._urlHelper = fixture.UrlHelper;
+            this._requestServices = fixture.RequestServices;
+            this._httpContext = fixture.HttpContext;
+            this._actionContext = fixture.ActionContext;
+            this._tempData = fixture.TempData;
         }
 
         /// <summary>
@@ -50,13 +67,13 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var controller = new PostController(null, this._markdownService.Object, this._publishService.Object); };
+            Action action1 = () => { var controller = new PostController(null, this._markdownHelper.Object, this._publishService.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
             Action action2 = () => { var controller = new PostController(this._settings.Object, null, this._publishService.Object); };
             action2.ShouldThrow<ArgumentNullException>();
 
-            Action action3 = () => { var controller = new PostController(this._settings.Object, this._markdownService.Object, null); };
+            Action action3 = () => { var controller = new PostController(this._settings.Object, this._markdownHelper.Object, null); };
             action3.ShouldThrow<ArgumentNullException>();
         }
 
@@ -66,6 +83,8 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         [Fact]
         public void Given_Index_ShouldReturn_RedirectToRouteResult()
         {
+            this._requestServices.Setup(p => p.GetService(typeof(IUrlHelper))).Returns(this._urlHelper.Object);
+
             var result = this._controller.Index() as RedirectToRouteResult;
             result.Should().NotBeNull();
             result.RouteName.Should().Be("write");
@@ -104,7 +123,7 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         [InlineData("**Hello World", "<p>Joe Bloggs</p>")]
         public void Given_Model_Preview_ShouldReturn_ViewResult(string markdown, string html)
         {
-            this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
 
             var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 
@@ -115,7 +134,6 @@ namespace Aliencube.Scissorhands.WebApp.Tests
             vm.Should().NotBeNull();
 
             vm.Theme.Should().Be(this._defaultThemeName);
-            vm.Markdown.Should().Be(markdown);
             vm.Html.Should().Be(html);
         }
 
@@ -138,20 +156,18 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         /// <param name="markdownpath">Path of the Markdown file.</param>
         /// <param name="htmlpath">Path of the HTML post file.</param>
         [Theory]
-        [InlineData("**Hello World", "<p>Joe Bloggs</p>", "~/Posts/markdown.md", "/posts/post.html")]
+        [InlineData("**Hello World", "<p>Joe Bloggs</p>", "/posts/markdown.md", "/posts/post.html")]
         public async void Given_Model_Publish_ShouldReturn_ViewResult(string markdown, string html, string markdownpath, string htmlpath)
         {
-            this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
-            this._publishService.Setup(p => p.PublishMarkdownAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>())).Returns(Task.FromResult(markdownpath));
-            this._publishService.Setup(
-                p =>
-                p.GetPostHtmlAsync(
-                    It.IsAny<IServiceProvider>(),
-                    It.IsAny<ActionContext>(),
-                    It.IsAny<PostPublishViewModel>(),
-                    It.IsAny<ViewDataDictionary>(),
-                    It.IsAny<ITempDataDictionary>())).Returns(Task.FromResult(html));
-            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>())).Returns(Task.FromResult(htmlpath));
+            this._requestServices.Setup(p => p.GetService(typeof(IApplicationEnvironment))).Returns(this._applicationEnvironment.Object);
+
+            this._httpContext.SetupGet(p => p.RequestServices).Returns(this._requestServices.Object);
+
+            this._controller.ActionContext = this._actionContext;
+            this._controller.TempData = this._tempData.Object;
+
+            var publishedpath = new PublishedPostPath() { Markdown = markdownpath, Html = htmlpath };
+            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>(), It.IsAny<HttpRequest>())).Returns(Task.FromResult(publishedpath));
 
             var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 
@@ -162,9 +178,8 @@ namespace Aliencube.Scissorhands.WebApp.Tests
             vm.Should().NotBeNull();
 
             vm.Theme.Should().Be(this._defaultThemeName);
-            vm.Markdownpath.Should().Be(markdownpath);
-            vm.Postpath.Should().Be(htmlpath);
-            vm.Html.Should().Be(html);
+            vm.MarkdownPath.Should().Be(markdownpath);
+            vm.HtmlPath.Should().Be(htmlpath);
         }
     }
 }

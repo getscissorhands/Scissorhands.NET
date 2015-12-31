@@ -1,17 +1,14 @@
 ﻿using System;
 using System.Net;
-using System.Net.Http;
-using System.Text;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services;
+using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
 
 using Microsoft.AspNet.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
-
-using Newtonsoft.Json;
 
 namespace Aliencube.Scissorhands.WebApp.Controllers
 {
@@ -22,16 +19,18 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
     public class PostController : Controller
     {
         private readonly WebAppSettings _settings;
-        private readonly IMarkdownService _markdownService;
+        private readonly IMarkdownHelper _markdownHelper;
         private readonly IPublishService _publishService;
+
+        private readonly IApplicationEnvironment _env;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
+        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(WebAppSettings settings, IMarkdownService markdownService, IPublishService publishService)
+        public PostController(WebAppSettings settings, IMarkdownHelper markdownHelper, IPublishService publishService)
         {
             if (settings == null)
             {
@@ -40,12 +39,12 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
 
             this._settings = settings;
 
-            if (markdownService == null)
+            if (markdownHelper == null)
             {
-                throw new ArgumentNullException(nameof(markdownService));
+                throw new ArgumentNullException(nameof(markdownHelper));
             }
 
-            this._markdownService = markdownService;
+            this._markdownHelper = markdownHelper;
 
             if (publishService == null)
             {
@@ -53,6 +52,8 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             }
 
             this._publishService = publishService;
+
+            //this._env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
         }
 
         /// <summary>
@@ -101,7 +102,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
 
             var vm = new PostViewViewModel() { Theme = this._settings.Theme };
 
-            var parsedHtml = this._markdownService.Parse(model.Body);
+            var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
 
             return this.View(vm);
@@ -121,29 +122,13 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = new PostPublishViewModel() { Theme = this._settings.Theme, Markdown = model.Body };
+            var vm = new PostPublishViewModel { Theme = this._settings.Theme };
 
-            var parsedHtml = this._markdownService.Parse(model.Body);
-            vm.Html = parsedHtml;
+            var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
 
-            var appEnv = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
-
-            var markdownpath = await this._publishService.PublishMarkdownAsync(vm.Markdown, this.Resolver).ConfigureAwait(false);
-            vm.Markdownpath = markdownpath;
-
-            string html;
-            using (var client = new HttpClient())
-            using (var content = new StringContent(JsonConvert.SerializeObject(vm), Encoding.UTF8))
-            {
-                client.BaseAddress = new Uri(string.Join("://", this.Request.IsHttps ? "https" : "http", this.Request.Host.Value));
-                content.Headers.ContentType.MediaType = "application/json";
-                content.Headers.ContentType.CharSet = "utf-8";
-                var response = await client.PostAsync("/admin/post/publish/html", content).ConfigureAwait(false);
-                html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
-            }
-
-            var postpath = await this._publishService.PublishPostAsync(html, this.Resolver).ConfigureAwait(false);
-            vm.Postpath = postpath;
+            var publishedpath = await this._publishService.PublishPostAsync(model.Body, env, this.Request).ConfigureAwait(false);
+            vm.MarkdownPath = publishedpath.Markdown;
+            vm.HtmlPath = publishedpath.Html;
 
             return this.View(vm);
         }
