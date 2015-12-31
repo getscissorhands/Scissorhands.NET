@@ -4,11 +4,9 @@ using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
 using Aliencube.Scissorhands.Services.Exceptions;
-using Aliencube.Scissorhands.Services.Extensions;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
 
-using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 using Microsoft.AspNet.Mvc.ViewEngines;
@@ -24,7 +22,6 @@ namespace Aliencube.Scissorhands.Services
     {
         private const string ViewName = "Post";
 
-        private readonly IHostingEnvironment _env;
         private readonly WebAppSettings _settings;
         private readonly IFileHelper _fileHelper;
 
@@ -33,18 +30,10 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishService"/> class.
         /// </summary>
-        /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        public PublishService(IHostingEnvironment env, WebAppSettings settings, IFileHelper fileHelper)
+        public PublishService(WebAppSettings settings, IFileHelper fileHelper)
         {
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
-            this._env = env;
-
             if (settings == null)
             {
                 throw new ArgumentNullException(nameof(settings));
@@ -64,29 +53,25 @@ namespace Aliencube.Scissorhands.Services
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        public async Task<string> PublishMarkdownAsync(string markdown, IServiceProvider provider)
+        public async Task<string> PublishMarkdownAsync(string markdown, IApplicationEnvironment env)
         {
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 throw new ArgumentNullException(nameof(markdown));
             }
 
-            if (provider == null)
-            {
-                throw new ArgumentNullException(nameof(provider));
-            }
-
-            var env = provider.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
             if (env == null)
             {
-                throw new InvalidOperationException("ApplicationEnvironment not set");
+                throw new ArgumentNullException(nameof(env));
             }
 
-            this.SetPostDirectory(this._settings.MarkdownPath, env);
+            var filename = "markdown.md";
+            var markdownpath = $"{this._settings.MarkdownPath}/{filename}";
 
-            var markdownpath = $"{this._settings.MarkdownPath}/markdown.md";
-            var filepath = Path.Combine(new[] { env.ApplicationBasePath, "wwwroot", TrimDirectoryPath(markdownpath) });
+            var filepath = this._fileHelper.GetDirectory(env, this._settings.MarkdownPath);
+            filepath = Path.Combine(new[] { filepath, filename });
 
             var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
             if (!written)
@@ -162,29 +147,25 @@ namespace Aliencube.Scissorhands.Services
         /// Publishes the HTML post as a file.
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the HTML file path.</returns>
-        public async Task<string> PublishPostAsync(string html, IServiceProvider provider)
+        public async Task<string> PublishPostAsync(string html, IApplicationEnvironment env)
         {
             if (string.IsNullOrWhiteSpace(html))
             {
                 throw new ArgumentNullException(nameof(html));
             }
 
-            if (provider == null)
-            {
-                throw new ArgumentNullException(nameof(provider));
-            }
-
-            var env = provider.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
             if (env == null)
             {
-                throw new InvalidOperationException("ApplicationEnvironment not set");
+                throw new ArgumentNullException(nameof(env));
             }
 
-            this.SetPostDirectory(this._settings.HtmlPath, env);
+            var filename = "post.html";
+            var htmlpath = $"{this._settings.HtmlPath}/{filename}";
 
-            var htmlpath = $"{this._settings.HtmlPath}/post.html";
-            var filepath = Path.Combine(new[] { env.ApplicationBasePath, "wwwroot", TrimDirectoryPath(htmlpath) });
+            var filepath = this._fileHelper.GetDirectory(env, this._settings.HtmlPath);
+            filepath = Path.Combine(new[] { filepath, filename });
 
             var written = await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
             if (!written)
@@ -206,46 +187,6 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
-        }
-
-        private static string TrimDirectoryPath(string directorypath)
-        {
-            var path = directorypath.Replace('/', Path.DirectorySeparatorChar);
-            if (path.StartsWith(Path.DirectorySeparatorChar))
-            {
-                path = path.Substring(1);
-            }
-
-            return path;
-        }
-
-        private void SetPostDirectory(string directorypath, IApplicationEnvironment env)
-        {
-            if (string.IsNullOrWhiteSpace(directorypath))
-            {
-                throw new ArgumentNullException(nameof(directorypath));
-            }
-
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
-            var trimmed = TrimDirectoryPath(directorypath);
-
-            var combined =
-                Path.Combine(
-                    new[]
-                        {
-                            env.ApplicationBasePath,
-                            "wwwroot",
-                            trimmed,
-                        });
-
-            if (!Directory.Exists(combined))
-            {
-                Directory.CreateDirectory(combined);
-            }
         }
     }
 }

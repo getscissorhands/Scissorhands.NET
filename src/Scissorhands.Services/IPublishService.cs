@@ -5,6 +5,7 @@ using Aliencube.Scissorhands.ViewModels.Post;
 
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -17,8 +18,9 @@ namespace Aliencube.Scissorhands.Services
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        Task<string> PublishMarkdownAsync(string markdown, IServiceProvider provider);
+        Task<string> PublishMarkdownAsync(string markdown, IApplicationEnvironment env);
 
         /// <summary>
         /// Gets the post HTML to be published.
@@ -35,7 +37,8 @@ namespace Aliencube.Scissorhands.Services
         /// Publishes the HTML post as a file.
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the HTML file path.</returns>
-        Task<string> PublishPostAsync(string html, IServiceProvider provider);
+        Task<string> PublishPostAsync(string html, IApplicationEnvironment env);
     }
 }
