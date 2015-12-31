@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Services.Helpers;
+using Scissorhands.Helpers;
 
-namespace Aliencube.Scissorhands.Services
+namespace Scissorhands.Services
 {
     /// <summary>
     /// This represents the service entity for markdown.

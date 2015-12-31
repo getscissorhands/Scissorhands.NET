@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.Services.Extensions
+﻿namespace Scissorhands.Helpers.Extensions
 {
     /// <summary>
     /// This represents the extension entity for <see cref="string"/>;

@@ -6,7 +6,7 @@ using Microsoft.AspNet.Mvc.ViewFeatures;
 
 using Moq;
 
-namespace Aliencube.Scissorhands.WebApp.Tests.Fixtures
+namespace Scissorhands.WebApp.Tests.Fixtures
 {
     /// <summary>
     /// This represents the base entity for controllers. This MUST be inherited.

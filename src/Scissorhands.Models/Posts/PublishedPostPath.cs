@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.Models.Posts
+﻿namespace Scissorhands.Models.Posts
 {
     /// <summary>
     /// This represents the entity that contains file paths for post - Markdown and HTML.

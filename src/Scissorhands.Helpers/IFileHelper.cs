@@ -3,7 +3,7 @@ using System.Threading.Tasks;
 
 using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Aliencube.Scissorhands.Services.Helpers
+namespace Scissorhands.Helpers
 {
     /// <summary>
     /// This provides interfaces to the <see cref="FileHelper"/> class.

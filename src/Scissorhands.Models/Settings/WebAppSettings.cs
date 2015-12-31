@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.Models.Settings
+﻿namespace Scissorhands.Models.Settings
 {
     /// <summary>
     /// This represents the entity for web app settings.

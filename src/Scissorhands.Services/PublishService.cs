@@ -5,17 +5,17 @@ using System.Net.Http.Headers;
 using System.Text;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Posts;
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services.Exceptions;
-using Aliencube.Scissorhands.Services.Helpers;
-
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Newtonsoft.Json;
 
-namespace Aliencube.Scissorhands.Services
+using Scissorhands.Helpers;
+using Scissorhands.Models.Posts;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services.Exceptions;
+
+namespace Scissorhands.Services
 {
     /// <summary>
     /// This represents the service entity for publish.

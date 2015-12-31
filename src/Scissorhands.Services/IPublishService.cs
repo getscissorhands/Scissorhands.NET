@@ -1,12 +1,12 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Posts;
-
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Aliencube.Scissorhands.Services
+using Scissorhands.Models.Posts;
+
+namespace Scissorhands.Services
 {
     /// <summary>
     /// This provides interfaces to the <see cref="PublishService"/> class.

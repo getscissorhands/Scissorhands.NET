@@ -1,11 +1,11 @@
-﻿using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
+﻿using FluentAssertions;
 
-using FluentAssertions;
+using Scissorhands.Helpers;
+using Scissorhands.Services.Tests.Fixtures;
 
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests.Helpers
+namespace Scissorhands.Services.Tests.Helpers
 {
     /// <summary>
     /// This represents the test entity for the <see cref="MarkdownHelper"/> class.

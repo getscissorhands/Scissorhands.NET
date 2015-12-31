@@ -1,10 +1,10 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models.Settings;
-
 using Moq;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="ThemeService"/> class.

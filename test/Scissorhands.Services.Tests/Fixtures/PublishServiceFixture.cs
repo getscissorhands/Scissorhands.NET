@@ -1,11 +1,11 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services.Helpers;
-
 using Moq;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+using Scissorhands.Helpers;
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="PublishService"/> class.

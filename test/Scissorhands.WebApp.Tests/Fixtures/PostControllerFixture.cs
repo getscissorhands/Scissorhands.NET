@@ -1,10 +1,5 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services;
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.WebApp.Controllers;
-
 using Microsoft.AspNet.Http;
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.ViewFeatures;
@@ -12,7 +7,12 @@ using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
-namespace Aliencube.Scissorhands.WebApp.Tests.Fixtures
+using Scissorhands.Helpers;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services;
+using Scissorhands.WebApp.Controllers;
+
+namespace Scissorhands.WebApp.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="PostController"/> class.

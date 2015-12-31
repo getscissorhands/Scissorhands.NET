@@ -2,20 +2,20 @@
 using System.IO;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services.Exceptions;
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
-
 using FluentAssertions;
 
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
+using Scissorhands.Helpers;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services.Exceptions;
+using Scissorhands.Services.Tests.Fixtures;
+
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Scissorhands.Services.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="PublishService"/> class.

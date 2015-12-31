@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.ViewModels.Post
+﻿namespace Scissorhands.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post publish.

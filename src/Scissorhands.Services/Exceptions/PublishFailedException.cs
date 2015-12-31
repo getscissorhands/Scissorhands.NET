@@ -6,7 +6,7 @@ using ApplicationException = global::System.InvalidOperationException;
 
 #endif
 
-namespace Aliencube.Scissorhands.Services.Exceptions
+namespace Scissorhands.Services.Exceptions
 {
     /// <summary>
     /// This represents the exception entity thrown on publish failure.

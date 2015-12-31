@@ -2,14 +2,6 @@
 using System.Net;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Posts;
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services;
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.ViewModels.Post;
-using Aliencube.Scissorhands.WebApp.Controllers;
-using Aliencube.Scissorhands.WebApp.Tests.Fixtures;
-
 using FluentAssertions;
 
 using Microsoft.AspNet.Http;
@@ -19,9 +11,17 @@ using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
+using Scissorhands.Helpers;
+using Scissorhands.Models.Posts;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services;
+using Scissorhands.ViewModels.Post;
+using Scissorhands.WebApp.Controllers;
+using Scissorhands.WebApp.Tests.Fixtures;
+
 using Xunit;
 
-namespace Aliencube.Scissorhands.WebApp.Tests
+namespace Scissorhands.WebApp.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="PostController"/> class.

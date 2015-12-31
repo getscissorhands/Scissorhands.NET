@@ -1,8 +1,8 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Services.Helpers;
+using Scissorhands.Helpers;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="MarkdownHelper"/> class.

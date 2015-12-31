@@ -2,12 +2,12 @@
 using System.Collections.Generic;
 using System.Linq;
 
-using Aliencube.Scissorhands.Models.Settings;
-
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.Rendering;
 
-namespace Aliencube.Scissorhands.Services
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.Services
 {
     /// <summary>
     /// This represents the service entity for themes.

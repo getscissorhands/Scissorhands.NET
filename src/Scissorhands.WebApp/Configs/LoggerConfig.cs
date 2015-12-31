@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 
-namespace Aliencube.Scissorhands.WebApp.Configs
+namespace Scissorhands.WebApp.Configs
 {
     /// <summary>
     /// This represents the configuration entity for logging.

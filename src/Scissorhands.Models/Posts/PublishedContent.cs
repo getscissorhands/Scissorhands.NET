@@ -1,4 +1,4 @@
-﻿namespace Aliencube.Scissorhands.Models.Posts
+﻿namespace Scissorhands.Models.Posts
 {
     /// <summary>
     /// This represents the entity of content to publish.

@@ -3,12 +3,12 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services.Extensions;
-
 using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Aliencube.Scissorhands.Services.Helpers
+using Scissorhands.Helpers.Extensions;
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.Helpers
 {
     /// <summary>
     /// This represents the helper entity for files.

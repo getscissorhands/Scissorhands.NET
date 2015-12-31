@@ -2,16 +2,16 @@
 using System.Net;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models.Posts;
-using Aliencube.Scissorhands.Models.Settings;
-using Aliencube.Scissorhands.Services;
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.ViewModels.Post;
-
 using Microsoft.AspNet.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Aliencube.Scissorhands.WebApp.Controllers
+using Scissorhands.Helpers;
+using Scissorhands.Models.Posts;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services;
+using Scissorhands.ViewModels.Post;
+
+namespace Scissorhands.WebApp.Controllers
 {
     /// <summary>
     /// This represents the controller entity for post.

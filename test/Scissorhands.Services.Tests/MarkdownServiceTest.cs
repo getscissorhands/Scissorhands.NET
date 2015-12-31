@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
-
 using FluentAssertions;
 
 using Moq;
 
+using Scissorhands.Helpers;
+using Scissorhands.Services.Tests.Fixtures;
+
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Scissorhands.Services.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="MarkdownService"/> class.

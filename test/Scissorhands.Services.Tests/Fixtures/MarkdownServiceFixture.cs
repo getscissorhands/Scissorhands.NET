@@ -1,10 +1,10 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Services.Helpers;
-
 using Moq;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+using Scissorhands.Helpers;
+
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="MarkdownService"/> class.

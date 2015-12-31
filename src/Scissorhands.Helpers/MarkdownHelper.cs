@@ -1,22 +1,7 @@
-﻿using System;
+﻿using CommonMark;
 
-using CommonMark;
-
-namespace Aliencube.Scissorhands.Services.Helpers
+namespace Scissorhands.Helpers
 {
-    /// <summary>
-    /// This provides interfaces to the <see cref="MarkdownHelper"/> class.
-    /// </summary>
-    public interface IMarkdownHelper : IDisposable
-    {
-        /// <summary>
-        /// Parses the Markdown string to HTML string.
-        /// </summary>
-        /// <param name="markdown">Markdown string.</param>
-        /// <returns>Returns HTML string parsed.</returns>
-        string Parse(string markdown);
-    }
-
     /// <summary>
     /// This represents the helper entity for Markdown.
     /// </summary>
