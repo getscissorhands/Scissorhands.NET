@@ -1,7 +1,7 @@
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 
-namespace Aliencube.Scissorhands.WebApp.Configs
+namespace Scissorhands.WebApp.Configs
 {
     /// <summary>
     /// This represents the configuration entity for environment.

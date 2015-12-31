@@ -1,8 +1,5 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
-
 using FluentAssertions;
 
 using Microsoft.AspNet.Mvc.Rendering;
@@ -10,9 +7,12 @@ using Microsoft.AspNet.Routing;
 
 using Moq;
 
+using Scissorhands.Models.Settings;
+using Scissorhands.Services.Tests.Fixtures;
+
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Scissorhands.Services.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="ThemeService"/> class.
@@ -133,7 +133,7 @@ namespace Aliencube.Scissorhands.Services.Tests
             var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
- 
+
         /// <summary>
         /// Tests whether the method should return value or not.
         /// </summary>

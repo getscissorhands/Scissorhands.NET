@@ -1,7 +1,5 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.WebApp.Configs;
-
 using Autofac;
 
 using Microsoft.AspNet.Builder;
@@ -9,9 +7,10 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.PlatformAbstractions;
 
-namespace Aliencube.Scissorhands.WebApp
+using Scissorhands.WebApp.Configs;
+
+namespace Scissorhands.WebApp
 {
     /// <summary>
     /// This represents the main entry point of the web application.

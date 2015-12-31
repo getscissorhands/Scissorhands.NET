@@ -1,13 +1,11 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
-using Aliencube.Scissorhands.Services.Helpers;
-
-using Microsoft.AspNet.Hosting;
-
 using Moq;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+using Scissorhands.Helpers;
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="PublishService"/> class.
@@ -23,17 +21,18 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         {
             this.DefaultThemeName = "default";
 
-            this.HostingEnvironment = new Mock<IHostingEnvironment>();
-            this.HostingEnvironment.SetupGet(p => p.WebRootPath).Returns(@"C:\wwwroot");
-
             this.WebAppSettings = new Mock<WebAppSettings>();
             this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
-            this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/Posts");
+            this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
+
+            this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
             this.FileHelper = new Mock<IFileHelper>();
 
-            this.PublishService = new PublishService(this.HostingEnvironment.Object, this.WebAppSettings.Object, this.FileHelper.Object);
+            this.HttpClientHelper = new Mock<IHttpClientHelper>();
+
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpClientHelper.Object);
         }
 
         /// <summary>
@@ -42,19 +41,24 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         public string DefaultThemeName { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{IHostingEnvironment}"/> instance..
-        /// </summary>
-        public Mock<IHostingEnvironment> HostingEnvironment { get; }
-
-        /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance..
         /// </summary>
         public Mock<WebAppSettings> WebAppSettings { get; }
 
         /// <summary>
+        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
+        /// </summary>
+        public Mock<IMarkdownHelper> MarkdownHelper { get; }
+
+        /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.
         /// </summary>
         public Mock<IFileHelper> FileHelper { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IHttpClientHelper}"/> instance.
+        /// </summary>
+        public Mock<IHttpClientHelper> HttpClientHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="IPublishService"/> instance.

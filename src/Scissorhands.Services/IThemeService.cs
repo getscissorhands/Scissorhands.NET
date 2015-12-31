@@ -2,7 +2,7 @@
 
 using Microsoft.AspNet.Mvc.Rendering;
 
-namespace Aliencube.Scissorhands.Services
+namespace Scissorhands.Services
 {
     /// <summary>
     /// This provides interfaces to the <see cref="ThemeService"/> class.

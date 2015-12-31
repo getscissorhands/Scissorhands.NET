@@ -1,4 +1,4 @@
-namespace Aliencube.Scissorhands.Models
+namespace Scissorhands.Models.Settings
 {
     /// <summary>
     /// This specifies server type.

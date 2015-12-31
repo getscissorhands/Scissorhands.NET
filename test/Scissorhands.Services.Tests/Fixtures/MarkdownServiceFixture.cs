@@ -1,10 +1,10 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Services.Helpers;
-
 using Moq;
 
-namespace Aliencube.Scissorhands.Services.Tests.Fixtures
+using Scissorhands.Helpers;
+
+namespace Scissorhands.Services.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="MarkdownService"/> class.
@@ -18,9 +18,15 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// </summary>
         public MarkdownServiceFixture()
         {
+            this.MarkdownHelper = new Mock<IMarkdownHelper>();
             this.FileHelper = new Mock<IFileHelper>();
-            this.MarkdownService = new MarkdownService(this.FileHelper.Object);
+            this.MarkdownService = new MarkdownService(this.MarkdownHelper.Object, this.FileHelper.Object);
         }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
+        /// </summary>
+        public Mock<IMarkdownHelper> MarkdownHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

@@ -1,9 +1,9 @@
-﻿@using Aliencube.Scissorhands.Services
-@using Aliencube.Scissorhands.ViewModels.Post
+﻿@using Scissorhands.Models.Posts
+@using Scissorhands.Services
 
 @inject IThemeService Theme
 
-@model PostPublishViewModel
+@model PublishedContent
 @{
     var partial = Theme.GetPost(Model.Theme);
 }

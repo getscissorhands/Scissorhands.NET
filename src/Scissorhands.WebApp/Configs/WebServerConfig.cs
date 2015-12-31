@@ -1,9 +1,9 @@
-using Aliencube.Scissorhands.Models;
-
 using Microsoft.AspNet.Builder;
 using Microsoft.Extensions.Configuration;
 
-namespace Aliencube.Scissorhands.WebApp.Configs
+using Scissorhands.Models.Settings;
+
+namespace Scissorhands.WebApp.Configs
 {
     /// <summary>
     /// This represents the configuration entity for web server.

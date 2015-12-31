@@ -1,26 +1,28 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.Services.Tests.Fixtures;
-
 using FluentAssertions;
 
 using Moq;
 
+using Scissorhands.Helpers;
+using Scissorhands.Services.Tests.Fixtures;
+
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Scissorhands.Services.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="MarkdownService"/> class.
     /// </summary>
     public class MarkdownServiceTest : IClassFixture<MarkdownServiceFixture>
     {
-        private readonly Mock<IFileHelper> _helper;
+        private readonly Mock<IMarkdownHelper> _markdownHelper;
+        private readonly Mock<IFileHelper> _fileHelper;
         private readonly IMarkdownService _service;
 
         private string _markdown;
+        private string _parsed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownServiceTest"/> class.
@@ -28,7 +30,8 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="MarkdownServiceFixture"/> instance.</param>
         public MarkdownServiceTest(MarkdownServiceFixture fixture)
         {
-            this._helper = fixture.FileHelper;
+            this._markdownHelper = fixture.MarkdownHelper;
+            this._fileHelper = fixture.FileHelper;
             this._service = fixture.MarkdownService;
         }
 
@@ -38,8 +41,11 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var service = new MarkdownService(null); };
-            action.ShouldThrow<ArgumentNullException>();
+            Action action1 = () => { var service = new MarkdownService(null, this._fileHelper.Object); };
+            action1.ShouldThrow<ArgumentNullException>();
+
+            Action action2 = () => { var service = new MarkdownService(this._markdownHelper.Object, null); };
+            action2.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -48,32 +54,8 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var service = new MarkdownService(this._helper.Object); };
+            Action action = () => { var service = new MarkdownService(this._markdownHelper.Object, this._fileHelper.Object); };
             action.ShouldNotThrow<Exception>();
-        }
-
-        /// <summary>
-        /// Tests whether the given markdown returns null or not.
-        /// </summary>
-        /// <param name="markdown">Markdown string.</param>
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        public void Given_Markdown_Parse_ShouldReturn_NullConverted(string markdown)
-        {
-            var parsed = this._service.Parse(markdown);
-            parsed.Should().BeNull();
-        }
-
-        /// <summary>
-        /// Tests whether the given markdown returns parsed HTML or not.
-        /// </summary>
-        [Fact]
-        public void Given_Markdown_Parse_Should_Return_ParsedHtml()
-        {
-            this._markdown = "**Hello World**";
-            var parsed = this._service.Parse(this._markdown);
-            parsed.Should().ContainEquivalentOf("<strong>Hello World</strong>");
         }
 
         /// <summary>
@@ -98,7 +80,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         public async void Given_Filepath_ConvertAsync_ShouldReturn_NullConverted(string filepath)
         {
             this._markdown = null;
-            this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
+            this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
             var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
             converted.Should().BeNull();
         }
@@ -112,9 +94,13 @@ namespace Aliencube.Scissorhands.Services.Tests
         public async void Given_Filepath_ConvertAsync_ShouldReturn_ParsedHtml(string filepath)
         {
             this._markdown = "**Hello World**";
-            this._helper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
+            this._parsed = "<strong>Hello World</strong>";
+
+            this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(this._markdown));
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(this._parsed);
+
             var converted = await this._service.ConvertAsync(filepath).ConfigureAwait(false);
-            converted.Should().ContainEquivalentOf("<strong>Hello World</strong>");
+            converted.Should().ContainEquivalentOf(this._parsed);
         }
     }
 }

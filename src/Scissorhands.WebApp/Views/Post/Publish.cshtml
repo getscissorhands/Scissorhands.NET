@@ -1,4 +1,5 @@
-﻿@using Aliencube.Scissorhands.ViewModels.Post
+﻿@using Scissorhands.Services
+@using Scissorhands.ViewModels.Post
 
 @model PostPublishViewModel
 @{
@@ -15,7 +16,7 @@
 
 <div class="row">
     <ul>
-        <li>Markdown: @Model.Markdownpath</li>
-        <li>Post: @Model.Postpath</li>
+        <li>Markdown: @Model.MarkdownPath</li>
+        <li>Post: @Model.HtmlPath</li>
     </ul>
 </div>

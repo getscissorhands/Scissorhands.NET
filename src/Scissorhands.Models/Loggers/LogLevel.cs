@@ -1,4 +1,4 @@
-namespace Aliencube.Scissorhands.Models
+namespace Scissorhands.Models.Loggers
 {
     /// <summary>
     /// This represents the entity for log level.

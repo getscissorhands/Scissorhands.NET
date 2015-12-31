@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNet.Mvc;
 
-namespace Aliencube.Scissorhands.WebApp.Controllers
+namespace Scissorhands.WebApp.Controllers
 {
     /// <summary>
     /// This represents the controller entity for home.

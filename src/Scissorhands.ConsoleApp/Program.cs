@@ -1,14 +1,14 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.WebApp;
-
 using Microsoft.AspNet.Builder;
 using Microsoft.AspNet.Hosting;
 using Microsoft.AspNet.TestHost;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace Aliencube.Scissorhands.ConsoleApp
+using Scissorhands.WebApp;
+
+namespace Scissorhands.ConsoleApp
 {
     /// <summary>
     /// This represents the main entry point of the console application.

@@ -1,15 +1,16 @@
-﻿using Aliencube.Scissorhands.Models;
-using Aliencube.Scissorhands.Services;
-using Aliencube.Scissorhands.Services.Helpers;
-
-using Autofac;
+﻿using Autofac;
 using Autofac.Extensions.DependencyInjection;
 
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Aliencube.Scissorhands.WebApp.Configs
+using Scissorhands.Helpers;
+using Scissorhands.Models.Loggers;
+using Scissorhands.Models.Settings;
+using Scissorhands.Services;
+
+namespace Scissorhands.WebApp.Configs
 {
     /// <summary>
     /// This represents the configuration entity for dependency injection.
@@ -47,6 +48,8 @@ namespace Aliencube.Scissorhands.WebApp.Configs
         private static void RegisterHelpers(ContainerBuilder builder)
         {
             builder.RegisterType<FileHelper>().As<IFileHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<HttpClientHelper>().As<IHttpClientHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<MarkdownHelper>().As<IMarkdownHelper>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 
         private static void RegisterServices(ContainerBuilder builder)
