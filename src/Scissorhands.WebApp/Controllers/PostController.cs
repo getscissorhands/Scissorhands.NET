@@ -2,6 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Models.Posts;
 using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.Services.Helpers;
@@ -52,12 +53,10 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             }
 
             this._publishService = publishService;
-
-            //this._env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
         }
 
         /// <summary>
-        /// Processes /post/index.
+        /// Processes /admin/post/index.
         /// </summary>
         /// <returns>Returns the view model.</returns>
         public IActionResult Index()
@@ -66,7 +65,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         }
 
         /// <summary>
-        /// Processes /post/write.
+        /// Processes /admin/post/write.
         /// </summary>
         /// <returns>Returns the view model.</returns>
         [Route("write", Name = "write")]
@@ -77,7 +76,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         }
 
         /// <summary>
-        /// Processes /post/edit.
+        /// Processes /admin/post/edit.
         /// </summary>
         /// <returns>Returns the view model.</returns>
         [Route("edit")]
@@ -87,7 +86,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         }
 
         /// <summary>
-        /// Processes /post/preview.
+        /// Processes /admin/post/preview.
         /// </summary>
         /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
@@ -109,7 +108,7 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
         }
 
         /// <summary>
-        /// Processes /post/publish.
+        /// Processes /admin/post/publish.
         /// </summary>
         /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
@@ -133,16 +132,21 @@ namespace Aliencube.Scissorhands.WebApp.Controllers
             return this.View(vm);
         }
 
+        /// <summary>
+        /// Processes /admin/post/publish/html.
+        /// </summary>
+        /// <param name="body"><see cref="PublishedContent"/> instance read from request body.</param>
+        /// <returns>Returns the view model.</returns>
         [Route("publish/html")]
         [HttpPost]
-        public async Task<IActionResult> PublishHtml([FromBody] PostPublishViewModel model)
+        public IActionResult PublishHtml([FromBody] PublishedContent body)
         {
-            if (model == null)
+            if (body == null)
             {
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = model;
+            var vm = body;
             return this.View(vm);
         }
 
