@@ -56,7 +56,7 @@ namespace Scissorhands.Services.Tests.Fixtures
         public Mock<IFileHelper> FileHelper { get; }
 
         /// <summary>
-        /// Gets the <see cref="HttpClientHelper"/> instance.
+        /// Gets the <see cref="Mock{IHttpClientHelper}"/> instance.
         /// </summary>
         public Mock<IHttpClientHelper> HttpClientHelper { get; }
 

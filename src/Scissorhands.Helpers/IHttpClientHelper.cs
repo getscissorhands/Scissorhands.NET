@@ -14,8 +14,9 @@ namespace Scissorhands.Helpers
         /// Creates a new instance of the <see cref="HttpClient"/> class.
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <param name="handler"><see cref="HttpMessageHandler"/> instance.</param>
         /// <returns>Returns the <see cref="HttpClient"/> instance created.</returns>
-        HttpClient CreateHttpClient(HttpRequest request);
+        HttpClient CreateHttpClient(HttpRequest request, HttpMessageHandler handler = null);
 
         /// <summary>
         /// Creates a new instance of the <see cref="StringContent"/> class.

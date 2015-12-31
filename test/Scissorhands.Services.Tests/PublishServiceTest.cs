@@ -1,9 +1,12 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
+using System.Text;
 using System.Threading.Tasks;
 
 using FluentAssertions;
 
+using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
@@ -30,6 +33,8 @@ namespace Scissorhands.Services.Tests
 
         private readonly Mock<IApplicationEnvironment> _env;
         private readonly string _filepath;
+        private readonly Mock<HttpRequest> _request;
+        private readonly string _defaultThemeName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishServiceTest"/> class.
@@ -45,6 +50,8 @@ namespace Scissorhands.Services.Tests
 
             this._env = new Mock<IApplicationEnvironment>();
             this._filepath = "/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
+            this._request = new Mock<HttpRequest>();
+            this._defaultThemeName = "default";
         }
 
         /// <summary>
@@ -150,6 +157,46 @@ namespace Scissorhands.Services.Tests
 
             var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>", this._env.Object).ConfigureAwait(false);
             result.Should().Be(htmlpath);
+        }
+
+        /// <summary>
+        /// Tests whether the method should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_GetPublishedHtmlAsync_ShouldThrow_ArgumentNullException()
+        {
+            Func<Task> func1 = async () => { var html = await this._service.GetPublishedHtmlAsync(null, this._request.Object).ConfigureAwait(false); };
+            func1.ShouldThrow<ArgumentNullException>();
+
+            var markdown = "**Hello World**";
+            Func<Task> func2 = async () => { var html = await this._service.GetPublishedHtmlAsync(markdown, null).ConfigureAwait(false); };
+            func2.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return result or not.
+        /// </summary>
+        /// <param name="markdown">Markdown string.</param>
+        /// <param name="html">HTML string.</param>
+        [Theory]
+        [InlineData("**Hello World**", "<strong>Joe Bloggs</strong>")]
+        public async void Given_Parameters_GetPublishedHtmlAsync_ShouldReturn_Html(string markdown, string html)
+        {
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._settings.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
+
+            var message = new HttpResponseMessage { Content = new StringContent(html) };
+
+            var handler = new FakeHttpResponseHandler(message);
+            var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5080") };
+
+            this._httpClientHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
+
+            var content = new StringContent(html, Encoding.UTF8);
+            this._httpClientHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
+
+            var result = await this._service.GetPublishedHtmlAsync(markdown, this._request.Object).ConfigureAwait(false);
+            result.Should().Be(html);
         }
     }
 }

@@ -23,8 +23,9 @@ namespace Scissorhands.Helpers
         /// Creates a new instance of the <see cref="HttpClient"/> class.
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <param name="handler"><see cref="HttpMessageHandler"/> instance.</param>
         /// <returns>Returns the <see cref="HttpClient"/> instance created.</returns>
-        public HttpClient CreateHttpClient(HttpRequest request)
+        public HttpClient CreateHttpClient(HttpRequest request, HttpMessageHandler handler = null)
         {
             if (request == null)
             {
@@ -34,7 +35,8 @@ namespace Scissorhands.Helpers
             var url = string.Join("://", request.IsHttps ? "https" : "http", request.Host.Value);
             var baseAddressUri = new Uri(url);
 
-            var client = new HttpClient() { BaseAddress = baseAddressUri };
+            var client = handler == null ? new HttpClient() : new HttpClient(handler, true);
+            client.BaseAddress = baseAddressUri;
             return client;
         }
 
