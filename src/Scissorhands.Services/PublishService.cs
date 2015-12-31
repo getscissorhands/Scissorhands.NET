@@ -180,7 +180,7 @@ namespace Aliencube.Scissorhands.Services
 
             var parsedHtml = this._markdownHelper.Parse(markdown);
 
-            var publishing = new PublishedContent() { Markdown = markdown, Html = parsedHtml };
+            var publishing = new PublishedContent() { Theme = this._settings.Theme, Markdown = markdown, Html = parsedHtml };
 
             using (var client = CreateHttpClient(request))
             using (var content = CreateStringContent(publishing))

@@ -6,6 +6,11 @@
     public class PublishedContent
     {
         /// <summary>
+        /// Gets or sets the theme name.
+        /// </summary>
+        public string Theme { get; set; }
+
+        /// <summary>
         /// Gets or sets the Markdown content.
         /// </summary>
         public string Markdown { get; set; }
