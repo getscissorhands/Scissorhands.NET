@@ -1,8 +1,6 @@
 ﻿using System;
 
-using Scissorhands.Helpers;
-
-namespace Scissorhands.Services.Tests.Fixtures
+namespace Scissorhands.Helpers.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="MarkdownHelper"/> class.

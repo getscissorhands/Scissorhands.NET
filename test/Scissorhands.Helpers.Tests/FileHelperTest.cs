@@ -8,13 +8,12 @@ using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
-using Scissorhands.Helpers;
+using Scissorhands.Helpers.Tests.Fixtures;
 using Scissorhands.Models.Settings;
-using Scissorhands.Services.Tests.Fixtures;
 
 using Xunit;
 
-namespace Scissorhands.Services.Tests.Helpers
+namespace Scissorhands.Helpers.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="FileHelper"/> class.

@@ -1,11 +1,10 @@
 ﻿using FluentAssertions;
 
-using Scissorhands.Helpers;
-using Scissorhands.Services.Tests.Fixtures;
+using Scissorhands.Helpers.Tests.Fixtures;
 
 using Xunit;
 
-namespace Scissorhands.Services.Tests.Helpers
+namespace Scissorhands.Helpers.Tests
 {
     /// <summary>
     /// This represents the test entity for the <see cref="MarkdownHelper"/> class.

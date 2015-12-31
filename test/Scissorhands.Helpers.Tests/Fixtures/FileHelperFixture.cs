@@ -2,10 +2,9 @@
 
 using Moq;
 
-using Scissorhands.Helpers;
 using Scissorhands.Models.Settings;
 
-namespace Scissorhands.Services.Tests.Fixtures
+namespace Scissorhands.Helpers.Tests.Fixtures
 {
     /// <summary>
     /// This represents the fixture entity for the <see cref="FileHelper"/> class.
