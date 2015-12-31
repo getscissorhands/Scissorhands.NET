@@ -7,23 +7,24 @@ using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
-
-using Microsoft.AspNet.Hosting;
+using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
 using Xunit;
 
-namespace Aliencube.Scissorhands.Services.Tests
+namespace Aliencube.Scissorhands.Services.Tests.Helpers
 {
     /// <summary>
     /// This represents the test entity for the <see cref="FileHelper"/> class.
     /// </summary>
     public class FileHelperTest : IClassFixture<FileHelperFixture>
     {
-        private readonly Mock<IHostingEnvironment> _env;
         private readonly Mock<WebAppSettings> _settings;
         private readonly IFileHelper _helper;
+
+        private readonly string _applicationBasePath;
+        private readonly Mock<IApplicationEnvironment> _env;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileHelperTest"/> class.
@@ -31,9 +32,13 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="FileHelperFixture"/> instance.</param>
         public FileHelperTest(FileHelperFixture fixture)
         {
-            this._env = fixture.HostingEnvironment;
             this._settings = fixture.WebAppSettings;
             this._helper = fixture.FileHelper;
+
+            this._applicationBasePath = "/home/scissorhands.net";
+
+            this._env = new Mock<IApplicationEnvironment>();
+            this._env.SetupGet(p => p.ApplicationBasePath).Returns(this._applicationBasePath);
         }
 
         /// <summary>
@@ -42,11 +47,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var helper = new FileHelper(null, this._settings.Object); };
-            action1.ShouldThrow<ArgumentNullException>();
-
-            Action action2 = () => { var helper = new FileHelper(this._env.Object, null); };
-            action2.ShouldThrow<ArgumentNullException>();
+            Action action = () => { var helper = new FileHelper(null); };
         }
 
         /// <summary>
@@ -55,7 +56,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var helper = new FileHelper(this._env.Object, this._settings.Object); };
+            Action action = () => { var helper = new FileHelper(this._settings.Object); };
             action.ShouldNotThrow<Exception>();
         }
 
@@ -127,6 +128,48 @@ namespace Aliencube.Scissorhands.Services.Tests
             if (exists)
             {
                 File.Delete(filepath);
+            }
+        }
+
+        /// <summary>
+        /// Tests whether the method should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_GetDirectory_ShouldThrow_ArgumentNullException()
+        {
+            var directorypath = "/posts";
+            Action action = () => { var result = this._helper.GetDirectory(null, directorypath); };
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return null or not.
+        /// </summary>
+        /// <param name="directorypath">Directory path.</param>
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void Given_NullOrEmptyParameter_GetDirectory_ShouldReturn_Null(string directorypath)
+        {
+            var result = this._helper.GetDirectory(this._env.Object, directorypath);
+            result.Should().BeNullOrWhiteSpace();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return the result or not.
+        /// </summary>
+        /// <param name="directorypath">Directory path.</param>
+        [Theory]
+        [InlineData("/posts")]
+        public void Given_DirectoryPath_GetDirectory_ShouldReturn_FullyQualifiedDirectoryPath(string directorypath)
+        {
+            var expected = $"{this._applicationBasePath}/wwwroot{directorypath}".Replace('/', Path.DirectorySeparatorChar);
+            var result = this._helper.GetDirectory(this._env.Object, directorypath);
+            result.Should().Be(expected);
+
+            if (Directory.Exists(expected))
+            {
+                Directory.Delete(expected);
             }
         }
     }
