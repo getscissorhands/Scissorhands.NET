@@ -4,8 +4,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Services.Extensions;
 
-using Microsoft.AspNet.Hosting;
+using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.Services.Helpers
 {
@@ -14,7 +15,6 @@ namespace Aliencube.Scissorhands.Services.Helpers
     /// </summary>
     public class FileHelper : IFileHelper
     {
-        private readonly IHostingEnvironment _env;
         private readonly WebAppSettings _settings;
 
         private bool _disposed;
@@ -22,17 +22,9 @@ namespace Aliencube.Scissorhands.Services.Helpers
         /// <summary>
         /// Initializes a new instance of the <see cref="FileHelper"/> class.
         /// </summary>
-        /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        public FileHelper(IHostingEnvironment env, WebAppSettings settings)
+        public FileHelper(WebAppSettings settings)
         {
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
-            this._env = env;
-
             if (settings == null)
             {
                 throw new ArgumentNullException(nameof(settings));
@@ -88,6 +80,44 @@ namespace Aliencube.Scissorhands.Services.Helpers
         }
 
         /// <summary>
+        /// Checks whether the directory path exists or not.
+        /// </summary>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <param name="directorypath">Directory path.</param>
+        /// <returns>Returns the fully qualified directory path.</returns>
+        public string GetDirectory(IApplicationEnvironment env, string directorypath)
+        {
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
+
+            if (string.IsNullOrWhiteSpace(directorypath))
+            {
+                return null;
+            }
+
+            var trimmedBasePath = ReplaceDirectorySeparator(env.ApplicationBasePath);
+            var trimmedDirectoryPath = TrimDirectoryPath(directorypath);
+
+            var combined =
+                Path.Combine(
+                    new[]
+                        {
+                            trimmedBasePath,
+                            "wwwroot",
+                            trimmedDirectoryPath,
+                        });
+
+            if (!Directory.Exists(combined))
+            {
+                Directory.CreateDirectory(combined);
+            }
+
+            return combined;
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
@@ -98,6 +128,23 @@ namespace Aliencube.Scissorhands.Services.Helpers
             }
 
             this._disposed = true;
+        }
+
+        private static string ReplaceDirectorySeparator(string directorypath)
+        {
+            var replaced = directorypath.Replace('/', Path.DirectorySeparatorChar);
+            return replaced;
+        }
+
+        private static string TrimDirectoryPath(string directorypath)
+        {
+            var path = ReplaceDirectorySeparator(directorypath);
+            if (path.StartsWith(Path.DirectorySeparatorChar))
+            {
+                path = path.Substring(1);
+            }
+
+            return path;
         }
     }
 }
