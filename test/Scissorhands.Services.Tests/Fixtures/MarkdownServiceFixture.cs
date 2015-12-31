@@ -18,9 +18,15 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// </summary>
         public MarkdownServiceFixture()
         {
+            this.MarkdownHelper = new Mock<IMarkdownHelper>();
             this.FileHelper = new Mock<IFileHelper>();
-            this.MarkdownService = new MarkdownService(this.FileHelper.Object);
+            this.MarkdownService = new MarkdownService(this.MarkdownHelper.Object, this.FileHelper.Object);
         }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
+        /// </summary>
+        public Mock<IMarkdownHelper> MarkdownHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

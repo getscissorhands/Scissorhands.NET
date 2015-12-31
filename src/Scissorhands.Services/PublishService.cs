@@ -1,17 +1,19 @@
 ﻿using System;
 using System.IO;
+using System.Net.Http;
+using System.Net.Http.Headers;
+using System.Text;
 using System.Threading.Tasks;
 
+using Aliencube.Scissorhands.Models.Posts;
 using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services.Exceptions;
 using Aliencube.Scissorhands.Services.Helpers;
-using Aliencube.Scissorhands.ViewModels.Post;
 
-using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.Rendering;
-using Microsoft.AspNet.Mvc.ViewEngines;
-using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
+
+using Newtonsoft.Json;
 
 namespace Aliencube.Scissorhands.Services
 {
@@ -20,9 +22,12 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class PublishService : IPublishService
     {
-        private const string ViewName = "Post";
+        private const string MediaType = "application/json";
+        private const string CharSet = "utf-8";
+        private const string PostPublishHtml = "/admin/post/publish/html";
 
         private readonly WebAppSettings _settings;
+        private readonly IMarkdownHelper _markdownHelper;
         private readonly IFileHelper _fileHelper;
 
         private bool _disposed;
@@ -31,8 +36,9 @@ namespace Aliencube.Scissorhands.Services
         /// Initializes a new instance of the <see cref="PublishService"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        public PublishService(WebAppSettings settings, IFileHelper fileHelper)
+        public PublishService(WebAppSettings settings, IMarkdownHelper markdownHelper, IFileHelper fileHelper)
         {
             if (settings == null)
             {
@@ -40,6 +46,13 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._settings = settings;
+
+            if (markdownHelper == null)
+            {
+                throw new ArgumentNullException(nameof(markdownHelper));
+            }
+
+            this._markdownHelper = markdownHelper;
 
             if (fileHelper == null)
             {
@@ -90,78 +103,6 @@ namespace Aliencube.Scissorhands.Services
         /// <returns>Returns the HTML file path.</returns>
         public async Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env)
         {
-            throw new NotImplementedException();
-        }
-
-        /// <summary>
-        /// Gets the post HTML to be published.
-        /// </summary>
-        /// <param name="resolver"><see cref="IServiceProvider"/> instance.</param>
-        /// <param name="actionContext"><see cref="ActionContext"/> instance.</param>
-        /// <param name="viewModel"><see cref="PostPublishViewModel"/> instance.</param>
-        /// <param name="viewData"><see cref="ViewDataDictionary"/> instance.</param>
-        /// <param name="tempData"><see cref="ITempDataDictionary"/> instance.</param>
-        /// <returns>Returns HTML to be published.</returns>
-        public async Task<string> GetPostHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData)
-        {
-            if (resolver == null)
-            {
-                throw new ArgumentNullException(nameof(resolver));
-            }
-
-            if (actionContext == null)
-            {
-                throw new ArgumentNullException(nameof(actionContext));
-            }
-
-            if (viewModel == null)
-            {
-                throw new ArgumentNullException(nameof(viewModel));
-            }
-
-            if (viewData == null)
-            {
-                throw new ArgumentNullException(nameof(viewData));
-            }
-
-            if (tempData == null)
-            {
-                throw new ArgumentNullException(nameof(tempData));
-            }
-
-            using (var writer = new StringWriter())
-            {
-                viewData.Model = viewModel;
-
-                var viewEngine = resolver.GetService(typeof(ICompositeViewEngine)) as ICompositeViewEngine;
-                if (viewEngine == null)
-                {
-                    return null;
-                }
-
-                var viewResult = viewEngine.FindPartialView(actionContext, ViewName);
-                if (viewResult == null)
-                {
-                    return null;
-                }
-
-                var viewContext = new ViewContext(actionContext, viewResult.View, viewData, tempData, writer, new HtmlHelperOptions());
-
-                await viewResult.View.RenderAsync(viewContext).ConfigureAwait(false);
-
-                var result = writer.GetStringBuilder().ToString();
-                return result;
-            }
-        }
-
-        /// <summary>
-        /// Publishes the HTML post as a file.
-        /// </summary>
-        /// <param name="html">Content in HTML format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
-        /// <returns>Returns the HTML file path.</returns>
-        public async Task<string> PublishPostAsync(string html, IApplicationEnvironment env)
-        {
             if (string.IsNullOrWhiteSpace(html))
             {
                 throw new ArgumentNullException(nameof(html));
@@ -188,6 +129,69 @@ namespace Aliencube.Scissorhands.Services
         }
 
         /// <summary>
+        /// Publishes the post as a file.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
+        public async Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                throw new ArgumentNullException(nameof(markdown));
+            }
+
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
+
+            var publishedpath = new PublishedPostPath();
+
+            var markdownpath = await this.PublishMarkdownAsync(markdown, env).ConfigureAwait(false);
+            publishedpath.Markdown = markdownpath;
+
+            var html = await this.GetPublishedHtmlAsync(markdown, request).ConfigureAwait(false);
+
+            var htmlpath = await this.PublishHtmlAsync(html, env).ConfigureAwait(false);
+            publishedpath.Html = htmlpath;
+
+            return publishedpath;
+        }
+
+        /// <summary>
+        /// Gets the published HTML content.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the published HTML content.</returns>
+        public async Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                throw new ArgumentNullException(nameof(markdown));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var parsedHtml = this._markdownHelper.Parse(markdown);
+
+            var publishing = new PublishedContent() { Markdown = markdown, Html = parsedHtml };
+
+            using (var client = CreateHttpClient(request))
+            using (var content = CreateStringContent(publishing))
+            {
+                var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
+                var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
+                return html;
+            }
+        }
+
+        /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
         public void Dispose()
@@ -198,6 +202,39 @@ namespace Aliencube.Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private static HttpClient CreateHttpClient(HttpRequest request)
+        {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var url = string.Join("://", request.IsHttps ? "https" : "http", request.Host.Value);
+            var baseAddressUri = new Uri(url);
+            var client = new HttpClient() { BaseAddress = baseAddressUri };
+            return client;
+        }
+
+        private static StringContent CreateStringContent(PublishedContent publishing)
+        {
+            if (publishing == null)
+            {
+                throw new ArgumentNullException(nameof(publishing));
+            }
+
+            var content = new StringContent(JsonConvert.SerializeObject(publishing), Encoding.UTF8)
+            {
+                Headers =
+                                      {
+                                          ContentType = new MediaTypeHeaderValue(MediaType)
+                                                            {
+                                                                CharSet = CharSet
+                                                            }
+                                      }
+            };
+            return content;
         }
     }
 }

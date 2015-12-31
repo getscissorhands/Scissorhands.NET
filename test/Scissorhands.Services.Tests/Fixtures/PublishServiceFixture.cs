@@ -26,9 +26,11 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
             this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
 
+            this.MarkdownHelper = new Mock<IMarkdownHelper>();
+
             this.FileHelper = new Mock<IFileHelper>();
 
-            this.PublishService = new PublishService(this.WebAppSettings.Object, this.FileHelper.Object);
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object);
         }
 
         /// <summary>
@@ -40,6 +42,11 @@ namespace Aliencube.Scissorhands.Services.Tests.Fixtures
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance..
         /// </summary>
         public Mock<WebAppSettings> WebAppSettings { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
+        /// </summary>
+        public Mock<IMarkdownHelper> MarkdownHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

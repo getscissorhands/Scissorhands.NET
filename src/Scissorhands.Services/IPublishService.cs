@@ -1,10 +1,9 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.ViewModels.Post;
+using Aliencube.Scissorhands.Models.Posts;
 
-using Microsoft.AspNet.Mvc;
-using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
 
 namespace Aliencube.Scissorhands.Services
@@ -35,18 +34,16 @@ namespace Aliencube.Scissorhands.Services
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
         /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
-        /// <returns>Returns the HTML file path.</returns>
-        Task<string> PublishPostAsync(string markdown, IApplicationEnvironment env);
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
+        Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request);
 
         /// <summary>
-        /// Gets the post HTML to be published.
+        /// Gets the published HTML content.
         /// </summary>
-        /// <param name="resolver"><see cref="IServiceProvider"/> instance.</param>
-        /// <param name="actionContext"><see cref="ActionContext"/> instance.</param>
-        /// <param name="viewModel"><see cref="PostPublishViewModel"/> instance.</param>
-        /// <param name="viewData"><see cref="ViewDataDictionary"/> instance.</param>
-        /// <param name="tempData"><see cref="ITempDataDictionary"/> instance.</param>
-        /// <returns>Returns HTML to be published.</returns>
-        Task<string> GetPostHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData);
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the published HTML content.</returns>
+        Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request);
     }
 }

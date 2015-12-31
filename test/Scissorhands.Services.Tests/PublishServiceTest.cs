@@ -23,6 +23,7 @@ namespace Aliencube.Scissorhands.Services.Tests
     public class PublishServiceTest : IClassFixture<PublishServiceFixture>
     {
         private readonly Mock<WebAppSettings> _settings;
+        private readonly Mock<IMarkdownHelper> _markdownHelper;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly IPublishService _service;
 
@@ -36,6 +37,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         public PublishServiceTest(PublishServiceFixture fixture)
         {
             this._settings = fixture.WebAppSettings;
+            this._markdownHelper = fixture.MarkdownHelper;
             this._fileHelper = fixture.FileHelper;
             this._service = fixture.PublishService;
 
@@ -49,11 +51,14 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var service = new PublishService(null, this._fileHelper.Object); };
+            Action action1 = () => { var service = new PublishService(null, this._markdownHelper.Object, this._fileHelper.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
-            Action action2 = () => { var service = new PublishService(this._settings.Object, null); };
+            Action action2 = () => { var service = new PublishService(this._settings.Object, null, this._fileHelper.Object); };
             action2.ShouldThrow<ArgumentNullException>();
+
+            Action action3 = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, null); };
+            action3.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -62,7 +67,7 @@ namespace Aliencube.Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var service = new PublishService(this._settings.Object, this._fileHelper.Object); };
+            Action action = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, this._fileHelper.Object); };
             action.ShouldNotThrow<Exception>();
         }
 
@@ -108,9 +113,9 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// Tests whether the method should throw an exception or not.
         /// </summary>
         [Fact]
-        public void Given_NullHtml_PublishPostAsync_ShouldThrow_ArgumentNullException()
+        public void Given_NullHtml_PublishHtmlAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishPostAsync(null, this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(null, this._env.Object).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
@@ -118,12 +123,12 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// Tests whether the method should throw an exception or not.
         /// </summary>
         [Fact]
-        public void Given_FalseWritingSync_PublishPostAsync_ShouldThrow_PublishFailedException()
+        public void Given_FalseWritingSync_PublishHtmlAsync_ShouldThrow_PublishFailedException()
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishPostAsync("**Hello World**", this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync("**Hello World**", this._env.Object).ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
@@ -133,12 +138,12 @@ namespace Aliencube.Scissorhands.Services.Tests
         /// <param name="htmlpath">File path.</param>
         [Theory]
         [InlineData("/posts/post.html")]
-        public async void Given_Markdown_PublishPostAsync_ShouldReturn_Filepath(string htmlpath)
+        public async void Given_Markdown_PublishHtmlAsync_ShouldReturn_Filepath(string htmlpath)
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishPostAsync("<strong>Hello World</strong>", this._env.Object).ConfigureAwait(false);
+            var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>", this._env.Object).ConfigureAwait(false);
             result.Should().Be(htmlpath);
         }
     }

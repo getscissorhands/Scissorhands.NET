@@ -3,8 +3,6 @@ using System.Threading.Tasks;
 
 using Aliencube.Scissorhands.Services.Helpers;
 
-using CommonMark;
-
 namespace Aliencube.Scissorhands.Services
 {
     /// <summary>
@@ -12,6 +10,7 @@ namespace Aliencube.Scissorhands.Services
     /// </summary>
     public class MarkdownService : IMarkdownService
     {
+        private readonly IMarkdownHelper _markdownHelper;
         private readonly IFileHelper _fileHelper;
 
         private bool _disposed;
@@ -19,31 +18,23 @@ namespace Aliencube.Scissorhands.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="MarkdownService"/> class.
         /// </summary>
+        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        public MarkdownService(IFileHelper fileHelper)
+        public MarkdownService(IMarkdownHelper markdownHelper, IFileHelper fileHelper)
         {
+            if (markdownHelper == null)
+            {
+                throw new ArgumentNullException(nameof(markdownHelper));
+            }
+
+            this._markdownHelper = markdownHelper;
+
             if (fileHelper == null)
             {
                 throw new ArgumentNullException(nameof(fileHelper));
             }
 
             this._fileHelper = fileHelper;
-        }
-
-        /// <summary>
-        /// Parses the markdown string to HTML string.
-        /// </summary>
-        /// <param name="markdown">Markdown string.</param>
-        /// <returns>Returns HTML string parsed.</returns>
-        public string Parse(string markdown)
-        {
-            if (string.IsNullOrWhiteSpace(markdown))
-            {
-                return null;
-            }
-
-            var parsed = CommonMarkConverter.Convert(markdown);
-            return parsed;
         }
 
         /// <summary>
@@ -64,7 +55,7 @@ namespace Aliencube.Scissorhands.Services
                 return null;
             }
 
-            var parsed = this.Parse(markdown);
+            var parsed = this._markdownHelper.Parse(markdown);
             return await Task.FromResult(parsed).ConfigureAwait(false);
         }
 

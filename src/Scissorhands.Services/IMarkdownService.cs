@@ -9,13 +9,6 @@ namespace Aliencube.Scissorhands.Services
     public interface IMarkdownService : IDisposable
     {
         /// <summary>
-        /// Parses the markdown string to HTML string.
-        /// </summary>
-        /// <param name="markdown">Markdown string.</param>
-        /// <returns>Returns HTML string parsed.</returns>
-        string Parse(string markdown);
-
-        /// <summary>
         /// Converts the markdown file to HTML string.
         /// </summary>
         /// <param name="filepath">Fully qualified file path.</param>

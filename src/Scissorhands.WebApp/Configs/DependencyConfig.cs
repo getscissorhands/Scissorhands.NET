@@ -48,6 +48,7 @@ namespace Aliencube.Scissorhands.WebApp.Configs
         private static void RegisterHelpers(ContainerBuilder builder)
         {
             builder.RegisterType<FileHelper>().As<IFileHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<MarkdownHelper>().As<IMarkdownHelper>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 
         private static void RegisterServices(ContainerBuilder builder)
