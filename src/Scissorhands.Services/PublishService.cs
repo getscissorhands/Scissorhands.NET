@@ -22,13 +22,12 @@ namespace Scissorhands.Services
     /// </summary>
     public class PublishService : IPublishService
     {
-        private const string MediaType = "application/json";
-        private const string CharSet = "utf-8";
         private const string PostPublishHtml = "/admin/post/publish/html";
 
         private readonly WebAppSettings _settings;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IFileHelper _fileHelper;
+        private readonly IHttpClientHelper _httpClientHelper;
 
         private bool _disposed;
 
@@ -38,7 +37,8 @@ namespace Scissorhands.Services
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        public PublishService(WebAppSettings settings, IMarkdownHelper markdownHelper, IFileHelper fileHelper)
+        /// <param name="httpClientHelper"><see cref="IHttpClientHelper"/> instance.</param>
+        public PublishService(WebAppSettings settings, IMarkdownHelper markdownHelper, IFileHelper fileHelper, IHttpClientHelper httpClientHelper)
         {
             if (settings == null)
             {
@@ -60,6 +60,13 @@ namespace Scissorhands.Services
             }
 
             this._fileHelper = fileHelper;
+
+            if (httpClientHelper == null)
+            {
+                throw new ArgumentNullException(nameof(httpClientHelper));
+            }
+
+            this._httpClientHelper = httpClientHelper;
         }
 
         /// <summary>
@@ -182,8 +189,8 @@ namespace Scissorhands.Services
 
             var publishing = new PublishedContent() { Theme = this._settings.Theme, Markdown = markdown, Html = parsedHtml };
 
-            using (var client = CreateHttpClient(request))
-            using (var content = CreateStringContent(publishing))
+            using (var client = this._httpClientHelper.CreateHttpClient(request))
+            using (var content = this._httpClientHelper.CreateStringContent(publishing))
             {
                 var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
                 var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -202,39 +209,6 @@ namespace Scissorhands.Services
             }
 
             this._disposed = true;
-        }
-
-        private static HttpClient CreateHttpClient(HttpRequest request)
-        {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var url = string.Join("://", request.IsHttps ? "https" : "http", request.Host.Value);
-            var baseAddressUri = new Uri(url);
-            var client = new HttpClient() { BaseAddress = baseAddressUri };
-            return client;
-        }
-
-        private static StringContent CreateStringContent(PublishedContent publishing)
-        {
-            if (publishing == null)
-            {
-                throw new ArgumentNullException(nameof(publishing));
-            }
-
-            var content = new StringContent(JsonConvert.SerializeObject(publishing), Encoding.UTF8)
-            {
-                Headers =
-                                      {
-                                          ContentType = new MediaTypeHeaderValue(MediaType)
-                                                            {
-                                                                CharSet = CharSet
-                                                            }
-                                      }
-            };
-            return content;
         }
     }
 }

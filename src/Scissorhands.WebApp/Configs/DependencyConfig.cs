@@ -48,6 +48,7 @@ namespace Scissorhands.WebApp.Configs
         private static void RegisterHelpers(ContainerBuilder builder)
         {
             builder.RegisterType<FileHelper>().As<IFileHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<HttpClientHelper>().As<IHttpClientHelper>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<MarkdownHelper>().As<IMarkdownHelper>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 

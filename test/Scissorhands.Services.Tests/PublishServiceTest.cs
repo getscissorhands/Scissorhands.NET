@@ -25,6 +25,7 @@ namespace Scissorhands.Services.Tests
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<IMarkdownHelper> _markdownHelper;
         private readonly Mock<IFileHelper> _fileHelper;
+        private readonly Mock<IHttpClientHelper> _httpClientHelper;
         private readonly IPublishService _service;
 
         private readonly Mock<IApplicationEnvironment> _env;
@@ -39,6 +40,7 @@ namespace Scissorhands.Services.Tests
             this._settings = fixture.WebAppSettings;
             this._markdownHelper = fixture.MarkdownHelper;
             this._fileHelper = fixture.FileHelper;
+            this._httpClientHelper = fixture.HttpClientHelper;
             this._service = fixture.PublishService;
 
             this._env = new Mock<IApplicationEnvironment>();
@@ -51,14 +53,17 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var service = new PublishService(null, this._markdownHelper.Object, this._fileHelper.Object); };
+            Action action1 = () => { var service = new PublishService(null, this._markdownHelper.Object, this._fileHelper.Object, this._httpClientHelper.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
-            Action action2 = () => { var service = new PublishService(this._settings.Object, null, this._fileHelper.Object); };
+            Action action2 = () => { var service = new PublishService(this._settings.Object, null, this._fileHelper.Object, this._httpClientHelper.Object); };
             action2.ShouldThrow<ArgumentNullException>();
 
-            Action action3 = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, null); };
+            Action action3 = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, null, this._httpClientHelper.Object); };
             action3.ShouldThrow<ArgumentNullException>();
+
+            Action action4 = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, this._fileHelper.Object, null); };
+            action4.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -67,7 +72,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, this._fileHelper.Object); };
+            Action action = () => { var service = new PublishService(this._settings.Object, this._markdownHelper.Object, this._fileHelper.Object, this._httpClientHelper.Object); };
             action.ShouldNotThrow<Exception>();
         }
 

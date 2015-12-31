@@ -30,7 +30,9 @@ namespace Scissorhands.Services.Tests.Fixtures
 
             this.FileHelper = new Mock<IFileHelper>();
 
-            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object);
+            this.HttpClientHelper = new Mock<IHttpClientHelper>();
+
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpClientHelper.Object);
         }
 
         /// <summary>
@@ -52,6 +54,11 @@ namespace Scissorhands.Services.Tests.Fixtures
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.
         /// </summary>
         public Mock<IFileHelper> FileHelper { get; }
+
+        /// <summary>
+        /// Gets the <see cref="HttpClientHelper"/> instance.
+        /// </summary>
+        public Mock<IHttpClientHelper> HttpClientHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="IPublishService"/> instance.
