@@ -2,7 +2,7 @@
 using System.Net;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.ViewModels.Post;
 using Aliencube.Scissorhands.WebApp.Controllers;
@@ -12,6 +12,7 @@ using FluentAssertions;
 
 using Microsoft.AspNet.Mvc;
 using Microsoft.AspNet.Mvc.ViewFeatures;
+using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
@@ -141,7 +142,7 @@ namespace Aliencube.Scissorhands.WebApp.Tests
         public async void Given_Model_Publish_ShouldReturn_ViewResult(string markdown, string html, string markdownpath, string htmlpath)
         {
             this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
-            this._publishService.Setup(p => p.PublishMarkdownAsync(It.IsAny<string>(), It.IsAny<IServiceProvider>())).Returns(Task.FromResult(markdownpath));
+            this._publishService.Setup(p => p.PublishMarkdownAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>())).Returns(Task.FromResult(markdownpath));
             this._publishService.Setup(
                 p =>
                 p.GetPostHtmlAsync(
@@ -150,7 +151,7 @@ namespace Aliencube.Scissorhands.WebApp.Tests
                     It.IsAny<PostPublishViewModel>(),
                     It.IsAny<ViewDataDictionary>(),
                     It.IsAny<ITempDataDictionary>())).Returns(Task.FromResult(html));
-            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<IServiceProvider>())).Returns(Task.FromResult(htmlpath));
+            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>())).Returns(Task.FromResult(htmlpath));
 
             var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 

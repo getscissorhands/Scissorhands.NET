@@ -2,7 +2,7 @@
 using System.IO;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services.Exceptions;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.ViewModels.Post;
@@ -80,6 +80,17 @@ namespace Aliencube.Scissorhands.Services
             }
 
             return markdownpath;
+        }
+
+        /// <summary>
+        /// Publishes the HTML post as a file.
+        /// </summary>
+        /// <param name="html">Content in HTML format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <returns>Returns the HTML file path.</returns>
+        public async Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env)
+        {
+            throw new NotImplementedException();
         }
 
         /// <summary>

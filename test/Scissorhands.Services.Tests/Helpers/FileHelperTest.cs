@@ -2,11 +2,12 @@
 using System.IO;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services.Helpers;
 using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
+
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;

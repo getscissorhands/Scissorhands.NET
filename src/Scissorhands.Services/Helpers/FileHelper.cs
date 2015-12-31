@@ -3,7 +3,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services.Extensions;
 
 using Microsoft.Extensions.PlatformAbstractions;

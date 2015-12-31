@@ -1,4 +1,5 @@
-﻿using Aliencube.Scissorhands.Models;
+﻿using Aliencube.Scissorhands.Models.Loggers;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services;
 using Aliencube.Scissorhands.Services.Helpers;
 

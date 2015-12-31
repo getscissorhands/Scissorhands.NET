@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 using Aliencube.Scissorhands.Services.Tests.Fixtures;
 
 using FluentAssertions;
@@ -133,7 +133,7 @@ namespace Aliencube.Scissorhands.Services.Tests
             var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
         }
- 
+
         /// <summary>
         /// Tests whether the method should return value or not.
         /// </summary>

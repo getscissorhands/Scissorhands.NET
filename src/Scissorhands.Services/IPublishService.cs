@@ -23,6 +23,22 @@ namespace Aliencube.Scissorhands.Services
         Task<string> PublishMarkdownAsync(string markdown, IApplicationEnvironment env);
 
         /// <summary>
+        /// Publishes the HTML post as a file.
+        /// </summary>
+        /// <param name="html">Content in HTML format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <returns>Returns the HTML file path.</returns>
+        Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env);
+
+        /// <summary>
+        /// Publishes the post as a file.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <returns>Returns the HTML file path.</returns>
+        Task<string> PublishPostAsync(string markdown, IApplicationEnvironment env);
+
+        /// <summary>
         /// Gets the post HTML to be published.
         /// </summary>
         /// <param name="resolver"><see cref="IServiceProvider"/> instance.</param>
@@ -32,13 +48,5 @@ namespace Aliencube.Scissorhands.Services
         /// <param name="tempData"><see cref="ITempDataDictionary"/> instance.</param>
         /// <returns>Returns HTML to be published.</returns>
         Task<string> GetPostHtmlAsync(IServiceProvider resolver, ActionContext actionContext, PostPublishViewModel viewModel, ViewDataDictionary viewData, ITempDataDictionary tempData);
-
-        /// <summary>
-        /// Publishes the HTML post as a file.
-        /// </summary>
-        /// <param name="html">Content in HTML format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
-        /// <returns>Returns the HTML file path.</returns>
-        Task<string> PublishPostAsync(string html, IApplicationEnvironment env);
     }
 }

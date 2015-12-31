@@ -1,6 +1,6 @@
 ﻿using System;
 
-using Aliencube.Scissorhands.Models;
+using Aliencube.Scissorhands.Models.Settings;
 
 using Moq;
 
