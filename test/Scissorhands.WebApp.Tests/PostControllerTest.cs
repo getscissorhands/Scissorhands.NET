@@ -181,5 +181,36 @@ namespace Aliencube.Scissorhands.WebApp.Tests
             vm.MarkdownPath.Should().Be(markdownpath);
             vm.HtmlPath.Should().Be(htmlpath);
         }
+
+        /// <summary>
+        /// Tests whether the action should return <see cref="HttpStatusCodeResult"/> instance or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullModel_PublishHtml_ShouldReturn_BadRequest()
+        {
+            var result = this._controller.PublishHtml(null) as HttpStatusCodeResult;
+            result.Should().NotBeNull();
+            result.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
+        }
+
+        /// <summary>
+        /// Tests whether the action should return <see cref="ViewResult"/> instance or not.
+        /// </summary>
+        /// <param name="markdown">String value in Markdown format.</param>
+        /// <param name="html">String value in HTML format.</param>
+        [Theory]
+        [InlineData("**Hello World", "<p>Joe Bloggs</p>")]
+        public void Given_Model_PublishHtml_ShouldReturn_ViewResult(string markdown, string html)
+        {
+            var body = new PublishedContent() { Markdown = markdown, Html = html };
+            var result = this._controller.PublishHtml(body) as ViewResult;
+            result.Should().NotBeNull();
+
+            var vm = result.ViewData.Model as PublishedContent;
+            vm.Should().NotBeNull();
+
+            vm.Markdown.Should().Be(markdown);
+            vm.Html.Should().Contain(html);
+        }
     }
 }
