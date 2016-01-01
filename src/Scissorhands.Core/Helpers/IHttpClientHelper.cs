@@ -6,7 +6,7 @@ using Microsoft.AspNet.Http;
 namespace Scissorhands.Helpers
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="HttpClientHelper"/> class.
+    /// This provides interfaces to the http client helper class.
     /// </summary>
     public interface IHttpClientHelper : IDisposable
     {

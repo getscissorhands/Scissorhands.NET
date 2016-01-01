@@ -6,7 +6,7 @@ using Microsoft.Extensions.PlatformAbstractions;
 namespace Scissorhands.Helpers
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="FileHelper"/> class.
+    /// This provides interfaces to the file helper class.
     /// </summary>
     public interface IFileHelper : IDisposable
     {
