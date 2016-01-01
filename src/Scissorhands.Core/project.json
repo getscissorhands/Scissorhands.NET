@@ -2,9 +2,9 @@
   "version": "1.0.0-*",
   "description": "Scissorhands.Core Class Library",
   "authors": [ "Justin Yoo" ],
-  "tags": [ "Scissorhands.NET" ],
+  "tags": [ "Scissorhands.NET", "Core" ],
   "projectUrl": "http://getscissorhands.net",
-  "licenseUrl": "http://getscissorhands.net/license",
+  "licenseUrl": "http://getscissorhands.net/license.txt",
 
   "frameworks": {
     "dnx451": { },

@@ -2,9 +2,9 @@
   "version": "1.0.0-*",
   "description": "Scissorhands.ConsoleApp Console Application",
   "authors": [ "Justin Yoo" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
+  "tags": [ "Scissorhands.NET", "Console" ],
+  "projectUrl": "http://getscissorhands.net",
+  "licenseUrl": "http://getscissorhands.net/license.txt",
 
   "compilationOptions": {
     "emitEntryPoint": true
