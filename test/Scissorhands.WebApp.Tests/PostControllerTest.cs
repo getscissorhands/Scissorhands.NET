@@ -15,9 +15,9 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.ViewModels.Post;
 using Scissorhands.WebApp.Controllers;
 using Scissorhands.WebApp.Tests.Fixtures;
+using Scissorhands.WebApp.ViewModels.Post;
 
 using Xunit;
 

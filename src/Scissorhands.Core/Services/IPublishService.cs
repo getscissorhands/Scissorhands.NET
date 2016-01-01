@@ -9,7 +9,7 @@ using Scissorhands.Models.Posts;
 namespace Scissorhands.Services
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="PublishService"/> class.
+    /// This provides interfaces to the publish service class.
     /// </summary>
     public interface IPublishService : IDisposable
     {

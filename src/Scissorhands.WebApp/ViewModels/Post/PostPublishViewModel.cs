@@ -1,4 +1,4 @@
-﻿namespace Scissorhands.ViewModels.Post
+﻿namespace Scissorhands.WebApp.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post publish.

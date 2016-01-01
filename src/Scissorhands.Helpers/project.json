@@ -1,4 +1,4 @@
-﻿{
+{
   "version": "1.0.0-*",
   "description": "Scissorhands.Helpers Class Library",
   "authors": [ "Justin Yoo" ],
@@ -26,7 +26,6 @@
     "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Newtonsoft.Json": "8.0.1",
     "Scissorhands.Core": "1.0.0-*",
-    "Scissorhands.Models": "1.0.0-*",
     "System.Net.Http": "4.0.1-beta-23516"
   }
 }
