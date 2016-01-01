@@ -30,6 +30,14 @@ namespace Scissorhands.Services
         Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env);
 
         /// <summary>
+        /// Gets the published HTML content.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the published HTML content.</returns>
+        Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request);
+
+        /// <summary>
         /// Publishes the post as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
@@ -37,13 +45,5 @@ namespace Scissorhands.Services
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
         Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request);
-
-        /// <summary>
-        /// Gets the published HTML content.
-        /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
-        /// <returns>Returns the published HTML content.</returns>
-        Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request);
     }
 }

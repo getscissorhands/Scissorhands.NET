@@ -14,6 +14,7 @@ using Moq;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services.Exceptions;
+using Scissorhands.Services.Tests.Fakes;
 using Scissorhands.Services.Tests.Fixtures;
 
 using Xunit;
@@ -187,7 +188,7 @@ namespace Scissorhands.Services.Tests
 
             var message = new HttpResponseMessage { Content = new StringContent(html) };
 
-            var handler = new FakeHttpResponseHandler(message);
+            var handler = new HttpResponseHandlerFake(message);
             var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5080") };
 
             this._httpClientHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
@@ -197,6 +198,57 @@ namespace Scissorhands.Services.Tests
 
             var result = await this._service.GetPublishedHtmlAsync(markdown, this._request.Object).ConfigureAwait(false);
             result.Should().Be(html);
+        }
+
+        /// <summary>
+        /// Tests whether the method should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_PublishPostAsync_ShouldThrow_ArgumentNullException()
+        {
+            var markdown = "**Hello World**";
+
+            Func<Task> func1 = async () => { var result = await this._service.PublishPostAsync(null, this._env.Object, this._request.Object).ConfigureAwait(false); };
+            func1.ShouldThrow<ArgumentNullException>();
+
+            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(markdown, null, this._request.Object).ConfigureAwait(false); };
+            func2.ShouldThrow<ArgumentNullException>();
+
+            Func<Task> func3 = async () => { var result = await this._service.PublishPostAsync(markdown, this._env.Object, null).ConfigureAwait(false); };
+            func3.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether the method should return result or not.
+        /// </summary>
+        /// <param name="markdownpath">Markdown file path.</param>
+        /// <param name="htmlpath">HTML file path.</param>
+        [Theory]
+        [InlineData("/posts/markdown.md", "/posts/post.html")]
+        public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result(string markdownpath, string htmlpath)
+        {
+            var markdown = "**Hello World**";
+            var html = "<strong>Joe Bloggs</strong>";
+
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
+
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._settings.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
+
+            var message = new HttpResponseMessage { Content = new StringContent(html) };
+
+            var handler = new HttpResponseHandlerFake(message);
+            var client = new HttpClient(handler) { BaseAddress = new Uri("http://localhost:5080") };
+
+            this._httpClientHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
+
+            var content = new StringContent(html, Encoding.UTF8);
+            this._httpClientHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
+
+            var publishedpath = await this._service.PublishPostAsync(markdown, this._env.Object, this._request.Object).ConfigureAwait(false);
+            publishedpath.Markdown.Should().BeEquivalentTo(markdownpath);
+            publishedpath.Html.Should().BeEquivalentTo(htmlpath);
         }
     }
 }

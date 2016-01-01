@@ -1,14 +1,9 @@
 ﻿using System;
 using System.IO;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Http;
 using Microsoft.Extensions.PlatformAbstractions;
-
-using Newtonsoft.Json;
 
 using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
@@ -136,38 +131,6 @@ namespace Scissorhands.Services
         }
 
         /// <summary>
-        /// Publishes the post as a file.
-        /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
-        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
-        /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
-        public async Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(markdown))
-            {
-                throw new ArgumentNullException(nameof(markdown));
-            }
-
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
-            var publishedpath = new PublishedPostPath();
-
-            var markdownpath = await this.PublishMarkdownAsync(markdown, env).ConfigureAwait(false);
-            publishedpath.Markdown = markdownpath;
-
-            var html = await this.GetPublishedHtmlAsync(markdown, request).ConfigureAwait(false);
-
-            var htmlpath = await this.PublishHtmlAsync(html, env).ConfigureAwait(false);
-            publishedpath.Html = htmlpath;
-
-            return publishedpath;
-        }
-
-        /// <summary>
         /// Gets the published HTML content.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
@@ -196,6 +159,43 @@ namespace Scissorhands.Services
                 var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
                 return html;
             }
+        }
+
+        /// <summary>
+        /// Publishes the post as a file.
+        /// </summary>
+        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
+        public async Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request)
+        {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                throw new ArgumentNullException(nameof(markdown));
+            }
+
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
+
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
+            var publishedpath = new PublishedPostPath();
+
+            var markdownpath = await this.PublishMarkdownAsync(markdown, env).ConfigureAwait(false);
+            publishedpath.Markdown = markdownpath;
+
+            var html = await this.GetPublishedHtmlAsync(markdown, request).ConfigureAwait(false);
+
+            var htmlpath = await this.PublishHtmlAsync(html, env).ConfigureAwait(false);
+            publishedpath.Html = htmlpath;
+
+            return publishedpath;
         }
 
         /// <summary>

@@ -1,26 +1,24 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Net.Http;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace Scissorhands.Services.Tests
+namespace Scissorhands.Services.Tests.Fakes
 {
     /// <summary>
     /// This represents the handler entity for fake HTTP response.
     /// </summary>
     /// <remarks>Reference: http://stackoverflow.com/questions/22223223/how-to-pass-in-a-mocked-httpclient-in-a-net-test#22264503</remarks>
     [SuppressMessage("StyleCop.CSharp.DocumentationRules", "SA1650:ElementDocumentationMustBeSpelledCorrectly", Justification = "Reviewed. Suppression is OK here.")]
-    public class FakeHttpResponseHandler : DelegatingHandler
+    public class HttpResponseHandlerFake : DelegatingHandler
     {
         private readonly HttpResponseMessage _message;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="FakeHttpResponseHandler"/> class.
+        /// Initializes a new instance of the <see cref="HttpResponseHandlerFake"/> class.
         /// </summary>
         /// <param name="message"><see cref="HttpResponseMessage"/> object.</param>
-        public FakeHttpResponseHandler(HttpResponseMessage message)
+        public HttpResponseHandlerFake(HttpResponseMessage message)
         {
             this._message = message;
         }
