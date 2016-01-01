@@ -1,13 +1,32 @@
-﻿<!DOCTYPE html>
+﻿@using Scissorhands.Services
+@using Scissorhands.WebApp.ViewModels.Post
 
+@inject IThemeService Theme
+
+@model PostPublishViewModel
+@{
+    var head = Theme.GetHead(Model.Theme);
+    var header = Theme.GetHeader(Model.Theme);
+    var footer = Theme.GetFooter(Model.Theme);
+}
+
+<!DOCTYPE html>
 <html>
-<head>
-    <meta name="viewport" content="width=device-width" />
-    <title>@ViewBag.Title</title>
-</head>
+
+  @Html.Partial(head, Model)
+
 <body>
-    <div>
-        @RenderBody()
+
+    @Html.Partial(header, Model)
+
+    <div class="page-content">
+        <div class="wrapper">
+            @RenderBody()
+        </div>
     </div>
+
+    @Html.Partial(footer, Model)
+
 </body>
+
 </html>

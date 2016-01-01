@@ -51,6 +51,40 @@ namespace Scissorhands.Services
         }
 
         /// <summary>
+        /// Gets the head path for view.
+        /// </summary>
+        /// <param name="themeName">Theme name.</param>
+        /// <returns>Returns the post path for view.</returns>
+        public string GetHead(string themeName = null)
+        {
+            var theme = themeName;
+            if (string.IsNullOrWhiteSpace(theme))
+            {
+                theme = this._settings.Theme;
+            }
+
+            var head = $"~/Themes/{theme}/Shared/_Head.cshtml";
+            return head;
+        }
+
+        /// <summary>
+        /// Gets the header path for view.
+        /// </summary>
+        /// <param name="themeName">Theme name.</param>
+        /// <returns>Returns the post path for view.</returns>
+        public string GetHeader(string themeName = null)
+        {
+            var theme = themeName;
+            if (string.IsNullOrWhiteSpace(theme))
+            {
+                theme = this._settings.Theme;
+            }
+
+            var header = $"~/Themes/{theme}/Shared/_Header.cshtml";
+            return header;
+        }
+
+        /// <summary>
         /// Gets the post path for view.
         /// </summary>
         /// <param name="themeName">Theme name.</param>
@@ -65,6 +99,23 @@ namespace Scissorhands.Services
 
             var post = $"~/Themes/{theme}/Post/Post.cshtml";
             return post;
+        }
+
+        /// <summary>
+        /// Gets the footer path for view.
+        /// </summary>
+        /// <param name="themeName">Theme name.</param>
+        /// <returns>Returns the post path for view.</returns>
+        public string GetFooter(string themeName = null)
+        {
+            var theme = themeName;
+            if (string.IsNullOrWhiteSpace(theme))
+            {
+                theme = this._settings.Theme;
+            }
+
+            var footer = $"~/Themes/{theme}/Shared/_Footer.cshtml";
+            return footer;
         }
 
         /// <summary>
