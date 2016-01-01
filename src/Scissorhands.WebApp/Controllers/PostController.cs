@@ -9,7 +9,7 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.ViewModels.Post;
+using Scissorhands.WebApp.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
 {
@@ -22,8 +22,6 @@ namespace Scissorhands.WebApp.Controllers
         private readonly WebAppSettings _settings;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IPublishService _publishService;
-
-        private readonly IApplicationEnvironment _env;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.

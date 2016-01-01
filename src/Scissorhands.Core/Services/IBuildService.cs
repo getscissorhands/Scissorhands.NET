@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Scissorhands.Services
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="BuildService"/> class.
+    /// This provides interfaces to the build service class.
     /// </summary>
     public interface IBuildService : IDisposable
     {

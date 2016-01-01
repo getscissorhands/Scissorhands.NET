@@ -6,8 +6,8 @@
   </PropertyGroup>
   <Import Project="$(VSToolsPath)\DNX\Microsoft.DNX.Props" Condition="'$(VSToolsPath)' != ''" />
   <PropertyGroup Label="Globals">
-    <ProjectGuid>b8379cba-f8d8-470b-940a-cabab14b438d</ProjectGuid>
-    <RootNamespace>Scissorhands.Models</RootNamespace>
+    <ProjectGuid>bb81588a-6b20-4ba5-beda-8ae9e86a7a3c</ProjectGuid>
+    <RootNamespace>Scissorhands</RootNamespace>
     <BaseIntermediateOutputPath Condition="'$(BaseIntermediateOutputPath)'=='' ">..\..\artifacts\obj\$(MSBuildProjectName)</BaseIntermediateOutputPath>
     <OutputPath Condition="'$(OutputPath)'=='' ">..\..\artifacts\bin\$(MSBuildProjectName)\</OutputPath>
   </PropertyGroup>

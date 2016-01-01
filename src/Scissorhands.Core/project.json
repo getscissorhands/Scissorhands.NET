@@ -1,10 +1,10 @@
 ﻿{
   "version": "1.0.0-*",
-  "description": "Scissorhands.ViewModels Class Library",
+  "description": "Scissorhands.Core Class Library",
   "authors": [ "Justin Yoo" ],
-  "tags": [ "" ],
-  "projectUrl": "",
-  "licenseUrl": "",
+  "tags": [ "Scissorhands.NET" ],
+  "projectUrl": "http://getscissorhands.net",
+  "licenseUrl": "http://getscissorhands.net/license",
 
   "frameworks": {
     "dnx451": { },
@@ -18,5 +18,12 @@
         "System.Threading": "4.0.11-beta-23516"
       }
     }
+  },
+
+  "dependencies": {
+    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
+    "Microsoft.AspNet.Mvc.ViewFeatures": "6.0.0-rc1-final",
+    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
+    "System.Net.Http": "4.0.1-beta-23516"
   }
 }

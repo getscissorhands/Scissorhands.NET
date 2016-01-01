@@ -3,7 +3,7 @@
 namespace Scissorhands.Helpers
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="MarkdownHelper"/> class.
+    /// This provides interfaces to the Markdown helper class.
     /// </summary>
     public interface IMarkdownHelper : IDisposable
     {

@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 namespace Scissorhands.Services
 {
     /// <summary>
-    /// This provides interfaces to the <see cref="MarkdownService"/> class.
+    /// This provides interfaces to the markdown service class.
     /// </summary>
     public interface IMarkdownService : IDisposable
     {
