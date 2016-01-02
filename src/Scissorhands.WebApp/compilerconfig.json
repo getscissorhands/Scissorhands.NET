@@ -1,0 +1,13 @@
+﻿[
+  {
+    "outputFile": "wwwroot/css/themes/polar-bear/main.css",
+    "inputFile": "wwwroot/css/themes/polar-bear/main.scss",
+    "minify": {
+      "enabled": true
+    },
+    "includeInProject": true,
+    "options": {
+      "sourceMap": true
+    }
+  }
+]
