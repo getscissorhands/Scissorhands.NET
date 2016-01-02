@@ -1,0 +1,32 @@
+﻿@using Scissorhands.Services
+@using Scissorhands.WebApp.ViewModels.Post
+
+@inject IThemeService Theme
+
+@model PostPublishViewModel
+@{
+    var head = Theme.GetHead(Model.Theme);
+    var header = Theme.GetHeader(Model.Theme);
+    var footer = Theme.GetFooter(Model.Theme);
+}
+
+<!DOCTYPE html>
+<html>
+
+  @Html.Partial(head, Model)
+
+<body>
+
+    @Html.Partial(header, Model)
+
+    <div class="page-content">
+        <div class="wrapper">
+            @RenderBody()
+        </div>
+    </div>
+
+    @Html.Partial(footer, Model)
+
+</body>
+
+</html>
