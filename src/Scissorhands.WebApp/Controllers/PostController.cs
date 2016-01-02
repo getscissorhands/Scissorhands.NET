@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Threading.Tasks;
 
@@ -9,6 +10,7 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
+using Scissorhands.Themes;
 using Scissorhands.WebApp.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
@@ -99,7 +101,7 @@ namespace Scissorhands.WebApp.Controllers
         /// <returns>Returns the view model.</returns>
         [Route("preview")]
         [HttpPost]
-        public IActionResult Preview(PostFormViewModel model)
+        public async Task<IActionResult> Preview(PostFormViewModel model)
         {
             if (model == null)
             {
@@ -122,7 +124,15 @@ namespace Scissorhands.WebApp.Controllers
             page.Date = DateTime.Today;
             page.BaseUrl = this._settings.BaseUrl;
             page.Url = "/posts/post.html";
+            page.Pages = new List<PageSettings>();
 
+            vm.Page = page;
+
+            var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
+
+            var loader = new ThemeLoader(this._settings, new FileHelper(this._settings));
+            var site = await loader.LoadAsync(env).ConfigureAwait(false);
+            vm.Site = site;
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;

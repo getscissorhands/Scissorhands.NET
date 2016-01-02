@@ -1,5 +1,7 @@
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.PlatformAbstractions;
+
 using Scissorhands.Models.Settings;
 
 namespace Scissorhands.Themes
@@ -13,6 +15,6 @@ namespace Scissorhands.Themes
         /// Loads the theme configuration file.
         /// </summary>
         /// <returns>Returns the <see cref="SiteSettings"/> instance.</returns>
-        Task<SiteSettings> LoadAsync();
+        Task<SiteSettings> LoadAsync(IApplicationEnvironment env);
     }
 }

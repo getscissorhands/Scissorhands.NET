@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "8.0.1",
-    "Scissorhands.Core": "1.0.0-*"
+    "Scissorhands.Helpers": "1.0.0-*"
   }
 }

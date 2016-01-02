@@ -3,9 +3,12 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.PlatformAbstractions;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Serialization;
 
+using Scissorhands.Helpers;
 using Scissorhands.Models.Settings;
 
 namespace Scissorhands.Themes
@@ -18,6 +21,7 @@ namespace Scissorhands.Themes
         private const string Config = "_config.json";
 
         private readonly WebAppSettings _settings;
+        private readonly IFileHelper _fileHelper;
 
         private bool _disposed;
 
@@ -25,7 +29,7 @@ namespace Scissorhands.Themes
         /// Initializes a new instance of the <see cref="ThemeLoader"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        public ThemeLoader(WebAppSettings settings)
+        public ThemeLoader(WebAppSettings settings, IFileHelper fileHelper)
         {
             if (settings == null)
             {
@@ -33,16 +37,23 @@ namespace Scissorhands.Themes
             }
 
             this._settings = settings;
+
+            if (fileHelper == null)
+            {
+                throw new ArgumentNullException(nameof(fileHelper));
+            }
+
+            this._fileHelper = fileHelper;
         }
 
         /// <summary>
         /// Loads the theme configuration file.
         /// </summary>
         /// <returns>Returns the <see cref="SiteSettings"/> instance.</returns>
-        public async Task<SiteSettings> LoadAsync()
+        public async Task<SiteSettings> LoadAsync(IApplicationEnvironment env)
         {
-            var themepath = $"~/Themes/{this._settings.Theme}/{Config}";
-            if (!File.Exists(themepath))
+            var configpath = Path.Combine(env.ApplicationBasePath, $"Themes/{this._settings.Theme}/{Config}");
+            if (!File.Exists(configpath))
             {
                 throw new InvalidOperationException("_config.json not found");
             }
@@ -54,15 +65,11 @@ namespace Scissorhands.Themes
                                    MissingMemberHandling = MissingMemberHandling.Ignore
                                };
 
-            using (var stream = new FileStream(themepath, FileMode.Open, FileAccess.Read))
-            using (var reader = new StreamReader(stream, Encoding.UTF8))
-            {
-                var json = await reader.ReadToEndAsync().ConfigureAwait(false);
-                var config = JsonConvert.DeserializeObject<SiteSettings>(json, settings);
+            var json = await this._fileHelper.ReadAsync(configpath).ConfigureAwait(false);
+            var config = JsonConvert.DeserializeObject<SiteSettings>(json, settings);
 
-                this.ApplyWebAppSettings(config);
-                return config;
-            }
+            this.ApplyWebAppSettings(config);
+            return config;
         }
 
         /// <summary>

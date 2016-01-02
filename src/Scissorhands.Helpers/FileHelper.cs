@@ -45,7 +45,7 @@ namespace Scissorhands.Helpers
                 return null;
             }
 
-            using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
+            using (var stream = new FileStream(ReplaceDirectorySeparator(filepath), FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
                 var contents = await reader.ReadToEndAsync().ConfigureAwait(false);
@@ -71,7 +71,7 @@ namespace Scissorhands.Helpers
                 return await Task.FromResult(false).ConfigureAwait(false);
             }
 
-            using (var stream = new FileStream(filepath, FileMode.Create, FileAccess.Write))
+            using (var stream = new FileStream(ReplaceDirectorySeparator(filepath), FileMode.Create, FileAccess.Write))
             using (var writer = new StreamWriter(stream, Encoding.UTF8))
             {
                 await writer.WriteAsync(value).ConfigureAwait(false);
