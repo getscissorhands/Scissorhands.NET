@@ -1,4 +1,6 @@
-﻿namespace Scissorhands.WebApp.ViewModels.Post
+﻿using Scissorhands.Models.Settings;
+
+namespace Scissorhands.WebApp.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post. This MUST be inherited.
@@ -29,5 +31,10 @@
         /// Gets or sets the file path of the footer partial view.
         /// </summary>
         public string FooterPartialViewPath { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Page"/> object.
+        /// </summary>
+        public PageSettings Page { get; set; }
     }
 }

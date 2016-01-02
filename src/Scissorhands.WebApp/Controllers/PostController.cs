@@ -115,6 +115,15 @@ namespace Scissorhands.WebApp.Controllers
                              FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
                          };
 
+            var page = new PageSettings();
+            page.Title = "Hello World";
+            page.Description = "This is description";
+            page.Author = new Author() { Name = "joebloggs" };
+            page.Date = DateTime.Today;
+            page.BaseUrl = this._settings.BaseUrl;
+            page.Url = "/posts/post.html";
+
+
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
 
