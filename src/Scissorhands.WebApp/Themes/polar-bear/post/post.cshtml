@@ -1,0 +1,31 @@
+﻿@{
+    var page = Model.Page;
+}
+<div class="post">
+
+    <header class="post-header">
+        <h1 class="post-title">@Html.Raw(page.Title)</h1>
+        <p class="post-meta">
+            Posted on
+            @page.Date.ToString("dd/MM/yyyy")
+            @if (page.Author != null)
+            {
+                if (!string.IsNullOrWhiteSpace(page.Author.Name))
+                {
+                    @string.Format(" • {0}", page.Author.Name)
+                }
+            }
+        </p>
+    </header>
+
+    <article class="post-content">
+        @Html.Raw(Model.Html)
+    </article>
+
+    <div align="center">
+        <a href="#">
+            <i class="fa fa-arrow-circle-up fa-2x"></i>
+        </a>
+    </div>
+
+</div>

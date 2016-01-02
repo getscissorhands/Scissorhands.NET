@@ -1,11 +1,10 @@
-﻿{
+{
   "version": "1.0.0-*",
-  "description": "Scissorhands.Core Class Library",
+  "description": "Scissorhands.Themes Class Library",
   "authors": [ "Justin Yoo" ],
   "tags": [ "Scissorhands.NET", "Core" ],
   "projectUrl": "http://getscissorhands.net",
   "licenseUrl": "http://getscissorhands.net/license.txt",
-
   "frameworks": {
     "dnx451": { },
     "dnxcore50": {
@@ -19,12 +18,8 @@
       }
     }
   },
-
   "dependencies": {
-    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc.ViewFeatures": "6.0.0-rc1-final",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
     "Newtonsoft.Json": "8.0.1",
-    "System.Net.Http": "4.0.1-beta-23516"
+    "Scissorhands.Helpers": "1.0.0-*"
   }
 }

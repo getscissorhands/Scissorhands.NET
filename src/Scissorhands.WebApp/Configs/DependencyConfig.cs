@@ -9,6 +9,7 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Loggers;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
+using Scissorhands.Themes;
 
 namespace Scissorhands.WebApp.Configs
 {
@@ -29,6 +30,7 @@ namespace Scissorhands.WebApp.Configs
             var builder = new ContainerBuilder();
 
             RegisterAppSettings(builder, env, configuration);
+            RegisterLoaders(builder);
             RegisterHelpers(builder);
             RegisterServices(builder);
 
@@ -43,6 +45,11 @@ namespace Scissorhands.WebApp.Configs
             builder.RegisterInstance(env).SingleInstance();
             builder.RegisterInstance(configuration.Get<Logging>("Logging")).SingleInstance();
             builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).SingleInstance();
+        }
+
+        private static void RegisterLoaders(ContainerBuilder builder)
+        {
+            builder.RegisterType<ThemeLoader>().As<IThemeLoader>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 
         private static void RegisterHelpers(ContainerBuilder builder)

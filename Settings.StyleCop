@@ -7,6 +7,10 @@
       <Value>dest</Value>
       <Value>str</Value>
       <Value>scissorhands</Value>
+      <Value>eg</Value>
+      <Value>getscissorhands</Value>
+      <Value>instagram</Value>
+      <Value>linkedin</Value>
     </CollectionProperty>
     <StringProperty Name="Culture">en-GB</StringProperty>
   </GlobalSettings>

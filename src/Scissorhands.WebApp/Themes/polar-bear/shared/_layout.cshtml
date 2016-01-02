@@ -1,0 +1,26 @@
+﻿@using Scissorhands.WebApp.ViewModels.Post
+
+@model PostViewModel
+@{
+}
+
+<!DOCTYPE html>
+<html>
+
+  @Html.Partial(Model.HeadPartialViewPath, Model)
+
+<body>
+
+    @Html.Partial(Model.HeaderPartialViewPath, Model)
+
+    <div class="page-content">
+        <div class="wrapper">
+            @RenderBody()
+        </div>
+    </div>
+
+    @Html.Partial(Model.FooterPartialViewPath, Model)
+
+</body>
+
+</html>
