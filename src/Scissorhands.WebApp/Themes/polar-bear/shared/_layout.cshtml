@@ -1,23 +1,17 @@
-﻿@using Scissorhands.Services
-@using Scissorhands.WebApp.ViewModels.Post
+﻿@using Scissorhands.WebApp.ViewModels.Post
 
-@inject IThemeService Theme
-
-@model PostPublishViewModel
+@model PostViewModel
 @{
-    var head = Theme.GetHead(Model.Theme);
-    var header = Theme.GetHeader(Model.Theme);
-    var footer = Theme.GetFooter(Model.Theme);
 }
 
 <!DOCTYPE html>
 <html>
 
-  @Html.Partial(head, Model)
+  @Html.Partial(Model.HeadPartialViewPath, Model)
 
 <body>
 
-    @Html.Partial(header, Model)
+    @Html.Partial(Model.HeaderPartialViewPath, Model)
 
     <div class="page-content">
         <div class="wrapper">
@@ -25,7 +19,7 @@
         </div>
     </div>
 
-    @Html.Partial(footer, Model)
+    @Html.Partial(Model.FooterPartialViewPath, Model)
 
 </body>
 

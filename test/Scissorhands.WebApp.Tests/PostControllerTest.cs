@@ -31,6 +31,7 @@ namespace Scissorhands.WebApp.Tests
         private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<IMarkdownHelper> _markdownHelper;
+        private readonly Mock<IThemeService> _themeService;
         private readonly Mock<IPublishService> _publishService;
         private readonly PostController _controller;
 
@@ -50,6 +51,7 @@ namespace Scissorhands.WebApp.Tests
             this._defaultThemeName = fixture.DefaultThemeName;
             this._settings = fixture.WebAppSettings;
             this._markdownHelper = fixture.MarkdownHelper;
+            this._themeService = fixture.ThemeService;
             this._publishService = fixture.PublishService;
             this._controller = fixture.Controller;
 
@@ -67,14 +69,17 @@ namespace Scissorhands.WebApp.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var controller = new PostController(null, this._markdownHelper.Object, this._publishService.Object); };
+            Action action1 = () => { var controller = new PostController(null, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
-            Action action2 = () => { var controller = new PostController(this._settings.Object, null, this._publishService.Object); };
+            Action action2 = () => { var controller = new PostController(this._settings.Object, null, this._themeService.Object, this._publishService.Object); };
             action2.ShouldThrow<ArgumentNullException>();
 
-            Action action3 = () => { var controller = new PostController(this._settings.Object, this._markdownHelper.Object, null); };
+            Action action3 = () => { var controller = new PostController(this._settings.Object, this._markdownHelper.Object, null, this._publishService.Object); };
             action3.ShouldThrow<ArgumentNullException>();
+
+            Action action4 = () => { var controller = new PostController(this._settings.Object, this._markdownHelper.Object, this._themeService.Object, null); };
+            action4.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -130,7 +135,7 @@ namespace Scissorhands.WebApp.Tests
             var result = this._controller.Preview(model) as ViewResult;
             result.Should().NotBeNull();
 
-            var vm = result.ViewData.Model as PostViewViewModel;
+            var vm = result.ViewData.Model as PostPreviewViewModel;
             vm.Should().NotBeNull();
 
             vm.Theme.Should().Be(this._defaultThemeName);

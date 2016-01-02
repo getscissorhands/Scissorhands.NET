@@ -116,7 +116,7 @@ namespace Scissorhands.Services.Tests
             this.SetViewContext(controllerName, actionName);
 
             var layout = this._service.GetLayout(this._context);
-            layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
+            layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/shared/_layout.cshtml");
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Scissorhands.Services.Tests
             this.SetViewContext(controllerName, actionName);
 
             var layout = this._service.GetLayout(this._context);
-            layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/Shared/_Layout.cshtml");
+            layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/shared/_layout.cshtml");
         }
 
         /// <summary>
@@ -141,9 +141,9 @@ namespace Scissorhands.Services.Tests
         [Theory]
         [InlineData(null)]
         [InlineData("")]
-        public void Given_NullThemeName_GetPost_ShouldReturn_DefaultThemePostPath(string themeName)
+        public void Given_NullThemeName_GetPostPartialViewPath_ShouldReturn_DefaultThemePostPath(string themeName)
         {
-            var postpath = this._service.GetPost(themeName);
+            var postpath = this._service.GetPostPartialViewPath(themeName);
             postpath.Should().BeEquivalentTo($"~/themes/{this._defaultThemeName}/post/post.cshtml");
         }
 
@@ -153,9 +153,9 @@ namespace Scissorhands.Services.Tests
         /// <param name="themeName">Theme name.</param>
         [Theory]
         [InlineData("test")]
-        public void Given_ThemeName_GetPost_ShouldReturn_ThemePostPath(string themeName)
+        public void Given_ThemeName_GetPostPartialViewPath_ShouldReturn_ThemePostPath(string themeName)
         {
-            var postpath = this._service.GetPost(themeName);
+            var postpath = this._service.GetPostPartialViewPath(themeName);
             postpath.Should().BeEquivalentTo($"~/themes/{themeName}/post/post.cshtml");
         }
 

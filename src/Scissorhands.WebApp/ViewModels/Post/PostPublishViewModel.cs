@@ -3,13 +3,8 @@
     /// <summary>
     /// This represents the view model entity for post publish.
     /// </summary>
-    public class PostPublishViewModel
+    public class PostPublishViewModel : PostViewModel
     {
-        /// <summary>
-        /// Gets or sets the theme.
-        /// </summary>
-        public string Theme { get; set; }
-
         /// <summary>
         /// Gets or sets the path of the Markdown file.
         /// </summary>

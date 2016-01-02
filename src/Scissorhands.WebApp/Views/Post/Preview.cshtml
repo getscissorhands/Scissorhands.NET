@@ -1,11 +1,7 @@
-﻿@using Scissorhands.Services
-@using Scissorhands.WebApp.ViewModels.Post
+﻿@using Scissorhands.WebApp.ViewModels.Post
 
-@inject IThemeService Theme
-
-@model PostViewViewModel
+@model PostPreviewViewModel
 @{
-    var partial = Theme.GetPost(Model.Theme);
 }
 
-@Html.Partial(partial, Model)
+@Html.Partial(Model.PostPartialViewPath, Model)

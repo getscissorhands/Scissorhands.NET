@@ -21,6 +21,7 @@ namespace Scissorhands.WebApp.Controllers
     {
         private readonly WebAppSettings _settings;
         private readonly IMarkdownHelper _markdownHelper;
+        private readonly IThemeService _themeService;
         private readonly IPublishService _publishService;
 
         /// <summary>
@@ -28,8 +29,9 @@ namespace Scissorhands.WebApp.Controllers
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
+        /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(WebAppSettings settings, IMarkdownHelper markdownHelper, IPublishService publishService)
+        public PostController(WebAppSettings settings, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
         {
             if (settings == null)
             {
@@ -44,6 +46,13 @@ namespace Scissorhands.WebApp.Controllers
             }
 
             this._markdownHelper = markdownHelper;
+
+            if (themeService == null)
+            {
+                throw new ArgumentNullException(nameof(themeService));
+            }
+
+            this._themeService = themeService;
 
             if (publishService == null)
             {
@@ -97,7 +106,14 @@ namespace Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = new PostViewViewModel() { Theme = this._settings.Theme };
+            var vm = new PostPreviewViewModel()
+                         {
+                             Theme = this._settings.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
+                         };
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
@@ -119,7 +135,14 @@ namespace Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = new PostPublishViewModel { Theme = this._settings.Theme };
+            var vm = new PostPublishViewModel
+                         {
+                             Theme = this._settings.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
+                         };
 
             var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
 

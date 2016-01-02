@@ -47,15 +47,16 @@ namespace Scissorhands.Services
         {
             var themepath = this.GetThemePath(viewContext);
             var layout = $"{themepath}/Shared/_Layout.cshtml";
-            return layout;
+
+            return themepath.StartsWith("~/Themes") ? layout.ToLowerInvariant() : layout;
         }
 
         /// <summary>
-        /// Gets the head path for view.
+        /// Gets the path for head partial view.
         /// </summary>
         /// <param name="themeName">Theme name.</param>
-        /// <returns>Returns the post path for view.</returns>
-        public string GetHead(string themeName = null)
+        /// <returns>Returns the path for head partial view.</returns>
+        public string GetHeadPartialViewPath(string themeName = null)
         {
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
@@ -63,16 +64,16 @@ namespace Scissorhands.Services
                 theme = this._settings.Theme;
             }
 
-            var head = $"~/Themes/{theme}/Shared/_Head.cshtml";
+            var head = $"~/Themes/{theme}/shared/_head.cshtml";
             return head;
         }
 
         /// <summary>
-        /// Gets the header path for view.
+        /// Gets the path for header partial view.
         /// </summary>
         /// <param name="themeName">Theme name.</param>
-        /// <returns>Returns the post path for view.</returns>
-        public string GetHeader(string themeName = null)
+        /// <returns>Returns the path for header partial view.</returns>
+        public string GetHeaderPartialViewPath(string themeName = null)
         {
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
@@ -80,16 +81,16 @@ namespace Scissorhands.Services
                 theme = this._settings.Theme;
             }
 
-            var header = $"~/Themes/{theme}/Shared/_Header.cshtml";
+            var header = $"~/Themes/{theme}/shared/_header.cshtml";
             return header;
         }
 
         /// <summary>
-        /// Gets the post path for view.
+        /// Gets the path for post partial view.
         /// </summary>
         /// <param name="themeName">Theme name.</param>
-        /// <returns>Returns the post path for view.</returns>
-        public string GetPost(string themeName = null)
+        /// <returns>Returns the path for post partial view.</returns>
+        public string GetPostPartialViewPath(string themeName = null)
         {
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
@@ -97,16 +98,16 @@ namespace Scissorhands.Services
                 theme = this._settings.Theme;
             }
 
-            var post = $"~/Themes/{theme}/Post/Post.cshtml";
+            var post = $"~/Themes/{theme}/post/post.cshtml";
             return post;
         }
 
         /// <summary>
-        /// Gets the footer path for view.
+        /// Gets the path for footer partial view.
         /// </summary>
         /// <param name="themeName">Theme name.</param>
-        /// <returns>Returns the post path for view.</returns>
-        public string GetFooter(string themeName = null)
+        /// <returns>Returns the path for footer partial view.</returns>
+        public string GetFooterPartialViewPath(string themeName = null)
         {
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
