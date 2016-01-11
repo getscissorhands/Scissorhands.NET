@@ -1,10 +1,16 @@
 ﻿{
-  "version": "1.0.0-*",
-  "description": "Scissorhands.Core Class Library",
-  "authors": [ "Justin Yoo" ],
-  "tags": [ "Scissorhands.NET", "Core" ],
-  "projectUrl": "http://getscissorhands.net",
+  "version": "1.0.0-alpha",
+  "requireLicenseAcceptance": true,
+  "authors": [ "justinyoo" ],
+  "owners": [ "scissorhands.net" ],
   "licenseUrl": "http://getscissorhands.net/license.txt",
+  "projectUrl": "http://getscissorhands.net",
+  "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
+  "title": "Scissorhands.NET Core",
+  "summary": "Scissorhands.Core class library",
+  "description": "This provides core classes and interfaces for Scissorhands.NET application.",
+  "tags": [ "Scissorhands.NET", "Core" ],
+  "releaseNotes": "Initial alpha release",
 
   "frameworks": {
     "dnx451": { },
