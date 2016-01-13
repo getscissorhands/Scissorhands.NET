@@ -1,0 +1,94 @@
+# for `dev` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - dev
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Debug
+  platform: Any CPU
+  environment:
+    project_name: Scissorhands.Helpers
+  install:
+  - cmd: >-
+      set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+
+      dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: >-
+      dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  
+      npm install
+  
+      node project-version.js
+  build:
+    verbosity: detailed
+  test_script:
+  - cmd: >-
+      dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  
+      cd test/%project_name%.Tests
+  
+      dnx test
+  
+      cd ../../
+
+# for `master` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - master
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Release
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: 1.0.0.{build}
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
+  environment:
+    project_name: Scissorhands.Helpers
+  install:
+  - cmd: >-
+      set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+
+      dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: >-
+      dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  
+      npm install
+  
+      node project-version.js
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: detailed
+  test_script:
+  - cmd: >-
+      dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  
+      cd test/%project_name%.Tests
+  
+      dnx test
+  
+      cd ../../
+  artifacts:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg  deploy:
+  - provider: Environment
+    name: NuGet for Scissorhands.NET
+    on:
+      branch: master
+      platform: Any CPU
+      configuration: Release  - provider: Environment
+    name: GitHub Release for Scissorhands.NET
+    on:
+      branch: master
+      platform: Any CPU
+      configuration: Release

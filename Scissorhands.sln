@@ -8,7 +8,11 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{8E878B5D-41EC-43E1-8CB8-AE2C2FF0F2CD}"
 	ProjectSection(SolutionItems) = preProject
 		.gitignore = .gitignore
+		appveyor.yml = appveyor.yml
 		global.json = global.json
+		LICENSE = LICENSE
+		package.json = package.json
+		project-version.js = project-version.js
 		README.md = README.md
 		Scissorhands.sln.DotSettings = Scissorhands.sln.DotSettings
 		Settings.StyleCop = Settings.StyleCop
