@@ -11,8 +11,7 @@ var updateVersion = function (err, project) {
         return;
     }
 
-    //var buildNumber = process.env.APPVEYOR_BUILD_NUMBER;
-    var buildNumber = 123;
+    var buildNumber = process.env.APPVEYOR_BUILD_NUMBER;
     var version = semver.valid(project.version + "-" + buildNumber);
     project.version = version;
 
