@@ -23,7 +23,7 @@
   "dependencies": {
     "Microsoft.AspNet.Mvc.Abstractions": "6.0.0-rc1-final",
     "Microsoft.AspNet.Mvc.ViewFeatures": "6.0.0-rc1-final",
-    "Scissorhands.Helpers": "1.0.0-*",
+    "Scissorhands.Helpers": "1.0.0-alpha-18",
     "System.Net.Http": "4.0.1-beta-23516"
   }
 }
