@@ -17,12 +17,7 @@
 
       dnvm install 1.0.0-rc1-update1
   before_build:
-  - cmd: >-
-      dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  
-      npm install
-  
-      node project-version.js
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   build:
     verbosity: detailed
   test_script:
@@ -80,15 +75,17 @@
   
       cd ../../
   artifacts:
-  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg  deploy:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
+  deploy:
   - provider: Environment
     name: NuGet for Scissorhands.NET
     on:
       branch: master
       platform: Any CPU
-      configuration: Release  - provider: Environment
+      configuration: Release
+  - provider: Environment
     name: GitHub Release for Scissorhands.NET
     on:
       branch: master
       platform: Any CPU
-      configuration: Release
+      configuration: Release

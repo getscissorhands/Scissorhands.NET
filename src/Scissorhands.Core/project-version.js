@@ -3,7 +3,7 @@
 var jsonfile = require("jsonfile");
 var semver = require("semver");
 
-var file = "src/" + process.env.PROJECT_NAME + "/project.json";
+var file = "/project.json";
 
 var updateVersion = function (err, project) {
     if (err) {
@@ -11,7 +11,8 @@ var updateVersion = function (err, project) {
         return;
     }
 
-    var buildNumber = process.env.APPVEYOR_BUILD_NUMBER;
+    //var buildNumber = process.env.APPVEYOR_BUILD_NUMBER;
+    var buildNumber = 123;
     var version = semver.valid(project.version + "-" + buildNumber);
     project.version = version;
 
