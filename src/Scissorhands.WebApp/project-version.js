@@ -3,7 +3,7 @@
 var jsonfile = require("jsonfile");
 var semver = require("semver");
 
-var file = "/project.json";
+var file = "project.json";
 
 var updateVersion = function (err, project) {
     if (err) {

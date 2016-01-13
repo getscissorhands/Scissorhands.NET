@@ -6,4 +6,5 @@ foreach($project in $projects) {
     cd src/$project
     npm install
     node project-version.js
+    cd ../../
 }
