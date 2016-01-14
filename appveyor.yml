@@ -101,4 +101,4 @@
   after_deploy:
   - cmd: git config --global credential.helper store
   - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
-  - cmd: git push --delete origin release-core
+  - cmd: git push origin --delete release-core
