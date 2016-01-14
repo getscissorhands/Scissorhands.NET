@@ -10,11 +10,12 @@
   - Debug
   platform: Any CPU
   environment:
-    project_name_core: Scissorhands.Core
-    project_name_helpers: Scissorhands.Helpers
-    project_name_themes: Scissorhands.Themes
-    project_name_services: Scissorhands.Services
-    project_name_webapp: Scissorhands.WebApp  install:
+    project_name_core: scissorhands.core
+    project_name_helpers: scissorhands.helpers
+    project_name_themes: scissorhands.themes
+    project_name_services: scissorhands.services
+    project_name_webapp: scissorhands.webapp
+  install:
   - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - cmd: dnvm install 1.0.0-rc1-update1
   before_build:
@@ -23,7 +24,8 @@
     verbosity: detailed
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-tests.ps1
+  - ps: ./run-tests.ps1
+
 # for `master` branch
 -
   version: 1.0.0-alpha-{build}
@@ -46,18 +48,23 @@
     project_name_helpers: scissorhands.helpers
     project_name_themes: scissorhands.themes
     project_name_services: scissorhands.services
-    project_name_webapp: scissorhands.webapp    github_auth_token:      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n  install:
+    project_name_webapp: scissorhands.webapp
+    github_auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+  install:
   - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - cmd: dnvm install 1.0.0-rc1-update1
   before_build:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-project-versioning.ps1  build:
+  - ps: ./run-project-versioning.ps1
+  build:
     publish_nuget: true
     publish_nuget_symbols: true
     verbosity: detailed
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-tests.ps1  artifacts:
+  - ps: ./run-tests.ps1
+  artifacts:
   - path: artifacts\bin\$(project_name_core)\$(configuration)\*.nupkg
     name: core
   - path: artifacts\bin\$(project_name_helpers)\$(configuration)\*.nupkg
@@ -67,7 +74,8 @@
   - path: artifacts\bin\$(project_name_services)\$(configuration)\*.nupkg
     name: services
   - path: artifacts\bin\$(project_name_webapp)\$(configuration)\*.nupkg
-    name: webapp  deploy:
+    name: webapp
+  deploy:
   - provider: NuGet
     api_key:
       secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
