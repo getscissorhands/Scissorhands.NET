@@ -1,20 +1,15 @@
-# for `dev` branch
+# for `dev`/`master` branch
 -
   version: 1.0.0-alpha-{build}
   branches:
     only:
     - dev
+	- master
   skip_tags: true
   os: Visual Studio 2015
   configuration:
   - Debug
   platform: Any CPU
-  environment:
-    project_name_core: scissorhands.core
-    project_name_helpers: scissorhands.helpers
-    project_name_themes: scissorhands.themes
-    project_name_services: scissorhands.services
-    project_name_webapp: scissorhands.webapp
   install:
   - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
   - cmd: dnvm install 1.0.0-rc1-update1
@@ -25,83 +20,6 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
-
-# for `master` branch
--
-  version: 1.0.0-alpha-{build}
-  branches:
-    only:
-    - master
-  skip_tags: true
-  os: Visual Studio 2015
-  configuration:
-  - Release
-  platform: Any CPU
-  assembly_info:
-    patch: true
-    file: '**\AssemblyInfo.*'
-    assembly_version: 1.0.0.{build}
-    assembly_file_version: '{version}'
-    assembly_informational_version: '{version}'
-  environment:
-    project_name_core: scissorhands.core
-    project_name_helpers: scissorhands.helpers
-    project_name_themes: scissorhands.themes
-    project_name_services: scissorhands.services
-    project_name_webapp: scissorhands.webapp
-    github_auth_token:
-      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
-  install:
-  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
-  - cmd: dnvm install 1.0.0-rc1-update1
-  before_build:
-  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-project-versioning.ps1
-  build:
-    publish_nuget: true
-    publish_nuget_symbols: true
-    verbosity: detailed
-  test_script:
-  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-tests.ps1
-  artifacts:
-  - path: artifacts\bin\$(project_name_core)\$(configuration)\*.nupkg
-    name: core
-  - path: artifacts\bin\$(project_name_helpers)\$(configuration)\*.nupkg
-    name: helpers
-  - path: artifacts\bin\$(project_name_themes)\$(configuration)\*.nupkg
-    name: themes
-  - path: artifacts\bin\$(project_name_services)\$(configuration)\*.nupkg
-    name: services
-  - path: artifacts\bin\$(project_name_webapp)\$(configuration)\*.nupkg
-    name: webapp
-  deploy:
-  - provider: NuGet
-    api_key:
-      secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
-    artifact: core
-    on:
-      branch: master
-      platform: Any CPU
-      configuration: Release
-      appveyor_repo_tag: true
-      appveyor_repo_tag_name: release-core
-  - provider: GitHub
-    tag: $(project_name_core)-v$(appveyor_build_version)
-    description: $(project_name_core)-v$(appveyor_build_version) has been released
-    auth_token:
-      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
-    artifact: core
-    on:
-      branch: master
-      platform: Any CPU
-      configuration: Release
-      appveyor_repo_tag: true
-      appveyor_repo_tag_name: release-core
-  after_deploy:
-  - cmd: git config --global credential.helper store
-  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
-  - cmd: git push --delete origin release-core
 
 # for `release/core` branch
 -
@@ -121,7 +39,7 @@
     assembly_file_version: '{version}'
     assembly_informational_version: '{version}'
   environment:
-    project_name_core: scissorhands.core
+    project_name: Scissorhands.Core
     github_auth_token:
       secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
   install:
@@ -138,7 +56,7 @@
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
   artifacts:
-  - path: artifacts\bin\$(project_name_core)\$(configuration)\*.nupkg
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: core
   deploy:
   - provider: NuGet
@@ -150,8 +68,8 @@
       platform: Any CPU
       configuration: Release
   - provider: GitHub
-    tag: $(project_name_core)-v$(appveyor_build_version)
-    description: $(project_name_core)-v$(appveyor_build_version) has been released
+    tag: $(project_name)-v$(appveyor_build_version)
+    description: $(project_name)-v$(appveyor_build_version) has been released
     auth_token:
       secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
     artifact: core
@@ -163,3 +81,247 @@
   - cmd: git config --global credential.helper store
   - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
   - cmd: git push --delete origin release/core
+
+# for `release/helpers` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - release/helpers
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Release
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: 1.0.0.{build}
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
+  environment:
+    project_name: Scissorhands.Helpers
+    github_auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+  install:
+  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - cmd: dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-project-versioning.ps1
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: detailed
+  test_script:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-tests.ps1
+  artifacts:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
+    name: helpers
+  deploy:
+  - provider: NuGet
+    api_key:
+      secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
+    artifact: helpers
+    on:
+      branch: release/helpers
+      platform: Any CPU
+      configuration: Release
+  - provider: GitHub
+    tag: $(project_name)-v$(appveyor_build_version)
+    description: $(project_name)-v$(appveyor_build_version) has been released
+    auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+    artifact: helpers
+    on:
+      branch: release/helpers
+      platform: Any CPU
+      configuration: Release
+  after_deploy:
+  - cmd: git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
+  - cmd: git push --delete origin release/helpers
+
+# for `release/themes` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - release/themes
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Release
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: 1.0.0.{build}
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
+  environment:
+    project_name: Scissorhands.Themes
+    github_auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+  install:
+  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - cmd: dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-project-versioning.ps1
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: detailed
+  test_script:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-tests.ps1
+  artifacts:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
+    name: themes
+  deploy:
+  - provider: NuGet
+    api_key:
+      secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
+    artifact: themes
+    on:
+      branch: release/themes
+      platform: Any CPU
+      configuration: Release
+  - provider: GitHub
+    tag: $(project_name)-v$(appveyor_build_version)
+    description: $(project_name)-v$(appveyor_build_version) has been released
+    auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+    artifact: themes
+    on:
+      branch: release/themes
+      platform: Any CPU
+      configuration: Release
+  after_deploy:
+  - cmd: git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
+  - cmd: git push --delete origin release/themes
+
+# for `release/services` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - release/services
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Release
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: 1.0.0.{build}
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
+  environment:
+    project_name: Scissorhands.Services
+    github_auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+  install:
+  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - cmd: dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-project-versioning.ps1
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: detailed
+  test_script:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-tests.ps1
+  artifacts:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
+    name: services
+  deploy:
+  - provider: NuGet
+    api_key:
+      secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
+    artifact: services
+    on:
+      branch: release/services
+      platform: Any CPU
+      configuration: Release
+  - provider: GitHub
+    tag: $(project_name)-v$(appveyor_build_version)
+    description: $(project_name)-v$(appveyor_build_version) has been released
+    auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+    artifact: services
+    on:
+      branch: release/services
+      platform: Any CPU
+      configuration: Release
+  after_deploy:
+  - cmd: git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
+  - cmd: git push --delete origin release/services
+
+# for `release/webapp` branch
+-
+  version: 1.0.0-alpha-{build}
+  branches:
+    only:
+    - release/webapp
+  skip_tags: true
+  os: Visual Studio 2015
+  configuration:
+  - Release
+  platform: Any CPU
+  assembly_info:
+    patch: true
+    file: '**\AssemblyInfo.*'
+    assembly_version: 1.0.0.{build}
+    assembly_file_version: '{version}'
+    assembly_informational_version: '{version}'
+  environment:
+    project_name: Scissorhands.WebApp
+    github_auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+  install:
+  - cmd: set PATH=C:\Program Files (x86)\MSBuild\14.0\Bin;%PATH%
+  - cmd: dnvm install 1.0.0-rc1-update1
+  before_build:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-project-versioning.ps1
+  build:
+    publish_nuget: true
+    publish_nuget_symbols: true
+    verbosity: detailed
+  test_script:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+  - ps: ./run-tests.ps1
+  artifacts:
+  - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
+    name: webapp
+  deploy:
+  - provider: NuGet
+    api_key:
+      secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
+    artifact: webapp
+    on:
+      branch: release/webapp
+      platform: Any CPU
+      configuration: Release
+  - provider: GitHub
+    tag: $(project_name)-v$(appveyor_build_version)
+    description: $(project_name)-v$(appveyor_build_version) has been released
+    auth_token:
+      secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
+    artifact: webapp
+    on:
+      branch: release/webapp
+      platform: Any CPU
+      configuration: Release
+  after_deploy:
+  - cmd: git config --global credential.helper store
+  - ps: Add-Content "$env:USERPROFILE\.git-credentials" "https://$($env:github_auth_token):x-oauth-basic@github.com`n"
+  - cmd: git push --delete origin release/webapp
