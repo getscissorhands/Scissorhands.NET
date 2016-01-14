@@ -146,7 +146,7 @@
       secure: +nwrSNmydF+453m3jZAS/qb5D2KAgs1ZXQDhCE/AjPvYo1IRDGI5pj3PFriX7ADd
     artifact: core
     on:
-      branch: master
+      branch: release/core
       platform: Any CPU
       configuration: Release
   - provider: GitHub
@@ -156,7 +156,7 @@
       secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
     artifact: core
     on:
-      branch: master
+      branch: release/core
       platform: Any CPU
       configuration: Release
   after_deploy:
