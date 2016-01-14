@@ -1,8 +1,8 @@
+`master` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/master?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/master) | `dev` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/dev?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/dev)
+
 # Scissorhands.NET #
 
 A markdown based static blog engine in .NET
-
-`master` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/master?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/master) | `dev` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/dev?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/dev)
 
 
 ## NuGet Packages ##
