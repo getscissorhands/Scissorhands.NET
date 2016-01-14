@@ -1,10 +1,23 @@
 {
   "version": "1.0.0-alpha",
-  "description": "Scissorhands.WebApp Web Application",
-  "authors": [ "Justin Yoo" ],
-  "tags": [ "Scissorhands.NET", "Web" ],
-  "projectUrl": "http://getscissorhands.net",
+  "requireLicenseAcceptance": true,
+  "authors": [
+    "justinyoo"
+  ],
+  "owners": [
+    "scissorhands.net"
+  ],
   "licenseUrl": "http://getscissorhands.net/license.txt",
+  "projectUrl": "http://getscissorhands.net",
+  "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
+  "title": "Scissorhands.NET",
+  "summary": "Scissorhands.NET Web UI application",
+  "description": "This provides Scissorhands.NET application with Web UI.",
+  "tags": [
+    "Scissorhands.NET",
+    "Web"
+  ],
+  "releaseNotes": "Initial alpha release",
 
   "compilationOptions": {
     "emitEntryPoint": true

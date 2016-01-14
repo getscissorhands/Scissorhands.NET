@@ -1,10 +1,23 @@
 {
   "version": "1.0.0-alpha",
-  "description": "Scissorhands.Services Class Library",
-  "authors": [ "Justin Yoo" ],
-  "tags": [ "Scissorhands.NET", "Services" ],
-  "projectUrl": "http://getscissorhands.net",
+  "requireLicenseAcceptance": true,
+  "authors": [
+    "justinyoo"
+  ],
+  "owners": [
+    "scissorhands.net"
+  ],
   "licenseUrl": "http://getscissorhands.net/license.txt",
+  "projectUrl": "http://getscissorhands.net",
+  "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
+  "title": "Scissorhands.NET Services",
+  "summary": "Scissorhands.Services class library",
+  "description": "This provides service classes for Scissorhands.NET application.",
+  "tags": [
+    "Scissorhands.NET",
+    "Services"
+  ],
+  "releaseNotes": "Initial alpha release",
 
   "frameworks": {
     "dnx451": { },

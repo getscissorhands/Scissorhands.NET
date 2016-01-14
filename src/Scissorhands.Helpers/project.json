@@ -12,7 +12,7 @@
   "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
   "title": "Scissorhands.NET Helpers",
   "summary": "Scissorhands.Helpers class library",
-  "description": "This provides helper classes and interfaces for Scissorhands.NET application.",
+  "description": "This provides helper classes for Scissorhands.NET application.",
   "tags": [
     "Scissorhands.NET",
     "Helpers"
