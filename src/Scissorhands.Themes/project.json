@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-*",
+  "version": "1.0.0-alpha",
   "description": "Scissorhands.Themes Class Library",
   "authors": [ "Justin Yoo" ],
   "tags": [ "Scissorhands.NET", "Core" ],
@@ -20,6 +20,6 @@
   },
   "dependencies": {
     "Newtonsoft.Json": "8.0.1",
-    "Scissorhands.Helpers": "1.0.0-alpha-18"
+    "Scissorhands.Helpers": "1.0.0-alpha"
   }
 }

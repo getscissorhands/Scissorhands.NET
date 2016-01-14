@@ -1,5 +1,5 @@
 {
-  "version": "1.0.0-*",
+  "version": "1.0.0-alpha",
   "description": "Scissorhands.WebApp Web Application",
   "authors": [ "Justin Yoo" ],
   "tags": [ "Scissorhands.NET", "Web" ],
@@ -36,8 +36,8 @@
     "Microsoft.Extensions.Logging.Console": "1.0.0-rc1-final",
     "Microsoft.Extensions.Logging.Debug": "1.0.0-rc1-final",
     "Microsoft.VisualStudio.Web.BrowserLink.Loader": "14.0.0-rc1-final",
-    "Scissorhands.Services": "1.0.0-*",
-    "Scissorhands.Themes": "1.0.0-*"
+    "Scissorhands.Services": "1.0.0-alpha",
+    "Scissorhands.Themes": "1.0.0-alpha"
   },
 
   "exclude": [

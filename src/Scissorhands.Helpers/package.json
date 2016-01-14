@@ -1,0 +1,9 @@
+{
+  "version": "1.0.0",
+  "name": "project-version",
+  "private": true,
+  "devDependencies": {
+    "jsonfile": "^2.2.3",
+    "semver": "^5.0.3"
+  }
+}
