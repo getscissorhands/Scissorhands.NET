@@ -7,11 +7,11 @@ A markdown based static blog engine in .NET
 
 ## NuGet Packages ##
 
-* `Scissorhands.Core    ` | [![](https://img.shields.io/nuget/v/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) [![](https://img.shields.io/nuget/dt/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/)
-* `Scissorhands.Helpers ` | [![](https://img.shields.io/nuget/v/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) [![](https://img.shields.io/nuget/dt/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/)
-* `Scissorhands.Themes  ` | [![](https://img.shields.io/nuget/v/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) [![](https://img.shields.io/nuget/dt/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/)
+* `Scissorhands.Core` | [![](https://img.shields.io/nuget/v/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) [![](https://img.shields.io/nuget/dt/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/)
+* `Scissorhands.Helpers` | [![](https://img.shields.io/nuget/v/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) [![](https://img.shields.io/nuget/dt/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/)
+* `Scissorhands.Themes` | [![](https://img.shields.io/nuget/v/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) [![](https://img.shields.io/nuget/dt/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/)
 * `Scissorhands.Services` | [![](https://img.shields.io/nuget/v/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) [![](https://img.shields.io/nuget/dt/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/)
-* `Scissorhands.NET     ` | [![](https://img.shields.io/nuget/v/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) [![](https://img.shields.io/nuget/dt/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/)
+* `Scissorhands.NET` | [![](https://img.shields.io/nuget/v/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) [![](https://img.shields.io/nuget/dt/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/)
 
 
 ## Getting Started ##
