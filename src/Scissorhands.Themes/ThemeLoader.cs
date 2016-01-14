@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Extensions.PlatformAbstractions;
@@ -29,6 +28,7 @@ namespace Scissorhands.Themes
         /// Initializes a new instance of the <see cref="ThemeLoader"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
         public ThemeLoader(WebAppSettings settings, IFileHelper fileHelper)
         {
             if (settings == null)
