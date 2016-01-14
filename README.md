@@ -1,53 +1,44 @@
-# Scissorhands.NET
+# Scissorhands.NET #
+
 A markdown based static blog engine in .NET
 
-# Dev setup
-## OSX
+`master` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/master?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/master) | `dev` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/dev?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/dev)
 
-### #1 Install packages
-- Mono: http://www.mono-project.com/download/
-- .NET CLI: http://dotnet.github.io
-- ASP.NET RC: https://get.asp.net/
 
-### #2 Update feed setting
+## NuGet Packages ##
 
-Create a file `~/.config/Nuget/NuGet.config` and copy/paste below
+* [![](https://img.shields.io/nuget/v/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) [![](https://img.shields.io/nuget/dt/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) | `Scissorhands.Core`
+* [![](https://img.shields.io/nuget/v/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) [![](https://img.shields.io/nuget/dt/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) | `Scissorhands.Helpers`
+* [![](https://img.shields.io/nuget/v/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) [![](https://img.shields.io/nuget/dt/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) | `Scissorhands.Themes`
+* [![](https://img.shields.io/nuget/v/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) [![](https://img.shields.io/nuget/dt/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) | `Scissorhands.Services`
+* [![](https://img.shields.io/nuget/v/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) [![](https://img.shields.io/nuget/dt/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) | `Scissorhands.NET`
 
-``` xml
-<?xml version="1.0" encoding="utf-8"?>
-<configuration>
-  <packageSources>
-    <add key="aspnet-contrib" value="https://www.myget.org/F/aspnet-contrib/api/v3/index.json" />
-    <add key="nuget.org" value="https://www.nuget.org/api/v2/" />
-  </packageSources>
-  <disabledPackageSources />
-  <activePackageSource>
-    <add key="nuget.org" value="https://www.nuget.org/api/v2/" />
-  </activePackageSource>
-</configuration>
-```
 
-This file will be automatically picked up by .NET CLI
+## Getting Started ##
 
-### #3 Restore project
+Please refer to our [wiki](https://github.com/GetScissorhands/Scissorhands.NET/wiki) page.
 
-Run `dotnet restore`
 
-At the end of the process, the following messeage will be shown.
+## Contribution ##
 
-```
-NuGet Config files used:
-    /Users/{your username}/.config/NuGet/nuget.config
+Your contributions are always welcome! All your work should be done in your forked repository. Once you finish your work, please send us a pull request onto our `dev` branch for review. Please make sure that sufficient test codes should cover your work.
 
-Feeds used:
-    https://www.myget.org/F/aspnet-contrib/api/v3/flatcontainer/
-    https://www.nuget.org/api/v2/
-```
 
-### #4 Run website
-```
-cd src/Scissorhands.WebApp
-dnx web
-```
+## Issues ##
 
-Open localhost:5000 on your browser.
+If you have any issues or queries, please leave it on the [issue page](https://github.com/GetScissorhands/Scissorhands.NET/issues).
+
+
+## License ##
+
+**Scissorhands.NET** is released under [MIT License](http://opensource.org/licenses/MIT)
+
+> The MIT License (MIT)
+>
+> Copyright (c) 2016 [Scissorhands.NET](http://getscissorhands.net)
+> 
+> Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
+> 
+> The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
+> 
+> THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
