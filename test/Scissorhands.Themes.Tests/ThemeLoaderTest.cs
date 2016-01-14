@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 using FluentAssertions;
@@ -21,6 +23,10 @@ namespace Scissorhands.Themes.Tests
     public class ThemeLoaderTest : IClassFixture<ThemeLoaderFixture>
     {
         private readonly string _defaultThemeName;
+        private readonly string _baseUrl;
+        private readonly string _bastPath;
+        private readonly List<Author> _authors;
+        private readonly List<FeedType> _feedTypes;
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly Mock<IApplicationEnvironment> _env;
@@ -33,6 +39,10 @@ namespace Scissorhands.Themes.Tests
         public ThemeLoaderTest(ThemeLoaderFixture fixture)
         {
             this._defaultThemeName = fixture.DefaultThemeName;
+            this._baseUrl = fixture.BaseUrl;
+            this._bastPath = fixture.BasePath;
+            this._authors = fixture.Authors;
+            this._feedTypes = fixture.FeedTypes;
             this._settings = fixture.WebAppSettings;
             this._fileHelper = fixture.FileHelper;
             this._env = fixture.ApplicationEnvironment;
@@ -73,6 +83,46 @@ namespace Scissorhands.Themes.Tests
 
             Func<Task> func = async () => { var result = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false); };
             func.ShouldThrow<InvalidOperationException>();
+        }
+
+        /// <summary>
+        /// Tests whether LoadAsync should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullConfig_LoadAsync_ShouldThrow_ArgumentNullException()
+        {
+            var basepath = string.Empty;
+            var json = string.Empty;
+
+            this._env.SetupGet(p => p.ApplicationBasePath).Returns(basepath);
+            this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(json));
+
+            Func<Task> func = async () => { var result = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false); };
+            func.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether LoadAsync should return result or not.
+        /// </summary>
+        /// <param name="title">Title of theme.</param>
+        [Theory]
+        [InlineData("Hello World")]
+        public async void Given_WebAppSettings_LoadAsync_ShouldReturn_Result(string title)
+        {
+            var basepath = string.Empty;
+            var json = $"{{ \"title\": \"{title}\" }}";
+
+            this._env.SetupGet(p => p.ApplicationBasePath).Returns(basepath);
+            this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(json));
+
+            var config = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false);
+            config.Title.Should().BeEquivalentTo(title);
+            config.BaseUrl.Should().BeEquivalentTo(this._baseUrl);
+            config.BasePath.Should().BeEquivalentTo(this._bastPath);
+            config.Authors.Should().HaveCount(this._authors.Count);
+            config.Authors.First().Name.Should().BeEquivalentTo(this._authors.First().Name);
+            config.FeedTypes.Count.Should().Be(this._feedTypes.Count);
+            config.FeedTypes.First().ShouldBeEquivalentTo(this._feedTypes.First());
         }
     }
 }
