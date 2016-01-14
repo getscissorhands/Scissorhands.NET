@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 
 using Microsoft.Extensions.PlatformAbstractions;
 
@@ -22,9 +23,17 @@ namespace Scissorhands.Themes.Tests.Fixtures
         public ThemeLoaderFixture()
         {
             this.DefaultThemeName = "default";
+            this.BaseUrl = "http://localhost:5080";
+            this.BasePath = "/blog";
+            this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
+            this.FeedTypes = new List<FeedType>() { FeedType.Rss };
 
             this.WebAppSettings = new Mock<WebAppSettings>();
             this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
+            this.WebAppSettings.SetupGet(p => p.BaseUrl).Returns(this.BaseUrl);
+            this.WebAppSettings.SetupGet(p => p.BasePath).Returns(this.BasePath);
+            this.WebAppSettings.SetupGet(p => p.Authors).Returns(this.Authors);
+            this.WebAppSettings.SetupGet(p => p.FeedTypes).Returns(this.FeedTypes);
 
             this.FileHelper = new Mock<IFileHelper>();
 
@@ -34,9 +43,29 @@ namespace Scissorhands.Themes.Tests.Fixtures
         }
 
         /// <summary>
-        /// Gets or sets the default theme name.
+        /// Gets the default theme name.
         /// </summary>
-        public string DefaultThemeName { get; set; }
+        public string DefaultThemeName { get; }
+
+        /// <summary>
+        /// Gets the base url.
+        /// </summary>
+        public string BaseUrl { get; }
+
+        /// <summary>
+        /// Gets the base path.
+        /// </summary>
+        public string BasePath { get; }
+
+        /// <summary>
+        /// Gets the list of authors.
+        /// </summary>
+        public List<Author> Authors { get; }
+
+        /// <summary>
+        /// Gets the list of feed types.
+        /// </summary>
+        public List<FeedType> FeedTypes { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
