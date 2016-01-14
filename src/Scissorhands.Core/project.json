@@ -12,10 +12,11 @@
   "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
   "title": "Scissorhands.NET Core",
   "summary": "Scissorhands.Core class library",
-  "description": "This provides core classes and interfaces for Scissorhands.NET application.",
+  "description": "This provides core classes and interfaces for Scissorhands.NET application and its extensions.",
   "tags": [
     "Scissorhands.NET",
-    "Core"
+    "Core",
+    "Extensions"
   ],
   "releaseNotes": "Initial alpha release",
 

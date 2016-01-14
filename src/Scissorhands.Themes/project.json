@@ -1,10 +1,24 @@
 {
   "version": "1.0.0-alpha",
-  "description": "Scissorhands.Themes Class Library",
-  "authors": [ "Justin Yoo" ],
-  "tags": [ "Scissorhands.NET", "Core" ],
-  "projectUrl": "http://getscissorhands.net",
+  "requireLicenseAcceptance": true,
+  "authors": [
+    "justinyoo"
+  ],
+  "owners": [
+    "scissorhands.net"
+  ],
   "licenseUrl": "http://getscissorhands.net/license.txt",
+  "projectUrl": "http://getscissorhands.net",
+  "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
+  "title": "Scissorhands.NET Themes",
+  "summary": "Scissorhands.Themes class library",
+  "description": "This provides theme related classes for Scissorhands.NET application.",
+  "tags": [
+    "Scissorhands.NET",
+    "Themes"
+  ],
+  "releaseNotes": "Initial alpha release",
+
   "frameworks": {
     "dnx451": { },
     "dnxcore50": {
