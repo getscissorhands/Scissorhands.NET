@@ -44,7 +44,7 @@
     project_name_helpers: Scissorhands.Helpers
     project_name_themes: Scissorhands.Themes
     project_name_services: Scissorhands.Services
-    project_name_webapp: Scissorhands.WebApp
+    project_name_net: Scissorhands.NET
     github_auth_token:
       secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
   install:
@@ -69,7 +69,7 @@
     name: themes
   - path: artifacts\bin\$(project_name_services)\$(configuration)\*.nupkg
     name: services
-  - path: artifacts\bin\$(project_name_webapp)\$(configuration)\*.nupkg
+  - path: artifacts\bin\$(project_name_net)\$(configuration)\*.nupkg
     name: webapp
   deploy:
   - provider: NuGet
@@ -355,7 +355,7 @@
     assembly_file_version: '{version}'
     assembly_informational_version: '{version}'
   environment:
-    project_name: Scissorhands.WebApp
+    project_name: Scissorhands.NET
     github_auth_token:
       secure: 3tp7rCl4cvk/WDYBaeodIlmalNiYVWQYxE1wmVU7aMbkMKP0WtlMjjOU2yhX0D4n
   install:
