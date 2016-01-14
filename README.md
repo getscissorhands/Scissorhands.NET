@@ -1,17 +1,17 @@
+`master` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/master?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/master) | `dev` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/dev?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/dev)
+
 # Scissorhands.NET #
 
 A markdown based static blog engine in .NET
 
-`master` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/master?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/master) | `dev` [![Build status](https://ci.appveyor.com/api/projects/status/a5v2ko2dg4u0ufdl/branch/dev?svg=true)](https://ci.appveyor.com/project/justinyoo/scissorhands-net/branch/dev)
-
 
 ## NuGet Packages ##
 
-* [![](https://img.shields.io/nuget/v/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) [![](https://img.shields.io/nuget/dt/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) | `Scissorhands.Core`
-* [![](https://img.shields.io/nuget/v/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) [![](https://img.shields.io/nuget/dt/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) | `Scissorhands.Helpers`
-* [![](https://img.shields.io/nuget/v/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) [![](https://img.shields.io/nuget/dt/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) | `Scissorhands.Themes`
-* [![](https://img.shields.io/nuget/v/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) [![](https://img.shields.io/nuget/dt/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) | `Scissorhands.Services`
-* [![](https://img.shields.io/nuget/v/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) [![](https://img.shields.io/nuget/dt/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) | `Scissorhands.NET`
+* `Scissorhands.Core` | [![](https://img.shields.io/nuget/v/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/) [![](https://img.shields.io/nuget/dt/Scissorhands.Core.svg)](https://www.nuget.org/packages/Scissorhands.Core/)
+* `Scissorhands.Helpers` | [![](https://img.shields.io/nuget/v/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/) [![](https://img.shields.io/nuget/dt/Scissorhands.Helpers.svg)](https://www.nuget.org/packages/Scissorhands.Helpers/)
+* `Scissorhands.Themes` | [![](https://img.shields.io/nuget/v/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/) [![](https://img.shields.io/nuget/dt/Scissorhands.Themes.svg)](https://www.nuget.org/packages/Scissorhands.Themes/)
+* `Scissorhands.Services` | [![](https://img.shields.io/nuget/v/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/) [![](https://img.shields.io/nuget/dt/Scissorhands.Services.svg)](https://www.nuget.org/packages/Scissorhands.Services/)
+* `Scissorhands.NET` | [![](https://img.shields.io/nuget/v/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/) [![](https://img.shields.io/nuget/dt/Scissorhands.NET.svg)](https://www.nuget.org/packages/Scissorhands.NET/)
 
 
 ## Getting Started ##
