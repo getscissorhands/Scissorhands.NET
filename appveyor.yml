@@ -17,10 +17,11 @@
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   build:
     verbosity: detailed
-  test_script:
-  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
-  - ps: ./run-tests.ps1
-
+#  test_script:
+#  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
+#  - ps: ./run-tests.ps1
+  before_test:
+  - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
 # for `release/all` branch
 -
   version: 1.0.0-alpha-{build}
