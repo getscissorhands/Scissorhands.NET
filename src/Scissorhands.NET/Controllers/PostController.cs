@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
 
+using Scissorhands.Exceptions;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
@@ -80,7 +82,12 @@ namespace Scissorhands.WebApp.Controllers
         [Route("write", Name = "write")]
         public IActionResult Write()
         {
-            var vm = new PostFormViewModel();
+            var vm = new PostFormViewModel()
+                         {
+                             SlugPrefix = this.GetBaseUrl() + this.GetBasePath(),
+                             Author = this.GetAuthorName(),
+                         };
+
             return this.View(vm);
         }
 
@@ -208,6 +215,41 @@ namespace Scissorhands.WebApp.Controllers
         public IActionResult PostView()
         {
             return this.View();
+        }
+
+        private string GetAuthorName()
+        {
+            var author = this._settings.Authors.FirstOrDefault(p => p.IsDefault);
+            if (author == null)
+            {
+                throw new AuthorNotFoundException("Author not found");
+            }
+
+            return author.Name;
+        }
+
+        private string GetBaseUrl()
+        {
+            var baseUrl = this._settings.BaseUrl;
+            if (string.IsNullOrWhiteSpace(baseUrl))
+            {
+                throw new InvalidSettingsException("BaseUrl has not been set");
+            }
+
+            return baseUrl;
+        }
+
+        private string GetBasePath()
+        {
+            var basepath = this._settings.BasePath;
+            var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
+
+            if (!string.IsNullOrWhiteSpace(basepath))
+            {
+                basepath += $"/{today}";
+            }
+
+            return basepath;
         }
     }
 }
