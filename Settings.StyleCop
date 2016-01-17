@@ -11,6 +11,7 @@
       <Value>getscissorhands</Value>
       <Value>instagram</Value>
       <Value>linkedin</Value>
+      <Value>github</Value>
     </CollectionProperty>
     <StringProperty Name="Culture">en-GB</StringProperty>
   </GlobalSettings>
