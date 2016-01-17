@@ -121,7 +121,7 @@ namespace Scissorhands.WebApp.Controllers
                              HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
                              PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
                              FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
-                             Page = this.GetPageMetadata(model),
+                             Page = this.GetPageMetadata(model, PublishMode.Preview),
                          };
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
@@ -225,26 +225,52 @@ namespace Scissorhands.WebApp.Controllers
         private string GetSlugPrefix()
         {
             var baseUrl = this.GetBaseUrl();
-            var basepath = this._metadata.BasePath.GetRootPathIfNullOrEmpty();
+            var basepath = this._metadata.BasePath.OrRootPath();
             var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
 
             return $"{baseUrl}{basepath}/{today}";
         }
 
-        private PageMetadataSettings GetPageMetadata(PostFormViewModel model)
+        private PageMetadataSettings GetPageMetadata(PostFormViewModel model, PublishMode publishMode)
         {
             var page = new PageMetadataSettings
-            {
-                Title = model.Title,
-                Excerpt = model.Excerpt,
-                Author = this._metadata.Authors.Single(p => p.Name.Equals(model.Author, StringComparison.CurrentCultureIgnoreCase)),
-                Date = DateTime.Today,
-                BaseUrl = this._metadata.BaseUrl,
-                Url = $"{model.SlugPrefix}/{model.Slug}.html",
-                HeaderNavigationLinks = this._metadata.HeaderNavigationLinks,
-            };
+                           {
+                               Title = model.Title,
+                               Excerpt = model.Excerpt,
+                               Author = this.GetAuthor(model.Author),
+                               Date = DateTime.Today,
+                               BaseUrl = this.GetBaseUrl(publishMode),
+                               Url = $"{model.SlugPrefix}/{model.Slug}.html",
+                               HeaderNavigationLinks = this._metadata.HeaderNavigationLinks.OrDefault(),
+                           };
 
             return page;
+        }
+
+        private Author GetAuthor(string name)
+        {
+            var author = this._metadata
+                             .Authors
+                             .SingleOrDefault(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+            return author;
+        }
+
+        private string GetBaseUrl(PublishMode publishMode)
+        {
+            string baseurl;
+            switch (publishMode)
+            {
+                case PublishMode.Preview:
+                    baseurl = $"{this.Request.Protocol}://{this.Request.Host}";
+            break;
+                case PublishMode.Publish:
+                    baseurl = this._metadata.BaseUrl;
+                    break;
+                default:
+                    throw new InvalidOperationException("Invalid publish mode.");
+            }
+
+            return baseurl;
         }
     }
 }
