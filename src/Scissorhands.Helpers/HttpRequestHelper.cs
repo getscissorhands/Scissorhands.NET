@@ -46,6 +46,11 @@ namespace Scissorhands.Helpers
         /// <returns>Returns the <see cref="Uri"/> instance representing base URI.</returns>
         public Uri GetBaseUri(HttpRequest request, PublishMode mode)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             Uri uri;
             switch (mode)
             {
@@ -84,6 +89,11 @@ namespace Scissorhands.Helpers
         /// <returns>Returns the prefix of the slug.</returns>
         public string GetSlugPrefix(HttpRequest request, PublishMode mode, PageType? pageType = null)
         {
+            if (request == null)
+            {
+                throw new ArgumentNullException(nameof(request));
+            }
+
             if (pageType == null)
             {
                 pageType = PageType.Post;
