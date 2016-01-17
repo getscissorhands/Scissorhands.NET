@@ -1,5 +1,5 @@
 ﻿@using Scissorhands.Services
-@using Scissorhands.WebApp.ViewModels.Post
+@using Scissorhands.ViewModels.Post
 
 @model PostFormViewModel
 @{
@@ -26,6 +26,10 @@
     <div class="form-group">
         <label asp-for="Author"></label>
         <input class="form-control" asp-for="Author" readonly="readonly"/>
+    </div>
+    <div class="form-group">
+        <label asp-for="Excerpt"></label>
+        <textarea class="form-control" asp-for="Excerpt"></textarea>
     </div>
     <div class="form-group">
         <label asp-for="Body"></label>

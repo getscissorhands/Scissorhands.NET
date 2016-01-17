@@ -1,7 +1,6 @@
 ﻿using Scissorhands.Models.Settings;
-using Scissorhands.ViewModels;
 
-namespace Scissorhands.WebApp.ViewModels.Post
+namespace Scissorhands.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post. This MUST be inherited.
