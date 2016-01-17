@@ -7,6 +7,7 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Exceptions;
+using Scissorhands.Extensions;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
@@ -82,7 +83,7 @@ namespace Scissorhands.WebApp.Controllers
         {
             var vm = new PostFormViewModel()
                          {
-                             SlugPrefix = this.GetBaseUrl() + this.GetBasePath(),
+                             SlugPrefix = this.GetSlugPrefix(),
                              Author = this.GetAuthorName(),
                          };
 
@@ -221,17 +222,13 @@ namespace Scissorhands.WebApp.Controllers
             return baseUrl;
         }
 
-        private string GetBasePath()
+        private string GetSlugPrefix()
         {
-            var basepath = this._metadata.BasePath;
+            var baseUrl = this.GetBaseUrl();
+            var basepath = this._metadata.BasePath.GetRootPathIfNullOrEmpty();
             var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
 
-            if (!string.IsNullOrWhiteSpace(basepath))
-            {
-                basepath += $"/{today}";
-            }
-
-            return basepath;
+            return $"{baseUrl}{basepath}/{today}";
         }
 
         private PageMetadataSettings GetPageMetadata(PostFormViewModel model)
