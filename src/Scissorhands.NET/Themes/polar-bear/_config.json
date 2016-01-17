@@ -1,6 +1,27 @@
 ﻿{
-  "title": "Polar Bear for Scissorhands.NET",
-  "description": "This is a default theme of Scissorhands.NET",
+  "title": "Polar Bear Theme for Scissorhands.NET",
+  "description": "This is a default theme of Scissorhands.NET, which is a port of Jekyll's Polar Bear Theme.",
+
+  "authors": [
+    {
+      "name": "Camille Diez",
+      "socialMedia": {
+        "gitHub": "https://github.com/diezcami"
+      }
+    },
+    {
+      "name": "Scissorhands.NET",
+      "socialMedia": {
+        "twitter": "https://twitter.com/getscissorhands",
+        "facebook": "https://facebook.com/getscissorhands",
+        "gitHub": "https://github.com/GetScissorhands"
+      }
+    }
+  ],
+
+  "projectUrl": "https://github.com/GetScissorhands/polar-bear-theme",
+  "licenseUrl": "https://github.com/GetScissorhands/polar-bear-theme/blob/master/LICENSE",
+
   "socialMedia": {
     "twitter": "https://twitter.com/getscissorhands",
     "facebook": "https://facebook.com/getscissorhands"

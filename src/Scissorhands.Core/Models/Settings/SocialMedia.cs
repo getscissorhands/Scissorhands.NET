@@ -34,5 +34,10 @@
         /// Gets or sets the LinkedIn URL. eg) https://linkedin.com/in/getscissorhands
         /// </summary>
         public string LinkedIn { get; set; }
+
+        /// <summary>
+        /// Gets or sets the GitHub URL. eg) https://github.com/GetScissorhands
+        /// </summary>
+        public string GitHub { get; set; }
     }
 }

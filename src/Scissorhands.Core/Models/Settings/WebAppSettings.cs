@@ -13,31 +13,6 @@ namespace Scissorhands.Models.Settings
         public virtual ServerType Server { get; set; }
 
         /// <summary>
-        /// Gets or sets the base URL of the website. eg) http://getscissorhands.net
-        /// </summary>
-        public virtual string BaseUrl { get; set; }
-
-        /// <summary>
-        /// Gets or sets the base path of the website. Trailing slash is optional. eg) /blog or /blog/
-        /// </summary>
-        public virtual string BasePath { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of <see cref="Author"/> objects.
-        /// </summary>
-        public virtual List<Author> Authors { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of <see cref="FeedType"/> values.
-        /// </summary>
-        public virtual List<FeedType> FeedTypes { get; set; }
-
-        /// <summary>
-        /// Gets or sets the theme.
-        /// </summary>
-        public virtual string Theme { get; set; }
-
-        /// <summary>
         /// Gets or sets the directory path where Markdown files are stored.
         /// </summary>
         public virtual string MarkdownPath { get; set; }
