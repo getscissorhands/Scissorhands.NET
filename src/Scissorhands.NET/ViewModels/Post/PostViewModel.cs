@@ -33,13 +33,13 @@ namespace Scissorhands.WebApp.ViewModels.Post
         public string FooterPartialViewPath { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="PageSettings"/> object.
+        /// Gets or sets the <see cref="PageMetadataSettings"/> object.
         /// </summary>
-        public PageSettings Page { get; set; }
+        public PageMetadataSettings Page { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="SiteSettings"/> object.
+        /// Gets or sets the <see cref="SiteMetadataSettings"/> object.
         /// </summary>
-        public SiteSettings Site { get; set; }
+        public SiteMetadataSettings Site { get; set; }
     }
 }
