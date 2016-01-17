@@ -8,6 +8,7 @@ using Microsoft.AspNet.Http;
 using Newtonsoft.Json;
 using Scissorhands.Extensions;
 using Scissorhands.Models.Settings;
+using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Helpers
 {
@@ -67,10 +68,11 @@ namespace Scissorhands.Helpers
         /// Gets the prefix of the slug.
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <param name="pageType"><see cref="PageType"/> value.</param>
         /// <returns>Returns the prefix of the slug.</returns>
-        public string GetSlugPrefix(HttpRequest request)
+        public string GetSlugPrefix(HttpRequest request, PageType? pageType = null)
         {
-            return this.GetSlugPrefix(request, PublishMode.Publish);
+            return this.GetSlugPrefix(request, PublishMode.Publish, pageType);
         }
 
         /// <summary>
@@ -78,14 +80,34 @@ namespace Scissorhands.Helpers
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <param name="mode"><see cref="PublishMode"/> value.</param>
+        /// <param name="pageType"><see cref="PageType"/> value.</param>
         /// <returns>Returns the prefix of the slug.</returns>
-        public string GetSlugPrefix(HttpRequest request, PublishMode mode)
+        public string GetSlugPrefix(HttpRequest request, PublishMode mode, PageType? pageType = null)
         {
+            if (pageType == null)
+            {
+                pageType = PageType.Post;
+            }
+
             var baseUri = this.GetBaseUri(request, mode);
             var basePath = this._metadata.BasePath.OrRootPath().TrimTrailingSlash();
             var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
 
-            var prefix = $"{baseUri.TrimTrailingSlash()}{basePath}/{today}";
+            var prefix = $"{baseUri.TrimTrailingSlash()}{basePath}";
+            switch (pageType.GetValueOrDefault(PageType.Undefined))
+            {
+                case PageType.Post:
+                    prefix += $"/posts/{today}";
+                    break;
+
+                case PageType.Page:
+                    prefix += "/pages";
+                    break;
+
+                default:
+                    throw new InvalidOperationException("Invalid page type");
+            }
+
             return prefix;
         }
 

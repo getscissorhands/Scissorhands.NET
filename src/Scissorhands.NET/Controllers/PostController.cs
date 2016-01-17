@@ -12,7 +12,7 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.WebApp.ViewModels.Post;
+using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
 {

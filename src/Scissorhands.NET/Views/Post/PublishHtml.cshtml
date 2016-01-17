@@ -5,7 +5,7 @@
 
 @model PublishedContent
 @{
-    var partial = Theme.GetPost(Model.Theme);
+    var partial = Theme.GetPostPartialViewPath(Model.Theme);
 }
 
 @Html.Partial(partial, Model)

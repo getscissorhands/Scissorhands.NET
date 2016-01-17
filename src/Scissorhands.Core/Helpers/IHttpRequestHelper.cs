@@ -4,6 +4,7 @@ using System.Net.Http;
 using Microsoft.AspNet.Http;
 
 using Scissorhands.Models.Settings;
+using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Helpers
 {
@@ -24,16 +25,18 @@ namespace Scissorhands.Helpers
         /// Gets the prefix of the slug.
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <param name="pageType"><see cref="PageType"/> value.</param>
         /// <returns>Returns the prefix of the slug.</returns>
-        string GetSlugPrefix(HttpRequest request);
+        string GetSlugPrefix(HttpRequest request, PageType? pageType = null);
 
         /// <summary>
         /// Gets the prefix of the slug.
         /// </summary>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <param name="mode"><see cref="PublishMode"/> value.</param>
+        /// <param name="pageType"><see cref="PageType"/> value.</param>
         /// <returns>Returns the prefix of the slug.</returns>
-        string GetSlugPrefix(HttpRequest request, PublishMode mode);
+        string GetSlugPrefix(HttpRequest request, PublishMode mode, PageType? pageType = null);
 
         /// <summary>
         /// Creates a new instance of the <see cref="HttpClient"/> class.
