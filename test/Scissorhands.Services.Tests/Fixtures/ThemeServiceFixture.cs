@@ -20,10 +20,10 @@ namespace Scissorhands.Services.Tests.Fixtures
         {
             this.DefaultThemeName = "default";
 
-            this.WebAppSettings = new Mock<WebAppSettings>();
-            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
-            this.ThemeService = new ThemeService(this.WebAppSettings.Object);
+            this.ThemeService = new ThemeService(this.SiteMetadataSettings.Object);
         }
 
         /// <summary>
@@ -32,9 +32,9 @@ namespace Scissorhands.Services.Tests.Fixtures
         public string DefaultThemeName { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<WebAppSettings> WebAppSettings { get; }
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="ThemeService"/> instance.

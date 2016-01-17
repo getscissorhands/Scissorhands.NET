@@ -26,8 +26,8 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         {
             this.DefaultThemeName = "default";
 
-            this.WebAppSettings = new Mock<WebAppSettings>();
-            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
@@ -35,7 +35,7 @@ namespace Scissorhands.WebApp.Tests.Fixtures
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.Controller = new PostController(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.PublishService.Object);
+            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.PublishService.Object);
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
@@ -55,9 +55,9 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public string DefaultThemeName { get; set; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<WebAppSettings> WebAppSettings { get; }
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.

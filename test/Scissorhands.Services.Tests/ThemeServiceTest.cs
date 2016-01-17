@@ -20,7 +20,7 @@ namespace Scissorhands.Services.Tests
     public class ThemeServiceTest : IClassFixture<ThemeServiceFixture>
     {
         private readonly string _defaultThemeName;
-        private readonly Mock<WebAppSettings> _settings;
+        private readonly Mock<SiteMetadataSettings> _metadata;
         private readonly IThemeService _service;
         private readonly RouteData _routeData;
 
@@ -33,7 +33,7 @@ namespace Scissorhands.Services.Tests
         public ThemeServiceTest(ThemeServiceFixture fixture)
         {
             this._defaultThemeName = fixture.DefaultThemeName;
-            this._settings = fixture.WebAppSettings;
+            this._metadata = fixture.SiteMetadataSettings;
             this._service = fixture.ThemeService;
 
             this._routeData = new RouteData();
@@ -55,7 +55,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameter_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var service = new ThemeService(this._settings.Object); };
+            Action action = () => { var service = new ThemeService(this._metadata.Object); };
             action.ShouldNotThrow<Exception>();
         }
 

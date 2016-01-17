@@ -22,9 +22,11 @@ namespace Scissorhands.Services.Tests.Fixtures
             this.DefaultThemeName = "default";
 
             this.WebAppSettings = new Mock<WebAppSettings>();
-            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
             this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
+
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
@@ -32,7 +34,7 @@ namespace Scissorhands.Services.Tests.Fixtures
 
             this.HttpClientHelper = new Mock<IHttpClientHelper>();
 
-            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpClientHelper.Object);
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.SiteMetadataSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpClientHelper.Object);
         }
 
         /// <summary>
@@ -44,6 +46,11 @@ namespace Scissorhands.Services.Tests.Fixtures
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance..
         /// </summary>
         public Mock<WebAppSettings> WebAppSettings { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// </summary>
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
