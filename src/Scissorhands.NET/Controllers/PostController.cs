@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -12,7 +11,6 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.Themes;
 using Scissorhands.WebApp.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
@@ -23,7 +21,7 @@ namespace Scissorhands.WebApp.Controllers
     [Route("admin/post")]
     public class PostController : Controller
     {
-        private readonly WebAppSettings _settings;
+        private readonly SiteMetadataSettings _metadata;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IThemeService _themeService;
         private readonly IPublishService _publishService;
@@ -31,18 +29,18 @@ namespace Scissorhands.WebApp.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
-        /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(WebAppSettings settings, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
+        public PostController(SiteMetadataSettings metadata, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
         {
-            if (settings == null)
+            if (metadata == null)
             {
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentNullException(nameof(metadata));
             }
 
-            this._settings = settings;
+            this._metadata = metadata;
 
             if (markdownHelper == null)
             {
@@ -117,29 +115,13 @@ namespace Scissorhands.WebApp.Controllers
 
             var vm = new PostPreviewViewModel()
                          {
-                             Theme = this._settings.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
+                             Theme = this._metadata.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                             Page = this.GetPageMetadata(model),
                          };
-
-            var page = new PageSettings();
-            page.Title = "Hello World";
-            page.Description = "This is description";
-            page.Author = new Author() { Name = "joebloggs" };
-            page.Date = DateTime.Today;
-            page.BaseUrl = this._settings.BaseUrl;
-            page.Url = "/posts/post.html";
-            page.Pages = new List<PageSettings>();
-
-            vm.Page = page;
-
-            var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
-
-            var loader = new ThemeLoader(this._settings, new FileHelper(this._settings));
-            var site = await loader.LoadAsync(env).ConfigureAwait(false);
-            vm.Site = site;
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
@@ -163,11 +145,11 @@ namespace Scissorhands.WebApp.Controllers
 
             var vm = new PostPublishViewModel
                          {
-                             Theme = this._settings.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
+                             Theme = this._metadata.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
                          };
 
             var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
@@ -219,7 +201,7 @@ namespace Scissorhands.WebApp.Controllers
 
         private string GetAuthorName()
         {
-            var author = this._settings.Authors.FirstOrDefault(p => p.IsDefault);
+            var author = this._metadata.Authors.FirstOrDefault(p => p.IsDefault);
             if (author == null)
             {
                 throw new AuthorNotFoundException("Author not found");
@@ -230,7 +212,7 @@ namespace Scissorhands.WebApp.Controllers
 
         private string GetBaseUrl()
         {
-            var baseUrl = this._settings.BaseUrl;
+            var baseUrl = this._metadata.BaseUrl;
             if (string.IsNullOrWhiteSpace(baseUrl))
             {
                 throw new InvalidSettingsException("BaseUrl has not been set");
@@ -241,7 +223,7 @@ namespace Scissorhands.WebApp.Controllers
 
         private string GetBasePath()
         {
-            var basepath = this._settings.BasePath;
+            var basepath = this._metadata.BasePath;
             var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
 
             if (!string.IsNullOrWhiteSpace(basepath))
@@ -250,6 +232,22 @@ namespace Scissorhands.WebApp.Controllers
             }
 
             return basepath;
+        }
+
+        private PageMetadataSettings GetPageMetadata(PostFormViewModel model)
+        {
+            var page = new PageMetadataSettings
+            {
+                Title = model.Title,
+                Excerpt = model.Excerpt,
+                Author = this._metadata.Authors.Single(p => p.Name.Equals(model.Author, StringComparison.CurrentCultureIgnoreCase)),
+                Date = DateTime.Today,
+                BaseUrl = this._metadata.BaseUrl,
+                Url = $"{model.SlugPrefix}/{model.Slug}.html",
+                HeaderNavigationLinks = this._metadata.HeaderNavigationLinks,
+            };
+
+            return page;
         }
     }
 }
