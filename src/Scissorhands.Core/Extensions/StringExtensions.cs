@@ -10,7 +10,7 @@
         /// </summary>
         /// <param name="value">Babe path value.</param>
         /// <returns>Returns the base path or root path.</returns>
-        public static string GetRootPathIfNullOrEmpty(this string value)
+        public static string OrRootPath(this string value)
         {
             if (string.IsNullOrWhiteSpace(value))
             {
