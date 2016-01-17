@@ -29,13 +29,15 @@ namespace Scissorhands.WebApp.Tests.Fixtures
             this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
+            this.RequestHelper = new Mock<IHttpRequestHelper>();
+
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
             this.ThemeService = new Mock<IThemeService>();
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.PublishService.Object);
+            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.RequestHelper.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.PublishService.Object);
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
@@ -58,6 +60,11 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
         /// </summary>
         public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{IHttpRequestHelper}"/> instance.
+        /// </summary>
+        public Mock<IHttpRequestHelper> RequestHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.

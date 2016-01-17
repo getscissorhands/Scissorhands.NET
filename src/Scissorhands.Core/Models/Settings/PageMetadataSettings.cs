@@ -9,6 +9,11 @@ namespace Scissorhands.Models.Settings
     public class PageMetadataSettings
     {
         /// <summary>
+        /// Gets or sets the title of the website.
+        /// </summary>
+        public string SiteTitle { get; set; }
+
+        /// <summary>
         /// Gets or sets the title of the post/page.
         /// </summary>
         public string Title { get; set; }

@@ -24,5 +24,21 @@
 
             return value;
         }
+
+        /// <summary>
+        /// Removes the trailing slash from the given URL.
+        /// </summary>
+        /// <param name="url">URL value.</param>
+        /// <returns>Returns the URL without trailing slash.</returns>
+        public static string TrimTrailingSlash(this string url)
+        {
+            if (string.IsNullOrWhiteSpace(url))
+            {
+                return string.Empty;
+            }
+
+            var trimmed = url.TrimEnd('/');
+            return trimmed;
+        }
     }
 }

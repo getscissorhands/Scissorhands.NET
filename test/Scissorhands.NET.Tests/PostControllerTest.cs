@@ -30,6 +30,7 @@ namespace Scissorhands.WebApp.Tests
     {
         private readonly string _defaultThemeName;
         private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<IHttpRequestHelper> _requestHelper;
         private readonly Mock<IMarkdownHelper> _markdownHelper;
         private readonly Mock<IThemeService> _themeService;
         private readonly Mock<IPublishService> _publishService;
@@ -50,6 +51,7 @@ namespace Scissorhands.WebApp.Tests
         {
             this._defaultThemeName = fixture.DefaultThemeName;
             this._metadata = fixture.SiteMetadataSettings;
+            this._requestHelper = fixture.RequestHelper;
             this._markdownHelper = fixture.MarkdownHelper;
             this._themeService = fixture.ThemeService;
             this._publishService = fixture.PublishService;
@@ -69,17 +71,21 @@ namespace Scissorhands.WebApp.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var controller = new PostController(null, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
+            Action action1 = () => { var controller = new PostController(null, this._requestHelper.Object, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
-            Action action2 = () => { var controller = new PostController(this._metadata.Object, null, this._themeService.Object, this._publishService.Object); };
+            Action action2 = () => { var controller = new PostController(this._metadata.Object, null, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
             action2.ShouldThrow<ArgumentNullException>();
 
-            Action action3 = () => { var controller = new PostController(this._metadata.Object, this._markdownHelper.Object, null, this._publishService.Object); };
+
+            Action action3 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, null, this._themeService.Object, this._publishService.Object); };
             action3.ShouldThrow<ArgumentNullException>();
 
-            Action action4 = () => { var controller = new PostController(this._metadata.Object, this._markdownHelper.Object, this._themeService.Object, null); };
+            Action action4 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, this._markdownHelper.Object, null, this._publishService.Object); };
             action4.ShouldThrow<ArgumentNullException>();
+
+            Action action5 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, this._markdownHelper.Object, this._themeService.Object, null); };
+            action5.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>

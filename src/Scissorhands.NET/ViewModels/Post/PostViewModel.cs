@@ -1,11 +1,12 @@
 ﻿using Scissorhands.Models.Settings;
+using Scissorhands.ViewModels;
 
 namespace Scissorhands.WebApp.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post. This MUST be inherited.
     /// </summary>
-    public abstract class PostViewModel
+    public abstract class PostViewModel : BaseViewModel
     {
         /// <summary>
         /// Gets or sets the theme.
