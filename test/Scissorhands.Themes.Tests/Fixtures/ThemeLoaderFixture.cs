@@ -28,18 +28,18 @@ namespace Scissorhands.Themes.Tests.Fixtures
             this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
             this.FeedTypes = new List<FeedType>() { FeedType.Rss };
 
-            this.WebAppSettings = new Mock<WebAppSettings>();
-            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
-            this.WebAppSettings.SetupGet(p => p.BaseUrl).Returns(this.BaseUrl);
-            this.WebAppSettings.SetupGet(p => p.BasePath).Returns(this.BasePath);
-            this.WebAppSettings.SetupGet(p => p.Authors).Returns(this.Authors);
-            this.WebAppSettings.SetupGet(p => p.FeedTypes).Returns(this.FeedTypes);
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
+            this.SiteMetadataSettings.SetupGet(p => p.BaseUrl).Returns(this.BaseUrl);
+            this.SiteMetadataSettings.SetupGet(p => p.BasePath).Returns(this.BasePath);
+            this.SiteMetadataSettings.SetupGet(p => p.Authors).Returns(this.Authors);
+            this.SiteMetadataSettings.SetupGet(p => p.FeedTypes).Returns(this.FeedTypes);
 
             this.FileHelper = new Mock<IFileHelper>();
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
-            this.ThemeLoader = new ThemeLoader(this.WebAppSettings.Object, this.FileHelper.Object);
+            this.ThemeLoader = new ThemeLoader(this.SiteMetadataSettings.Object, this.FileHelper.Object);
         }
 
         /// <summary>
@@ -68,9 +68,9 @@ namespace Scissorhands.Themes.Tests.Fixtures
         public List<FeedType> FeedTypes { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<WebAppSettings> WebAppSettings { get; }
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

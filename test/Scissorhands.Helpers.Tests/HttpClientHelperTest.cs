@@ -16,11 +16,11 @@ using Xunit;
 namespace Scissorhands.Helpers.Tests
 {
     /// <summary>
-    /// This represents the test entity for the <see cref="HttpClientHelper"/> class.
+    /// This represents the test entity for the <see cref="HttpRequestHelper"/> class.
     /// </summary>
     public class HttpClientHelperTest : IClassFixture<HttpClientHelperFixture>
     {
-        private readonly IHttpClientHelper _httpClientHelper;
+        private readonly IHttpRequestHelper _httpRequestHelper;
         private readonly Mock<HttpRequest> _httpRequest;
 
         /// <summary>
@@ -29,7 +29,7 @@ namespace Scissorhands.Helpers.Tests
         /// <param name="fixture"><see cref="HttpClientHelperFixture"/> instance.</param>
         public HttpClientHelperTest(HttpClientHelperFixture fixture)
         {
-            this._httpClientHelper = fixture.HttpClientHelper;
+            this._httpRequestHelper = fixture.HttpClientHelper;
             this._httpRequest = fixture.HttpRequest;
         }
 
@@ -39,7 +39,7 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_NullHttpRequest_CreateHttpClient_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var client = this._httpClientHelper.CreateHttpClient(null); };
+            Action action = () => { var client = this._httpRequestHelper.CreateHttpClient(null); };
             action.ShouldThrow<ArgumentNullException>();
         }
 
@@ -58,7 +58,7 @@ namespace Scissorhands.Helpers.Tests
 
             var url = string.Join("://", isHttps ? "https" : "http", host);
 
-            var client = this._httpClientHelper.CreateHttpClient(this._httpRequest.Object);
+            var client = this._httpRequestHelper.CreateHttpClient(this._httpRequest.Object);
             client.BaseAddress.ToString().TrimEnd('/').Should().Be(url);
         }
 
@@ -68,7 +68,7 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_NullModel_CreateStringContent_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var content = this._httpClientHelper.CreateStringContent(null); };
+            Action action = () => { var content = this._httpRequestHelper.CreateStringContent(null); };
             action.ShouldThrow<ArgumentNullException>();
         }
 
@@ -83,7 +83,7 @@ namespace Scissorhands.Helpers.Tests
         {
             var model = new PublishedContent() { Theme = "default", Markdown = markdown, Html = html };
 
-            var content = this._httpClientHelper.CreateStringContent(model);
+            var content = this._httpRequestHelper.CreateStringContent(model);
             var result = JsonConvert.DeserializeObject<PublishedContent>(await content.ReadAsStringAsync().ConfigureAwait(false));
 
             result.Markdown.Should().Be(markdown);

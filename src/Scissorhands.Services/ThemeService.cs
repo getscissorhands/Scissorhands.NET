@@ -14,7 +14,7 @@ namespace Scissorhands.Services
     /// </summary>
     public class ThemeService : IThemeService
     {
-        private readonly WebAppSettings _settings;
+        private readonly SiteMetadataSettings _metadata;
         private readonly IDictionary<string, List<string>> _controllers;
 
         private bool _disposed;
@@ -22,15 +22,15 @@ namespace Scissorhands.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="ThemeService"/> class.
         /// </summary>
-        /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        public ThemeService(WebAppSettings settings)
+        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
+        public ThemeService(SiteMetadataSettings metadata)
         {
-            if (settings == null)
+            if (metadata == null)
             {
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentNullException(nameof(metadata));
             }
 
-            this._settings = settings;
+            this._metadata = metadata;
 
             this._controllers = new Dictionary<string, List<string>>
                                     {
@@ -61,7 +61,7 @@ namespace Scissorhands.Services
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
             {
-                theme = this._settings.Theme;
+                theme = this._metadata.Theme;
             }
 
             var head = $"~/Themes/{theme}/shared/_head.cshtml";
@@ -78,7 +78,7 @@ namespace Scissorhands.Services
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
             {
-                theme = this._settings.Theme;
+                theme = this._metadata.Theme;
             }
 
             var header = $"~/Themes/{theme}/shared/_header.cshtml";
@@ -95,7 +95,7 @@ namespace Scissorhands.Services
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
             {
-                theme = this._settings.Theme;
+                theme = this._metadata.Theme;
             }
 
             var post = $"~/Themes/{theme}/post/post.cshtml";
@@ -112,7 +112,7 @@ namespace Scissorhands.Services
             var theme = themeName;
             if (string.IsNullOrWhiteSpace(theme))
             {
-                theme = this._settings.Theme;
+                theme = this._metadata.Theme;
             }
 
             var footer = $"~/Themes/{theme}/Shared/_Footer.cshtml";
@@ -140,7 +140,7 @@ namespace Scissorhands.Services
             var themepath = "~/Views";
             if (this.IsThemeRequired(controller, action))
             {
-                themepath = $"~/Themes/{this._settings.Theme}";
+                themepath = $"~/Themes/{this._metadata.Theme}";
             }
 
             return themepath;

@@ -20,9 +20,10 @@ namespace Scissorhands.Services
         private const string PostPublishHtml = "/admin/post/publish/html";
 
         private readonly WebAppSettings _settings;
+        private readonly SiteMetadataSettings _metadata;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IFileHelper _fileHelper;
-        private readonly IHttpClientHelper _httpClientHelper;
+        private readonly IHttpRequestHelper _requestHelper;
 
         private bool _disposed;
 
@@ -30,10 +31,11 @@ namespace Scissorhands.Services
         /// Initializes a new instance of the <see cref="PublishService"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        /// <param name="httpClientHelper"><see cref="IHttpClientHelper"/> instance.</param>
-        public PublishService(WebAppSettings settings, IMarkdownHelper markdownHelper, IFileHelper fileHelper, IHttpClientHelper httpClientHelper)
+        /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
+        public PublishService(WebAppSettings settings, SiteMetadataSettings metadata, IMarkdownHelper markdownHelper, IFileHelper fileHelper, IHttpRequestHelper requestHelper)
         {
             if (settings == null)
             {
@@ -41,6 +43,13 @@ namespace Scissorhands.Services
             }
 
             this._settings = settings;
+
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
+
+            this._metadata = metadata;
 
             if (markdownHelper == null)
             {
@@ -56,12 +65,12 @@ namespace Scissorhands.Services
 
             this._fileHelper = fileHelper;
 
-            if (httpClientHelper == null)
+            if (requestHelper == null)
             {
-                throw new ArgumentNullException(nameof(httpClientHelper));
+                throw new ArgumentNullException(nameof(requestHelper));
             }
 
-            this._httpClientHelper = httpClientHelper;
+            this._requestHelper = requestHelper;
         }
 
         /// <summary>
@@ -150,10 +159,10 @@ namespace Scissorhands.Services
 
             var parsedHtml = this._markdownHelper.Parse(markdown);
 
-            var publishing = new PublishedContent() { Theme = this._settings.Theme, Markdown = markdown, Html = parsedHtml };
+            var publishing = new PublishedContent() { Theme = this._metadata.Theme, Markdown = markdown, Html = parsedHtml };
 
-            using (var client = this._httpClientHelper.CreateHttpClient(request))
-            using (var content = this._httpClientHelper.CreateStringContent(publishing))
+            using (var client = this._requestHelper.CreateHttpClient(request))
+            using (var content = this._requestHelper.CreateStringContent(publishing))
             {
                 var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
                 var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);

@@ -1,23 +1,19 @@
 @{
-    var site = Model.Site;
     var page = Model.Page;
 }
 
 <div class="site-header">
 
     <nav class="site-nav">
-        @foreach (var p in page.Pages)
+        @foreach (var link in page.HeaderNavigationLinks)
         {
-            if (!string.IsNullOrWhiteSpace(p.Title))
-            {
-                <a class="page-link" href="@string.Join("/", site.BaseUrl, p.Url)">@Html.Raw(p.Title)</a>
-            }
+            <a class="page-link" href="@link.Url">@Html.Raw(link.Title)</a>
         }
     </nav>
 
     <h1>
      <span>
-      <a class="site-title" href="@site.BaseUrl/">@Html.Raw(site.Title)</a>
+      <a class="site-title" href="@page.BaseUrl/">@Html.Raw(page.SiteTitle)</a>
      </span>
     </h1>
 

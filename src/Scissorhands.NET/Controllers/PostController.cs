@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Threading.Tasks;
@@ -8,11 +7,11 @@ using Microsoft.AspNet.Mvc;
 using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Exceptions;
+using Scissorhands.Extensions;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.Themes;
 using Scissorhands.WebApp.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
@@ -23,7 +22,8 @@ namespace Scissorhands.WebApp.Controllers
     [Route("admin/post")]
     public class PostController : Controller
     {
-        private readonly WebAppSettings _settings;
+        private readonly SiteMetadataSettings _metadata;
+        private readonly IHttpRequestHelper _requestHelper;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IThemeService _themeService;
         private readonly IPublishService _publishService;
@@ -31,18 +31,26 @@ namespace Scissorhands.WebApp.Controllers
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
-        /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
+        /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(WebAppSettings settings, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
+        public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
         {
-            if (settings == null)
+            if (metadata == null)
             {
-                throw new ArgumentNullException(nameof(settings));
+                throw new ArgumentNullException(nameof(metadata));
             }
 
-            this._settings = settings;
+            this._metadata = metadata;
+
+            if (requestHelper == null)
+            {
+                throw new ArgumentNullException(nameof(requestHelper));
+            }
+
+            this._requestHelper = requestHelper;
 
             if (markdownHelper == null)
             {
@@ -83,10 +91,10 @@ namespace Scissorhands.WebApp.Controllers
         public IActionResult Write()
         {
             var vm = new PostFormViewModel()
-                         {
-                             SlugPrefix = this.GetBaseUrl() + this.GetBasePath(),
-                             Author = this.GetAuthorName(),
-                         };
+            {
+                SlugPrefix = this._requestHelper.GetSlugPrefix(this.Request),
+                Author = this.GetAuthorName(),
+            };
 
             return this.View(vm);
         }
@@ -116,30 +124,14 @@ namespace Scissorhands.WebApp.Controllers
             }
 
             var vm = new PostPreviewViewModel()
-                         {
-                             Theme = this._settings.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
-                         };
-
-            var page = new PageSettings();
-            page.Title = "Hello World";
-            page.Description = "This is description";
-            page.Author = new Author() { Name = "joebloggs" };
-            page.Date = DateTime.Today;
-            page.BaseUrl = this._settings.BaseUrl;
-            page.Url = "/posts/post.html";
-            page.Pages = new List<PageSettings>();
-
-            vm.Page = page;
-
-            var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
-
-            var loader = new ThemeLoader(this._settings, new FileHelper(this._settings));
-            var site = await loader.LoadAsync(env).ConfigureAwait(false);
-            vm.Site = site;
+            {
+                Theme = this._metadata.Theme,
+                HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
+                HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
+                PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
+                FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                Page = this.GetPageMetadata(model, PublishMode.Preview),
+            };
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
@@ -162,13 +154,13 @@ namespace Scissorhands.WebApp.Controllers
             }
 
             var vm = new PostPublishViewModel
-                         {
-                             Theme = this._settings.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._settings.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._settings.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._settings.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._settings.Theme),
-                         };
+            {
+                Theme = this._metadata.Theme,
+                HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
+                HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
+                PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
+                FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+            };
 
             var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
 
@@ -217,9 +209,17 @@ namespace Scissorhands.WebApp.Controllers
             return this.View();
         }
 
+        private Author GetAuthor(string name)
+        {
+            var author = this._metadata
+                             .Authors
+                             .SingleOrDefault(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
+            return author;
+        }
+
         private string GetAuthorName()
         {
-            var author = this._settings.Authors.FirstOrDefault(p => p.IsDefault);
+            var author = this._metadata.Authors.FirstOrDefault(p => p.IsDefault);
             if (author == null)
             {
                 throw new AuthorNotFoundException("Author not found");
@@ -228,28 +228,20 @@ namespace Scissorhands.WebApp.Controllers
             return author.Name;
         }
 
-        private string GetBaseUrl()
+        private PageMetadataSettings GetPageMetadata(PostFormViewModel model, PublishMode publishMode)
         {
-            var baseUrl = this._settings.BaseUrl;
-            if (string.IsNullOrWhiteSpace(baseUrl))
+            var page = new PageMetadataSettings
             {
-                throw new InvalidSettingsException("BaseUrl has not been set");
-            }
-
-            return baseUrl;
-        }
-
-        private string GetBasePath()
-        {
-            var basepath = this._settings.BasePath;
-            var today = $"{DateTime.Today.ToString("yyyy/MM/dd")}";
-
-            if (!string.IsNullOrWhiteSpace(basepath))
-            {
-                basepath += $"/{today}";
-            }
-
-            return basepath;
+                SiteTitle = this._metadata.Title,
+                Title = model.Title,
+                Excerpt = model.Excerpt,
+                Author = this.GetAuthor(model.Author),
+                Date = DateTime.Today,
+                BaseUrl = this._requestHelper.GetBaseUri(this.Request, publishMode).TrimTrailingSlash(),
+                Url = $"{this._requestHelper.GetSlugPrefix(this.Request, publishMode)}/{model.Slug}.html",
+                HeaderNavigationLinks = this._metadata.HeaderNavigationLinks.OrDefault(),
+            };
+            return page;
         }
     }
 }

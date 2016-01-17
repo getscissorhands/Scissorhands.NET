@@ -14,7 +14,8 @@ namespace Scissorhands.Themes
         /// <summary>
         /// Loads the theme configuration file.
         /// </summary>
-        /// <returns>Returns the <see cref="SiteSettings"/> instance.</returns>
-        Task<SiteSettings> LoadAsync(IApplicationEnvironment env);
+        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
+        /// <returns>Returns the <see cref="ThemeConfigSettings"/> instance.</returns>
+        Task<ThemeConfigSettings> LoadAsync(IApplicationEnvironment env);
     }
 }

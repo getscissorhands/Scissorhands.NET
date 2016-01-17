@@ -4,6 +4,8 @@ using Microsoft.AspNet.Http;
 
 using Moq;
 
+using Scissorhands.Models.Settings;
+
 namespace Scissorhands.Helpers.Tests.Fixtures
 {
     /// <summary>
@@ -18,15 +20,22 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         /// </summary>
         public HttpClientHelperFixture()
         {
-            this.HttpClientHelper = new HttpClientHelper();
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+
+            this.HttpClientHelper = new HttpRequestHelper(this.SiteMetadataSettings.Object);
 
             this.HttpRequest = new Mock<HttpRequest>();
         }
 
         /// <summary>
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// </summary>
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+
+        /// <summary>
         /// Gets the <see cref="HttpClientHelper"/> instance.
         /// </summary>
-        public HttpClientHelper HttpClientHelper { get; }
+        public HttpRequestHelper HttpClientHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{HttpRequest}"/> instance.

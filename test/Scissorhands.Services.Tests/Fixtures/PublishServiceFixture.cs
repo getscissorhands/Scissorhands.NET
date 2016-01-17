@@ -22,17 +22,19 @@ namespace Scissorhands.Services.Tests.Fixtures
             this.DefaultThemeName = "default";
 
             this.WebAppSettings = new Mock<WebAppSettings>();
-            this.WebAppSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
             this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
+
+            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
             this.FileHelper = new Mock<IFileHelper>();
 
-            this.HttpClientHelper = new Mock<IHttpClientHelper>();
+            this.HttpRequestHelper = new Mock<IHttpRequestHelper>();
 
-            this.PublishService = new PublishService(this.WebAppSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpClientHelper.Object);
+            this.PublishService = new PublishService(this.WebAppSettings.Object, this.SiteMetadataSettings.Object, this.MarkdownHelper.Object, this.FileHelper.Object, this.HttpRequestHelper.Object);
         }
 
         /// <summary>
@@ -46,6 +48,11 @@ namespace Scissorhands.Services.Tests.Fixtures
         public Mock<WebAppSettings> WebAppSettings { get; }
 
         /// <summary>
+        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// </summary>
+        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+
+        /// <summary>
         /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
         /// </summary>
         public Mock<IMarkdownHelper> MarkdownHelper { get; }
@@ -56,9 +63,9 @@ namespace Scissorhands.Services.Tests.Fixtures
         public Mock<IFileHelper> FileHelper { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{IHttpClientHelper}"/> instance.
+        /// Gets the <see cref="Mock{IHttpRequestHelper}"/> instance.
         /// </summary>
-        public Mock<IHttpClientHelper> HttpClientHelper { get; }
+        public Mock<IHttpRequestHelper> HttpRequestHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="IPublishService"/> instance.

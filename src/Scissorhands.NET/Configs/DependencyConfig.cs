@@ -45,6 +45,7 @@ namespace Scissorhands.WebApp.Configs
             builder.RegisterInstance(env).SingleInstance();
             builder.RegisterInstance(configuration.Get<Logging>("Logging")).SingleInstance();
             builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).SingleInstance();
+            builder.RegisterInstance(configuration.Get<SiteMetadataSettings>("SiteMetadataSettings")).SingleInstance();
         }
 
         private static void RegisterLoaders(ContainerBuilder builder)
@@ -55,7 +56,7 @@ namespace Scissorhands.WebApp.Configs
         private static void RegisterHelpers(ContainerBuilder builder)
         {
             builder.RegisterType<FileHelper>().As<IFileHelper>().PropertiesAutowired().InstancePerLifetimeScope();
-            builder.RegisterType<HttpClientHelper>().As<IHttpClientHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<HttpRequestHelper>().As<IHttpRequestHelper>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<MarkdownHelper>().As<IMarkdownHelper>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 
