@@ -213,14 +213,11 @@ namespace Scissorhands.Services.Tests
         {
             var markdown = "**Hello World**";
 
-            Func<Task> func1 = async () => { var result = await this._service.PublishPostAsync(null, this._env.Object, this._request.Object).ConfigureAwait(false); };
+            Func<Task> func1 = async () => { var result = await this._service.PublishPostAsync(null, this._request.Object).ConfigureAwait(false); };
             func1.ShouldThrow<ArgumentNullException>();
 
-            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(markdown, null, this._request.Object).ConfigureAwait(false); };
+            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(markdown, null).ConfigureAwait(false); };
             func2.ShouldThrow<ArgumentNullException>();
-
-            Func<Task> func3 = async () => { var result = await this._service.PublishPostAsync(markdown, this._env.Object, null).ConfigureAwait(false); };
-            func3.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -251,7 +248,7 @@ namespace Scissorhands.Services.Tests
             var content = new StringContent(html, Encoding.UTF8);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
-            var publishedpath = await this._service.PublishPostAsync(markdown, this._env.Object, this._request.Object).ConfigureAwait(false);
+            var publishedpath = await this._service.PublishPostAsync(markdown, this._request.Object).ConfigureAwait(false);
             publishedpath.Markdown.Should().BeEquivalentTo(markdownpath);
             publishedpath.Html.Should().BeEquivalentTo(htmlpath);
         }
