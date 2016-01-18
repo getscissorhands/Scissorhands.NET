@@ -118,35 +118,35 @@ namespace Scissorhands.WebApp.Tests
         /// Tests whether the action should return <see cref="HttpStatusCodeResult"/> instance or not.
         /// </summary>
         [Fact]
-        public async void Given_NullParameter_Preview_ShouldReturn_BadRequest()
+        public void Given_NullParameter_Preview_ShouldReturn_BadRequest()
         {
-            var result = await this._controller.Preview(null).ConfigureAwait(false) as HttpStatusCodeResult;
+            var result = this._controller.Preview(null) as HttpStatusCodeResult;
             result.Should().NotBeNull();
             result.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         }
 
-        ///// <summary>
-        ///// Tests whether the action should return <see cref="ViewResult"/> instance or not.
-        ///// </summary>
-        ///// <param name="markdown">String value in Markdown format.</param>
-        ///// <param name="html">String value in HTML format.</param>
-        //[Theory]
-        //[InlineData("**Hello World", "<p>Joe Bloggs</p>")]
-        //public async void Given_Model_Preview_ShouldReturn_ViewResult(string markdown, string html)
-        //{
-        //    this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+        /// <summary>
+        /// Tests whether the action should return <see cref="ViewResult"/> instance or not.
+        /// </summary>
+        /// <param name="markdown">String value in Markdown format.</param>
+        /// <param name="html">String value in HTML format.</param>
+        [Theory]
+        [InlineData("**Hello World", "<p>Joe Bloggs</p>")]
+        public void Given_Model_Preview_ShouldReturn_ViewResult(string markdown, string html)
+        {
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
 
-        //    var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
+            var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 
-        //    var result = await this._controller.Preview(model).ConfigureAwait(false) as ViewResult;
-        //    result.Should().NotBeNull();
+            var result = this._controller.Preview(model) as ViewResult;
+            result.Should().NotBeNull();
 
-        //    var vm = result.ViewData.Model as PostPreviewViewModel;
-        //    vm.Should().NotBeNull();
+            var vm = result.ViewData.Model as PostPreviewViewModel;
+            vm.Should().NotBeNull();
 
-        //    vm.Theme.Should().Be(this._defaultThemeName);
-        //    vm.Html.Should().Be(html);
-        //}
+            vm.Theme.Should().Be(this._defaultThemeName);
+            vm.Html.Should().Be(html);
+        }
 
         /// <summary>
         /// Tests whether the action should return <see cref="HttpStatusCodeResult"/> instance or not.
