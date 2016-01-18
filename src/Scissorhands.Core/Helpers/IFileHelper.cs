@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Threading.Tasks;
 
-using Microsoft.Extensions.PlatformAbstractions;
-
 namespace Scissorhands.Helpers
 {
     /// <summary>
@@ -28,9 +26,8 @@ namespace Scissorhands.Helpers
         /// <summary>
         /// Checks whether the directory path exists or not.
         /// </summary>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="directorypath">Directory path.</param>
         /// <returns>Returns the fully qualified directory path.</returns>
-        string GetDirectory(IApplicationEnvironment env, string directorypath);
+        string GetDirectory(string directorypath);
     }
 }
