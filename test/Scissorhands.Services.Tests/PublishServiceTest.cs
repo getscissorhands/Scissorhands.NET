@@ -133,7 +133,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullHtml_PublishHtmlAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(null, this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(null).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
@@ -146,7 +146,7 @@ namespace Scissorhands.Services.Tests
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync("**Hello World**", this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync("**Hello World**").ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
@@ -161,7 +161,7 @@ namespace Scissorhands.Services.Tests
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>", this._env.Object).ConfigureAwait(false);
+            var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>").ConfigureAwait(false);
             result.Should().Be(htmlpath);
         }
 
