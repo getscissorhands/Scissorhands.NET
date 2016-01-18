@@ -7,6 +7,7 @@ using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.WebApp.Configs;
 
@@ -21,8 +22,9 @@ namespace Scissorhands.WebApp
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
         /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
-        public Startup(IHostingEnvironment env)
-            : this(env, null)
+        /// <param name="appEnv"><see cref="IApplicationEnvironment"/> instance.</param>
+        public Startup(IHostingEnvironment env, IApplicationEnvironment appEnv)
+            : this(env, appEnv, null)
         {
         }
 
@@ -30,10 +32,12 @@ namespace Scissorhands.WebApp
         /// Initializes a new instance of the <see cref="Startup"/> class.
         /// </summary>
         /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
+        /// <param name="appEnv"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="args">List of arguments from the command line.</param>
-        public Startup(IHostingEnvironment env, string[] args)
+        public Startup(IHostingEnvironment env, IApplicationEnvironment appEnv, string[] args)
         {
             this.HostingEnvironment = env;
+            this.ApplicationEnvironment = appEnv;
 
             var builder = new ConfigurationBuilder()
                 .AddJsonFile("appsettings.json")
@@ -48,12 +52,17 @@ namespace Scissorhands.WebApp
         }
 
         /// <summary>
-        /// Gets the hosting environment.
+        /// Gets the <see cref="IHostingEnvironment"/> instance.
         /// </summary>
         public IHostingEnvironment HostingEnvironment { get; }
 
         /// <summary>
-        /// Gets the configuration.
+        /// Gets the <see cref="IApplicationEnvironment"/> instance..
+        /// </summary>
+        public IApplicationEnvironment ApplicationEnvironment { get; }
+
+        /// <summary>
+        /// Gets the <see cref="IConfigurationRoot"/> instance.
         /// </summary>
         public IConfigurationRoot Configuration { get; }
 
@@ -88,7 +97,7 @@ namespace Scissorhands.WebApp
             services.AddMvc();
 
             // Add dependencies.
-            var container = DependencyConfig.Register(services, this.HostingEnvironment, this.Configuration);
+            var container = DependencyConfig.Register(services, this.HostingEnvironment, this.ApplicationEnvironment, this.Configuration);
             return container.Resolve<IServiceProvider>();
         }
     }

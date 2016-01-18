@@ -4,6 +4,7 @@ using Autofac.Extensions.DependencyInjection;
 using Microsoft.AspNet.Hosting;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Helpers;
 using Scissorhands.Models.Loggers;
@@ -23,13 +24,14 @@ namespace Scissorhands.WebApp.Configs
         /// </summary>
         /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
         /// <param name="env"><see cref="IHostingEnvironment"/> instance.</param>
+        /// <param name="appEnv"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="configuration"><see cref="IConfiguration"/> instance.</param>
         /// <returns>Returns the <see cref="IContainer"/> instance.</returns>
-        public static IContainer Register(IServiceCollection services, IHostingEnvironment env, IConfiguration configuration)
+        public static IContainer Register(IServiceCollection services, IHostingEnvironment env, IApplicationEnvironment appEnv, IConfiguration configuration)
         {
             var builder = new ContainerBuilder();
 
-            RegisterAppSettings(builder, env, configuration);
+            RegisterAppSettings(builder, env, appEnv, configuration);
             RegisterLoaders(builder);
             RegisterHelpers(builder);
             RegisterServices(builder);
@@ -40,9 +42,10 @@ namespace Scissorhands.WebApp.Configs
             return container;
         }
 
-        private static void RegisterAppSettings(ContainerBuilder builder, IHostingEnvironment env, IConfiguration configuration)
+        private static void RegisterAppSettings(ContainerBuilder builder, IHostingEnvironment env, IApplicationEnvironment appEnv, IConfiguration configuration)
         {
             builder.RegisterInstance(env).SingleInstance();
+            builder.RegisterInstance(appEnv).SingleInstance();
             builder.RegisterInstance(configuration.Get<Logging>("Logging")).SingleInstance();
             builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).SingleInstance();
             builder.RegisterInstance(configuration.Get<SiteMetadataSettings>("SiteMetadataSettings")).SingleInstance();
