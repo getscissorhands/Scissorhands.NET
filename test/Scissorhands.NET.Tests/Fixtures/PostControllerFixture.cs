@@ -29,7 +29,6 @@ namespace Scissorhands.WebApp.Tests.Fixtures
             this.DefaultThemeName = "default";
             this.SlugPrefix = "http://localhost:5080/posts/2016/01/01";
             this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
-            this.BaseUri = new Uri("http://localhost:5080");
 
             this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
@@ -37,7 +36,6 @@ namespace Scissorhands.WebApp.Tests.Fixtures
 
             this.RequestHelper = new Mock<IHttpRequestHelper>();
             this.RequestHelper.Setup(p => p.GetSlugPrefix(It.IsAny<HttpRequest>(), It.IsAny<PageType?>())).Returns(this.SlugPrefix);
-            this.RequestHelper.Setup(p => p.GetBaseUri(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(this.BaseUri);
 
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
@@ -73,11 +71,6 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         /// Gets or sets the list of <see cref="Author"/> instances.
         /// </summary>
         public List<Author> Authors { get; set; }
-
-        /// <summary>
-        /// Gets or sets the base <see cref="Uri"/> instance.
-        /// </summary>
-        public Uri BaseUri { get; set; }
 
         /// <summary>
         /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
