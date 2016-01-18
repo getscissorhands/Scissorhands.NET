@@ -16,7 +16,7 @@
   before_build:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   build:
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -56,7 +56,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -123,7 +123,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -184,7 +184,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -245,7 +245,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -306,7 +306,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -367,7 +367,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: detailed
+    verbosity: minimal
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
