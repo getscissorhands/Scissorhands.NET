@@ -160,6 +160,7 @@ namespace Scissorhands.WebApp.Controllers
                              HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
                              PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
                              FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                             Page = this.GetPageMetadata(model, PublishMode.Preview),
                          };
 
             var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
