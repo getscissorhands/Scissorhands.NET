@@ -75,10 +75,22 @@ namespace Scissorhands.Themes.Tests
         /// Tests whether LoadAsync should throw an exception or not.
         /// </summary>
         [Fact]
+        public void Given_NullParameter_LoadAsync_ShouldThrow_ArgumentNullException()
+        {
+            Func<Task> func = async () => { var result = await this._themeLoader.LoadAsync(null).ConfigureAwait(false); };
+            func.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether LoadAsync should throw an exception or not.
+        /// </summary>
+        [Fact]
         public void Given_InvalidFilepath_LoadAsync_ShouldThrow_InvalidOperationException()
         {
             var basepath = "test";
+
             this._env.SetupGet(p => p.ApplicationBasePath).Returns(basepath);
+            this._metadata.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
 
             Func<Task> func = async () => { var result = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false); };
             func.ShouldThrow<InvalidOperationException>();
@@ -88,40 +100,39 @@ namespace Scissorhands.Themes.Tests
         /// Tests whether LoadAsync should throw an exception or not.
         /// </summary>
         [Fact]
-        public void Given_NullConfig_LoadAsync_ShouldThrow_ArgumentNullException()
+        public void Given_InvalidConfigPath_LoadAsync_ShouldThrow_InvalidOperationException()
         {
             var basepath = string.Empty;
             var json = string.Empty;
+            var theme = string.Empty;
 
             this._env.SetupGet(p => p.ApplicationBasePath).Returns(basepath);
             this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(json));
+            this._metadata.SetupGet(p => p.Theme).Returns(theme);
 
             Func<Task> func = async () => { var result = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false); };
-            func.ShouldThrow<ArgumentNullException>();
+            func.ShouldThrow<InvalidOperationException>();
         }
 
         /// <summary>
         /// Tests whether LoadAsync should return result or not.
         /// </summary>
         /// <param name="title">Title of theme.</param>
+        /// <param name="description">Description of theme.</param>
         [Theory]
-        [InlineData("Hello World")]
-        public async void Given_WebAppSettings_LoadAsync_ShouldReturn_Result(string title)
+        [InlineData("Hello World", "Lorem Ipsum")]
+        public async void Given_WebAppSettings_LoadAsync_ShouldReturn_Result(string title, string description)
         {
             var basepath = string.Empty;
-            var json = $"{{ \"title\": \"{title}\" }}";
+            var json = $"{{ \"title\": \"{title}\", \"description\": \"{description}\" }}";
 
             this._env.SetupGet(p => p.ApplicationBasePath).Returns(basepath);
             this._fileHelper.Setup(p => p.ReadAsync(It.IsAny<string>())).Returns(Task.FromResult(json));
+            this._metadata.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
 
             var config = await this._themeLoader.LoadAsync(this._env.Object).ConfigureAwait(false);
             config.Title.Should().BeEquivalentTo(title);
-            //config.BaseUrl.Should().BeEquivalentTo(this._baseUrl);
-            //config.BasePath.Should().BeEquivalentTo(this._bastPath);
-            //config.Authors.Should().HaveCount(this._authors.Count);
-            //config.Authors.First().Name.Should().BeEquivalentTo(this._authors.First().Name);
-            //config.FeedTypes.Count.Should().Be(this._feedTypes.Count);
-            //config.FeedTypes.First().ShouldBeEquivalentTo(this._feedTypes.First());
+            config.Description.Should().BeEquivalentTo(description);
         }
     }
 }

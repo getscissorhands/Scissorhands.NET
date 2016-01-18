@@ -129,14 +129,7 @@ namespace Scissorhands.Helpers
         /// <returns>Returns the <see cref="HttpClient"/> instance created.</returns>
         public HttpClient CreateHttpClient(HttpRequest request, HttpMessageHandler handler = null)
         {
-            if (request == null)
-            {
-                throw new ArgumentNullException(nameof(request));
-            }
-
-            var client = handler == null ? new HttpClient() : new HttpClient(handler, true);
-            client.BaseAddress = this.GetBaseUri(request, PublishMode.Publish);
-            return client;
+            return this.CreateHttpClient(request, PublishMode.Publish, handler);
         }
 
         /// <summary>

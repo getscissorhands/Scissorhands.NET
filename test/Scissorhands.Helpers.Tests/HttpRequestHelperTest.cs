@@ -143,6 +143,18 @@ namespace Scissorhands.Helpers.Tests
             action.ShouldThrow<InvalidOperationException>();
         }
 
+        [Theory]
+        [InlineData(PageType.Post, "/posts")]
+        [InlineData(PageType.Page, "/pages")]
+        public void Given_PageType_GetSlugPrefix_ShouldReturn_Value(PageType pageType, string segment)
+        {
+            var expected = pageType == PageType.Page ? segment : $"{segment}/{DateTime.Today.ToString("yyyy/MM/dd")}";
+
+            var result = this._httpRequestHelper.GetSlugPrefix(this._httpRequest.Object, PublishMode.Publish, pageType);
+
+            result.Should().EndWithEquivalent(expected);
+        }
+
         /// <summary>
         /// Tests whether GetSlugPrefix should return result or not.
         /// </summary>
@@ -186,13 +198,14 @@ namespace Scissorhands.Helpers.Tests
         [InlineData(true, "localhost:5080")]
         public void Given_HttpRequest_CreateHttpClient_ShouldReturn_HttpClient(bool isHttps, string host)
         {
-            this._httpRequest.SetupGet(p => p.IsHttps).Returns(isHttps);
-            this._httpRequest.SetupGet(p => p.Host).Returns(new HostString(host));
-
             var url = string.Join("://", isHttps ? "https" : "http", host);
 
+            this._httpRequest.SetupGet(p => p.IsHttps).Returns(isHttps);
+            this._httpRequest.SetupGet(p => p.Host).Returns(new HostString(host));
+            this._metadata.SetupGet(p => p.BaseUrl).Returns(url);
+
             var client = this._httpRequestHelper.CreateHttpClient(this._httpRequest.Object);
-            client.BaseAddress.ToString().TrimEnd('/').Should().Be(url);
+            client.BaseAddress.TrimTrailingSlash().Should().Be(url);
         }
 
         /// <summary>

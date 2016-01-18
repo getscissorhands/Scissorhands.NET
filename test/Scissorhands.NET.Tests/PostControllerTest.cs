@@ -111,7 +111,7 @@ namespace Scissorhands.WebApp.Tests
             result.Should().NotBeNull();
 
             var vm = result.ViewData.Model as PostFormViewModel;
-            vm.Should().NotBeNull();
+            vm.Should().BeNull();
         }
 
         /// <summary>

@@ -52,6 +52,11 @@ namespace Scissorhands.Themes
         /// <returns>Returns the <see cref="SiteMetadataSettings"/> instance.</returns>
         public async Task<ThemeConfigSettings> LoadAsync(IApplicationEnvironment env)
         {
+            if (env == null)
+            {
+                throw new ArgumentNullException(nameof(env));
+            }
+
             var configpath = Path.Combine(env.ApplicationBasePath, $"Themes/{this._metadata.Theme}/{Config}");
             if (!File.Exists(configpath))
             {
