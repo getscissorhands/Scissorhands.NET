@@ -77,24 +77,18 @@ namespace Scissorhands.Services
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        public async Task<string> PublishMarkdownAsync(string markdown, IApplicationEnvironment env)
+        public async Task<string> PublishMarkdownAsync(string markdown)
         {
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 throw new ArgumentNullException(nameof(markdown));
             }
 
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
             var filename = "markdown.md";
             var markdownpath = $"{this._settings.MarkdownPath}/{filename}";
 
-            var filepath = this._fileHelper.GetDirectory(env, this._settings.MarkdownPath);
+            var filepath = this._fileHelper.GetDirectory(this._settings.MarkdownPath);
             filepath = Path.Combine(new[] { filepath, filename });
 
             var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
@@ -110,24 +104,18 @@ namespace Scissorhands.Services
         /// Publishes the HTML post as a file.
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the HTML file path.</returns>
-        public async Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env)
+        public async Task<string> PublishHtmlAsync(string html)
         {
             if (string.IsNullOrWhiteSpace(html))
             {
                 throw new ArgumentNullException(nameof(html));
             }
 
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
             var filename = "post.html";
             var htmlpath = $"{this._settings.HtmlPath}/{filename}";
 
-            var filepath = this._fileHelper.GetDirectory(env, this._settings.HtmlPath);
+            var filepath = this._fileHelper.GetDirectory(this._settings.HtmlPath);
             filepath = Path.Combine(new[] { filepath, filename });
 
             var written = await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
@@ -174,19 +162,13 @@ namespace Scissorhands.Services
         /// Publishes the post as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
-        public async Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request)
+        public async Task<PublishedPostPath> PublishPostAsync(string markdown, HttpRequest request)
         {
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 throw new ArgumentNullException(nameof(markdown));
-            }
-
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
             }
 
             if (request == null)
@@ -196,12 +178,12 @@ namespace Scissorhands.Services
 
             var publishedpath = new PublishedPostPath();
 
-            var markdownpath = await this.PublishMarkdownAsync(markdown, env).ConfigureAwait(false);
+            var markdownpath = await this.PublishMarkdownAsync(markdown).ConfigureAwait(false);
             publishedpath.Markdown = markdownpath;
 
             var html = await this.GetPublishedHtmlAsync(markdown, request).ConfigureAwait(false);
 
-            var htmlpath = await this.PublishHtmlAsync(html, env).ConfigureAwait(false);
+            var htmlpath = await this.PublishHtmlAsync(html).ConfigureAwait(false);
             publishedpath.Html = htmlpath;
 
             return publishedpath;

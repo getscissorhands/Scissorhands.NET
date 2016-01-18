@@ -2,7 +2,6 @@
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Http;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Models.Posts;
 
@@ -17,17 +16,15 @@ namespace Scissorhands.Services
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        Task<string> PublishMarkdownAsync(string markdown, IApplicationEnvironment env);
+        Task<string> PublishMarkdownAsync(string markdown);
 
         /// <summary>
         /// Publishes the HTML post as a file.
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <returns>Returns the HTML file path.</returns>
-        Task<string> PublishHtmlAsync(string html, IApplicationEnvironment env);
+        Task<string> PublishHtmlAsync(string html);
 
         /// <summary>
         /// Gets the published HTML content.
@@ -41,9 +38,8 @@ namespace Scissorhands.Services
         /// Publishes the post as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
-        Task<PublishedPostPath> PublishPostAsync(string markdown, IApplicationEnvironment env, HttpRequest request);
+        Task<PublishedPostPath> PublishPostAsync(string markdown, HttpRequest request);
     }
 }

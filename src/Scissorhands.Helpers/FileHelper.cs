@@ -16,6 +16,7 @@ namespace Scissorhands.Helpers
     public class FileHelper : IFileHelper
     {
         private readonly WebAppSettings _settings;
+        private readonly IApplicationEnvironment _appEnv;
 
         private bool _disposed;
 
@@ -23,7 +24,7 @@ namespace Scissorhands.Helpers
         /// Initializes a new instance of the <see cref="FileHelper"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        public FileHelper(WebAppSettings settings)
+        public FileHelper(WebAppSettings settings, IApplicationEnvironment appEnv)
         {
             if (settings == null)
             {
@@ -31,6 +32,13 @@ namespace Scissorhands.Helpers
             }
 
             this._settings = settings;
+
+            if (appEnv == null)
+            {
+                throw new ArgumentNullException(nameof(appEnv));
+            }
+
+            this._appEnv = appEnv;
         }
 
         /// <summary>
@@ -82,22 +90,16 @@ namespace Scissorhands.Helpers
         /// <summary>
         /// Checks whether the directory path exists or not.
         /// </summary>
-        /// <param name="env"><see cref="IApplicationEnvironment"/> instance.</param>
         /// <param name="directorypath">Directory path.</param>
         /// <returns>Returns the fully qualified directory path.</returns>
-        public string GetDirectory(IApplicationEnvironment env, string directorypath)
+        public string GetDirectory(string directorypath)
         {
-            if (env == null)
-            {
-                throw new ArgumentNullException(nameof(env));
-            }
-
             if (string.IsNullOrWhiteSpace(directorypath))
             {
                 return null;
             }
 
-            var trimmedBasePath = ReplaceDirectorySeparator(env.ApplicationBasePath);
+            var trimmedBasePath = ReplaceDirectorySeparator(this._appEnv.ApplicationBasePath);
             var trimmedDirectoryPath = TrimDirectoryPath(directorypath);
 
             var combined =
