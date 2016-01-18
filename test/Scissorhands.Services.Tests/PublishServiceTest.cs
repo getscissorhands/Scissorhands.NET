@@ -105,7 +105,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_FalseWritingSync_PublishMarkdownAsync_ShouldThrow_PublishFailedException()
         {
-            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
             Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false); };
@@ -120,7 +120,7 @@ namespace Scissorhands.Services.Tests
         [InlineData("/posts/markdown.md")]
         public async void Given_Markdown_PublishMarkdownAsync_ShouldReturn_Filepath(string markdownpath)
         {
-            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
             var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false);
@@ -143,7 +143,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_FalseWritingSync_PublishHtmlAsync_ShouldThrow_PublishFailedException()
         {
-            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
             Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync("**Hello World**", this._env.Object).ConfigureAwait(false); };
@@ -158,7 +158,7 @@ namespace Scissorhands.Services.Tests
         [InlineData("/posts/post.html")]
         public async void Given_Markdown_PublishHtmlAsync_ShouldReturn_Filepath(string htmlpath)
         {
-            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
             var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>", this._env.Object).ConfigureAwait(false);
@@ -235,7 +235,7 @@ namespace Scissorhands.Services.Tests
             var markdown = "**Hello World**";
             var html = "<strong>Joe Bloggs</strong>";
 
-            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
+            this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
             this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
