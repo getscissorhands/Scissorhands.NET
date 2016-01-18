@@ -178,7 +178,7 @@ namespace Scissorhands.WebApp.Tests
             this._controller.TempData = this._tempData.Object;
 
             var publishedpath = new PublishedPostPath() { Markdown = markdownpath, Html = htmlpath };
-            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<IApplicationEnvironment>(), It.IsAny<HttpRequest>())).Returns(Task.FromResult(publishedpath));
+            this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<string>(), It.IsAny<HttpRequest>())).Returns(Task.FromResult(publishedpath));
 
             var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 
