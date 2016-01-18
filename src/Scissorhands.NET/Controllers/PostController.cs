@@ -116,7 +116,7 @@ namespace Scissorhands.WebApp.Controllers
         /// <returns>Returns the view model.</returns>
         [Route("preview")]
         [HttpPost]
-        public async Task<IActionResult> Preview(PostFormViewModel model)
+        public IActionResult Preview(PostFormViewModel model)
         {
             if (model == null)
             {

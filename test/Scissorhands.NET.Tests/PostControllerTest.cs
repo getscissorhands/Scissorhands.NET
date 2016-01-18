@@ -118,9 +118,9 @@ namespace Scissorhands.WebApp.Tests
         /// Tests whether the action should return <see cref="HttpStatusCodeResult"/> instance or not.
         /// </summary>
         [Fact]
-        public async void Given_NullParameter_Preview_ShouldReturn_BadRequest()
+        public void Given_NullParameter_Preview_ShouldReturn_BadRequest()
         {
-            var result = await this._controller.Preview(null).ConfigureAwait(false) as HttpStatusCodeResult;
+            var result = this._controller.Preview(null) as HttpStatusCodeResult;
             result.Should().NotBeNull();
             result.StatusCode.Should().Be((int)HttpStatusCode.BadRequest);
         }
