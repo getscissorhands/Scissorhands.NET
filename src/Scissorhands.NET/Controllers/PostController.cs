@@ -163,9 +163,7 @@ namespace Scissorhands.WebApp.Controllers
                              Page = this.GetPageMetadata(model, PublishMode.Preview),
                          };
 
-            var env = this.Resolver.GetService(typeof(IApplicationEnvironment)) as IApplicationEnvironment;
-
-            var publishedpath = await this._publishService.PublishPostAsync(model.Body, env, this.Request).ConfigureAwait(false);
+            var publishedpath = await this._publishService.PublishPostAsync(model.Body, this.Request).ConfigureAwait(false);
             vm.MarkdownPath = publishedpath.Markdown;
             vm.HtmlPath = publishedpath.Html;
 

@@ -3,7 +3,6 @@ using System.IO;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Http;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;

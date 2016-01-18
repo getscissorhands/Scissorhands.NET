@@ -24,6 +24,7 @@ namespace Scissorhands.Helpers
         /// Initializes a new instance of the <see cref="FileHelper"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
+        /// <param name="appEnv"><see cref="IApplicationEnvironment"/> instance.</param>
         public FileHelper(WebAppSettings settings, IApplicationEnvironment appEnv)
         {
             if (settings == null)
