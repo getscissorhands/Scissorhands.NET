@@ -2,6 +2,8 @@
 
 $projects = Get-ChildItem .\test | ?{$_.PsIsContainer}
 
+$exitCode = 0
+
 foreach($project in $projects) {
     # Display project name
     $project
@@ -12,6 +14,14 @@ foreach($project in $projects) {
     # Run test
     dnx test
 
+    $LASTEXITCODE
+
+    $exitCode += $LASTEXITCODE
+
     # Move back to the solution root
     cd ../../
+}
+
+if($exitCode -ne 0) {
+    $host.SetShouldExit($exitCode)
 }
