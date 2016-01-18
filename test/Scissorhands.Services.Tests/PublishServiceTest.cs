@@ -95,7 +95,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullMarkdown_PublishMarkdownAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null, this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
@@ -108,7 +108,7 @@ namespace Scissorhands.Services.Tests
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**", this._env.Object).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
@@ -123,7 +123,7 @@ namespace Scissorhands.Services.Tests
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<IApplicationEnvironment>(), It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishMarkdownAsync("**Hello World**", this._env.Object).ConfigureAwait(false);
+            var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false);
             result.Should().Be(markdownpath);
         }
 
