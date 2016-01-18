@@ -2,7 +2,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - dev
     - master
@@ -26,7 +27,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/all
   skip_tags: true
@@ -58,7 +60,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -99,7 +101,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/core
   skip_tags: true
@@ -126,7 +129,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -161,7 +164,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/helpers
   skip_tags: true
@@ -188,7 +192,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -223,7 +227,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/themes
   skip_tags: true
@@ -250,7 +255,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -285,7 +290,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/services
   skip_tags: true
@@ -312,7 +318,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
@@ -347,7 +353,8 @@
 -
   version: 1.0.0-alpha-{build}
   pull_requests:
-    do_not_increment_build_number: true  branches:
+    do_not_increment_build_number: true
+  branches:
     only:
     - release/webapp
   skip_tags: true
@@ -374,7 +381,7 @@
   build:
     publish_nuget: true
     publish_nuget_symbols: true
-    verbosity: minimal
+    verbosity: quiet
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
