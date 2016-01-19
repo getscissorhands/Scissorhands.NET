@@ -1,5 +1,6 @@
 ﻿using System;
-
+using System.IO;
+using Microsoft.Extensions.PlatformAbstractions;
 using Moq;
 
 using Scissorhands.Models.Settings;
@@ -19,14 +20,28 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         public FileHelperFixture()
         {
             this.WebAppSettings = new Mock<WebAppSettings>();
+            this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
-            this.FileHelper = new FileHelper(this.WebAppSettings.Object);
+            this.ApplicationBasePath = this.ApplicationBasePath = $"{Path.GetTempPath()}/home/scissorhands.net";
+            this.ApplicationEnvironment.SetupGet(p => p.ApplicationBasePath).Returns(this.ApplicationBasePath);
+
+            this.FileHelper = new FileHelper(this.WebAppSettings.Object, this.ApplicationEnvironment.Object);
         }
+        
+        /// <summary>
+        /// Gets the appliation base path
+        /// </summary>
+        public String ApplicationBasePath { get; } 
 
         /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
         /// </summary>
         public Mock<WebAppSettings> WebAppSettings { get; }
+
+        /// <summary>
+        /// Gets the <see cref="Mock{ApplicationEnvironment}"/> instance.
+        /// </summary>
+        public Mock<IApplicationEnvironment> ApplicationEnvironment { get; }
 
         /// <summary>
         /// Gets the <see cref="IFileHelper"/> instance.

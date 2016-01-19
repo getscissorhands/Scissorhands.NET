@@ -34,8 +34,7 @@ namespace Scissorhands.Helpers.Tests
         {
             this._settings = fixture.WebAppSettings;
             this._helper = fixture.FileHelper;
-
-            this._applicationBasePath = "/home/scissorhands.net";
+            this._applicationBasePath = fixture.ApplicationBasePath;
 
             this._env = new Mock<IApplicationEnvironment>();
             this._env.SetupGet(p => p.ApplicationBasePath).Returns(this._applicationBasePath);
@@ -47,7 +46,7 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var helper = new FileHelper(null); };
+            Action action = () => { var helper = new FileHelper(null, null); };
         }
 
         /// <summary>
@@ -56,7 +55,7 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var helper = new FileHelper(this._settings.Object); };
+            Action action = () => { var helper = new FileHelper(this._settings.Object, this._env.Object); };
             action.ShouldNotThrow<Exception>();
         }
 
@@ -132,17 +131,6 @@ namespace Scissorhands.Helpers.Tests
         }
 
         /// <summary>
-        /// Tests whether the method should throw an exception or not.
-        /// </summary>
-        [Fact]
-        public void Given_NullParameter_GetDirectory_ShouldThrow_ArgumentNullException()
-        {
-            var directorypath = "/posts";
-            Action action = () => { var result = this._helper.GetDirectory(null, directorypath); };
-            action.ShouldThrow<ArgumentNullException>();
-        }
-
-        /// <summary>
         /// Tests whether the method should return null or not.
         /// </summary>
         /// <param name="directorypath">Directory path.</param>
@@ -151,7 +139,7 @@ namespace Scissorhands.Helpers.Tests
         [InlineData("")]
         public void Given_NullOrEmptyParameter_GetDirectory_ShouldReturn_Null(string directorypath)
         {
-            var result = this._helper.GetDirectory(this._env.Object, directorypath);
+            var result = this._helper.GetDirectory(directorypath);
             result.Should().BeNullOrWhiteSpace();
         }
 
@@ -164,12 +152,13 @@ namespace Scissorhands.Helpers.Tests
         public void Given_DirectoryPath_GetDirectory_ShouldReturn_FullyQualifiedDirectoryPath(string directorypath)
         {
             var expected = $"{this._applicationBasePath}/wwwroot{directorypath}".Replace('/', Path.DirectorySeparatorChar);
-            var result = this._helper.GetDirectory(this._env.Object, directorypath);
+            var result = this._helper.GetDirectory(directorypath);
             result.Should().Be(expected);
 
             if (Directory.Exists(expected))
             {
-                Directory.Delete(expected);
+                var testedDirectory = $"{this._applicationBasePath}/wwwroot".Replace('/', Path.DirectorySeparatorChar);
+                Directory.Delete(testedDirectory, true);
             }
         }
     }
