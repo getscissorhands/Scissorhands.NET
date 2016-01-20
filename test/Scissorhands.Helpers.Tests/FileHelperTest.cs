@@ -46,7 +46,14 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var helper = new FileHelper(null, null); };
+            Action action = () => { var helper = new FileHelper(null, this._env.Object); };
+            action.ShouldThrow<ArgumentNullException>();
+            
+            action = () => { var helper = new FileHelper(this._settings.Object, null); };
+            action.ShouldThrow<ArgumentNullException>();
+            
+            action = () => { var helper = new FileHelper(null, null); };
+            action.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
