@@ -29,7 +29,6 @@ namespace Scissorhands.Services.Tests
         private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<SiteMetadataSettings> _metadata;
-        private readonly Mock<IMarkdownHelper> _markdownHelper;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly Mock<IHttpRequestHelper> _httpRequestHelper;
         private readonly IPublishService _service;
@@ -46,7 +45,6 @@ namespace Scissorhands.Services.Tests
             this._defaultThemeName = fixture.DefaultThemeName;
             this._settings = fixture.WebAppSettings;
             this._metadata = fixture.SiteMetadataSettings;
-            this._markdownHelper = fixture.MarkdownHelper;
             this._fileHelper = fixture.FileHelper;
             this._httpRequestHelper = fixture.HttpRequestHelper;
             this._service = fixture.PublishService;
@@ -61,20 +59,17 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var service = new PublishService(null, this._metadata.Object,  this._markdownHelper.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
+            Action action1 = () => { var service = new PublishService(null, this._metadata.Object,  this._fileHelper.Object, this._httpRequestHelper.Object); };
             action1.ShouldThrow<ArgumentNullException>();
 
-            Action action2 = () => { var service = new PublishService(this._settings.Object, null, this._markdownHelper.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
+            Action action2 = () => { var service = new PublishService(this._settings.Object, null, this._fileHelper.Object, this._httpRequestHelper.Object); };
             action2.ShouldThrow<ArgumentNullException>();
 
-            Action action3 = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, null, this._fileHelper.Object, this._httpRequestHelper.Object); };
+            Action action3 = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, null, this._httpRequestHelper.Object); };
             action3.ShouldThrow<ArgumentNullException>();
 
-            Action action4 = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._markdownHelper.Object, null, this._httpRequestHelper.Object); };
+            Action action4 = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._fileHelper.Object, null); };
             action4.ShouldThrow<ArgumentNullException>();
-
-            Action action5 = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._markdownHelper.Object, this._fileHelper.Object, null); };
-            action5.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -83,7 +78,7 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_Parameters_Constructor_ShouldThrow_NoException()
         {
-            Action action = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._markdownHelper.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
+            Action action = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
             action.ShouldNotThrow<Exception>();
         }
 
@@ -226,7 +221,6 @@ namespace Scissorhands.Services.Tests
         [InlineData("**Hello World**", "<strong>Hello World</strong>")]
         public async void Given_Parameters_GetPublishedHtmlAsync_ShouldReturn_Html(string markdown, string html)
         {
-            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
             this._metadata.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
 
             var message = new HttpResponseMessage { Content = new StringContent(html) };
@@ -289,7 +283,6 @@ namespace Scissorhands.Services.Tests
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
             this._metadata.SetupGet(p => p.Theme).Returns(this._defaultThemeName);
 
             var message = new HttpResponseMessage { Content = new StringContent(html) };

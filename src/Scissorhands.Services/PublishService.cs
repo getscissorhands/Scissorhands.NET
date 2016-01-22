@@ -24,7 +24,6 @@ namespace Scissorhands.Services
 
         private readonly WebAppSettings _settings;
         private readonly SiteMetadataSettings _metadata;
-        private readonly IMarkdownHelper _markdownHelper;
         private readonly IFileHelper _fileHelper;
         private readonly IHttpRequestHelper _requestHelper;
 
@@ -35,10 +34,9 @@ namespace Scissorhands.Services
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
         /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
         /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
-        public PublishService(WebAppSettings settings, SiteMetadataSettings metadata, IMarkdownHelper markdownHelper, IFileHelper fileHelper, IHttpRequestHelper requestHelper)
+        public PublishService(WebAppSettings settings, SiteMetadataSettings metadata, IFileHelper fileHelper, IHttpRequestHelper requestHelper)
         {
             if (settings == null)
             {
@@ -53,13 +51,6 @@ namespace Scissorhands.Services
             }
 
             this._metadata = metadata;
-
-            if (markdownHelper == null)
-            {
-                throw new ArgumentNullException(nameof(markdownHelper));
-            }
-
-            this._markdownHelper = markdownHelper;
 
             if (fileHelper == null)
             {
@@ -102,7 +93,7 @@ namespace Scissorhands.Services
             sb.AppendLine($"* Title: {metadata.Title}");
             sb.AppendLine($"* Slug: {metadata.Slug}");
             sb.AppendLine($"* Author: {metadata.Author}");
-            sb.AppendLine($"* Date Published: {metadata.DatePublished.ToString("U")}");
+            sb.AppendLine($"* Date Published: {metadata.DatePublished.ToString(this._metadata.DateTimeFormat)}");
             sb.AppendLine($"* Tags: {string.Join(", ", metadata.Tags)}");
             sb.AppendLine("---");
             sb.AppendLine();
