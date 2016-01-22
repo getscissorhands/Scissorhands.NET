@@ -28,6 +28,11 @@ namespace Scissorhands.Models.Settings
         public virtual string BasePath { get; set; }
 
         /// <summary>
+        /// Gets or sets the date/time format.
+        /// </summary>
+        public virtual string DateTimeFormat { get; set; }
+
+        /// <summary>
         /// Gets or sets the list of <see cref="Author"/> objects.
         /// </summary>
         public virtual List<Author> Authors { get; set; }
