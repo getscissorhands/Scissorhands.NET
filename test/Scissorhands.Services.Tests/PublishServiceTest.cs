@@ -16,6 +16,7 @@ using Scissorhands.Models.Settings;
 using Scissorhands.Services.Exceptions;
 using Scissorhands.Services.Tests.Fakes;
 using Scissorhands.Services.Tests.Fixtures;
+using Scissorhands.ViewModels.Post;
 
 using Xunit;
 
@@ -211,12 +212,12 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_PublishPostAsync_ShouldThrow_ArgumentNullException()
         {
-            var markdown = "**Hello World**";
+            var model = new PostFormViewModel();
 
             Func<Task> func1 = async () => { var result = await this._service.PublishPostAsync(null, this._request.Object).ConfigureAwait(false); };
             func1.ShouldThrow<ArgumentNullException>();
 
-            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(markdown, null).ConfigureAwait(false); };
+            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(model, null).ConfigureAwait(false); };
             func2.ShouldThrow<ArgumentNullException>();
         }
 
@@ -229,7 +230,7 @@ namespace Scissorhands.Services.Tests
         [InlineData("/posts/markdown.md", "/posts/post.html")]
         public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result(string markdownpath, string htmlpath)
         {
-            var markdown = "**Hello World**";
+            var model = new PostFormViewModel() { Body = "**Hello World**" };
             var html = "<strong>Joe Bloggs</strong>";
 
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
@@ -248,7 +249,7 @@ namespace Scissorhands.Services.Tests
             var content = new StringContent(html, Encoding.UTF8);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
-            var publishedpath = await this._service.PublishPostAsync(markdown, this._request.Object).ConfigureAwait(false);
+            var publishedpath = await this._service.PublishPostAsync(model, this._request.Object).ConfigureAwait(false);
             publishedpath.Markdown.Should().BeEquivalentTo(markdownpath);
             publishedpath.Html.Should().BeEquivalentTo(htmlpath);
         }

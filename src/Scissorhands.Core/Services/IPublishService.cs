@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNet.Http;
 
 using Scissorhands.Models.Posts;
+using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Services
 {
@@ -12,6 +13,13 @@ namespace Scissorhands.Services
     /// </summary>
     public interface IPublishService : IDisposable
     {
+        /// <summary>
+        /// Applies metadata to the markdown body.
+        /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
+        /// <returns>Returns the markdown body with metadata applied.</returns>
+        string ApplyMetadata(PostFormViewModel model);
+
         /// <summary>
         /// Publishes the markdown as a file.
         /// </summary>
@@ -37,9 +45,9 @@ namespace Scissorhands.Services
         /// <summary>
         /// Publishes the post as a file.
         /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
-        Task<PublishedPostPath> PublishPostAsync(string markdown, HttpRequest request);
+        Task<PublishedPostPath> PublishPostAsync(PostFormViewModel model, HttpRequest request);
     }
 }

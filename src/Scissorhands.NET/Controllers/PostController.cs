@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Mvc;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Exceptions;
 using Scissorhands.Extensions;
@@ -163,7 +162,7 @@ namespace Scissorhands.WebApp.Controllers
                              Page = this.GetPageMetadata(model, PublishMode.Preview),
                          };
 
-            var publishedpath = await this._publishService.PublishPostAsync(model.Body, this.Request).ConfigureAwait(false);
+            var publishedpath = await this._publishService.PublishPostAsync(model, this.Request).ConfigureAwait(false);
             vm.MarkdownPath = publishedpath.Markdown;
             vm.HtmlPath = publishedpath.Html;
 
