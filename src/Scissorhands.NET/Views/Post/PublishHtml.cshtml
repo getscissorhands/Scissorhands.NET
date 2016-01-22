@@ -1,11 +1,5 @@
-﻿@using Scissorhands.Models.Posts
-@using Scissorhands.Services
-
-@inject IThemeService Theme
-
-@model PublishedContent
+﻿@model Scissorhands.ViewModels.Post.PostParseViewModel
 @{
-    var partial = Theme.GetPostPartialViewPath(Model.Theme);
 }
 
-@Html.Partial(partial, Model)
+@Html.Partial(Model.PostPartialViewPath, Model)

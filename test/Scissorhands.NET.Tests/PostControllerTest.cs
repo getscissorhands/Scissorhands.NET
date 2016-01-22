@@ -210,18 +210,26 @@ namespace Scissorhands.WebApp.Tests
         /// <param name="markdown">String value in Markdown format.</param>
         /// <param name="html">String value in HTML format.</param>
         [Theory]
-        [InlineData("**Hello World**", "<p>Joe Bloggs</p>")]
+        [InlineData("**Hello World**", "<strong>Hello World</strong>")]
         public void Given_Model_PublishHtml_ShouldReturn_ViewResult(string markdown, string html)
         {
-            var body = new PublishedContent() { Markdown = markdown, Html = html };
-            var result = this._controller.PublishHtml(body) as ViewResult;
+            var model = new PostFormViewModel()
+                            {
+                                Title = "Title",
+                                Slug = "slug",
+                                Author = "Joe Bloggs",
+                                Tags = "tag1,tag2",
+                                Body = markdown
+                            };
+
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+
+            var result = this._controller.PublishHtml(model) as ViewResult;
             result.Should().NotBeNull();
 
-            var vm = result.ViewData.Model as PublishedContent;
+            var vm = result.ViewData.Model as PostParseViewModel;
             vm.Should().NotBeNull();
-
-            vm.Markdown.Should().Be(markdown);
-            vm.Html.Should().Contain(html);
+            vm.Html.Should().ContainEquivalentOf(html);
         }
     }
 }

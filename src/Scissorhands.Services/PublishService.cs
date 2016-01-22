@@ -168,14 +168,14 @@ namespace Scissorhands.Services
         /// <summary>
         /// Gets the published HTML content.
         /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the published HTML content.</returns>
-        public async Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request)
+        public async Task<string> GetPublishedHtmlAsync(PostFormViewModel model, HttpRequest request)
         {
-            if (string.IsNullOrWhiteSpace(markdown))
+            if (model == null)
             {
-                throw new ArgumentNullException(nameof(markdown));
+                throw new ArgumentNullException(nameof(model));
             }
 
             if (request == null)
@@ -183,12 +183,8 @@ namespace Scissorhands.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var parsedHtml = this._markdownHelper.Parse(markdown);
-
-            var publishing = new PublishedContent() { Theme = this._metadata.Theme, Markdown = markdown, Html = parsedHtml };
-
             using (var client = this._requestHelper.CreateHttpClient(request, PublishMode.Parse))
-            using (var content = this._requestHelper.CreateStringContent(publishing))
+            using (var content = this._requestHelper.CreateStringContent(model))
             {
                 var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
                 var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -221,7 +217,7 @@ namespace Scissorhands.Services
             var markdownpath = await this.PublishMarkdownAsync(markdown).ConfigureAwait(false);
             publishedpath.Markdown = markdownpath;
 
-            var html = await this.GetPublishedHtmlAsync(model.Body, request).ConfigureAwait(false);
+            var html = await this.GetPublishedHtmlAsync(model, request).ConfigureAwait(false);
 
             var htmlpath = await this.PublishHtmlAsync(html).ConfigureAwait(false);
             publishedpath.Html = htmlpath;

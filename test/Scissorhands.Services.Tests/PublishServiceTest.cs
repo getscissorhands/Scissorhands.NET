@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using Microsoft.AspNet.Http;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
@@ -213,8 +212,8 @@ namespace Scissorhands.Services.Tests
             Func<Task> func1 = async () => { var html = await this._service.GetPublishedHtmlAsync(null, this._request.Object).ConfigureAwait(false); };
             func1.ShouldThrow<ArgumentNullException>();
 
-            var markdown = "**Hello World**";
-            Func<Task> func2 = async () => { var html = await this._service.GetPublishedHtmlAsync(markdown, null).ConfigureAwait(false); };
+            var model = new PostFormViewModel();
+            Func<Task> func2 = async () => { var html = await this._service.GetPublishedHtmlAsync(model, null).ConfigureAwait(false); };
             func2.ShouldThrow<ArgumentNullException>();
         }
 
@@ -224,7 +223,7 @@ namespace Scissorhands.Services.Tests
         /// <param name="markdown">Markdown string.</param>
         /// <param name="html">HTML string.</param>
         [Theory]
-        [InlineData("**Hello World**", "<strong>Joe Bloggs</strong>")]
+        [InlineData("**Hello World**", "<strong>Hello World</strong>")]
         public async void Given_Parameters_GetPublishedHtmlAsync_ShouldReturn_Html(string markdown, string html)
         {
             this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
@@ -238,9 +237,18 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
 
             var content = new StringContent(html, Encoding.UTF8);
+            this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>(), It.IsAny<HttpMessageHandler>())).Returns(client);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
-            var result = await this._service.GetPublishedHtmlAsync(markdown, this._request.Object).ConfigureAwait(false);
+            var model = new PostFormViewModel()
+                            {
+                                Title = "Title",
+                                Slug = "slug",
+                                Author = "Joe Bloggs",
+                                Tags = "tag1,tag2",
+                                Body = markdown
+                            };
+            var result = await this._service.GetPublishedHtmlAsync(model, this._request.Object).ConfigureAwait(false);
             result.Should().Be(html);
         }
 
@@ -276,7 +284,7 @@ namespace Scissorhands.Services.Tests
                                 Tags = "tag1,tag2",
                                 Body = "**Hello World**"
                             };
-            var html = "<strong>Joe Bloggs</strong>";
+            var html = "<strong>Hello World</strong>";
 
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
@@ -292,6 +300,7 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
 
             var content = new StringContent(html, Encoding.UTF8);
+            this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>(), It.IsAny<HttpMessageHandler>())).Returns(client);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
             var publishedpath = await this._service.PublishPostAsync(model, this._request.Object).ConfigureAwait(false);

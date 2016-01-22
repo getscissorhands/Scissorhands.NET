@@ -37,10 +37,10 @@ namespace Scissorhands.Services
         /// <summary>
         /// Gets the published HTML content.
         /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the published HTML content.</returns>
-        Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request);
+        Task<string> GetPublishedHtmlAsync(PostFormViewModel model, HttpRequest request);
 
         /// <summary>
         /// Publishes the post as a file.
