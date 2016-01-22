@@ -16,8 +16,13 @@
         Preview = 1,
 
         /// <summary>
+        /// Indicates the parse mode.
+        /// </summary>
+        Parse = 2,
+
+        /// <summary>
         /// Indicates the publish mode.
         /// </summary>
-        Publish = 2
+        Publish = 3
     }
 }

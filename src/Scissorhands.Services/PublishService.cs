@@ -83,6 +83,11 @@ namespace Scissorhands.Services
         /// <returns>Returns the markdown body with metadata applied.</returns>
         public string ApplyMetadata(PostFormViewModel model)
         {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
             var metadata = new PublishedMetadata()
                                {
                                    Title = model.Title,
@@ -94,11 +99,11 @@ namespace Scissorhands.Services
 
             var sb = new StringBuilder();
             sb.AppendLine("---");
-            sb.AppendLine($"* {metadata.Title}");
-            sb.AppendLine($"* {metadata.Slug}");
-            sb.AppendLine($"* {metadata.Author}");
-            sb.AppendLine($"* {metadata.DatePublished.ToString("U")}");
-            sb.AppendLine($"* {string.Join(", ", metadata.Tags)}");
+            sb.AppendLine($"* Title: {metadata.Title}");
+            sb.AppendLine($"* Slug: {metadata.Slug}");
+            sb.AppendLine($"* Author: {metadata.Author}");
+            sb.AppendLine($"* Date Published: {metadata.DatePublished.ToString("U")}");
+            sb.AppendLine($"* Tags: {string.Join(", ", metadata.Tags)}");
             sb.AppendLine("---");
             sb.AppendLine();
             sb.AppendLine(model.Body);
@@ -182,7 +187,7 @@ namespace Scissorhands.Services
 
             var publishing = new PublishedContent() { Theme = this._metadata.Theme, Markdown = markdown, Html = parsedHtml };
 
-            using (var client = this._requestHelper.CreateHttpClient(request))
+            using (var client = this._requestHelper.CreateHttpClient(request, PublishMode.Parse))
             using (var content = this._requestHelper.CreateStringContent(publishing))
             {
                 var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
@@ -244,7 +249,7 @@ namespace Scissorhands.Services
                 return null;
             }
 
-            var list = tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).ToList();
+            var list = tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList();
             return list;
         }
     }

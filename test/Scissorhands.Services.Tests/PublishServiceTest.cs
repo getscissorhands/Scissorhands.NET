@@ -27,6 +27,7 @@ namespace Scissorhands.Services.Tests
     /// </summary>
     public class PublishServiceTest : IClassFixture<PublishServiceFixture>
     {
+        private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<SiteMetadataSettings> _metadata;
         private readonly Mock<IMarkdownHelper> _markdownHelper;
@@ -34,10 +35,8 @@ namespace Scissorhands.Services.Tests
         private readonly Mock<IHttpRequestHelper> _httpRequestHelper;
         private readonly IPublishService _service;
 
-        private readonly Mock<IApplicationEnvironment> _env;
         private readonly string _filepath;
         private readonly Mock<HttpRequest> _request;
-        private readonly string _defaultThemeName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishServiceTest"/> class.
@@ -45,6 +44,7 @@ namespace Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="PublishServiceFixture"/> instance.</param>
         public PublishServiceTest(PublishServiceFixture fixture)
         {
+            this._defaultThemeName = fixture.DefaultThemeName;
             this._settings = fixture.WebAppSettings;
             this._metadata = fixture.SiteMetadataSettings;
             this._markdownHelper = fixture.MarkdownHelper;
@@ -52,10 +52,8 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper = fixture.HttpRequestHelper;
             this._service = fixture.PublishService;
 
-            this._env = new Mock<IApplicationEnvironment>();
-            this._filepath = "/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
+            this._filepath = $"{Path.GetTempPath()}/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
             this._request = new Mock<HttpRequest>();
-            this._defaultThemeName = "default";
         }
 
         /// <summary>
@@ -88,6 +86,46 @@ namespace Scissorhands.Services.Tests
         {
             Action action = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._markdownHelper.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
             action.ShouldNotThrow<Exception>();
+        }
+
+        /// <summary>
+        /// Tests whether ApplyMetadata should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_ApplyMetadata_ShouldThrow_ArgumentNullException()
+        {
+            Action action = () => { var result = this._service.ApplyMetadata(null); };
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether ApplyMetadata should return result or not.
+        /// </summary>
+        /// <param name="title">Title value.</param>
+        /// <param name="slug">Slug value.</param>
+        /// <param name="author">Author value.</param>
+        /// <param name="tags">List of tags.</param>
+        /// <param name="body">Content value.</param>
+        [Theory]
+        [InlineData("Title", "slug", "Joe Bloggs", "tag1,tag2", "**Hello World**")]
+        public void Given_Model_ApplyMetadata_ShouldReturn_Result(string title, string slug, string author, string tags, string body)
+        {
+            var model = new PostFormViewModel()
+                            {
+                                Title = title,
+                                Slug = slug,
+                                Author = author,
+                                Tags = tags,
+                                Body = body
+                            };
+            var markdown = this._service.ApplyMetadata(model);
+
+            markdown.Should().StartWithEquivalent("---");
+            markdown.Should().ContainEquivalentOf($"* Title: {title}");
+            markdown.Should().ContainEquivalentOf($"* Slug: {slug}");
+            markdown.Should().ContainEquivalentOf($"* Author: {author}");
+            markdown.Should().ContainEquivalentOf($"* Tags: {string.Join(", ", tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries))}");
+            markdown.Should().EndWithEquivalent($"{body}\r\n");
         }
 
         /// <summary>
@@ -230,7 +268,14 @@ namespace Scissorhands.Services.Tests
         [InlineData("/posts/markdown.md", "/posts/post.html")]
         public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result(string markdownpath, string htmlpath)
         {
-            var model = new PostFormViewModel() { Body = "**Hello World**" };
+            var model = new PostFormViewModel()
+                            {
+                                Title = "Title",
+                                Slug = "slug",
+                                Author = "Joe Bloggs",
+                                Tags = "tag1,tag2",
+                                Body = "**Hello World**"
+                            };
             var html = "<strong>Joe Bloggs</strong>";
 
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);

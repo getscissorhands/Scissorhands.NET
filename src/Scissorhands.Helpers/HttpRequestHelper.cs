@@ -55,6 +55,7 @@ namespace Scissorhands.Helpers
             switch (mode)
             {
                 case PublishMode.Preview:
+                case PublishMode.Parse:
                     uri = GetBaseUri(request);
                     break;
 
