@@ -159,7 +159,7 @@ namespace Scissorhands.WebApp.Controllers
                              HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
                              PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
                              FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Preview),
+                             Page = this.GetPageMetadata(model, PublishMode.Publish),
                          };
 
             var publishedpath = await this._publishService.PublishPostAsync(model, this.Request).ConfigureAwait(false);
@@ -190,7 +190,7 @@ namespace Scissorhands.WebApp.Controllers
                              HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
                              PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
                              FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Parse),
+                             Page = this.GetPageMetadata(model, PublishMode.Publish),
                          };
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
