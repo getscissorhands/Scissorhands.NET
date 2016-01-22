@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Http;
@@ -8,6 +11,7 @@ using Scissorhands.Helpers;
 using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services.Exceptions;
+using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Services
 {
@@ -73,6 +77,41 @@ namespace Scissorhands.Services
         }
 
         /// <summary>
+        /// Applies metadata to the markdown body.
+        /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
+        /// <returns>Returns the markdown body with metadata applied.</returns>
+        public string ApplyMetadata(PostFormViewModel model)
+        {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
+            var metadata = new PublishedMetadata()
+                               {
+                                   Title = model.Title,
+                                   Slug = model.Slug,
+                                   Author = model.Author,
+                                   DatePublished = DateTime.Now,
+                                   Tags = GetTags(model.Tags),
+                               };
+
+            var sb = new StringBuilder();
+            sb.AppendLine("---");
+            sb.AppendLine($"* Title: {metadata.Title}");
+            sb.AppendLine($"* Slug: {metadata.Slug}");
+            sb.AppendLine($"* Author: {metadata.Author}");
+            sb.AppendLine($"* Date Published: {metadata.DatePublished.ToString("U")}");
+            sb.AppendLine($"* Tags: {string.Join(", ", metadata.Tags)}");
+            sb.AppendLine("---");
+            sb.AppendLine();
+            sb.AppendLine(model.Body);
+
+            return sb.ToString();
+        }
+
+        /// <summary>
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
@@ -129,14 +168,14 @@ namespace Scissorhands.Services
         /// <summary>
         /// Gets the published HTML content.
         /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the published HTML content.</returns>
-        public async Task<string> GetPublishedHtmlAsync(string markdown, HttpRequest request)
+        public async Task<string> GetPublishedHtmlAsync(PostFormViewModel model, HttpRequest request)
         {
-            if (string.IsNullOrWhiteSpace(markdown))
+            if (model == null)
             {
-                throw new ArgumentNullException(nameof(markdown));
+                throw new ArgumentNullException(nameof(model));
             }
 
             if (request == null)
@@ -144,12 +183,8 @@ namespace Scissorhands.Services
                 throw new ArgumentNullException(nameof(request));
             }
 
-            var parsedHtml = this._markdownHelper.Parse(markdown);
-
-            var publishing = new PublishedContent() { Theme = this._metadata.Theme, Markdown = markdown, Html = parsedHtml };
-
-            using (var client = this._requestHelper.CreateHttpClient(request))
-            using (var content = this._requestHelper.CreateStringContent(publishing))
+            using (var client = this._requestHelper.CreateHttpClient(request, PublishMode.Parse))
+            using (var content = this._requestHelper.CreateStringContent(model))
             {
                 var response = await client.PostAsync(PostPublishHtml, content).ConfigureAwait(false);
                 var html = await response.Content.ReadAsStringAsync().ConfigureAwait(false);
@@ -160,14 +195,14 @@ namespace Scissorhands.Services
         /// <summary>
         /// Publishes the post as a file.
         /// </summary>
-        /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <param name="request"><see cref="HttpRequest"/> instance.</param>
         /// <returns>Returns the <see cref="PublishedPostPath"/> instance containing paths for published files.</returns>
-        public async Task<PublishedPostPath> PublishPostAsync(string markdown, HttpRequest request)
+        public async Task<PublishedPostPath> PublishPostAsync(PostFormViewModel model, HttpRequest request)
         {
-            if (string.IsNullOrWhiteSpace(markdown))
+            if (model == null)
             {
-                throw new ArgumentNullException(nameof(markdown));
+                throw new ArgumentNullException(nameof(model));
             }
 
             if (request == null)
@@ -177,10 +212,12 @@ namespace Scissorhands.Services
 
             var publishedpath = new PublishedPostPath();
 
+            var markdown = this.ApplyMetadata(model);
+
             var markdownpath = await this.PublishMarkdownAsync(markdown).ConfigureAwait(false);
             publishedpath.Markdown = markdownpath;
 
-            var html = await this.GetPublishedHtmlAsync(markdown, request).ConfigureAwait(false);
+            var html = await this.GetPublishedHtmlAsync(model, request).ConfigureAwait(false);
 
             var htmlpath = await this.PublishHtmlAsync(html).ConfigureAwait(false);
             publishedpath.Html = htmlpath;
@@ -199,6 +236,17 @@ namespace Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private static List<string> GetTags(string tags)
+        {
+            if (string.IsNullOrWhiteSpace(tags))
+            {
+                return null;
+            }
+
+            var list = tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries).Select(p => p.Trim()).ToList();
+            return list;
         }
     }
 }

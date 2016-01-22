@@ -7,7 +7,6 @@ using System.Threading.Tasks;
 using FluentAssertions;
 
 using Microsoft.AspNet.Http;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Moq;
 
@@ -16,6 +15,7 @@ using Scissorhands.Models.Settings;
 using Scissorhands.Services.Exceptions;
 using Scissorhands.Services.Tests.Fakes;
 using Scissorhands.Services.Tests.Fixtures;
+using Scissorhands.ViewModels.Post;
 
 using Xunit;
 
@@ -26,6 +26,7 @@ namespace Scissorhands.Services.Tests
     /// </summary>
     public class PublishServiceTest : IClassFixture<PublishServiceFixture>
     {
+        private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<SiteMetadataSettings> _metadata;
         private readonly Mock<IMarkdownHelper> _markdownHelper;
@@ -33,10 +34,8 @@ namespace Scissorhands.Services.Tests
         private readonly Mock<IHttpRequestHelper> _httpRequestHelper;
         private readonly IPublishService _service;
 
-        private readonly Mock<IApplicationEnvironment> _env;
         private readonly string _filepath;
         private readonly Mock<HttpRequest> _request;
-        private readonly string _defaultThemeName;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishServiceTest"/> class.
@@ -44,6 +43,7 @@ namespace Scissorhands.Services.Tests
         /// <param name="fixture"><see cref="PublishServiceFixture"/> instance.</param>
         public PublishServiceTest(PublishServiceFixture fixture)
         {
+            this._defaultThemeName = fixture.DefaultThemeName;
             this._settings = fixture.WebAppSettings;
             this._metadata = fixture.SiteMetadataSettings;
             this._markdownHelper = fixture.MarkdownHelper;
@@ -51,10 +51,8 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper = fixture.HttpRequestHelper;
             this._service = fixture.PublishService;
 
-            this._env = new Mock<IApplicationEnvironment>();
-            this._filepath = "/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
+            this._filepath = $"{Path.GetTempPath()}/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
             this._request = new Mock<HttpRequest>();
-            this._defaultThemeName = "default";
         }
 
         /// <summary>
@@ -87,6 +85,46 @@ namespace Scissorhands.Services.Tests
         {
             Action action = () => { var service = new PublishService(this._settings.Object, this._metadata.Object, this._markdownHelper.Object, this._fileHelper.Object, this._httpRequestHelper.Object); };
             action.ShouldNotThrow<Exception>();
+        }
+
+        /// <summary>
+        /// Tests whether ApplyMetadata should throw an exception or not.
+        /// </summary>
+        [Fact]
+        public void Given_NullParameter_ApplyMetadata_ShouldThrow_ArgumentNullException()
+        {
+            Action action = () => { var result = this._service.ApplyMetadata(null); };
+            action.ShouldThrow<ArgumentNullException>();
+        }
+
+        /// <summary>
+        /// Tests whether ApplyMetadata should return result or not.
+        /// </summary>
+        /// <param name="title">Title value.</param>
+        /// <param name="slug">Slug value.</param>
+        /// <param name="author">Author value.</param>
+        /// <param name="tags">List of tags.</param>
+        /// <param name="body">Content value.</param>
+        [Theory]
+        [InlineData("Title", "slug", "Joe Bloggs", "tag1,tag2", "**Hello World**")]
+        public void Given_Model_ApplyMetadata_ShouldReturn_Result(string title, string slug, string author, string tags, string body)
+        {
+            var model = new PostFormViewModel()
+                            {
+                                Title = title,
+                                Slug = slug,
+                                Author = author,
+                                Tags = tags,
+                                Body = body
+                            };
+            var markdown = this._service.ApplyMetadata(model);
+
+            markdown.Should().StartWithEquivalent("---");
+            markdown.Should().ContainEquivalentOf($"* Title: {title}");
+            markdown.Should().ContainEquivalentOf($"* Slug: {slug}");
+            markdown.Should().ContainEquivalentOf($"* Author: {author}");
+            markdown.Should().ContainEquivalentOf($"* Tags: {string.Join(", ", tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries))}");
+            markdown.Should().EndWithEquivalent($"{body}\r\n");
         }
 
         /// <summary>
@@ -174,8 +212,8 @@ namespace Scissorhands.Services.Tests
             Func<Task> func1 = async () => { var html = await this._service.GetPublishedHtmlAsync(null, this._request.Object).ConfigureAwait(false); };
             func1.ShouldThrow<ArgumentNullException>();
 
-            var markdown = "**Hello World**";
-            Func<Task> func2 = async () => { var html = await this._service.GetPublishedHtmlAsync(markdown, null).ConfigureAwait(false); };
+            var model = new PostFormViewModel();
+            Func<Task> func2 = async () => { var html = await this._service.GetPublishedHtmlAsync(model, null).ConfigureAwait(false); };
             func2.ShouldThrow<ArgumentNullException>();
         }
 
@@ -185,7 +223,7 @@ namespace Scissorhands.Services.Tests
         /// <param name="markdown">Markdown string.</param>
         /// <param name="html">HTML string.</param>
         [Theory]
-        [InlineData("**Hello World**", "<strong>Joe Bloggs</strong>")]
+        [InlineData("**Hello World**", "<strong>Hello World</strong>")]
         public async void Given_Parameters_GetPublishedHtmlAsync_ShouldReturn_Html(string markdown, string html)
         {
             this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
@@ -199,9 +237,18 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
 
             var content = new StringContent(html, Encoding.UTF8);
+            this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>(), It.IsAny<HttpMessageHandler>())).Returns(client);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
-            var result = await this._service.GetPublishedHtmlAsync(markdown, this._request.Object).ConfigureAwait(false);
+            var model = new PostFormViewModel()
+                            {
+                                Title = "Title",
+                                Slug = "slug",
+                                Author = "Joe Bloggs",
+                                Tags = "tag1,tag2",
+                                Body = markdown
+                            };
+            var result = await this._service.GetPublishedHtmlAsync(model, this._request.Object).ConfigureAwait(false);
             result.Should().Be(html);
         }
 
@@ -211,12 +258,12 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_PublishPostAsync_ShouldThrow_ArgumentNullException()
         {
-            var markdown = "**Hello World**";
+            var model = new PostFormViewModel();
 
             Func<Task> func1 = async () => { var result = await this._service.PublishPostAsync(null, this._request.Object).ConfigureAwait(false); };
             func1.ShouldThrow<ArgumentNullException>();
 
-            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(markdown, null).ConfigureAwait(false); };
+            Func<Task> func2 = async () => { var result = await this._service.PublishPostAsync(model, null).ConfigureAwait(false); };
             func2.ShouldThrow<ArgumentNullException>();
         }
 
@@ -229,8 +276,15 @@ namespace Scissorhands.Services.Tests
         [InlineData("/posts/markdown.md", "/posts/post.html")]
         public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result(string markdownpath, string htmlpath)
         {
-            var markdown = "**Hello World**";
-            var html = "<strong>Joe Bloggs</strong>";
+            var model = new PostFormViewModel()
+                            {
+                                Title = "Title",
+                                Slug = "slug",
+                                Author = "Joe Bloggs",
+                                Tags = "tag1,tag2",
+                                Body = "**Hello World**"
+                            };
+            var html = "<strong>Hello World</strong>";
 
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
@@ -246,9 +300,10 @@ namespace Scissorhands.Services.Tests
             this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<HttpMessageHandler>())).Returns(client);
 
             var content = new StringContent(html, Encoding.UTF8);
+            this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>(), It.IsAny<HttpMessageHandler>())).Returns(client);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
 
-            var publishedpath = await this._service.PublishPostAsync(markdown, this._request.Object).ConfigureAwait(false);
+            var publishedpath = await this._service.PublishPostAsync(model, this._request.Object).ConfigureAwait(false);
             publishedpath.Markdown.Should().BeEquivalentTo(markdownpath);
             publishedpath.Html.Should().BeEquivalentTo(htmlpath);
         }

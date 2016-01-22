@@ -4,7 +4,6 @@ using System.Net;
 using System.Threading.Tasks;
 
 using Microsoft.AspNet.Mvc;
-using Microsoft.Extensions.PlatformAbstractions;
 
 using Scissorhands.Exceptions;
 using Scissorhands.Extensions;
@@ -163,7 +162,7 @@ namespace Scissorhands.WebApp.Controllers
                              Page = this.GetPageMetadata(model, PublishMode.Preview),
                          };
 
-            var publishedpath = await this._publishService.PublishPostAsync(model.Body, this.Request).ConfigureAwait(false);
+            var publishedpath = await this._publishService.PublishPostAsync(model, this.Request).ConfigureAwait(false);
             vm.MarkdownPath = publishedpath.Markdown;
             vm.HtmlPath = publishedpath.Html;
 
@@ -173,18 +172,30 @@ namespace Scissorhands.WebApp.Controllers
         /// <summary>
         /// Processes /admin/post/publish/html.
         /// </summary>
-        /// <param name="body"><see cref="PublishedContent"/> instance read from request body.</param>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
         /// <returns>Returns the view model.</returns>
         [Route("publish/html")]
         [HttpPost]
-        public IActionResult PublishHtml([FromBody] PublishedContent body)
+        public IActionResult PublishHtml([FromBody] PostFormViewModel model)
         {
-            if (body == null)
+            if (model == null)
             {
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = body;
+            var vm = new PostParseViewModel()
+                         {
+                             Theme = this._metadata.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                             Page = this.GetPageMetadata(model, PublishMode.Parse),
+                         };
+
+            var parsedHtml = this._markdownHelper.Parse(model.Body);
+            vm.Html = parsedHtml;
+
             return this.View(vm);
         }
 

@@ -22,7 +22,7 @@ namespace Scissorhands.Helpers.Tests.Fixtures
             this.WebAppSettings = new Mock<WebAppSettings>();
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
-            this.ApplicationBasePath = this.ApplicationBasePath = $"{Path.GetTempPath()}/home/scissorhands.net";
+            this.ApplicationBasePath = $"{Path.GetTempPath()}/home/scissorhands.net";
             this.ApplicationEnvironment.SetupGet(p => p.ApplicationBasePath).Returns(this.ApplicationBasePath);
 
             this.FileHelper = new FileHelper(this.WebAppSettings.Object, this.ApplicationEnvironment.Object);
