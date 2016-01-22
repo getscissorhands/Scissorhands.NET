@@ -20,11 +20,10 @@ namespace Scissorhands.Helpers.Tests
     /// </summary>
     public class FileHelperTest : IClassFixture<FileHelperFixture>
     {
-        private readonly Mock<WebAppSettings> _settings;
-        private readonly IFileHelper _helper;
-
         private readonly string _applicationBasePath;
+        private readonly Mock<WebAppSettings> _settings;
         private readonly Mock<IApplicationEnvironment> _env;
+        private readonly IFileHelper _helper;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="FileHelperTest"/> class.
@@ -32,12 +31,10 @@ namespace Scissorhands.Helpers.Tests
         /// <param name="fixture"><see cref="FileHelperFixture"/> instance.</param>
         public FileHelperTest(FileHelperFixture fixture)
         {
-            this._settings = fixture.WebAppSettings;
-            this._helper = fixture.FileHelper;
             this._applicationBasePath = fixture.ApplicationBasePath;
-
-            this._env = new Mock<IApplicationEnvironment>();
-            this._env.SetupGet(p => p.ApplicationBasePath).Returns(this._applicationBasePath);
+            this._settings = fixture.WebAppSettings;
+            this._env = fixture.ApplicationEnvironment;
+            this._helper = fixture.FileHelper;
         }
 
         /// <summary>
@@ -46,14 +43,11 @@ namespace Scissorhands.Helpers.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var helper = new FileHelper(null, this._env.Object); };
-            action.ShouldThrow<ArgumentNullException>();
+            Action action1 = () => { var helper = new FileHelper(null, this._env.Object); };
+            action1.ShouldThrow<ArgumentNullException>();
             
-            action = () => { var helper = new FileHelper(this._settings.Object, null); };
-            action.ShouldThrow<ArgumentNullException>();
-            
-            action = () => { var helper = new FileHelper(null, null); };
-            action.ShouldThrow<ArgumentNullException>();
+            Action action2 = () => { var helper = new FileHelper(this._settings.Object, null); };
+            action2.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -162,11 +156,13 @@ namespace Scissorhands.Helpers.Tests
             var result = this._helper.GetDirectory(directorypath);
             result.Should().Be(expected);
 
-            if (Directory.Exists(expected))
+            if (!Directory.Exists(expected))
             {
-                var testedDirectory = $"{this._applicationBasePath}/wwwroot".Replace('/', Path.DirectorySeparatorChar);
-                Directory.Delete(testedDirectory, true);
+                return;
             }
+
+            var testedDirectory = $"{this._applicationBasePath}/wwwroot".Replace('/', Path.DirectorySeparatorChar);
+            Directory.Delete(testedDirectory, true);
         }
     }
 }
