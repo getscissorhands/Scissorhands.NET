@@ -31,7 +31,7 @@ namespace Scissorhands.Models.Settings
         /// <summary>
         /// Gets or sets the date of the post/page when it was written.
         /// </summary>
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
 
         /// <summary>
         /// Gets or sets the base URL of the post/page.

@@ -7,7 +7,7 @@
         <h1 class="post-title">@Html.Raw(page.Title)</h1>
         <p class="post-meta">
             Posted on
-            @page.Date.ToString("dd/MM/yyyy")
+            @page.Date
             @if (page.Author != null)
             {
                 if (!string.IsNullOrWhiteSpace(page.Author.Name))

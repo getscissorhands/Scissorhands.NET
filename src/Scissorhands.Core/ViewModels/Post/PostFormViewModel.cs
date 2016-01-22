@@ -1,4 +1,6 @@
-﻿namespace Scissorhands.ViewModels.Post
+﻿using System;
+
+namespace Scissorhands.ViewModels.Post
 {
     /// <summary>
     /// This represents the view model entity for post form.
@@ -39,5 +41,10 @@
         /// Gets or sets the comma delimited list of tags of the post/page.
         /// </summary>
         public string Tags { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date published.
+        /// </summary>
+        public DateTime DatePublished { get; set; }
     }
 }

@@ -8,7 +8,6 @@ using Microsoft.AspNet.Mvc;
 using Scissorhands.Exceptions;
 using Scissorhands.Extensions;
 using Scissorhands.Helpers;
-using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
 using Scissorhands.ViewModels.Post;
@@ -122,6 +121,8 @@ namespace Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
+            model.DatePublished = DateTime.Now;
+
             var vm = new PostPreviewViewModel()
                          {
                              Theme = this._metadata.Theme,
@@ -151,6 +152,8 @@ namespace Scissorhands.WebApp.Controllers
             {
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
+
+            model.DatePublished = DateTime.Now;
 
             var vm = new PostPublishViewModel
                          {
@@ -246,7 +249,7 @@ namespace Scissorhands.WebApp.Controllers
                                Title = model.Title,
                                Excerpt = model.Excerpt,
                                Author = this.GetAuthor(model.Author),
-                               Date = DateTime.Today,
+                               Date = model.DatePublished.ToString(this._metadata.DateTimeFormat),
                                BaseUrl = this._requestHelper.GetBaseUri(this.Request, publishMode).TrimTrailingSlash(),
                                Url = $"{this._requestHelper.GetSlugPrefix(this.Request, publishMode)}/{model.Slug}.html",
                                HeaderNavigationLinks = this._metadata.HeaderNavigationLinks.OrDefault(),

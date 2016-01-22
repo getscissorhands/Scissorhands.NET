@@ -84,7 +84,7 @@ namespace Scissorhands.Services
                                    Title = model.Title,
                                    Slug = model.Slug,
                                    Author = model.Author,
-                                   DatePublished = DateTime.Now,
+                                   DatePublished = model.DatePublished,
                                    Tags = GetTags(model.Tags),
                                };
 
