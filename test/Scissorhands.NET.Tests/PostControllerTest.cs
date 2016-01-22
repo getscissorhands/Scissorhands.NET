@@ -131,7 +131,7 @@ namespace Scissorhands.WebApp.Tests
         /// <param name="markdown">String value in Markdown format.</param>
         /// <param name="html">String value in HTML format.</param>
         [Theory]
-        [InlineData("**Hello World", "<p>Joe Bloggs</p>")]
+        [InlineData("**Hello World**", "<p>Joe Bloggs</p>")]
         public void Given_Model_Preview_ShouldReturn_ViewResult(string markdown, string html)
         {
             this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
@@ -167,7 +167,7 @@ namespace Scissorhands.WebApp.Tests
         /// <param name="markdownpath">Path of the Markdown file.</param>
         /// <param name="htmlpath">Path of the HTML post file.</param>
         [Theory]
-        [InlineData("**Hello World", "<p>Joe Bloggs</p>", "/posts/markdown.md", "/posts/post.html")]
+        [InlineData("**Hello World**", "<p>Joe Bloggs</p>", "/posts/markdown.md", "/posts/post.html")]
         public async void Given_Model_Publish_ShouldReturn_ViewResult(string markdown, string html, string markdownpath, string htmlpath)
         {
             this._requestServices.Setup(p => p.GetService(typeof(IApplicationEnvironment))).Returns(this._applicationEnvironment.Object);
@@ -210,7 +210,7 @@ namespace Scissorhands.WebApp.Tests
         /// <param name="markdown">String value in Markdown format.</param>
         /// <param name="html">String value in HTML format.</param>
         [Theory]
-        [InlineData("**Hello World", "<p>Joe Bloggs</p>")]
+        [InlineData("**Hello World**", "<p>Joe Bloggs</p>")]
         public void Given_Model_PublishHtml_ShouldReturn_ViewResult(string markdown, string html)
         {
             var body = new PublishedContent() { Markdown = markdown, Html = html };

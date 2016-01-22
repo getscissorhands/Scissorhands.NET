@@ -224,7 +224,7 @@ namespace Scissorhands.Helpers.Tests
         /// <param name="markdown">Markdown value.</param>
         /// <param name="html">HTML value.</param>
         [Theory]
-        [InlineData("**Hello World", "<strong>Hello World</strong>")]
+        [InlineData("**Hello World**", "<strong>Hello World</strong>")]
         public async void Given_Model_CreateStringContent_ShouldReturn_StringContent(string markdown, string html)
         {
             var model = new PublishedContent() { Theme = "default", Markdown = markdown, Html = html };
