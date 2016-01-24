@@ -103,14 +103,7 @@ namespace Scissorhands.Helpers
             var trimmedBasePath = ReplaceDirectorySeparator(this._appEnv.ApplicationBasePath);
             var trimmedDirectoryPath = TrimDirectoryPath(directorypath);
 
-            var combined =
-                Path.Combine(
-                    new[]
-                        {
-                            trimmedBasePath,
-                            "wwwroot",
-                            trimmedDirectoryPath,
-                        });
+            var combined = Path.Combine(trimmedBasePath, "wwwroot", trimmedDirectoryPath);
 
             if (!Directory.Exists(combined))
             {

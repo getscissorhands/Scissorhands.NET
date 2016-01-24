@@ -71,22 +71,19 @@ namespace Scissorhands.Services
         /// Applies metadata to the markdown body.
         /// </summary>
         /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
+        /// <param name="metadata"><see cref="PublishedMetadata"/> instance.</param>
         /// <returns>Returns the markdown body with metadata applied.</returns>
-        public string ApplyMetadata(PostFormViewModel model)
+        public string ApplyMetadata(PostFormViewModel model, PublishedMetadata metadata)
         {
             if (model == null)
             {
                 throw new ArgumentNullException(nameof(model));
             }
 
-            var metadata = new PublishedMetadata()
-                               {
-                                   Title = model.Title,
-                                   Slug = model.Slug,
-                                   Author = model.Author,
-                                   DatePublished = model.DatePublished,
-                                   Tags = GetTags(model.Tags),
-                               };
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
 
             var sb = new StringBuilder();
             sb.AppendLine("---");
@@ -106,19 +103,23 @@ namespace Scissorhands.Services
         /// Publishes the markdown as a file.
         /// </summary>
         /// <param name="markdown">Content in Markdown format.</param>
+        /// <param name="metadata"><see cref="PublishedMetadata"/> instance.</param>
         /// <returns>Returns the Markdown file path in a virtual path format.</returns>
-        public async Task<string> PublishMarkdownAsync(string markdown)
+        public async Task<string> PublishMarkdownAsync(string markdown, PublishedMetadata metadata)
         {
             if (string.IsNullOrWhiteSpace(markdown))
             {
                 throw new ArgumentNullException(nameof(markdown));
             }
 
-            var filename = "markdown.md";
-            var markdownpath = $"{this._settings.MarkdownPath}/{filename}";
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
 
-            var filepath = this._fileHelper.GetDirectory(this._settings.MarkdownPath);
-            filepath = Path.Combine(new[] { filepath, filename });
+            var markdownpath = $"{this._settings.MarkdownPath}/{metadata.DatePublished.ToString("yyyy/MM/dd")}";
+            var filename = $"{metadata.Slug}.md";
+            var filepath = Path.Combine(this._fileHelper.GetDirectory(markdownpath), filename);
 
             var written = await this._fileHelper.WriteAsync(filepath, markdown).ConfigureAwait(false);
             if (!written)
@@ -126,26 +127,30 @@ namespace Scissorhands.Services
                 throw new PublishFailedException("Markdown not published");
             }
 
-            return markdownpath;
+            return $"{markdownpath}/{filename}";
         }
 
         /// <summary>
         /// Publishes the HTML post as a file.
         /// </summary>
         /// <param name="html">Content in HTML format.</param>
+        /// <param name="metadata"><see cref="PublishedMetadata"/> instance.</param>
         /// <returns>Returns the HTML file path.</returns>
-        public async Task<string> PublishHtmlAsync(string html)
+        public async Task<string> PublishHtmlAsync(string html, PublishedMetadata metadata)
         {
             if (string.IsNullOrWhiteSpace(html))
             {
                 throw new ArgumentNullException(nameof(html));
             }
 
-            var filename = "post.html";
-            var htmlpath = $"{this._settings.HtmlPath}/{filename}";
+            if (metadata == null)
+            {
+                throw new ArgumentNullException(nameof(metadata));
+            }
 
-            var filepath = this._fileHelper.GetDirectory(this._settings.HtmlPath);
-            filepath = Path.Combine(new[] { filepath, filename });
+            var htmlpath = $"{this._settings.HtmlPath}/{metadata.DatePublished.ToString("yyyy/MM/dd")}";
+            var filename = $"{metadata.Slug}.html";
+            var filepath = Path.Combine(this._fileHelper.GetDirectory(htmlpath), filename);
 
             var written = await this._fileHelper.WriteAsync(filepath, html).ConfigureAwait(false);
             if (!written)
@@ -153,7 +158,7 @@ namespace Scissorhands.Services
                 throw new PublishFailedException("Post not published");
             }
 
-            return htmlpath;
+            return $"{htmlpath}/{filename}";
         }
 
         /// <summary>
@@ -203,14 +208,16 @@ namespace Scissorhands.Services
 
             var publishedpath = new PublishedPostPath();
 
-            var markdown = this.ApplyMetadata(model);
+            var metadata = this.GetMetadata(model);
 
-            var markdownpath = await this.PublishMarkdownAsync(markdown).ConfigureAwait(false);
+            var markdown = this.ApplyMetadata(model, metadata);
+
+            var markdownpath = await this.PublishMarkdownAsync(markdown, metadata).ConfigureAwait(false);
             publishedpath.Markdown = markdownpath;
 
             var html = await this.GetPublishedHtmlAsync(model, request).ConfigureAwait(false);
 
-            var htmlpath = await this.PublishHtmlAsync(html).ConfigureAwait(false);
+            var htmlpath = await this.PublishHtmlAsync(html, metadata).ConfigureAwait(false);
             publishedpath.Html = htmlpath;
 
             return publishedpath;
@@ -227,6 +234,25 @@ namespace Scissorhands.Services
             }
 
             this._disposed = true;
+        }
+
+        private PublishedMetadata GetMetadata(PostFormViewModel model)
+        {
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model));
+            }
+
+            var metadata = new PublishedMetadata()
+                               {
+                                   Title = model.Title,
+                                   Slug = model.Slug,
+                                   Author = model.Author,
+                                   DatePublished = model.DatePublished,
+                                   Tags = GetTags(model.Tags),
+                               };
+
+            return metadata;
         }
 
         private static List<string> GetTags(string tags)

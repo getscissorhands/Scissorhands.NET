@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net.Http;
 using System.Text;
@@ -11,6 +12,7 @@ using Microsoft.AspNet.Http;
 using Moq;
 
 using Scissorhands.Helpers;
+using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services.Exceptions;
 using Scissorhands.Services.Tests.Fakes;
@@ -36,6 +38,13 @@ namespace Scissorhands.Services.Tests
         private readonly string _filepath;
         private readonly Mock<HttpRequest> _request;
 
+        private readonly string _title;
+        private readonly string _slug;
+        private readonly string _author;
+        private readonly DateTime _datePublished;
+        private readonly List<string> _tags;
+        private readonly Mock<PublishedMetadata> _publishedMetadata;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PublishServiceTest"/> class.
         /// </summary>
@@ -51,6 +60,13 @@ namespace Scissorhands.Services.Tests
 
             this._filepath = $"{Path.GetTempPath()}/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
             this._request = new Mock<HttpRequest>();
+
+            this._title = fixture.Title;
+            this._slug = fixture.Slug;
+            this._author = fixture.Author;
+            this._datePublished = fixture.DatePublished;
+            this._tags = fixture.Tags;
+            this._publishedMetadata = fixture.PublishedMetadata;
         }
 
         /// <summary>
@@ -88,8 +104,11 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullParameter_ApplyMetadata_ShouldThrow_ArgumentNullException()
         {
-            Action action = () => { var result = this._service.ApplyMetadata(null); };
-            action.ShouldThrow<ArgumentNullException>();
+            Action action1 = () => { var result = this._service.ApplyMetadata(null, this._publishedMetadata.Object); };
+            action1.ShouldThrow<ArgumentNullException>();
+
+            Action action2 = () => { var result = this._service.ApplyMetadata(new PostFormViewModel(), null); };
+            action2.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
@@ -101,18 +120,18 @@ namespace Scissorhands.Services.Tests
         /// <param name="tags">List of tags.</param>
         /// <param name="body">Content value.</param>
         [Theory]
-        [InlineData("Title", "slug", "Joe Bloggs", "tag1,tag2", "**Hello World**")]
+        [InlineData("Hello World", "hello-world", "Joe Bloggs", "hello,world", "**Hello World**")]
         public void Given_Model_ApplyMetadata_ShouldReturn_Result(string title, string slug, string author, string tags, string body)
         {
             var model = new PostFormViewModel()
                             {
-                                Title = title,
-                                Slug = slug,
+                                Title  = title,
+                                Slug   = slug,
                                 Author = author,
-                                Tags = tags,
-                                Body = body
+                                Tags   = tags,
+                                Body   = body
                             };
-            var markdown = this._service.ApplyMetadata(model);
+            var markdown = this._service.ApplyMetadata(model, this._publishedMetadata.Object);
 
             markdown.Should().StartWithEquivalent("---");
             markdown.Should().ContainEquivalentOf($"* Title: {title}");
@@ -128,35 +147,42 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullMarkdown_PublishMarkdownAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(null).ConfigureAwait(false); };
-            func.ShouldThrow<ArgumentNullException>();
+            Func<Task> func1 = async () => { var result = await this._service.PublishMarkdownAsync(null, this._publishedMetadata.Object).ConfigureAwait(false); };
+            func1.ShouldThrow<ArgumentNullException>();
+
+            var markdown = "**Hello World**";
+            Func<Task> func2 = async () => { var result = await this._service.PublishMarkdownAsync(markdown, null).ConfigureAwait(false); };
+            func2.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
         /// Tests whether the method should throw an exception or not.
         /// </summary>
-        [Fact]
-        public void Given_FalseWritingSync_PublishMarkdownAsync_ShouldThrow_PublishFailedException()
+        /// <param name="markdown">Markdown value.</param>
+        [Theory]
+        [InlineData("**Hello World**")]
+        public void Given_FalseWritingSync_PublishMarkdownAsync_ShouldThrow_PublishFailedException(string markdown)
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishMarkdownAsync(markdown, this._publishedMetadata.Object).ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
         /// <summary>
         /// Tests whether the method should return value or not.
         /// </summary>
-        /// <param name="markdownpath">File path.</param>
+        /// <param name="markdown">Markdown value.</param>
         [Theory]
-        [InlineData("/posts/markdown.md")]
-        public async void Given_Markdown_PublishMarkdownAsync_ShouldReturn_Filepath(string markdownpath)
+        [InlineData("**Hello World**")]
+        public async void Given_Markdown_PublishMarkdownAsync_ShouldReturn_Filepath(string markdown)
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishMarkdownAsync("**Hello World**").ConfigureAwait(false);
+            var result = await this._service.PublishMarkdownAsync(markdown, this._publishedMetadata.Object).ConfigureAwait(false);
+            var markdownpath = $"{this._settings.Object.MarkdownPath}/{this._publishedMetadata.Object.DatePublished.ToString("yyyy/MM/dd")}/{this._publishedMetadata.Object.Slug}.md";
             result.Should().Be(markdownpath);
         }
 
@@ -166,35 +192,38 @@ namespace Scissorhands.Services.Tests
         [Fact]
         public void Given_NullHtml_PublishHtmlAsync_ShouldThrow_ArgumentNullException()
         {
-            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(null).ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(null, this._publishedMetadata.Object).ConfigureAwait(false); };
             func.ShouldThrow<ArgumentNullException>();
         }
 
         /// <summary>
         /// Tests whether the method should throw an exception or not.
         /// </summary>
-        [Fact]
-        public void Given_FalseWritingSync_PublishHtmlAsync_ShouldThrow_PublishFailedException()
+        /// <param name="markdown">Markdown value.</param>
+        [Theory]
+        [InlineData("**Hello World**")]
+        public void Given_FalseWritingSync_PublishHtmlAsync_ShouldThrow_PublishFailedException(string markdown)
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(false));
 
-            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync("**Hello World**").ConfigureAwait(false); };
+            Func<Task> func = async () => { var result = await this._service.PublishHtmlAsync(markdown, this._publishedMetadata.Object).ConfigureAwait(false); };
             func.ShouldThrow<PublishFailedException>();
         }
 
         /// <summary>
         /// Tests whether the method should return value or not.
         /// </summary>
-        /// <param name="htmlpath">File path.</param>
+        /// <param name="html">HTML value.</param>
         [Theory]
-        [InlineData("/posts/post.html")]
-        public async void Given_Markdown_PublishHtmlAsync_ShouldReturn_Filepath(string htmlpath)
+        [InlineData("<strong>Hello World</strong>")]
+        public async void Given_Markdown_PublishHtmlAsync_ShouldReturn_Filepath(string html)
         {
             this._fileHelper.Setup(p => p.GetDirectory(It.IsAny<string>())).Returns(this._filepath);
             this._fileHelper.Setup(p => p.WriteAsync(It.IsAny<string>(), It.IsAny<string>())).Returns(Task.FromResult(true));
 
-            var result = await this._service.PublishHtmlAsync("<strong>Hello World</strong>").ConfigureAwait(false);
+            var result = await this._service.PublishHtmlAsync(html, this._publishedMetadata.Object).ConfigureAwait(false);
+            var htmlpath = $"{this._settings.Object.HtmlPath}/{this._publishedMetadata.Object.DatePublished.ToString("yyyy/MM/dd")}/{this._publishedMetadata.Object.Slug}.html";
             result.Should().Be(htmlpath);
         }
 
@@ -264,19 +293,17 @@ namespace Scissorhands.Services.Tests
         /// <summary>
         /// Tests whether the method should return result or not.
         /// </summary>
-        /// <param name="markdownpath">Markdown file path.</param>
-        /// <param name="htmlpath">HTML file path.</param>
-        [Theory]
-        [InlineData("/posts/markdown.md", "/posts/post.html")]
-        public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result(string markdownpath, string htmlpath)
+        [Fact]
+        public async void Given_Parameters_PublishPostAsync_ShouldReturn_Result()
         {
             var model = new PostFormViewModel()
                             {
-                                Title = "Title",
-                                Slug = "slug",
+                                Title = "Hello World",
+                                Slug = "hello-world",
                                 Author = "Joe Bloggs",
-                                Tags = "tag1,tag2",
-                                Body = "**Hello World**"
+                                Tags = "hello,world",
+                                Body = "**Hello World**",
+                                DatePublished = DateTime.Now,
                             };
             var html = "<strong>Hello World</strong>";
 
@@ -295,6 +322,9 @@ namespace Scissorhands.Services.Tests
             var content = new StringContent(html, Encoding.UTF8);
             this._httpRequestHelper.Setup(p => p.CreateHttpClient(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>(), It.IsAny<HttpMessageHandler>())).Returns(client);
             this._httpRequestHelper.Setup(p => p.CreateStringContent(It.IsAny<object>())).Returns(content);
+
+            var markdownpath = $"{this._settings.Object.MarkdownPath}/{this._publishedMetadata.Object.DatePublished.ToString("yyyy/MM/dd")}/{this._publishedMetadata.Object.Slug}.md";
+            var htmlpath = $"{this._settings.Object.HtmlPath}/{this._publishedMetadata.Object.DatePublished.ToString("yyyy/MM/dd")}/{this._publishedMetadata.Object.Slug}.html";
 
             var publishedpath = await this._service.PublishPostAsync(model, this._request.Object).ConfigureAwait(false);
             publishedpath.Markdown.Should().BeEquivalentTo(markdownpath);

@@ -1,8 +1,11 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 
 using Moq;
 
 using Scissorhands.Helpers;
+using Scissorhands.Models.Posts;
 using Scissorhands.Models.Settings;
 
 namespace Scissorhands.Services.Tests.Fixtures
@@ -33,6 +36,19 @@ namespace Scissorhands.Services.Tests.Fixtures
             this.HttpRequestHelper = new Mock<IHttpRequestHelper>();
 
             this.PublishService = new PublishService(this.WebAppSettings.Object, this.SiteMetadataSettings.Object, this.FileHelper.Object, this.HttpRequestHelper.Object);
+
+            this.Title = "Hello World";
+            this.Slug = "hello-world";
+            this.Author = "Joe Bloggs";
+            this.DatePublished = DateTime.Now;
+            this.Tags = new[] { "hello", "world" }.ToList();
+
+            this.PublishedMetadata = new Mock<PublishedMetadata>();
+            this.PublishedMetadata.SetupGet(p => p.Title).Returns(this.Title);
+            this.PublishedMetadata.SetupGet(p => p.Slug).Returns(this.Slug);
+            this.PublishedMetadata.SetupGet(p => p.Author).Returns(this.Author);
+            this.PublishedMetadata.SetupGet(p => p.DatePublished).Returns(this.DatePublished);
+            this.PublishedMetadata.SetupGet(p => p.Tags).Returns(this.Tags);
         }
 
         /// <summary>
@@ -64,6 +80,36 @@ namespace Scissorhands.Services.Tests.Fixtures
         /// Gets the <see cref="IPublishService"/> instance.
         /// </summary>
         public IPublishService PublishService { get; }
+
+        /// <summary>
+        /// Gets or sets the title.
+        /// </summary>
+        public string Title { get; set; }
+
+        /// <summary>
+        /// Gets or sets the slug.
+        /// </summary>
+        public string Slug { get; set; }
+
+        /// <summary>
+        /// Gets or sets the author.
+        /// </summary>
+        public string Author { get; set; }
+
+        /// <summary>
+        /// Gets or sets the date published.
+        /// </summary>
+        public DateTime DatePublished { get; set; }
+
+        /// <summary>
+        /// Gets or sets the list of tags.
+        /// </summary>
+        public List<string> Tags { get; set; }
+
+        /// <summary>
+        /// Gets or sets the <see cref="Mock{PublishedMetadata}"/> instance.
+        /// </summary>
+        public Mock<PublishedMetadata> PublishedMetadata { get; set; }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
