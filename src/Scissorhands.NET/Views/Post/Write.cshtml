@@ -1,7 +1,4 @@
-﻿@using Scissorhands.Services
-@using Scissorhands.ViewModels.Post
-
-@model PostFormViewModel
+﻿@model Scissorhands.ViewModels.Post.PostFormViewModel
 @{
     ViewBag.Title = "Write Post";
 }
@@ -10,37 +7,52 @@
     <h2>@ViewBag.Title</h2>
 </div>
 
-<form class="row" asp-controller="post" asp-action="publish" method="post">
-    <div class="form-group">
-        <label asp-for="Title"></label>
-        <input class="form-control" asp-for="Title"/>
+<div class="row" id="write">
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6">
+        <form class="row" asp-controller="post" asp-action="publish" method="post">
+            <div class="form-group">
+                <label asp-for="Title"></label>
+                <input class="form-control" asp-for="Title"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="Slug"></label>
+                <div class="input-group">
+                    <div class="input-group-addon">@Model.SlugPrefix/</div>
+                    <input class="form-control" asp-for="Slug"/>
+                    <div class="input-group-addon">.html</div>
+                </div>
+            </div>
+            <div class="form-group">
+                <label asp-for="Author"></label>
+                <input class="form-control" asp-for="Author" readonly="readonly"/>
+            </div>
+            <div class="form-group">
+                <label asp-for="Excerpt"></label>
+                <textarea class="form-control" asp-for="Excerpt"></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="Body"></label>
+                <textarea class="form-control" asp-for="Body"></textarea>
+            </div>
+            <div class="form-group">
+                <label asp-for="Tags"></label>
+                <input class="form-control" asp-for="Tags"/>
+            </div>
+            <div class="form-group">
+                <button class="btn btn-info" type="submit" formaction="@Url.Action("preview")">Preview</button>
+                <button class="btn btn-primary" type="submit">Publish</button>
+            </div>
+        </form>
     </div>
-    <div class="form-group">
-        <label asp-for="Slug"></label>
-        <div class="input-group">
-            <div class="input-group-addon">@Model.SlugPrefix/</div>
-            <input class="form-control" asp-for="Slug" />
-            <div class="input-group-addon">.html</div>
-        </div>
+
+    <div class="col-xs-12 col-sm-12 col-md-6 col-lg-6" id="preview">
     </div>
-    <div class="form-group">
-        <label asp-for="Author"></label>
-        <input class="form-control" asp-for="Author" readonly="readonly"/>
-    </div>
-    <div class="form-group">
-        <label asp-for="Excerpt"></label>
-        <textarea class="form-control" asp-for="Excerpt"></textarea>
-    </div>
-    <div class="form-group">
-        <label asp-for="Body"></label>
-        <textarea class="form-control" asp-for="Body"></textarea>
-    </div>
-    <div class="form-group">
-        <label asp-for="Tags"></label>
-        <input class="form-control" asp-for="Tags"/>
-    </div>
-    <div class="form-group">
-        <button class="btn btn-info" type="submit" formaction="@Url.Action("preview")">Preview</button>
-        <button class="btn btn-primary" type="submit">Publish</button>
-    </div>
-</form>
+</div>
+
+@section scripts {
+    <script type="text/javascript">
+        $("#Body").keyup(function() {
+            $("#preview").text($("#Body").val());
+        });
+    </script>
+}
