@@ -52,7 +52,17 @@
 @section scripts {
     <script type="text/javascript">
         $("#Body").keyup(function() {
-            $("#preview").text($("#Body").val());
+            var markdown = $("#Body").val();
+            $.ajax({
+                type: "POST",
+                url: "/admin/post/write/preview",
+                data: JSON.stringify({ "value": markdown }),
+                dataType: "json",
+                contentType: "application/json",
+                success: function(data) {
+                    $("#preview").html(data.Value);
+                }
+            });
         });
     </script>
 }

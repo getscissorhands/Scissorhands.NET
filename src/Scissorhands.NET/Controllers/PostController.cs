@@ -8,12 +8,19 @@ using Microsoft.AspNet.Mvc;
 using Scissorhands.Exceptions;
 using Scissorhands.Extensions;
 using Scissorhands.Helpers;
+using Scissorhands.Models.Requests;
+using Scissorhands.Models.Responses;
 using Scissorhands.Models.Settings;
 using Scissorhands.Services;
 using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
 {
+    public class MarkdownRequest
+    {
+        public string Markdown { get; set; }
+    }
+
     /// <summary>
     /// This represents the controller entity for post.
     /// </summary>
@@ -105,6 +112,20 @@ namespace Scissorhands.WebApp.Controllers
         public IActionResult Edit()
         {
             return this.View();
+        }
+
+        /// <summary>
+        /// Processes /admin/post/write/preview API request.
+        /// </summary>
+        /// <param name="request"><see cref="MarkdownPreviewRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="MarkdownPreviewResponse"/> object.</returns>
+        [Route("write/preview")]
+        [HttpPost]
+        public IActionResult WritePreview([FromBody] MarkdownPreviewRequest request)
+        {
+            var parsedHtml = this._markdownHelper.Parse(request.Value);
+            var response = new MarkdownPreviewResponse() { Value = parsedHtml };
+            return new JsonResult(response);
         }
 
         /// <summary>
