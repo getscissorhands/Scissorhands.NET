@@ -16,11 +16,6 @@ using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
 {
-    public class MarkdownRequest
-    {
-        public string Markdown { get; set; }
-    }
-
     /// <summary>
     /// This represents the controller entity for post.
     /// </summary>
