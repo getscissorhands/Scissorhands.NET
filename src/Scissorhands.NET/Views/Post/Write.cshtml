@@ -55,7 +55,7 @@
             var markdown = $("#Body").val();
             $.ajax({
                 type: "POST",
-                url: "/admin/post/write/preview",
+                url: "/admin/post/preview/html",
                 data: JSON.stringify({ "value": markdown }),
                 dataType: "json",
                 contentType: "application/json",
