@@ -5,8 +5,6 @@ using System.Threading.Tasks;
 
 using Microsoft.AspNet.Mvc;
 
-using Scissorhands.Exceptions;
-using Scissorhands.Extensions;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Requests;
 using Scissorhands.Models.Responses;
@@ -20,10 +18,8 @@ namespace Scissorhands.WebApp.Controllers
     /// This represents the controller entity for post.
     /// </summary>
     [Route("admin/post")]
-    public class PostController : Controller
+    public class PostController : BaseController
     {
-        private readonly SiteMetadataSettings _metadata;
-        private readonly IHttpRequestHelper _requestHelper;
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IThemeService _themeService;
         private readonly IPublishService _publishService;
@@ -37,21 +33,8 @@ namespace Scissorhands.WebApp.Controllers
         /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
         public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
+            : base(metadata, requestHelper)
         {
-            if (metadata == null)
-            {
-                throw new ArgumentNullException(nameof(metadata));
-            }
-
-            this._metadata = metadata;
-
-            if (requestHelper == null)
-            {
-                throw new ArgumentNullException(nameof(requestHelper));
-            }
-
-            this._requestHelper = requestHelper;
-
             if (markdownHelper == null)
             {
                 throw new ArgumentNullException(nameof(markdownHelper));
@@ -92,8 +75,8 @@ namespace Scissorhands.WebApp.Controllers
         {
             var vm = new PostFormViewModel()
                          {
-                             SlugPrefix = this._requestHelper.GetSlugPrefix(this.Request),
-                             Author = this.GetAuthorName(),
+                             SlugPrefix = this.RequestHelper.GetSlugPrefix(this.Request),
+                             Author = this.GetDefaultAuthorName(),
                          };
 
             return this.View(vm);
@@ -107,20 +90,6 @@ namespace Scissorhands.WebApp.Controllers
         public IActionResult Edit()
         {
             return this.View();
-        }
-
-        /// <summary>
-        /// Processes /admin/post/write/preview API request.
-        /// </summary>
-        /// <param name="request"><see cref="MarkdownPreviewRequest"/> instance.</param>
-        /// <returns>Returns the <see cref="MarkdownPreviewResponse"/> object.</returns>
-        [Route("write/preview")]
-        [HttpPost]
-        public IActionResult WritePreview([FromBody] MarkdownPreviewRequest request)
-        {
-            var parsedHtml = this._markdownHelper.Parse(request.Value);
-            var response = new MarkdownPreviewResponse() { Value = parsedHtml };
-            return new JsonResult(response);
         }
 
         /// <summary>
@@ -140,19 +109,33 @@ namespace Scissorhands.WebApp.Controllers
             model.DatePublished = DateTime.Now;
 
             var vm = new PostPreviewViewModel()
-                         {
-                             Theme = this._metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Preview),
-                         };
+            {
+                Theme = this.Metadata.Theme,
+                HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
+                HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
+                PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
+                FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
+                Page = this.GetPageMetadata(model, PublishMode.Preview),
+            };
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;
 
             return this.View(vm);
+        }
+
+        /// <summary>
+        /// Processes /admin/post/preview/html API request.
+        /// </summary>
+        /// <param name="request"><see cref="MarkdownPreviewRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="MarkdownPreviewResponse"/> object.</returns>
+        [Route("preview/html")]
+        [HttpPost]
+        public IActionResult WritePreview([FromBody] MarkdownPreviewRequest request)
+        {
+            var parsedHtml = this._markdownHelper.Parse(request.Value);
+            var response = new MarkdownPreviewResponse() { Value = parsedHtml };
+            return new JsonResult(response);
         }
 
         /// <summary>
@@ -173,11 +156,11 @@ namespace Scissorhands.WebApp.Controllers
 
             var vm = new PostPublishViewModel
                          {
-                             Theme = this._metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                             Theme = this.Metadata.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
                              Page = this.GetPageMetadata(model, PublishMode.Publish),
                          };
 
@@ -204,11 +187,11 @@ namespace Scissorhands.WebApp.Controllers
 
             var vm = new PostParseViewModel()
                          {
-                             Theme = this._metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this._metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this._metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this._metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this._metadata.Theme),
+                             Theme = this.Metadata.Theme,
+                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
+                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
+                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
+                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
                              Page = this.GetPageMetadata(model, PublishMode.Publish),
                          };
 
@@ -216,61 +199,6 @@ namespace Scissorhands.WebApp.Controllers
             vm.Html = parsedHtml;
 
             return this.View(vm);
-        }
-
-        /// <summary>
-        /// Processes /post/build.
-        /// </summary>
-        /// <returns>Returns the view model.</returns>
-        [Route("build")]
-        public IActionResult Build()
-        {
-            return this.View();
-        }
-
-        /// <summary>
-        /// Processes /post/view.
-        /// </summary>
-        /// <returns>Returns the view model.</returns>
-        [Route("view")]
-        public IActionResult PostView()
-        {
-            return this.View();
-        }
-
-        private Author GetAuthor(string name)
-        {
-            var author = this._metadata
-                             .Authors
-                             .SingleOrDefault(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
-            return author;
-        }
-
-        private string GetAuthorName()
-        {
-            var author = this._metadata.Authors.FirstOrDefault(p => p.IsDefault);
-            if (author == null)
-            {
-                throw new AuthorNotFoundException("Author not found");
-            }
-
-            return author.Name;
-        }
-
-        private PageMetadataSettings GetPageMetadata(PostFormViewModel model, PublishMode publishMode)
-        {
-            var page = new PageMetadataSettings
-                           {
-                               SiteTitle = this._metadata.Title,
-                               Title = model.Title,
-                               Excerpt = model.Excerpt,
-                               Author = this.GetAuthor(model.Author),
-                               Date = model.DatePublished.ToString(this._metadata.DateTimeFormat),
-                               BaseUrl = this._requestHelper.GetBaseUri(this.Request, publishMode).TrimTrailingSlash(),
-                               Url = $"{this._requestHelper.GetSlugPrefix(this.Request, publishMode)}/{model.Slug}.html",
-                               HeaderNavigationLinks = this._metadata.HeaderNavigationLinks.OrDefault(),
-                           };
-            return page;
         }
     }
 }
