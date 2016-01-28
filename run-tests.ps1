@@ -1,11 +1,16 @@
+# This PowerShel script runs all test projects.
+
 # Set the list of DNVM objects
-$dnvm1 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "clr"; "Architecture" = "x86" })
-$dnvm2 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "clr"; "Architecture" = "x64" })
-$dnvm3 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "coreclr"; "Architecture" = "x86" })
-$dnvm4 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "coreclr"; "Architecture" = "x64" })
+$dnvm1 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "clr"; "Architecture" = "x86"; "OS" = "win" })
+$dnvm2 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "clr"; "Architecture" = "x64"; "OS" = "win" })
+$dnvm3 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "coreclr"; "Architecture" = "x86"; "OS" = "win" })
+$dnvm4 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "coreclr"; "Architecture" = "x64"; "OS" = "win" })
 $dnvms = ($dnvm1, $dnvm2, $dnvm3, $dnvm4)
 
-# This PowerShel script runs all test projects.
+# Install DNX rumtimes
+foreach($dnvm in $dnvms) {
+    dnvm install $dnvm.Version -r $dnvm.Runtime -a $dnvm.Architecture -OS $dnvm.OS
+}
 
 $projects = Get-ChildItem .\test | ?{$_.PsIsContainer}
 
