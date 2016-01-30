@@ -39,14 +39,8 @@ foreach($html in $htmls) {
 
         $failed = $testcase.failure
         if ($failed) {
-            $lines = $failed.InnerText -split "`n"
-            $message = $lines[0]
-            #$texts = $()
-            #for ($i = 1; $i -lt $lines.Length; $i++) {
-            #    $texts += $lines[$i]
-            #}
-            #$trace = $texts -join "`r`n"
-            $trace = $failed.InnerText -replace $message, ""
+            $message = $($failed.InnerText -split "`n")[0]
+            $trace = $failed.InnerText
 
             Add-AppveyorTest $testname -Outcome Failed -FileName $html.Name -Duration $time -ErrorMessage $message -ErrorStackTrace $trace
         }
