@@ -29,6 +29,11 @@ foreach($html in $htmls) {
     del ../../../report.xml
 
     # Display test summary.
+    Write-Host "`nmocha-phantomjs JavaScript Test Runner"
+    Write-Host "  Discovering: $($html.Name)"
+    Write-Host "  Discovered:  $($html.Name)"
+    Write-Host "  Starting:    $($html.Name)"
+    Write-Host "  Finished:    $($html.Name)"
     Write-Host "=== TEST EXECUTION SUMMARY ==="
     Write-Host "   $($html.Name)  Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s`n"
 
