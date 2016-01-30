@@ -23,21 +23,20 @@ foreach($html in $htmls) {
     node mocha-phantomjs -R xunit $filename > ../../../report.xml
 
     # Read report.xml
-    $testsuite = [xml](Get-Content ../../../report.xml)
+    $xml = [xml](Get-Content ../../../report.xml)
+    $testsuite = $xml.testsuite
+
+    del ../../../report.xml
 
     # Display test summary.
-    Write-Host "$($testsuite.name)`n`n"
-    Write-Host "=== TEST EXECUTION SUMMARY ===`n"
-    Write-Host "$($html.Name) Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s`n"
+    Write-Host "=== TEST EXECUTION SUMMARY ==="
+    Write-Host "$($html.Name) Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s"
 
     # Uploads test results to AppVeyor.
     foreach ($testcase in $testsuite.testcase) {
-        $time = $testsuite.time
-        if ($testcase.time) {
-            $time = $testcase.time
-        }
-
+        $time = $testcase.time * 1000
         $testname = $testcase.classname + " " + $testcase.name
+
         $failed = $testcase.failure
         if ($failed) {
             Add-AppveyorTest $testname -Outcome Failed -FileName $html.Name -ErrorMessage $testcase.failure.message -Duration $time
