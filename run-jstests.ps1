@@ -34,7 +34,7 @@ foreach($html in $htmls) {
 
     # Uploads test results to AppVeyor.
     foreach ($testcase in $testsuite.testcase) {
-        $time = $testcase.time * 1000
+        [decimal]$time = [Convert]::ToDecimal($testcase.time) * 1000
         $testname = $testcase.classname + " " + $testcase.name
 
         $failed = $testcase.failure
