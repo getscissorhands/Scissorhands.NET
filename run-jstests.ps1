@@ -30,7 +30,7 @@ foreach($html in $htmls) {
 
     # Display test summary.
     Write-Host "=== TEST EXECUTION SUMMARY ==="
-    Write-Host "$($html.Name) Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s"
+    Write-Host "$($html.Name) Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s`n"
 
     # Uploads test results to AppVeyor.
     foreach ($testcase in $testsuite.testcase) {
@@ -41,11 +41,12 @@ foreach($html in $htmls) {
         if ($failed) {
             $lines = $failed.InnerText -split "`n"
             $message = $lines[0]
-            $texts = $()
-            for ($i = 1; $i -lt $lines.Length; $i++) {
-                $texts += $lines[$i]
-            }
-            $trace = $texts -join "`r`n"
+            #$texts = $()
+            #for ($i = 1; $i -lt $lines.Length; $i++) {
+            #    $texts += $lines[$i]
+            #}
+            #$trace = $texts -join "`r`n"
+            $trace = $failed.InnerText -replace $message, ""
 
             Add-AppveyorTest $testname -Outcome Failed -FileName $html.Name -Duration $time -ErrorMessage $message -ErrorStackTrace $trace
         }
