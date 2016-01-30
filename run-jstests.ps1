@@ -1,10 +1,14 @@
 # This PowerShell script runs all javascript tests.
 
+# Installs npm packages.
+cd  ./src/Scissorhands.NET
+npm install
+
 # Gets all test harness HTML files.
-$htmls = Get-ChildItem -Path ./src/Scissorhands.NET/wwwroot/js/* -Include *.html -Recurse
+$htmls = Get-ChildItem -Path ./wwwroot/js/tests/* -Include *.html -Recurse
 
 # Moves to the test runner directory.
-cd ./src/Scissorhands.NET/node_modules/mocha-phantomjs/bin
+cd ./node_modules/mocha-phantomjs/bin
 
 # Runs the test harness files.
 $exitCode = 0
