@@ -38,7 +38,7 @@ describe("There is a tick box right next to the slug field", function() {
 
   describe("Tickbox", function() {
     it("should be 'not checked' as default", function() {
-      expect($slugCheckbox).to.have.prop('checked', true);
+      expect($slugCheckbox).to.have.prop('checked', false);
     });
   });
   describe("Slug field", function() {
