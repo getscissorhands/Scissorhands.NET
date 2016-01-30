@@ -30,7 +30,7 @@ foreach($html in $htmls) {
 
     # Display test summary.
     Write-Host "=== TEST EXECUTION SUMMARY ==="
-    Write-Host "$($html.Name) Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s`n"
+    Write-Host "   $($html.Name)  Total: $($testsuite.tests), Errors: $($testsuite.errors), Failed: $($testsuite.failures), Skipped: $($testsuite.skipped), Time: $($testsuite.time)s`n"
 
     # Uploads test results to AppVeyor.
     foreach ($testcase in $testsuite.testcase) {
