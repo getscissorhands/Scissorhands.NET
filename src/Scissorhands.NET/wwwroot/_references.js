@@ -4,6 +4,7 @@
 /// <reference path="js/site.js" />
 /// <reference path="js/slug.js" />
 /// <reference path="js/slug_test.js" />
+/// <reference path="js/tests/slug_test.js" />
 /// <reference path="lib/bootstrap/dist/js/bootstrap.js" />
 /// <reference path="lib/chai/chai.js" />
 /// <reference path="lib/chai-jquery/chai-jquery.js" />

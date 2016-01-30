@@ -22,6 +22,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
 
 # for `release/all` branch
 -
@@ -64,6 +65,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name_core)\$(configuration)\*.nupkg
     name: core
@@ -133,6 +135,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: core
@@ -196,6 +199,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: helpers
@@ -259,6 +263,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: themes
@@ -322,6 +327,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: services
@@ -385,6 +391,7 @@
   test_script:
   - cmd: dnu restore -f https://www.myget.org/F/aspnet-contrib/api/v3/index.json
   - ps: ./run-tests.ps1
+  - ps: ./run-jstests.ps1
   artifacts:
   - path: artifacts\bin\$(project_name)\$(configuration)\*.nupkg
     name: webapp

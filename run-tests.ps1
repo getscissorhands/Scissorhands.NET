@@ -1,4 +1,4 @@
-# This PowerShel script runs all test projects.
+# This PowerShell script runs all test projects.
 
 # Set the list of DNVM objects
 $dnvm1 = New-Object -TypeName PSObject -Property (@{ "Version" = "1.0.0-rc1-update1"; "Runtime" = "clr"; "Architecture" = "x86"; "OS" = "win" })
