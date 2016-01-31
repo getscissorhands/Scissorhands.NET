@@ -107,4 +107,31 @@ describe("There is a tick box right next to the slug field", function() {
       });
     });
   });
+
+  describe("When the tick box is checked and then unchecked", function() {
+    var defaultText, alternativeText;
+
+    beforeEach(function() {
+      defaultText = "Answer to the Ultimate Question of Life, the Universe, and Everything";
+      alternativeText = "The-snow-glows-white-on-the-mountain-tonight";
+    });
+
+    describe("Slug field", function() {
+      it("should get new slug using the current subject", function() {
+
+        // fill defaultText and get the result
+        $slugTrigger.val(defaultText).trigger('change');
+        var originalResult = $slugInput.val();
+
+        // action tick and update the slug, then untick
+        $slugCheckbox.trigger('click');
+        $slugInput.val(alternativeText);
+        $slugCheckbox.trigger('click');
+
+        var result = $slugInput.val();
+        expect(result).to.equal(originalResult);
+      });
+    })
+
+  });
 });
