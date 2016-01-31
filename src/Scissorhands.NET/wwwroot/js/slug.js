@@ -88,6 +88,9 @@
 
     function clickCheckbox() {
       ele.prop('readonly', !$(this).is(':checked'));
+      if (!$(this).is(':checked')) {
+        trigger.trigger('change');
+      }
     }
   };
 
