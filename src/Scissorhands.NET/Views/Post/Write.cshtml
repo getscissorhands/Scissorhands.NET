@@ -18,9 +18,14 @@
                 <label asp-for="Slug"></label>
                 <div class="input-group">
                     <div class="input-group-addon">@Model.SlugPrefix/</div>
-                    <input class="form-control" asp-for="Slug"/>
+                    <input trigger-field="Title" lock-checkbox="SlugEdit"  class="form-control slug-input" asp-for="Slug"/>
                     <div class="input-group-addon">.html</div>
                 </div>
+            </div>
+            <div class="checkbox">
+                <label>
+                    <input type="checkbox" id="SlugEdit"> Edit Slug
+                </label>
             </div>
             <div class="form-group">
                 <label asp-for="Author"></label>
@@ -64,5 +69,7 @@
                 }
             });
         });
+        
+        SlugAutofill.globalInit();
     </script>
 }
