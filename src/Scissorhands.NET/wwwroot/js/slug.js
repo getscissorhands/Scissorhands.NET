@@ -76,6 +76,7 @@
 
     // initialize the events
     trigger.on('change', updateSlug);
+    trigger.on('keyup', updateSlug);
     lock.on('change', clickCheckbox);
     lock.on('click', clickCheckbox);
 
