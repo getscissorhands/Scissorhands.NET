@@ -55,7 +55,14 @@
 </div>
 
 @section scripts {
-    <script type="text/javascript">
+    <environment names="Development">
+        <script src="~/js/slug.js" asp-append-version="true"></script>
+    </environment>
+    <environment names="Staging,Production">
+        <script src="~/js/slug.min.js" asp-append-version="true"></script>
+    </environment>
+
+    <script>
         $("#Body").keyup(function() {
             var markdown = $("#Body").val();
             $.ajax({
