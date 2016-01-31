@@ -57,34 +57,34 @@ describe("There is a tick box right next to the slug field", function() {
         var text = 'Hello World';
         $slugTrigger.val(text).trigger('change');
         var result = $slugInput.val();
-        expect(result).to.equal('Hello-World');
+        expect(result).to.equal('hello-world');
       });
 
       it('should be kept the Underscores(_)', function() {
         var text = 'Hello_World';
         $slugTrigger.val(text).trigger('change');
         var result = $slugInput.val();
-        expect(result).to.equal('Hello_World');
+        expect(result).to.equal('hello_world');
       });
 
       it('should be kept the Hypens(-)', function() {
         var text = 'He-llo-Worl-d';
         $slugTrigger.val(text).trigger('change');
         var result = $slugInput.val();
-        expect(result).to.equal('He-llo-Worl-d');
+        expect(result).to.equal('he-llo-worl-d');
       });
 
       it('should be dropped all other special chararaters', function() {
         var text = 'He@-l$lo-#Wo!rl@-d';
         $slugTrigger.val(text).trigger('change');
         var result = $slugInput.val();
-        expect(result).to.equal('He-llo-Worl-d');
+        expect(result).to.equal('he-llo-worl-d');
       });
     });
   });
 
   describe("When the tick box is checked", function() {
-    var defaultText = 'He-llo-Worl-d';
+    var defaultText = 'he-llo-worl-d';
 
     beforeEach(function() {
       $slugTrigger.val(defaultText).trigger('change');
@@ -124,7 +124,7 @@ describe("There is a tick box right next to the slug field", function() {
 
     beforeEach(function() {
       defaultText = "Answer to the Ultimate Question of Life, the Universe, and Everything";
-      alternativeText = "The-snow-glows-white-on-the-mountain-tonight";
+      alternativeText = "the-snow-glows-white-on-the-mountain-tonight";
     });
 
     describe("Slug field", function() {

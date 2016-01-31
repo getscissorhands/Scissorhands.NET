@@ -16,7 +16,7 @@
   /**
    * Add a Parse Rule
    * @param {RegExp|string} rule - a rule of RegExp for parsing
-   * @param {string} replace - a new text for replacement
+   * @param {string|function} replace - a new text for replacement
    */
   SlugAutofill.addParseRule = function(rule, replace) {
     ParseRules.push(function(text) {
@@ -39,7 +39,7 @@
   // add basic rules for parse
   SlugAutofill.addParseRule(/ /gi, '-');
   SlugAutofill.addParseRule(/[^\w\s\-\_]/gi, '');
-
+  SlugAutofill.addParseRule(/[A-Z]/gi, function(v) { return v.toLowerCase(); });
 
   /**
    * initialize Slug Autofill elements
