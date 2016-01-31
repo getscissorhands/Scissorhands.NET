@@ -80,7 +80,9 @@
     lock.on('click', clickCheckbox);
 
     function updateSlug() {
-      ele.val(SlugAutofill.parse($(this).val()));
+      if (ele.prop('readonly')) {
+        ele.val(SlugAutofill.parse($(this).val()));
+      }
     }
 
     function clickCheckbox() {
