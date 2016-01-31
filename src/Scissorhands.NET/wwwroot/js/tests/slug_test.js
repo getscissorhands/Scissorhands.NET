@@ -106,6 +106,17 @@ describe("There is a tick box right next to the slug field", function() {
         expect(result).to.equal(defaultText);
       });
     });
+    describe("Subject field", function() {
+      it("should not update the slug field", function() {
+        var deniableSubject = "It shouldn't be here.";
+        var deniableResult = SlugAutofill.parse(deniableSubject);
+
+        $slugTrigger.val(deniableSubject).trigger('change');
+
+        var result = $slugInput.val();
+        expect(result).to.not.equal(deniableResult);
+      });
+    });
   });
 
   describe("When the tick box is checked and then unchecked", function() {
