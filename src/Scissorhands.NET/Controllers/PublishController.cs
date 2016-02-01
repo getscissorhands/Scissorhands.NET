@@ -30,15 +30,8 @@ namespace Scissorhands.WebApp.Controllers
 
             model.DatePublished = DateTime.Now;
 
-            var vm = new PostPublishViewModel
-                         {
-                             Theme = this.Metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Publish),
-                         };
+            var vm = this._viewModelService.CreatePostPublishViewModel();
+            vm.Page = this.GetPageMetadata(model, PublishMode.Publish);
 
             var publishedpath = await this._publishService.PublishPostAsync(model, this.Request).ConfigureAwait(false);
             vm.MarkdownPath = publishedpath.Markdown;

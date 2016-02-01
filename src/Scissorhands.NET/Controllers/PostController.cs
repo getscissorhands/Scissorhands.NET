@@ -17,6 +17,7 @@ namespace Scissorhands.WebApp.Controllers
     {
         private readonly IMarkdownHelper _markdownHelper;
         private readonly IThemeService _themeService;
+        private readonly IViewModelService _viewModelService;
         private readonly IPublishService _publishService;
 
         /// <summary>
@@ -26,8 +27,9 @@ namespace Scissorhands.WebApp.Controllers
         /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
         /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
         /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
+        /// <param name="viewModelService"><see cref="IViewModelService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
+        public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IThemeService themeService, IViewModelService viewModelService, IPublishService publishService)
             : base(metadata, requestHelper)
         {
             if (markdownHelper == null)
@@ -43,6 +45,13 @@ namespace Scissorhands.WebApp.Controllers
             }
 
             this._themeService = themeService;
+
+            if (viewModelService == null)
+            {
+                throw new ArgumentNullException(nameof(viewModelService));
+            }
+
+            this._viewModelService = viewModelService;
 
             if (publishService == null)
             {

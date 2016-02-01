@@ -31,18 +31,9 @@ namespace Scissorhands.WebApp.Controllers
 
             model.DatePublished = DateTime.Now;
 
-            var vm = new PostPreviewViewModel()
-                         {
-                             Theme = this.Metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Preview),
-                         };
-
-            var parsedHtml = this._markdownHelper.Parse(model.Body);
-            vm.Html = parsedHtml;
+            var vm = this._viewModelService.CreatePostPreviewViewModel();
+            vm.Page = this.GetPageMetadata(model, PublishMode.Preview);
+            vm.Html = this._markdownHelper.Parse(model.Body);
 
             return this.View(vm);
         }
