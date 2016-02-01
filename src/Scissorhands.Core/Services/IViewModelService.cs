@@ -2,6 +2,7 @@
 
 using Microsoft.AspNet.Http;
 
+using Scissorhands.Models.Settings;
 using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Services
@@ -36,5 +37,13 @@ namespace Scissorhands.Services
         /// <returns>Returns the <see cref="PostParseViewModel"/> instance created.</returns>
         PostParseViewModel CreatePostParseViewModel();
 
+        /// <summary>
+        /// Gets the <see cref="PageMetadataSettings"/> instance.
+        /// </summary>
+        /// <param name="model"><see cref="PostFormViewModel"/> instance.</param>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <param name="publishMode"><see cref="PublishMode"/> value.</param>
+        /// <returns>Returns the <see cref="PageMetadataSettings"/> instance.</returns>
+        PageMetadataSettings CreatePageMetadata(PostFormViewModel model, HttpRequest request, PublishMode publishMode);
     }
 }

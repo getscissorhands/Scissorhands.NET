@@ -23,7 +23,7 @@ namespace Scissorhands.Services
         private const string PostPublishHtml = "/admin/post/publish/html";
 
         private readonly WebAppSettings _settings;
-        private readonly SiteMetadataSettings _metadata;
+        private readonly ISiteMetadataSettings _metadata;
         private readonly IFileHelper _fileHelper;
         private readonly IHttpRequestHelper _requestHelper;
 
@@ -33,10 +33,10 @@ namespace Scissorhands.Services
         /// Initializes a new instance of the <see cref="PublishService"/> class.
         /// </summary>
         /// <param name="settings"><see cref="WebAppSettings"/> instance.</param>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
+        /// <param name="metadata"><see cref="ISiteMetadataSettings"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
         /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
-        public PublishService(WebAppSettings settings, SiteMetadataSettings metadata, IFileHelper fileHelper, IHttpRequestHelper requestHelper)
+        public PublishService(WebAppSettings settings, ISiteMetadataSettings metadata, IFileHelper fileHelper, IHttpRequestHelper requestHelper)
         {
             if (settings == null)
             {

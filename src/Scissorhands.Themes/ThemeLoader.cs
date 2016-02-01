@@ -19,7 +19,7 @@ namespace Scissorhands.Themes
     {
         private const string Config = "_config.json";
 
-        private readonly SiteMetadataSettings _metadata;
+        private readonly ISiteMetadataSettings _metadata;
         private readonly IFileHelper _fileHelper;
 
         private bool _disposed;
@@ -27,9 +27,9 @@ namespace Scissorhands.Themes
         /// <summary>
         /// Initializes a new instance of the <see cref="ThemeLoader"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
+        /// <param name="metadata"><see cref="ISiteMetadataSettings"/> instance.</param>
         /// <param name="fileHelper"><see cref="IFileHelper"/> instance.</param>
-        public ThemeLoader(SiteMetadataSettings metadata, IFileHelper fileHelper)
+        public ThemeLoader(ISiteMetadataSettings metadata, IFileHelper fileHelper)
         {
             if (metadata == null)
             {

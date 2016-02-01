@@ -32,9 +32,9 @@ namespace Scissorhands.WebApp.Controllers
             model.DatePublished = DateTime.Now;
 
             var vm = this._viewModelService.CreatePostPreviewViewModel();
-            vm.Page = this.GetPageMetadata(model, PublishMode.Preview);
+            vm.Page = this._viewModelService.CreatePageMetadata(model, this.Request, PublishMode.Preview);
 
-            var parsedHtml = this._markdownHelper.Parse(model.Body);
+            var parsedHtml = this._markdownService.Parse(model.Body);
             vm.Html = parsedHtml;
 
             return this.View(vm);
@@ -49,7 +49,7 @@ namespace Scissorhands.WebApp.Controllers
         [HttpPost]
         public IActionResult PreviewHtml([FromBody] MarkdownPreviewRequest request)
         {
-            var parsedHtml = this._markdownHelper.Parse(request.Value);
+            var parsedHtml = this._markdownService.Parse(request.Value);
             var response = new MarkdownPreviewResponse() { Value = parsedHtml };
             return new JsonResult(response);
         }

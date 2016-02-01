@@ -2,8 +2,6 @@
 
 using Microsoft.AspNet.Mvc;
 
-using Scissorhands.Helpers;
-using Scissorhands.Models.Settings;
 using Scissorhands.Services;
 
 namespace Scissorhands.WebApp.Controllers
@@ -14,27 +12,24 @@ namespace Scissorhands.WebApp.Controllers
     [Route("admin/post")]
     public partial class PostController : BaseController
     {
-        private readonly IMarkdownHelper _markdownHelper;
+        private readonly IMarkdownService _markdownService;
         private readonly IViewModelService _viewModelService;
         private readonly IPublishService _publishService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
-        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
+        /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
         /// <param name="viewModelService"><see cref="IViewModelService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IViewModelService viewModelService, IPublishService publishService)
-            : base(metadata, requestHelper)
+        public PostController(IMarkdownService markdownService, IViewModelService viewModelService, IPublishService publishService)
         {
-            if (markdownHelper == null)
+            if (markdownService == null)
             {
-                throw new ArgumentNullException(nameof(markdownHelper));
+                throw new ArgumentNullException(nameof(markdownService));
             }
 
-            this._markdownHelper = markdownHelper;
+            this._markdownService = markdownService;
 
             if (viewModelService == null)
             {
@@ -68,7 +63,6 @@ namespace Scissorhands.WebApp.Controllers
         public IActionResult Write()
         {
             var vm = this._viewModelService.CreatePostFormViewModel(this.Request);
-            vm.Author = this.GetDefaultAuthorName();
 
             return this.View(vm);
         }

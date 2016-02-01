@@ -9,15 +9,15 @@ namespace Scissorhands.Helpers
     /// </summary>
     public class ThemeHelper : IThemeHelper
     {
-        private readonly SiteMetadataSettings _metadata;
+        private readonly ISiteMetadataSettings _metadata;
 
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ThemeHelper"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        public ThemeHelper(SiteMetadataSettings metadata)
+        /// <param name="metadata"><see cref="ISiteMetadataSettings"/> instance.</param>
+        public ThemeHelper(ISiteMetadataSettings metadata)
         {
             if (metadata == null)
             {

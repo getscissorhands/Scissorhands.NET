@@ -39,13 +39,13 @@ namespace Scissorhands.WebApp.Tests.Fixtures
             this.RequestHelper.Setup(p => p.GetBaseUri(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(this.BaseUri);
             this.RequestHelper.Setup(p => p.GetSlugPrefix(It.IsAny<HttpRequest>(), It.IsAny<PageType?>())).Returns(this.SlugPrefix);
 
-            this.MarkdownHelper = new Mock<IMarkdownHelper>();
+            this.MarkdownService = new Mock<IMarkdownService>();
 
             this.ViewModelService = new Mock<IViewModelService>();
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.RequestHelper.Object, this.MarkdownHelper.Object, this.ViewModelService.Object, this.PublishService.Object);
+            this.Controller = new PostController(this.MarkdownService.Object, this.ViewModelService.Object, this.PublishService.Object);
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
@@ -90,9 +90,9 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public Mock<IHttpRequestHelper> RequestHelper { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
+        /// Gets the <see cref="Mock{IMarkdownService}"/> instance.
         /// </summary>
-        public Mock<IMarkdownHelper> MarkdownHelper { get; }
+        public Mock<IMarkdownService> MarkdownService { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IViewModelService}"/> instance.

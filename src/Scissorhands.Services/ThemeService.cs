@@ -14,7 +14,7 @@ namespace Scissorhands.Services
     /// </summary>
     public class ThemeService : IThemeService
     {
-        private readonly SiteMetadataSettings _metadata;
+        private readonly ISiteMetadataSettings _metadata;
         private readonly IDictionary<string, List<string>> _controllers;
 
         private bool _disposed;
@@ -22,8 +22,8 @@ namespace Scissorhands.Services
         /// <summary>
         /// Initializes a new instance of the <see cref="ThemeService"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        public ThemeService(SiteMetadataSettings metadata)
+        /// <param name="metadata"><see cref="ISiteMetadataSettings"/> instance.</param>
+        public ThemeService(ISiteMetadataSettings metadata)
         {
             if (metadata == null)
             {
