@@ -33,7 +33,9 @@ namespace Scissorhands.WebApp.Controllers
 
             var vm = this._viewModelService.CreatePostPreviewViewModel();
             vm.Page = this.GetPageMetadata(model, PublishMode.Preview);
-            vm.Html = this._markdownHelper.Parse(model.Body);
+
+            var parsedHtml = this._markdownHelper.Parse(model.Body);
+            vm.Html = parsedHtml;
 
             return this.View(vm);
         }

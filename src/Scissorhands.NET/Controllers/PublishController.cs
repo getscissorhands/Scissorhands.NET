@@ -54,15 +54,8 @@ namespace Scissorhands.WebApp.Controllers
                 return new HttpStatusCodeResult((int)HttpStatusCode.BadRequest);
             }
 
-            var vm = new PostParseViewModel()
-                         {
-                             Theme = this.Metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Publish),
-                         };
+            var vm = this._viewModelService.CreatePostParseViewModel();
+            vm.Page = this.GetPageMetadata(model, PublishMode.Publish);
 
             var parsedHtml = this._markdownHelper.Parse(model.Body);
             vm.Html = parsedHtml;

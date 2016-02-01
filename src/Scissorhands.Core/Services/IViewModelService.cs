@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Microsoft.AspNet.Http;
+
 using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.Services
@@ -9,6 +11,13 @@ namespace Scissorhands.Services
     /// </summary>
     public interface IViewModelService : IDisposable
     {
+        /// <summary>
+        /// Creates a new instance of the <see cref="PostFormViewModel"/> class.
+        /// </summary>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="PostFormViewModel"/> instance created.</returns>
+        PostFormViewModel CreatePostFormViewModel(HttpRequest request);
+
         /// <summary>
         /// Creates a new instance of the <see cref="PostPreviewViewModel"/> class.
         /// </summary>
@@ -20,5 +29,12 @@ namespace Scissorhands.Services
         /// </summary>
         /// <returns>Returns the <see cref="PostPublishViewModel"/> instance created.</returns>
         PostPublishViewModel CreatePostPublishViewModel();
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PostParseViewModel"/> class.
+        /// </summary>
+        /// <returns>Returns the <see cref="PostParseViewModel"/> instance created.</returns>
+        PostParseViewModel CreatePostParseViewModel();
+
     }
 }

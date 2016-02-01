@@ -1,5 +1,7 @@
 ﻿using System;
 
+using Microsoft.AspNet.Http;
+
 using Scissorhands.Helpers;
 using Scissorhands.Models.Settings;
 using Scissorhands.ViewModels.Post;
@@ -12,6 +14,7 @@ namespace Scissorhands.Services
     public class ViewModelService : IViewModelService
     {
         private readonly SiteMetadataSettings _metadata;
+        private readonly IHttpRequestHelper _requestHelper;
         private readonly IThemeHelper _themeHelper;
 
         private bool _disposed;
@@ -20,8 +23,9 @@ namespace Scissorhands.Services
         /// Initializes a new instance of the <see cref="ViewModelService"/> class.
         /// </summary>
         /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
+        /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
         /// <param name="themeHelper"><see cref="IThemeHelper"/> instance.</param>
-        public ViewModelService(SiteMetadataSettings metadata, IThemeHelper themeHelper)
+        public ViewModelService(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IThemeHelper themeHelper)
         {
             if (metadata == null)
             {
@@ -30,12 +34,33 @@ namespace Scissorhands.Services
 
             this._metadata = metadata;
 
+            if (requestHelper == null)
+            {
+                throw new ArgumentNullException(nameof(requestHelper));
+            }
+
+            this._requestHelper = requestHelper;
+
             if (themeHelper == null)
             {
                 throw new ArgumentNullException(nameof(themeHelper));
             }
 
             this._themeHelper = themeHelper;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PostFormViewModel"/> class.
+        /// </summary>
+        /// <param name="request"><see cref="HttpRequest"/> instance.</param>
+        /// <returns>Returns the <see cref="PostFormViewModel"/> instance created.</returns>
+        public PostFormViewModel CreatePostFormViewModel(HttpRequest request)
+        {
+            var vm = new PostFormViewModel()
+                         {
+                             SlugPrefix = this._requestHelper.GetSlugPrefix(request),
+                         };
+            return vm;
         }
 
         /// <summary>
@@ -62,6 +87,23 @@ namespace Scissorhands.Services
         public PostPublishViewModel CreatePostPublishViewModel()
         {
             var vm = new PostPublishViewModel
+                         {
+                             Theme = this._metadata.Theme,
+                             HeadPartialViewPath = this._themeHelper.GetHeadPartialViewPath(this._metadata.Theme),
+                             HeaderPartialViewPath = this._themeHelper.GetHeaderPartialViewPath(this._metadata.Theme),
+                             PostPartialViewPath = this._themeHelper.GetPostPartialViewPath(this._metadata.Theme),
+                             FooterPartialViewPath = this._themeHelper.GetFooterPartialViewPath(this._metadata.Theme),
+                         };
+            return vm;
+        }
+
+        /// <summary>
+        /// Creates a new instance of the <see cref="PostParseViewModel"/> class.
+        /// </summary>
+        /// <returns>Returns the <see cref="PostParseViewModel"/> instance created.</returns>
+        public PostParseViewModel CreatePostParseViewModel()
+        {
+            var vm = new PostParseViewModel()
                          {
                              Theme = this._metadata.Theme,
                              HeadPartialViewPath = this._themeHelper.GetHeadPartialViewPath(this._metadata.Theme),

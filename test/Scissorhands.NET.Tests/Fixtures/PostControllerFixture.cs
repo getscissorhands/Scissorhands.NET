@@ -41,13 +41,11 @@ namespace Scissorhands.WebApp.Tests.Fixtures
 
             this.MarkdownHelper = new Mock<IMarkdownHelper>();
 
-            this.ThemeService = new Mock<IThemeService>();
-
             this.ViewModelService = new Mock<IViewModelService>();
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.RequestHelper.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.ViewModelService.Object, this.PublishService.Object);
+            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.RequestHelper.Object, this.MarkdownHelper.Object, this.ViewModelService.Object, this.PublishService.Object);
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
@@ -97,10 +95,8 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public Mock<IMarkdownHelper> MarkdownHelper { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{ThemeService}"/>.
+        /// Gets the <see cref="Mock{IViewModelService}"/> instance.
         /// </summary>
-        public Mock<IThemeService> ThemeService { get; }
-
         public Mock<IViewModelService> ViewModelService { get; }
 
         /// <summary>
