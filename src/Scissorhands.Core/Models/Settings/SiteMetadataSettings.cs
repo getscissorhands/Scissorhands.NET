@@ -70,6 +70,11 @@ namespace Scissorhands.Models.Settings
         /// <returns>Returns the <see cref="Author"/> instance.</returns>
         public Author GetAuthor(string name)
         {
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                return null;
+            }
+
             var author = this.Authors
                              .SingleOrDefault(p => p.Name.Equals(name, StringComparison.CurrentCultureIgnoreCase));
             return author;
