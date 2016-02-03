@@ -28,7 +28,7 @@ namespace Scissorhands.Themes.Tests.Fixtures
             this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
             this.FeedTypes = new List<FeedType>() { FeedType.Rss };
 
-            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings = new Mock<ISiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
             this.SiteMetadataSettings.SetupGet(p => p.BaseUrl).Returns(this.BaseUrl);
             this.SiteMetadataSettings.SetupGet(p => p.BasePath).Returns(this.BasePath);
@@ -68,9 +68,9 @@ namespace Scissorhands.Themes.Tests.Fixtures
         public List<FeedType> FeedTypes { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// Gets the <see cref="Mock{ISiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+        public Mock<ISiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

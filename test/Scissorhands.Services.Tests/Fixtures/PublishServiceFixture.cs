@@ -28,7 +28,7 @@ namespace Scissorhands.Services.Tests.Fixtures
             this.WebAppSettings.SetupGet(p => p.MarkdownPath).Returns("/posts");
             this.WebAppSettings.SetupGet(p => p.HtmlPath).Returns("/posts");
 
-            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings = new Mock<ISiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
             this.FileHelper = new Mock<IFileHelper>();
@@ -62,9 +62,9 @@ namespace Scissorhands.Services.Tests.Fixtures
         public Mock<WebAppSettings> WebAppSettings { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// Gets the <see cref="Mock{ISiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+        public Mock<ISiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IFileHelper}"/> instance.

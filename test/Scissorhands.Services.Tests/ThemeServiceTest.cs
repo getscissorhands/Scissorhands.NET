@@ -20,7 +20,7 @@ namespace Scissorhands.Services.Tests
     public class ThemeServiceTest : IClassFixture<ThemeServiceFixture>
     {
         private readonly string _defaultThemeName;
-        private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<ISiteMetadataSettings> _metadata;
         private readonly IThemeService _service;
         private readonly RouteData _routeData;
 

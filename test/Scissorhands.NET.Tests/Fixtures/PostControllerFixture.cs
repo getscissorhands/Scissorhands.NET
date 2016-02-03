@@ -27,17 +27,6 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public PostControllerFixture()
         {
             this.DefaultThemeName = "default";
-            this.SlugPrefix = "http://localhost:5080/posts/2016/01/01";
-            this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
-            this.BaseUri = new Uri("http://localhost:5080");
-
-            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
-            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
-            this.SiteMetadataSettings.SetupGet(p => p.Authors).Returns(this.Authors);
-
-            this.RequestHelper = new Mock<IHttpRequestHelper>();
-            this.RequestHelper.Setup(p => p.GetBaseUri(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(this.BaseUri);
-            this.RequestHelper.Setup(p => p.GetSlugPrefix(It.IsAny<HttpRequest>(), It.IsAny<PageType?>())).Returns(this.SlugPrefix);
 
             this.MarkdownService = new Mock<IMarkdownService>();
 
@@ -63,31 +52,6 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         /// Gets or sets the theme name.
         /// </summary>
         public string DefaultThemeName { get; set; }
-
-        /// <summary>
-        /// Gets or sets the slug prefix.
-        /// </summary>
-        public string SlugPrefix { get; set; }
-
-        /// <summary>
-        /// Gets or sets the list of <see cref="Author"/> instances.
-        /// </summary>
-        public List<Author> Authors { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Uri"/> instance.
-        /// </summary>
-        public Uri BaseUri { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
-        /// </summary>
-        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{IHttpRequestHelper}"/> instance.
-        /// </summary>
-        public Mock<IHttpRequestHelper> RequestHelper { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IMarkdownService}"/> instance.

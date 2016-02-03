@@ -25,7 +25,7 @@ namespace Scissorhands.Helpers.Tests
     {
         private readonly string _baseUrl;
         private readonly string _basePath;
-        private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<ISiteMetadataSettings> _metadata;
         private readonly IHttpRequestHelper _httpRequestHelper;
         private readonly Mock<HttpRequest> _httpRequest;
 
