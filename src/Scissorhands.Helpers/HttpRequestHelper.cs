@@ -164,16 +164,9 @@ namespace Scissorhands.Helpers
                 throw new ArgumentNullException(nameof(model));
             }
 
-            var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8)
-            {
-                Headers =
-                                      {
-                                          ContentType = new MediaTypeHeaderValue(MediaType)
-                                                            {
-                                                                CharSet = CharSet
-                                                            }
-                                      }
-            };
+            var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8);
+            content.Headers.ContentType = new MediaTypeHeaderValue(MediaType) { CharSet = CharSet };
+
             return content;
         }
 
