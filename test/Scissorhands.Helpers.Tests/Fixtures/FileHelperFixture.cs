@@ -1,6 +1,8 @@
 ﻿using System;
 using System.IO;
+
 using Microsoft.Extensions.PlatformAbstractions;
+
 using Moq;
 
 using Scissorhands.Models.Settings;
@@ -31,7 +33,7 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         /// <summary>
         /// Gets the appliation base path
         /// </summary>
-        public String ApplicationBasePath { get; } 
+        public string ApplicationBasePath { get; } 
 
         /// <summary>
         /// Gets the <see cref="Mock{WebAppSettings}"/> instance.
@@ -39,7 +41,7 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         public Mock<WebAppSettings> WebAppSettings { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{ApplicationEnvironment}"/> instance.
+        /// Gets the <see cref="Mock{IApplicationEnvironment}"/> instance.
         /// </summary>
         public Mock<IApplicationEnvironment> ApplicationEnvironment { get; }
 

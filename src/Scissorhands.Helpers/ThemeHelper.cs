@@ -91,7 +91,7 @@ namespace Scissorhands.Helpers
                 theme = this._metadata.Theme;
             }
 
-            var footer = $"~/Themes/{theme}/Shared/_Footer.cshtml";
+            var footer = $"~/Themes/{theme}/shared/_footer.cshtml";
             return footer;
         }
 

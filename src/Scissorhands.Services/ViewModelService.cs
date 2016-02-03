@@ -1,6 +1,7 @@
 ﻿using System;
 
 using Microsoft.AspNet.Http;
+
 using Scissorhands.Extensions;
 using Scissorhands.Helpers;
 using Scissorhands.Models.Settings;
