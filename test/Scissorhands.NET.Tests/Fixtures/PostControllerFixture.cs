@@ -27,25 +27,14 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public PostControllerFixture()
         {
             this.DefaultThemeName = "default";
-            this.SlugPrefix = "http://localhost:5080/posts/2016/01/01";
-            this.Authors = new List<Author>() { new Author() { Name = "Joe Bloggs", IsDefault = true } };
-            this.BaseUri = new Uri("http://localhost:5080");
 
-            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
-            this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
-            this.SiteMetadataSettings.SetupGet(p => p.Authors).Returns(this.Authors);
+            this.MarkdownService = new Mock<IMarkdownService>();
 
-            this.RequestHelper = new Mock<IHttpRequestHelper>();
-            this.RequestHelper.Setup(p => p.GetBaseUri(It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(this.BaseUri);
-            this.RequestHelper.Setup(p => p.GetSlugPrefix(It.IsAny<HttpRequest>(), It.IsAny<PageType?>())).Returns(this.SlugPrefix);
-
-            this.MarkdownHelper = new Mock<IMarkdownHelper>();
-
-            this.ThemeService = new Mock<IThemeService>();
+            this.ViewModelService = new Mock<IViewModelService>();
 
             this.PublishService = new Mock<IPublishService>();
 
-            this.Controller = new PostController(this.SiteMetadataSettings.Object, this.RequestHelper.Object, this.MarkdownHelper.Object, this.ThemeService.Object, this.PublishService.Object);
+            this.Controller = new PostController(this.MarkdownService.Object, this.ViewModelService.Object, this.PublishService.Object);
 
             this.ApplicationEnvironment = new Mock<IApplicationEnvironment>();
 
@@ -65,39 +54,14 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         public string DefaultThemeName { get; set; }
 
         /// <summary>
-        /// Gets or sets the slug prefix.
+        /// Gets the <see cref="Mock{IMarkdownService}"/> instance.
         /// </summary>
-        public string SlugPrefix { get; set; }
+        public Mock<IMarkdownService> MarkdownService { get; }
 
         /// <summary>
-        /// Gets or sets the list of <see cref="Author"/> instances.
+        /// Gets the <see cref="Mock{IViewModelService}"/> instance.
         /// </summary>
-        public List<Author> Authors { get; set; }
-
-        /// <summary>
-        /// Gets or sets the <see cref="Uri"/> instance.
-        /// </summary>
-        public Uri BaseUri { get; set; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
-        /// </summary>
-        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{IHttpRequestHelper}"/> instance.
-        /// </summary>
-        public Mock<IHttpRequestHelper> RequestHelper { get; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{IMarkdownHelper}"/> instance.
-        /// </summary>
-        public Mock<IMarkdownHelper> MarkdownHelper { get; }
-
-        /// <summary>
-        /// Gets the <see cref="Mock{ThemeService}"/>.
-        /// </summary>
-        public Mock<IThemeService> ThemeService { get; }
+        public Mock<IViewModelService> ViewModelService { get; }
 
         /// <summary>
         /// Gets the <see cref="Mock{IPublishService}"/> instance.

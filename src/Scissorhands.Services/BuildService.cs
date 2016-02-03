@@ -42,7 +42,7 @@ namespace Scissorhands.Services
         /// Builds all index pages including pagination.
         /// </summary>
         /// <returns>Returns the <see cref="Task"/>.</returns>
-        public async Task<string> BuildIndiciesAsync()
+        public Task<string> BuildIndiciesAsync()
         {
             throw new NotImplementedException();
         }
@@ -51,7 +51,7 @@ namespace Scissorhands.Services
         /// Builds all posts.
         /// </summary>
         /// <returns>Returns the <see cref="Task"/>.</returns>
-        public async Task<string> BuildPostsAsync()
+        public Task<string> BuildPostsAsync()
         {
             throw new NotImplementedException();
         }

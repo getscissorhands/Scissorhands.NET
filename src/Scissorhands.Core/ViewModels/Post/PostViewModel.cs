@@ -38,8 +38,8 @@ namespace Scissorhands.ViewModels.Post
         public PageMetadataSettings Page { get; set; }
 
         /// <summary>
-        /// Gets or sets the <see cref="SiteMetadataSettings"/> object.
+        /// Gets or sets the <see cref="ISiteMetadataSettings"/> object.
         /// </summary>
-        public SiteMetadataSettings Site { get; set; }
+        public ISiteMetadataSettings Site { get; set; }
     }
 }

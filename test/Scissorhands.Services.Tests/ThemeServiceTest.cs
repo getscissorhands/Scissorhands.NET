@@ -20,7 +20,7 @@ namespace Scissorhands.Services.Tests
     public class ThemeServiceTest : IClassFixture<ThemeServiceFixture>
     {
         private readonly string _defaultThemeName;
-        private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<ISiteMetadataSettings> _metadata;
         private readonly IThemeService _service;
         private readonly RouteData _routeData;
 
@@ -132,31 +132,6 @@ namespace Scissorhands.Services.Tests
 
             var layout = this._service.GetLayout(this._context);
             layout.Should().BeEquivalentTo($"~/Themes/{this._defaultThemeName}/shared/_layout.cshtml");
-        }
-
-        /// <summary>
-        /// Tests whether the method should return value or not.
-        /// </summary>
-        /// <param name="themeName">Theme name.</param>
-        [Theory]
-        [InlineData(null)]
-        [InlineData("")]
-        public void Given_NullThemeName_GetPostPartialViewPath_ShouldReturn_DefaultThemePostPath(string themeName)
-        {
-            var postpath = this._service.GetPostPartialViewPath(themeName);
-            postpath.Should().BeEquivalentTo($"~/themes/{this._defaultThemeName}/post/post.cshtml");
-        }
-
-        /// <summary>
-        /// Tests whether the method should return value or not.
-        /// </summary>
-        /// <param name="themeName">Theme name.</param>
-        [Theory]
-        [InlineData("test")]
-        public void Given_ThemeName_GetPostPartialViewPath_ShouldReturn_ThemePostPath(string themeName)
-        {
-            var postpath = this._service.GetPostPartialViewPath(themeName);
-            postpath.Should().BeEquivalentTo($"~/themes/{themeName}/post/post.cshtml");
         }
 
         private void SetViewContext(string controllerName, string actionName)

@@ -29,10 +29,8 @@ namespace Scissorhands.WebApp.Tests
     public class PostControllerTest : IClassFixture<PostControllerFixture>
     {
         private readonly string _defaultThemeName;
-        private readonly Mock<SiteMetadataSettings> _metadata;
-        private readonly Mock<IHttpRequestHelper> _requestHelper;
-        private readonly Mock<IMarkdownHelper> _markdownHelper;
-        private readonly Mock<IThemeService> _themeService;
+        private readonly Mock<IMarkdownService> _markdownService;
+        private readonly Mock<IViewModelService> _viewModelService;
         private readonly Mock<IPublishService> _publishService;
         private readonly PostController _controller;
 
@@ -50,10 +48,8 @@ namespace Scissorhands.WebApp.Tests
         public PostControllerTest(PostControllerFixture fixture)
         {
             this._defaultThemeName = fixture.DefaultThemeName;
-            this._metadata = fixture.SiteMetadataSettings;
-            this._requestHelper = fixture.RequestHelper;
-            this._markdownHelper = fixture.MarkdownHelper;
-            this._themeService = fixture.ThemeService;
+            this._markdownService = fixture.MarkdownService;
+            this._viewModelService = fixture.ViewModelService;
             this._publishService = fixture.PublishService;
             this._controller = fixture.Controller;
 
@@ -71,20 +67,13 @@ namespace Scissorhands.WebApp.Tests
         [Fact]
         public void Given_NullParameter_Constructor_ShouldThrow_ArgumentNullException()
         {
-            Action action1 = () => { var controller = new PostController(null, this._requestHelper.Object, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
-            action1.ShouldThrow<ArgumentNullException>();
-
-            Action action2 = () => { var controller = new PostController(this._metadata.Object, null, this._markdownHelper.Object, this._themeService.Object, this._publishService.Object); };
-            action2.ShouldThrow<ArgumentNullException>();
-
-
-            Action action3 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, null, this._themeService.Object, this._publishService.Object); };
+            Action action3 = () => { var controller = new PostController(null, this._viewModelService.Object, this._publishService.Object); };
             action3.ShouldThrow<ArgumentNullException>();
 
-            Action action4 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, this._markdownHelper.Object, null, this._publishService.Object); };
+            Action action4 = () => { var controller = new PostController(this._markdownService.Object, null, this._publishService.Object); };
             action4.ShouldThrow<ArgumentNullException>();
 
-            Action action5 = () => { var controller = new PostController(this._metadata.Object, this._requestHelper.Object, this._markdownHelper.Object, this._themeService.Object, null); };
+            Action action5 = () => { var controller = new PostController(this._markdownService.Object, this._viewModelService.Object, null); };
             action5.ShouldThrow<ArgumentNullException>();
         }
 
@@ -107,6 +96,9 @@ namespace Scissorhands.WebApp.Tests
         [Fact]
         public void Given_Write_ShouldReturn_ViewResult()
         {
+            var model = new PostFormViewModel();
+            this._viewModelService.Setup(p => p.CreatePostFormViewModel(It.IsAny<HttpRequest>())).Returns(model);
+
             var result = this._controller.Write() as ViewResult;
             result.Should().NotBeNull();
 
@@ -134,7 +126,12 @@ namespace Scissorhands.WebApp.Tests
         [InlineData("**Hello World**", "<p>Joe Bloggs</p>")]
         public void Given_Model_Preview_ShouldReturn_ViewResult(string markdown, string html)
         {
-            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+
+            var ppvm = new PostPreviewViewModel() { Theme = this._defaultThemeName };
+            var pms = new PageMetadataSettings();
+            this._viewModelService.Setup(p => p.CreatePostPreviewViewModel()).Returns(ppvm);
+            this._viewModelService.Setup(p => p.CreatePageMetadata(It.IsAny<PostFormViewModel>(), It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(pms);
 
             var model = new PostFormViewModel() { Title = "Title", Slug = "slug", Body = markdown };
 
@@ -176,6 +173,11 @@ namespace Scissorhands.WebApp.Tests
 
             this._controller.ActionContext = this._actionContext;
             this._controller.TempData = this._tempData.Object;
+
+            var ppvm = new PostPublishViewModel() { Theme = this._defaultThemeName };
+            var pms = new PageMetadataSettings();
+            this._viewModelService.Setup(p => p.CreatePostPublishViewModel()).Returns(ppvm);
+            this._viewModelService.Setup(p => p.CreatePageMetadata(It.IsAny<PostFormViewModel>(), It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(pms);
 
             var publishedpath = new PublishedPostPath() { Markdown = markdownpath, Html = htmlpath };
             this._publishService.Setup(p => p.PublishPostAsync(It.IsAny<PostFormViewModel>(), It.IsAny<HttpRequest>())).Returns(Task.FromResult(publishedpath));
@@ -222,7 +224,12 @@ namespace Scissorhands.WebApp.Tests
                                 Body = markdown
                             };
 
-            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+            this._markdownService.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+
+            var ppvm = new PostParseViewModel() { Theme = this._defaultThemeName };
+            var pms = new PageMetadataSettings();
+            this._viewModelService.Setup(p => p.CreatePostParseViewModel()).Returns(ppvm);
+            this._viewModelService.Setup(p => p.CreatePageMetadata(It.IsAny<PostFormViewModel>(), It.IsAny<HttpRequest>(), It.IsAny<PublishMode>())).Returns(pms);
 
             var result = this._controller.PublishHtml(model) as ViewResult;
             result.Should().NotBeNull();

@@ -38,6 +38,22 @@ namespace Scissorhands.Services
         }
 
         /// <summary>
+        /// Parses the Markdown string to HTML string.
+        /// </summary>
+        /// <param name="markdown">Markdown string.</param>
+        /// <returns>Returns HTML string parsed.</returns>
+        public string Parse(string markdown)
+        {
+            if (string.IsNullOrWhiteSpace(markdown))
+            {
+                return null;
+            }
+
+            var parsed = this._markdownHelper.Parse(markdown);
+            return parsed;
+        }
+
+        /// <summary>
         /// Converts the markdown file to HTML string.
         /// </summary>
         /// <param name="filepath">Fully qualified file path.</param>
@@ -55,7 +71,7 @@ namespace Scissorhands.Services
                 return null;
             }
 
-            var parsed = this._markdownHelper.Parse(markdown);
+            var parsed = this.Parse(markdown);
             return await Task.FromResult(parsed).ConfigureAwait(false);
         }
 

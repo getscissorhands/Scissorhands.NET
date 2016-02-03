@@ -59,6 +59,34 @@ namespace Scissorhands.Services.Tests
         }
 
         /// <summary>
+        /// Tests whether the Parse method should return <c>null</c> or not.
+        /// </summary>
+        /// <param name="markdown">Markdown value.</param>
+        [Theory]
+        [InlineData(null)]
+        [InlineData("")]
+        public void Given_NullParameter_Parse_ShouldReturn_Null(string markdown)
+        {
+            var result = this._service.Parse(markdown);
+            result.Should().BeNullOrWhiteSpace();
+        }
+
+        /// <summary>
+        /// Tests whether the Parse method should return parsed HTML or not.
+        /// </summary>
+        /// <param name="markdown">Markdown value.</param>
+        /// <param name="html">HTML value.</param>
+        [Theory]
+        [InlineData("**Hello World**", "<strong>Hello World</strong>")]
+        public void Given_NullParameter_Parse_ShouldReturn_Html(string markdown, string html)
+        {
+            this._markdownHelper.Setup(p => p.Parse(It.IsAny<string>())).Returns(html);
+
+            var result = this._service.Parse(markdown);
+            result.Should().BeEquivalentTo(html);
+        }
+
+        /// <summary>
         /// Tests whether the given file path returns null or not.
         /// </summary>
         /// <param name="filepath">Fully qualified file path.</param>

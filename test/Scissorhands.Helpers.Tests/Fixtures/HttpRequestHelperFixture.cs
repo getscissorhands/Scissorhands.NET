@@ -23,7 +23,7 @@ namespace Scissorhands.Helpers.Tests.Fixtures
             this.BaseUrl = "http://localhost:5080";
             this.BasePath = "/";
 
-            this.SiteMetadataSettings = new Mock<SiteMetadataSettings>();
+            this.SiteMetadataSettings = new Mock<ISiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.BaseUrl).Returns(this.BaseUrl);
             this.SiteMetadataSettings.SetupGet(p => p.BasePath).Returns(this.BasePath);
 
@@ -43,9 +43,9 @@ namespace Scissorhands.Helpers.Tests.Fixtures
         public string BasePath { get; }
 
         /// <summary>
-        /// Gets the <see cref="Mock{SiteMetadataSettings}"/> instance.
+        /// Gets the <see cref="Mock{ISiteMetadataSettings}"/> instance.
         /// </summary>
-        public Mock<SiteMetadataSettings> SiteMetadataSettings { get; }
+        public Mock<ISiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
         /// Gets the <see cref="HttpClientHelper"/> instance.

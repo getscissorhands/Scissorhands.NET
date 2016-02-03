@@ -49,14 +49,28 @@ namespace Scissorhands.WebApp.Tests.Fixtures
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
         /// </summary>
-        public virtual void Dispose()
+        public void Dispose()
+        {
+            this.Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
+        /// </summary>
+        /// <param name="disposing">Value that checks whether to dispose managed resources or not.</param>
+        protected virtual void Dispose(bool disposing)
         {
             if (this._disposed)
             {
                 return;
             }
 
-            this.Controller.Dispose();
+            if (disposing)
+            {
+                this.Controller.Dispose();
+                this.ActionContext = null;
+            }
 
             this._disposed = true;
         }

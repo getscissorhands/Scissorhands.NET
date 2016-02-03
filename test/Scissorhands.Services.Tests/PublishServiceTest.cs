@@ -30,7 +30,7 @@ namespace Scissorhands.Services.Tests
     {
         private readonly string _defaultThemeName;
         private readonly Mock<WebAppSettings> _settings;
-        private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<ISiteMetadataSettings> _metadata;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly Mock<IHttpRequestHelper> _httpRequestHelper;
         private readonly IPublishService _service;
@@ -38,11 +38,6 @@ namespace Scissorhands.Services.Tests
         private readonly string _filepath;
         private readonly Mock<HttpRequest> _request;
 
-        private readonly string _title;
-        private readonly string _slug;
-        private readonly string _author;
-        private readonly DateTime _datePublished;
-        private readonly List<string> _tags;
         private readonly Mock<PublishedMetadata> _publishedMetadata;
 
         /// <summary>
@@ -61,11 +56,6 @@ namespace Scissorhands.Services.Tests
             this._filepath = $"{Path.GetTempPath()}/home/scissorhands.net/wwwroot/posts".Replace('/', Path.DirectorySeparatorChar);
             this._request = new Mock<HttpRequest>();
 
-            this._title = fixture.Title;
-            this._slug = fixture.Slug;
-            this._author = fixture.Author;
-            this._datePublished = fixture.DatePublished;
-            this._tags = fixture.Tags;
             this._publishedMetadata = fixture.PublishedMetadata;
         }
 

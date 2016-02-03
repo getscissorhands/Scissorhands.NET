@@ -31,17 +31,10 @@ namespace Scissorhands.WebApp.Controllers
 
             model.DatePublished = DateTime.Now;
 
-            var vm = new PostPreviewViewModel()
-                         {
-                             Theme = this.Metadata.Theme,
-                             HeadPartialViewPath = this._themeService.GetHeadPartialViewPath(this.Metadata.Theme),
-                             HeaderPartialViewPath = this._themeService.GetHeaderPartialViewPath(this.Metadata.Theme),
-                             PostPartialViewPath = this._themeService.GetPostPartialViewPath(this.Metadata.Theme),
-                             FooterPartialViewPath = this._themeService.GetFooterPartialViewPath(this.Metadata.Theme),
-                             Page = this.GetPageMetadata(model, PublishMode.Preview),
-                         };
+            var vm = this._viewModelService.CreatePostPreviewViewModel();
+            vm.Page = this._viewModelService.CreatePageMetadata(model, this.Request, PublishMode.Preview);
 
-            var parsedHtml = this._markdownHelper.Parse(model.Body);
+            var parsedHtml = this._markdownService.Parse(model.Body);
             vm.Html = parsedHtml;
 
             return this.View(vm);
@@ -56,7 +49,7 @@ namespace Scissorhands.WebApp.Controllers
         [HttpPost]
         public IActionResult PreviewHtml([FromBody] MarkdownPreviewRequest request)
         {
-            var parsedHtml = this._markdownHelper.Parse(request.Value);
+            var parsedHtml = this._markdownService.Parse(request.Value);
             var response = new MarkdownPreviewResponse() { Value = parsedHtml };
             return new JsonResult(response);
         }

@@ -12,6 +12,7 @@
       <Value>instagram</Value>
       <Value>linkedin</Value>
       <Value>github</Value>
+      <Value>viewmodel</Value>
     </CollectionProperty>
     <StringProperty Name="Culture">en-GB</StringProperty>
   </GlobalSettings>

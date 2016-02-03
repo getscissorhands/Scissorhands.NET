@@ -47,8 +47,8 @@ namespace Scissorhands.WebApp.Configs
             builder.RegisterInstance(env).SingleInstance();
             builder.RegisterInstance(appEnv).SingleInstance();
             builder.RegisterInstance(configuration.Get<Logging>("Logging")).SingleInstance();
+            builder.RegisterInstance(configuration.Get<SiteMetadataSettings>("SiteMetadataSettings")).As<ISiteMetadataSettings>().SingleInstance();
             builder.RegisterInstance(configuration.Get<WebAppSettings>("WebAppSettings")).SingleInstance();
-            builder.RegisterInstance(configuration.Get<SiteMetadataSettings>("SiteMetadataSettings")).SingleInstance();
         }
 
         private static void RegisterLoaders(ContainerBuilder builder)
@@ -61,6 +61,7 @@ namespace Scissorhands.WebApp.Configs
             builder.RegisterType<FileHelper>().As<IFileHelper>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<HttpRequestHelper>().As<IHttpRequestHelper>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<MarkdownHelper>().As<IMarkdownHelper>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<ThemeHelper>().As<IThemeHelper>().PropertiesAutowired().InstancePerLifetimeScope();
         }
 
         private static void RegisterServices(ContainerBuilder builder)
@@ -69,6 +70,7 @@ namespace Scissorhands.WebApp.Configs
             builder.RegisterType<MarkdownService>().As<IMarkdownService>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<PublishService>().As<IPublishService>().PropertiesAutowired().InstancePerLifetimeScope();
             builder.RegisterType<ThemeService>().As<IThemeService>().PropertiesAutowired().InstancePerLifetimeScope();
+            builder.RegisterType<ViewModelService>().As<IViewModelService>().PropertiesAutowired().InstancePerLifetimeScope();
         }
     }
 }

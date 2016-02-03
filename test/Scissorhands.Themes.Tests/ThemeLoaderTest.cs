@@ -26,7 +26,7 @@ namespace Scissorhands.Themes.Tests
         private readonly string _bastPath;
         private readonly List<Author> _authors;
         private readonly List<FeedType> _feedTypes;
-        private readonly Mock<SiteMetadataSettings> _metadata;
+        private readonly Mock<ISiteMetadataSettings> _metadata;
         private readonly Mock<IFileHelper> _fileHelper;
         private readonly Mock<IApplicationEnvironment> _env;
         private readonly IThemeLoader _themeLoader;

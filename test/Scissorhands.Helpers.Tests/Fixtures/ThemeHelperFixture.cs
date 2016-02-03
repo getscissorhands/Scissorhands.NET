@@ -4,26 +4,26 @@ using Moq;
 
 using Scissorhands.Models.Settings;
 
-namespace Scissorhands.Services.Tests.Fixtures
+namespace Scissorhands.Helpers.Tests.Fixtures
 {
     /// <summary>
-    /// This represents the fixture entity for the <see cref="ThemeService"/> class.
+    /// This represents the fixture entity for the <see cref="ThemeHelperTest"/> class.
     /// </summary>
-    public class ThemeServiceFixture : IDisposable
+    public class ThemeHelperFixture : IDisposable
     {
         private bool _disposed;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="ThemeServiceFixture"/> class.
+        /// Initializes a new instance of the <see cref="ThemeHelperFixture"/> class.
         /// </summary>
-        public ThemeServiceFixture()
+        public ThemeHelperFixture()
         {
             this.DefaultThemeName = "default";
 
             this.SiteMetadataSettings = new Mock<ISiteMetadataSettings>();
             this.SiteMetadataSettings.SetupGet(p => p.Theme).Returns(this.DefaultThemeName);
 
-            this.ThemeService = new ThemeService(this.SiteMetadataSettings.Object);
+            this.ThemeHelper = new ThemeHelper(this.SiteMetadataSettings.Object);
         }
 
         /// <summary>
@@ -37,9 +37,9 @@ namespace Scissorhands.Services.Tests.Fixtures
         public Mock<ISiteMetadataSettings> SiteMetadataSettings { get; }
 
         /// <summary>
-        /// Gets the <see cref="ThemeService"/> instance.
+        /// Gets the <see cref="IThemeHelper"/> instance.
         /// </summary>
-        public IThemeService ThemeService { get; }
+        public IThemeHelper ThemeHelper { get; }
 
         /// <summary>
         /// Performs application-defined tasks associated with freeing, releasing, or resetting unmanaged resources.
@@ -51,7 +51,7 @@ namespace Scissorhands.Services.Tests.Fixtures
                 return;
             }
 
-            this.ThemeService.Dispose();
+            this.ThemeHelper.Dispose();
 
             this._disposed = true;
         }

@@ -20,15 +20,15 @@ namespace Scissorhands.Helpers
         private const string MediaType = "application/json";
         private const string CharSet = "utf-8";
 
-        private readonly SiteMetadataSettings _metadata;
+        private readonly ISiteMetadataSettings _metadata;
 
         private bool _disposed;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HttpRequestHelper"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        public HttpRequestHelper(SiteMetadataSettings metadata)
+        /// <param name="metadata"><see cref="ISiteMetadataSettings"/> instance.</param>
+        public HttpRequestHelper(ISiteMetadataSettings metadata)
         {
             if (metadata == null)
             {
@@ -164,16 +164,9 @@ namespace Scissorhands.Helpers
                 throw new ArgumentNullException(nameof(model));
             }
 
-            var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8)
-            {
-                Headers =
-                                      {
-                                          ContentType = new MediaTypeHeaderValue(MediaType)
-                                                            {
-                                                                CharSet = CharSet
-                                                            }
-                                      }
-            };
+            var content = new StringContent(JsonConvert.SerializeObject(model), Encoding.UTF8);
+            content.Headers.ContentType = new MediaTypeHeaderValue(MediaType) { CharSet = CharSet };
+
             return content;
         }
 

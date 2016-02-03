@@ -2,10 +2,7 @@
 
 using Microsoft.AspNet.Mvc;
 
-using Scissorhands.Helpers;
-using Scissorhands.Models.Settings;
 using Scissorhands.Services;
-using Scissorhands.ViewModels.Post;
 
 namespace Scissorhands.WebApp.Controllers
 {
@@ -15,34 +12,31 @@ namespace Scissorhands.WebApp.Controllers
     [Route("admin/post")]
     public partial class PostController : BaseController
     {
-        private readonly IMarkdownHelper _markdownHelper;
-        private readonly IThemeService _themeService;
+        private readonly IMarkdownService _markdownService;
+        private readonly IViewModelService _viewModelService;
         private readonly IPublishService _publishService;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PostController"/> class.
         /// </summary>
-        /// <param name="metadata"><see cref="SiteMetadataSettings"/> instance.</param>
-        /// <param name="requestHelper"><see cref="IHttpRequestHelper"/> instance.</param>
-        /// <param name="markdownHelper"><see cref="IMarkdownHelper"/> instance.</param>
-        /// <param name="themeService"><see cref="IThemeService"/> instance.</param>
+        /// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
+        /// <param name="viewModelService"><see cref="IViewModelService"/> instance.</param>
         /// <param name="publishService"><see cref="IPublishService"/> instance.</param>
-        public PostController(SiteMetadataSettings metadata, IHttpRequestHelper requestHelper, IMarkdownHelper markdownHelper, IThemeService themeService, IPublishService publishService)
-            : base(metadata, requestHelper)
+        public PostController(IMarkdownService markdownService, IViewModelService viewModelService, IPublishService publishService)
         {
-            if (markdownHelper == null)
+            if (markdownService == null)
             {
-                throw new ArgumentNullException(nameof(markdownHelper));
+                throw new ArgumentNullException(nameof(markdownService));
             }
 
-            this._markdownHelper = markdownHelper;
+            this._markdownService = markdownService;
 
-            if (themeService == null)
+            if (viewModelService == null)
             {
-                throw new ArgumentNullException(nameof(themeService));
+                throw new ArgumentNullException(nameof(viewModelService));
             }
 
-            this._themeService = themeService;
+            this._viewModelService = viewModelService;
 
             if (publishService == null)
             {
@@ -68,11 +62,7 @@ namespace Scissorhands.WebApp.Controllers
         [Route("write", Name = "write")]
         public IActionResult Write()
         {
-            var vm = new PostFormViewModel()
-                         {
-                             SlugPrefix = this.RequestHelper.GetSlugPrefix(this.Request),
-                             Author = this.GetDefaultAuthorName(),
-                         };
+            var vm = this._viewModelService.CreatePostFormViewModel(this.Request);
 
             return this.View(vm);
         }
