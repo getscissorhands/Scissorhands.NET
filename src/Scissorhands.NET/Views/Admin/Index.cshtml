@@ -1,7 +1,21 @@
-﻿@using Scissorhands.Services
+﻿@using System.IO
+@using System.Threading.Tasks
 @{
     ViewData["Title"] = "Home Page";
 }
+
+<table>
+    <tr>
+        <th>Filename</th>
+        <th>Date Published</th>
+    </tr>
+    @foreach (FileInfo file in ViewBag.Files)
+    {
+        <tr>
+            <td><a href="@file.FullName.Replace("\\", "/").Replace("C:/Dev/Scissorhands/Scissorhands.NET/src/Scissorhands.NET/wwwroot", "")">@file.Name</a></td><td>@file.Directory.Parent.Parent.Name-@file.Directory.Parent.Name-@file.Directory.Name</td>
+        </tr>
+    }
+</table>
 
 <div id="myCarousel" class="carousel slide" data-ride="carousel" data-interval="6000">
     <ol class="carousel-indicators">
