@@ -70,9 +70,21 @@ namespace Scissorhands.WebApp.Controllers
         /// <summary>
         /// Processes /admin/post/edit.
         /// </summary>
+        /// <param name="filename">Filename to edit.</param>
         /// <returns>Returns the view model.</returns>
         [Route("edit")]
-        public IActionResult Edit()
+        public IActionResult Edit(string filename)
+        {
+            return this.View();
+        }
+
+        /// <summary>
+        /// Processes /admin/post/delete.
+        /// </summary>
+        /// <param name="filename">Filename to edit.</param>
+        /// <returns>Returns the view model.</returns>
+        [Route("delete")]
+        public IActionResult Delete(string filename)
         {
             return this.View();
         }
