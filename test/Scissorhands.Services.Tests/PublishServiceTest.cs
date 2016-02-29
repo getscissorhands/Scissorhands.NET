@@ -128,7 +128,7 @@ namespace Scissorhands.Services.Tests
             markdown.Should().ContainEquivalentOf($"* Slug: {slug}");
             markdown.Should().ContainEquivalentOf($"* Author: {author}");
             markdown.Should().ContainEquivalentOf($"* Tags: {string.Join(", ", tags.Split(new[] { "," }, StringSplitOptions.RemoveEmptyEntries))}");
-            markdown.Should().EndWithEquivalent($"{body}\r\n");
+            markdown.Should().EndWithEquivalent($"{body}"+Environment.NewLine);
         }
 
         /// <summary>
