@@ -1,0 +1,36 @@
+{
+  "version": "1.0.0-beta-*",
+
+  "frameworks": {
+    "net461": {
+      "dependencies": {
+        "System.Runtime": "4.0.20.0"
+      }
+    },
+
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0",
+          "type": "platform"
+        }
+      }
+    }
+  },
+
+  "dependencies": {
+    "Newtonsoft.Json": "9.0.1",
+    "Scissorhands.Core": "1.0.0-beta-*"
+  },
+
+  "buildOptions": {
+    "emitEntryPoint": true,
+    "define": [ "DEBUG", "TRACE" ],
+    "xmlDoc": true
+  }
+}

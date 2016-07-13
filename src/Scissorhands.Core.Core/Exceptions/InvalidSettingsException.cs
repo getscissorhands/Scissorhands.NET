@@ -1,8 +1,8 @@
 ﻿using System;
 
-#if NETCOREAPP1_0
+#if DNXCORE50
 
-using ApplicationException = System.InvalidOperationException;
+using ApplicationException = global::System.InvalidOperationException;
 
 #endif
 
@@ -14,7 +14,7 @@ namespace Scissorhands.Exceptions
     public class InvalidSettingsException : ApplicationException
     {
         /// <summary>
-        /// Initialises a new instance of the <see cref="InvalidSettingsException"/> class.
+        /// Initializes a new instance of the <see cref="InvalidSettingsException"/> class.
         /// </summary>
         public InvalidSettingsException()
             : base()
@@ -22,7 +22,7 @@ namespace Scissorhands.Exceptions
         }
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="InvalidSettingsException"/> class.
+        /// Initializes a new instance of the <see cref="InvalidSettingsException"/> class.
         /// </summary>
         /// <param name="message">Exception message.</param>
         public InvalidSettingsException(string message)
@@ -31,7 +31,7 @@ namespace Scissorhands.Exceptions
         }
 
         /// <summary>
-        /// Initialises a new instance of the <see cref="InvalidSettingsException"/> class.
+        /// Initializes a new instance of the <see cref="InvalidSettingsException"/> class.
         /// </summary>
         /// <param name="message">Exception message.</param>
         /// <param name="innerException">Inner <see cref="Exception"/> instance.</param>

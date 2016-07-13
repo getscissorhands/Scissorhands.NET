@@ -9,15 +9,14 @@ namespace Scissorhands.Extensions
     public interface IExtension : IDisposable
     {
         /// <summary>
-        /// Gets or sets the <see cref="Extensions.ExtensionTypes"/> value.
+        /// Gets or sets the <see cref="ExtensionTypes"/> value.
         /// </summary>
         ExtensionTypes ExtensionTypes { get; set; }
 
         /// <summary>
         /// Executes the extension.
         /// </summary>
-        /// <returns>Returns the value as an error code.</returns>
-        /// <remarks>Error code of 0 usually means success.</remarks>
-        Task<int> ExecuteAsync();
+        /// <returns>Returns the <see cref="Task"/>.</returns>
+        Task ExecuteAsync();
     }
 }

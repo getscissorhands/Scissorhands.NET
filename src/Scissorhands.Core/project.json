@@ -1,44 +1,57 @@
-{
-  "version": "1.0.0-alpha",
-  "requireLicenseAcceptance": true,
+﻿{
+  "version": "1.0.0-beta-*",
+
+  "title": "Scissorhands.NET Core",
   "authors": [
-    "justinyoo"
-  ],
-  "owners": [
     "scissorhands.net"
   ],
-  "licenseUrl": "http://getscissorhands.net/license.txt",
-  "projectUrl": "http://getscissorhands.net",
-  "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
-  "title": "Scissorhands.NET Core",
-  "summary": "Scissorhands.Core class library",
+
+  "packOptions": {
+    "owners": [
+      "scissorhands.net"
+    ],
+    "licenseUrl": "http://getscissorhands.net/license.txt",
+    "projectUrl": "http://getscissorhands.net",
+    "iconUrl": "http://getscissorhands.net/favicon-32x32.png",
+    "summary": "Scissorhands.Core class library",
+    "tags": [
+      "Scissorhands.NET",
+      "Core",
+      "Extensions"
+    ],
+    "requireLicenseAcceptance": true,
+    "releaseNotes": ""
+  },
+
   "description": "This provides core classes and interfaces for Scissorhands.NET application and its extensions.",
-  "tags": [
-    "Scissorhands.NET",
-    "Core",
-    "Extensions"
-  ],
-  "releaseNotes": "Initial alpha release",
+  "copyright": "Scissorhands.NET. All rights reserved.",
 
   "frameworks": {
-    "dnx451": {},
-    "dnxcore50": {
+    "net461": {
       "dependencies": {
-        "Microsoft.CSharp": "4.0.1-beta-23516",
-        "System.Collections": "4.0.11-beta-23516",
-        "System.Console": "4.0.0-beta-23516",
-        "System.IO.FileSystem": "4.0.1-beta-23516",
-        "System.Linq": "4.0.1-beta-23516",
-        "System.Threading": "4.0.11-beta-23516"
+        "System.Runtime": "4.0.20.0"
+      }
+    },
+
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0",
+          "type": "platform"
+        }
       }
     }
   },
 
-  "dependencies": {
-    "Microsoft.AspNet.Http.Abstractions": "1.0.0-rc1-final",
-    "Microsoft.AspNet.Mvc.ViewFeatures": "6.0.0-rc1-final",
-    "Microsoft.Extensions.PlatformAbstractions": "1.0.0-rc1-final",
-    "Newtonsoft.Json": "8.0.1",
-    "System.Net.Http": "4.0.1-beta-23516"
+  "dependencies": {},
+
+  "buildOptions": {
+    "define": [ "DEBUG", "TRACE" ],
+    "xmlDoc": true
   }
 }
