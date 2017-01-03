@@ -11,14 +11,14 @@ namespace Scissorhands
         /// Builds options from command arguments.
         /// </summary>
         /// <param name="args">List of arguments.</param>
-        /// <returns>Returns the <see cref="CommandOptions"/> built</returns>
-        Task<CommandOptions> BuildAsync(string[] args);
+        /// <returns>Returns the <see cref="Options"/> built</returns>
+        Task<Options> BuildAsync(string[] args);
 
         /// <summary>
         /// Gets the default options by reading <c>appsettings.json</c>.
         /// </summary>
         /// <param name="filepath">File path of the <c>appsettings.json</c>.</param>
-        /// <returns>Returns the <see cref="CommandOptions"/> deserialised.</returns>
-        Task<CommandOptions> GetDefaultOptionsAsyc(string filepath);
+        /// <returns>Returns the <see cref="Options"/> deserialised.</returns>
+        Task<Options> GetDefaultOptionsAsyc(string filepath);
     }
 }

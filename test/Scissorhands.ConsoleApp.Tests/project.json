@@ -1,0 +1,34 @@
+{
+  "version": "1.0.0-beta-*",
+
+  "testRunner": "xunit",
+
+  "frameworks": {
+    "netcoreapp1.0": {
+      "imports": [
+        "dotnet5.6",
+        "dnxcore50",
+        "portable-net45+win8"
+      ],
+      "dependencies": {
+        "Microsoft.NETCore.App": {
+          "version": "1.0.0",
+          "type": "platform"
+        }
+      }
+    }
+  },
+
+  "dependencies": {
+    "dotnet-test-xunit": "2.2.0-preview2-build1029",
+    "FluentAssertions": "4.11.0",
+    "Moq": "4.6.25-alpha",
+    "Scissorhands.ConsoleApp": "1.0.0-beta-*",
+    "xunit": "2.2.0-beta2-build3300",
+    "xunit.runner.visualstudio": "2.2.0-beta2-build1149"
+  },
+
+  "buildOptions": {
+    "define": [ "DEBUG", "TRACE" ]
+  }
+}

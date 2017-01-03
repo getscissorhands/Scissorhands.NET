@@ -3,7 +3,7 @@ namespace Scissorhands
     /// <summary>
     /// This represents the options entity for command-line arguments.
     /// </summary>
-    public class CommandOptions
+    public class Options
     {
         /// <summary>
         /// Gets or sets the source file in markdown or directory where markdown is located.

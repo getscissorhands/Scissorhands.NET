@@ -1,5 +1,4 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -31,6 +30,8 @@ namespace Scissorhands
                 this._filepath = "appsettings.json";
             }
 
+            this._filepath = filepath;
+
             this._settings = new JsonSerializerSettings()
             {
                 ContractResolver = new CamelCasePropertyNamesContractResolver(),
@@ -50,16 +51,16 @@ namespace Scissorhands
         /// Builds options from command arguments.
         /// </summary>
         /// <param name="args">List of arguments.</param>
-        /// <returns>Returns the <see cref="CommandOptions"/> built</returns>
+        /// <returns>Returns the <see cref="Options"/> built</returns>
         /// <remarks>Options are read from the <c>appsettings.json</c> first, then overridden by command line arguments.</remarks>
-        public async Task<CommandOptions> BuildAsync(string[] args)
+        public async Task<Options> BuildAsync(string[] args)
         {
+            var options = await this.GetDefaultOptionsAsyc(this._filepath).ConfigureAwait(false);
+
             if (args.IsNullOrEmpty())
             {
-                throw new ArgumentNullException(nameof(args));
+                return options;
             }
-
-            var options = await this.GetDefaultOptionsAsyc(this._filepath).ConfigureAwait(false);
 
             var source =
                 args.SingleOrDefault(
@@ -92,24 +93,25 @@ namespace Scissorhands
         /// Gets the default options by reading <c>appsettings.json</c>.
         /// </summary>
         /// <param name="filepath">File path of the <c>appsettings.json</c>.</param>
-        /// <returns>Returns the <see cref="CommandOptions"/> deserialised.</returns>
-        public async Task<CommandOptions> GetDefaultOptionsAsyc(string filepath)
+        /// <returns>Returns the <see cref="Options"/> deserialised.</returns>
+        public async Task<Options> GetDefaultOptionsAsyc(string filepath)
         {
             if (string.IsNullOrWhiteSpace(filepath))
             {
-                return new CommandOptions();
+                return new Options();
             }
 
             if (!File.Exists(filepath))
             {
-                return new CommandOptions();
+                return new Options();
             }
 
             using (var stream = new FileStream(filepath, FileMode.Open, FileAccess.Read))
             using (var reader = new StreamReader(stream, Encoding.UTF8))
             {
                 var json = await reader.ReadToEndAsync().ConfigureAwait(false);
-                var options = JsonConvert.DeserializeObject<AppSettings>(json, this._settings)?.CommandOptions;
+                var settings = JsonConvert.DeserializeObject<AppSettings>(json, this._settings);
+                var options = settings?.Options;
                 return options;
             }
         }
