@@ -37,6 +37,11 @@ jobs:
       run: |
         dotnet restore .
 
+    - name: Update testsettings.json
+      shell: pwsh
+      run: |
+        ./Update-TestSettings.ps1 -ProjectPath "./test/Scissorhands.Core.Tests"
+
     - name: Build solution
       shell: pwsh
       run: |
