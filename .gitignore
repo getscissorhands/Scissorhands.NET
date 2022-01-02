@@ -196,8 +196,7 @@ FakesAssemblies/
 *.opt
 
 # Scissorhands.NET specific rules
-project.lock.json
 *.bak
 *.org
 
-**/wwwroot/posts
+*.local.json
