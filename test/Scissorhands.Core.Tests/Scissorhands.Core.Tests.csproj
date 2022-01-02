@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net6.0</TargetFramework>
@@ -34,7 +34,10 @@
     <ItemGroup>
       <TestSettingFile Include="$(ProjectDir)testsettings.local.json" />
     </ItemGroup>
-    <Copy SourceFiles="@(TestSettingFile)" DestinationFiles="$(TargetDir)testsettings.json" SkipUnchangedFiles="true" />
+    <Copy Condition="Exists('@(TestSettingFile)')"
+          SourceFiles="@(TestSettingFile)"
+          DestinationFiles="$(TargetDir)testsettings.json"
+          SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
