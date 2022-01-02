@@ -45,6 +45,7 @@ jobs:
     - name: Build solution
       shell: pwsh
       run: |
+        dir /s
         dotnet build . -c Debug -v minimal
 
     - name: Run unit tests

@@ -35,4 +35,6 @@ $json.projectDirectory = $json.projectDirectory -replace "~", "$($pwd.Path)"
 $json.projectDirectory = $json.projectDirectory -replace "/", "$([System.IO.Path]::DirectorySeparatorChar)"
 $json | ConvertTo-Json | Set-Content -Path "$($ProjectPath)/testsettings.json" -Force
 
+Get-Content -Path "$($ProjectPath)/testsettings.json"
+
 Write-Output "[$(Get-Date -Format "yyyy-MM-dd HH:mm:ss")] Updated $($ProjectPath)/testsettings.json"
