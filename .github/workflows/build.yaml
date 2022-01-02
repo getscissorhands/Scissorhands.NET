@@ -13,8 +13,8 @@ jobs:
     name: Build and test
     strategy:
       matrix:
-        # os: [ 'windows-latest', 'macos-latest', 'ubuntu-latest' ]
-        os: [ 'windows-latest', 'ubuntu-latest' ]
+        os: [ 'windows-latest', 'macos-latest', 'ubuntu-latest' ]
+        # os: [ 'windows-latest', 'ubuntu-latest' ]
 
     runs-on: ${{ matrix.os }}
 
@@ -37,6 +37,11 @@ jobs:
       shell: pwsh
       run: |
         dotnet restore .
+
+    - name: Copy local settings.json
+      shell: pwsh
+      run: |
+        ./Copy-LocalSettings.ps1
 
     - name: Update appsettings.json
       shell: pwsh
