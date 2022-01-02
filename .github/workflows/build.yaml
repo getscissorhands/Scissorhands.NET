@@ -45,7 +45,7 @@ jobs:
     - name: Build solution
       shell: pwsh
       run: |
-        dir /s
+        Get-ChildItem . -Recurse
         dotnet build . -c Debug -v minimal
 
     - name: Run unit tests
