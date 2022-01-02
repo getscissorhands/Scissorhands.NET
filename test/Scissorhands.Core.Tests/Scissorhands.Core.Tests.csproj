@@ -26,10 +26,6 @@
     </None>
   </ItemGroup>
 
-  <!-- <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="xcopy &quot;$(ProjectDir)testsettings.local.json&quot; &quot;$(TargetDir)testsettings.json&quot; /y" />
-  </Target> -->
-
   <Target Name="CopyTestSettings" AfterTargets="Build">
     <ItemGroup>
       <TestSettingFile Include="$(ProjectDir)testsettings.local.json" />
