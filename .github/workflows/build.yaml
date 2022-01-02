@@ -7,9 +7,6 @@ on:
     - release/*
     - feature/*
     - hotfix/*
-    paths:
-    - "src/*"
-    - "test/*"
 
 jobs:
   build_and_test:
