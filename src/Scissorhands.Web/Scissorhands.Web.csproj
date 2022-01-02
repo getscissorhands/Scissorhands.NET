@@ -20,4 +20,8 @@
     <Folder Include="Configs\" />
   </ItemGroup>
 
+  <Target Name="PreBuild" BeforeTargets="PreBuildEvent">
+    <Exec Command="dotnet run --project &quot;$(SolutionDir)src\Scissorhands.RouteGenerator\Scissorhands.RouteGenerator.csproj&quot; --verbosity quiet --" />
+  </Target>
+
 </Project>

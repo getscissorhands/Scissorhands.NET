@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Threading.Tasks;
@@ -45,6 +45,19 @@ namespace Scissorhands.Core.Resolvers
             }
 
             return contentItems.OrderBy(p => p.Order).ThenBy(p => p.UrlPath).ToList();
+        }
+
+        /// <inheritdoc />
+        public List<string> ResolveAllUrlPaths(List<ContentItem> contentItems)
+        {
+            var urlPaths = new List<string>();
+            foreach (var contentItem in contentItems)
+            {
+                urlPaths.Add(contentItem.UrlPath);
+                urlPaths.AddRange(this.ResolveAllUrlPaths(contentItem.ChildItems));
+            }
+
+            return urlPaths;
         }
 
         private static IEnumerable<DirectoryInfo> GetSubdirectories(string directory)

@@ -5,9 +5,11 @@ VisualStudioVersion = 17.0.32014.148
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{2571879A-716C-492E-913E-9C4FDB8FF16E}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scissorhands.Web", "src\Scissorhands.Web\Scissorhands.Web.csproj", "{F3355F5C-6057-4F17-A807-84469A3AF7E9}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scissorhands.Core", "src\Scissorhands.Core\Scissorhands.Core.csproj", "{26718C44-17B7-4007-8A07-78FF16F60149}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scissorhands.RouteGenerator", "src\Scissorhands.RouteGenerator\Scissorhands.RouteGenerator.csproj", "{2950459C-8CE8-4147-96F6-72EC72D37BFC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Scissorhands.Web", "src\Scissorhands.Web\Scissorhands.Web.csproj", "{F3355F5C-6057-4F17-A807-84469A3AF7E9}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{651B341B-943D-42FF-9F37-96EEEDC4D676}"
 EndProject
@@ -19,14 +21,18 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{26718C44-17B7-4007-8A07-78FF16F60149}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{26718C44-17B7-4007-8A07-78FF16F60149}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{26718C44-17B7-4007-8A07-78FF16F60149}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{26718C44-17B7-4007-8A07-78FF16F60149}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2950459C-8CE8-4147-96F6-72EC72D37BFC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2950459C-8CE8-4147-96F6-72EC72D37BFC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2950459C-8CE8-4147-96F6-72EC72D37BFC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2950459C-8CE8-4147-96F6-72EC72D37BFC}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F3355F5C-6057-4F17-A807-84469A3AF7E9}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DF513485-9741-4946-A8C6-37B72AD2880A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{DF513485-9741-4946-A8C6-37B72AD2880A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{DF513485-9741-4946-A8C6-37B72AD2880A}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -36,8 +42,9 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{F3355F5C-6057-4F17-A807-84469A3AF7E9} = {2571879A-716C-492E-913E-9C4FDB8FF16E}
 		{26718C44-17B7-4007-8A07-78FF16F60149} = {2571879A-716C-492E-913E-9C4FDB8FF16E}
+		{2950459C-8CE8-4147-96F6-72EC72D37BFC} = {2571879A-716C-492E-913E-9C4FDB8FF16E}
+		{F3355F5C-6057-4F17-A807-84469A3AF7E9} = {2571879A-716C-492E-913E-9C4FDB8FF16E}
 		{DF513485-9741-4946-A8C6-37B72AD2880A} = {651B341B-943D-42FF-9F37-96EEEDC4D676}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution

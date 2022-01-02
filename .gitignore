@@ -200,3 +200,4 @@ FakesAssemblies/
 *.org
 
 *.local.json
+src/Scissorhands.Web/Routing.cs

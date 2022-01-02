@@ -37,10 +37,15 @@ jobs:
       run: |
         dotnet restore .
 
+    - name: Update appsettings.json
+      shell: pwsh
+      run: |
+        ./Update-Settings.ps1 -ProjectPath "./src/Scissorhands.RouteGenerator" -Filename "appsettings.json"
+
     - name: Update testsettings.json
       shell: pwsh
       run: |
-        ./Update-TestSettings.ps1 -ProjectPath "./test/Scissorhands.Core.Tests"
+        ./Update-Settings.ps1 -ProjectPath "./test/Scissorhands.Core.Tests" -Filename "testsettings.json"
 
     - name: Build solution
       shell: pwsh

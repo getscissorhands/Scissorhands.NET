@@ -1,4 +1,4 @@
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 
 namespace Scissorhands.Core.Abstractions
@@ -18,5 +18,12 @@ namespace Scissorhands.Core.Abstractions
         /// </summary>
         /// <returns>Returns the list of <see cref="ContentItem"/> objects.</returns>
         Task<List<ContentItem>> ResolveAsync();
+
+        /// <summary>
+        /// Resolves all the list of content item URLs.
+        /// </summary>
+        /// <param name="contentItems">List of <see cref="ContentItem"/> objects.</param>
+        /// <returns>Returns all the list of content item URLs.</returns>
+        List<string> ResolveAllUrlPaths(List<ContentItem> contentItems);
     }
 }
