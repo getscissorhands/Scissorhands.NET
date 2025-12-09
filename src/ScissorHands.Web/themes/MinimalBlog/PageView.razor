@@ -1,0 +1,21 @@
+@layout ScissorHands.Web.Themes.MinimalBlog.MainLayout
+
+@code {
+    [Parameter]
+    public ContentDocument Document { get; set; } = new();
+
+    [Parameter]
+    public ThemeManifest Theme { get; set; } = new();
+
+    [Parameter]
+    public SiteOptions Site { get; set; } = new();
+}
+
+<section class="page">
+    <header class="page__header">
+        <h1 class="page__title">@Document.Metadata.Title</h1>
+    </header>
+    <article class="page__body">
+        @((MarkupString)Document.Html)
+    </article>
+</section>
