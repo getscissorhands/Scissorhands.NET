@@ -1,9 +1,0 @@
-﻿using Microsoft.AspNetCore.Components;
-
-namespace Scissorhands.Web.Pages
-{
-    {{ ROUTE }}
-    public partial class Index
-    {
-    }
-}

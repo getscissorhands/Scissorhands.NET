@@ -4,8 +4,7 @@ on:
   push:
     branches:
     - main
-    - release/*
-    - feature/*
+    - feat/*
     - hotfix/*
 
 jobs:
@@ -21,10 +20,10 @@ jobs:
     - name: Checkout the repository
       uses: actions/checkout@v2
 
-    - name: Setup .NET 6 SDK
+    - name: Setup .NET SDK
       uses: actions/setup-dotnet@v1
       with:
-        dotnet-version: '6.x'
+        dotnet-version: '10.x'
 
     - name: Clear NuGet local cache
       if: matrix.os == 'windows-latest'
@@ -37,20 +36,20 @@ jobs:
       run: |
         dotnet restore .
 
-    - name: Copy local settings.json
-      shell: pwsh
-      run: |
-        ./Copy-LocalSettings.ps1
+    # - name: Copy local settings.json
+    #   shell: pwsh
+    #   run: |
+    #     ./Copy-LocalSettings.ps1
 
-    - name: Update appsettings.json
-      shell: pwsh
-      run: |
-        ./Update-Settings.ps1 -ProjectPath "./src/Scissorhands.RouteGenerator" -Filename "appsettings.json"
+    # - name: Update appsettings.json
+    #   shell: pwsh
+    #   run: |
+    #     ./Update-Settings.ps1 -ProjectPath "./src/Scissorhands.RouteGenerator" -Filename "appsettings.json"
 
-    - name: Update testsettings.json
-      shell: pwsh
-      run: |
-        ./Update-Settings.ps1 -ProjectPath "./test/Scissorhands.Core.Tests" -Filename "testsettings.json"
+    # - name: Update testsettings.json
+    #   shell: pwsh
+    #   run: |
+    #     ./Update-Settings.ps1 -ProjectPath "./test/Scissorhands.Core.Tests" -Filename "testsettings.json"
 
     - name: Build solution
       shell: pwsh
