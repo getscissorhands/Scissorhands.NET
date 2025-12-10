@@ -1,0 +1,36 @@
+@layout ScissorHands.Web.Themes.MinimalBlog.MainLayout
+
+@code {
+    [Parameter]
+    public ContentDocument Document { get; set; } = new();
+
+    [Parameter]
+    public ThemeManifest Theme { get; set; } = new();
+
+    [Parameter]
+    public SiteOptions Site { get; set; } = new();
+}
+
+<section class="post">
+    <header class="post__header">
+        <p class="post__meta">
+            @if (Document.Metadata.Published is { } published)
+            {
+                <span>@published.ToString("MMMM dd, yyyy")</span>
+            }
+        </p>
+        <h1 class="post__title">@Document.Metadata.Title</h1>
+        @if (Document.Metadata.Tags.Any())
+        {
+            <ul class="post__tags">
+                @foreach (var tag in Document.Metadata.Tags)
+                {
+                    <li>@tag</li>
+                }
+            </ul>
+        }
+    </header>
+    <article class="post__body" >
+        @((MarkupString)Document.Html)
+    </article>
+</section>

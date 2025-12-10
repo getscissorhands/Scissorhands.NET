@@ -1,0 +1,57 @@
+@using Microsoft.Extensions.Options
+@using ScissorHands.Web.Models
+@using ScissorHands.Web.Services
+
+@inherits LayoutComponentBase
+@inject ThemeService ThemeService
+@inject IOptions<SiteOptions> SiteOptions
+
+@code {
+    private SiteOptions Site { get; set; } = new();
+    private ThemeManifest Theme { get; set; } = new();
+
+    /// <inheritdoc />
+    protected override void OnInitialized()
+    {
+        Site = SiteOptions.Value;
+        Theme = ThemeService.LoadManifest(Site.Theme);
+    }
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="@Site.BaseUrl" />
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@Site.Title</title>
+    <link rel="icon" type="image/x-icon" href="@($"/themes/{Theme.Slug.TrimEnd('/')}/favicon.ico")" />
+    @if (Theme.Stylesheets is not null)
+    {
+        foreach (var css in Theme.Stylesheets)
+        {
+            <link rel="stylesheet" href="@($"/themes/{Theme.Slug.TrimEnd('/')}{css}")" />
+        }
+    }
+</head>
+<body>
+    <header class="site-header">
+        <div class="site-header__inner">
+            <div class="site-title"><img src="@($"/themes/{Theme.Slug.TrimEnd('/')}/assets/images/icon.png")" alt="Site Logo" width="32" height="32" />@Site.Title</div>
+        </div>
+    </header>
+    <main class="site-main">
+        @Body
+    </main>
+    <footer class="site-footer">
+        <p>&copy; @DateTimeOffset.UtcNow.Year @Site.Title</p>
+    </footer>
+    @if (Theme.Scripts is not null)
+    {
+        foreach (var script in Theme.Scripts)
+        {
+            <script src="@($"/themes/{Theme.Slug.TrimEnd('/')}{script}")"></script>
+        }
+    }
+</body>
+</html>
