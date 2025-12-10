@@ -1,19 +1,15 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using ScissorHands.Web.Models;
+
+using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Services;
 
 namespace ScissorHands.Web.Services;
 
-public sealed class ThemeService
+public sealed class ThemeService(ILogger<ThemeService> logger) : IThemeService
 {
-    private readonly ILogger<ThemeService> _logger;
-    private readonly string _basePath;
-
-    public ThemeService(ILogger<ThemeService> logger)
-    {
-        _logger = logger;
-        _basePath = Directory.GetCurrentDirectory();
-    }
+    private readonly ILogger<ThemeService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly string _basePath = Directory.GetCurrentDirectory();
 
     public ThemeManifest LoadManifest(string themeName)
     {

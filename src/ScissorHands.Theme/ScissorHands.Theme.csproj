@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+
+    <LangVersion>latest</LangVersion>
+
+    <AssemblyName>ScissorHands.Theme</AssemblyName>
+    <RootNamespace>ScissorHands.Theme</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.*" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\ScissorHands.Core\ScissorHands.Core.csproj" />
+  </ItemGroup>
+
+</Project>

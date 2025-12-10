@@ -1,5 +1,5 @@
-using ScissorHands.Web.Models;
-using ScissorHands.Web.Plugins;
+using ScissorHands.Core.Models;
+using ScissorHands.Plugin;
 
 namespace ScissorHands.Web.Services;
 

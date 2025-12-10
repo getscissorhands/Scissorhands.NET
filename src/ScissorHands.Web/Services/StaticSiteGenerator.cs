@@ -1,40 +1,37 @@
 using System.Text;
+
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ScissorHands.Web.Models;
+
+using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Models;
+using ScissorHands.Core.Services;
 using ScissorHands.Web.Rendering;
 
 namespace ScissorHands.Web.Services;
 
-public sealed class StaticSiteGenerator
-{
-    private readonly ContentLoader _contentLoader;
-    private readonly MarkdownService _markdownService;
-    private readonly PluginRunner _pluginRunner;
-    private readonly ThemeService _themeService;
-    private readonly ComponentRenderer _renderer;
-    private readonly SiteOptions _options;
-    private readonly ILogger<StaticSiteGenerator> _logger;
-
-    public StaticSiteGenerator(
+public sealed class StaticSiteGenerator(
         ContentLoader contentLoader,
         MarkdownService markdownService,
         PluginRunner pluginRunner,
-        ThemeService themeService,
+        IThemeService themeService,
         ComponentRenderer renderer,
-        IOptions<SiteOptions> options,
+        SiteManifest options,
         ILogger<StaticSiteGenerator> logger)
-    {
-        _contentLoader = contentLoader;
-        _markdownService = markdownService;
-        _pluginRunner = pluginRunner;
-        _themeService = themeService;
-        _renderer = renderer;
-        _options = options.Value;
-        _logger = logger;
-    }
+{
+    private readonly ContentLoader _contentLoader = contentLoader ?? throw new ArgumentNullException(nameof(contentLoader));
+    private readonly MarkdownService _markdownService = markdownService ?? throw new ArgumentNullException(nameof(markdownService));
+    private readonly PluginRunner _pluginRunner = pluginRunner ?? throw new ArgumentNullException(nameof(pluginRunner));
+    private readonly IThemeService _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
+    private readonly ComponentRenderer _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
+    private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-    public async Task BuildAsync(string destination, bool preview, CancellationToken cancellationToken)
+
+    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
+        where TMainLayout : ScissorHands.Theme.MainLayoutBase
+        where TIndexView : ScissorHands.Theme.IndexViewBase
+        where TPostView : ScissorHands.Theme.PostViewBase
+        where TPageView : ScissorHands.Theme.PageViewBase
     {
         Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
@@ -42,8 +39,8 @@ public sealed class StaticSiteGenerator
         var theme = _themeService.LoadManifest(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
 
-        var layoutType = typeof(Themes.MinimalBlog.MainLayout);
-        await RenderIndexAsync(documents, theme, destination, layoutType, cancellationToken);
+        var layoutType = typeof(TMainLayout);
+        await RenderIndexAsync<TIndexView>(documents, theme, destination, layoutType, cancellationToken);
 
         foreach (var document in documents)
         {
@@ -63,8 +60,8 @@ public sealed class StaticSiteGenerator
 
             var rendered = postMarkdown.Kind switch
             {
-                ContentKind.Page => await _renderer.RenderAsync<Themes.MinimalBlog.PageView>(layoutType, parameters, cancellationToken),
-                _ => await _renderer.RenderAsync<Themes.MinimalBlog.PostView>(layoutType, parameters, cancellationToken)
+                ContentKind.Page => await _renderer.RenderAsync<TPageView>(layoutType, parameters, cancellationToken),
+                _ => await _renderer.RenderAsync<TPostView>(layoutType, parameters, cancellationToken)
             };
 
             var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, postMarkdown, cancellationToken);
@@ -78,7 +75,8 @@ public sealed class StaticSiteGenerator
         _themeService.CopyAssets(_options.Theme, destination);
     }
 
-    private async Task RenderIndexAsync(IEnumerable<ContentDocument> documents, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TIndexView : ScissorHands.Theme.IndexViewBase
     {
         var posts = documents
             .Where(d => d.Kind == ContentKind.Post)
@@ -92,7 +90,7 @@ public sealed class StaticSiteGenerator
             ["Site"] = _options
         };
 
-        var rendered = await _renderer.RenderAsync<Themes.MinimalBlog.IndexView>(layoutType, parameters, cancellationToken);
+        var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, new ContentDocument
         {
             Kind = ContentKind.Page,

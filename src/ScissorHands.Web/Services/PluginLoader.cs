@@ -1,24 +1,18 @@
 using System.Reflection;
+
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ScissorHands.Web.Models;
-using ScissorHands.Web.Plugins;
+
+using ScissorHands.Core.Manifests;
+using ScissorHands.Plugin;
 
 namespace ScissorHands.Web.Services;
 
-public sealed class PluginLoader
+public sealed class PluginLoader(List<PluginManifest> pluginOptions, IServiceProvider services, ILogger<PluginLoader> logger)
 {
-    private readonly ILogger<PluginLoader> _logger;
-    private readonly IServiceProvider _services;
-    private readonly IReadOnlyList<PluginDefinition> _definitions;
-
-    public PluginLoader(IOptions<List<PluginDefinition>> pluginOptions, IServiceProvider services, ILogger<PluginLoader> logger)
-    {
-        _services = services;
-        _logger = logger;
-        _definitions = pluginOptions.Value ?? new List<PluginDefinition>();
-    }
+    private readonly IReadOnlyList<PluginManifest> _definitions = pluginOptions ?? throw new ArgumentNullException(nameof(pluginOptions));
+    private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));
+    private readonly ILogger<PluginLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     public IReadOnlyList<IContentPlugin> Load()
     {

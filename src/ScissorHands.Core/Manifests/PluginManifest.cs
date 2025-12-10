@@ -1,6 +1,6 @@
-namespace ScissorHands.Web.Models;
+namespace ScissorHands.Core.Manifests;
 
-public sealed class PluginDefinition
+public sealed class PluginManifest
 {
     public string? Assembly { get; init; }
     public string? Type { get; init; }

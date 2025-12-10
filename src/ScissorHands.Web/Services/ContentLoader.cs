@@ -1,29 +1,24 @@
 using System.Globalization;
+
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
-using ScissorHands.Web.Models;
+
+using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Models;
+
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
 namespace ScissorHands.Web.Services;
 
-public sealed class ContentLoader
+public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> logger)
 {
-    private readonly ILogger<ContentLoader> _logger;
-    private readonly SiteOptions _options;
-    private readonly IDeserializer _deserializer;
-    private readonly string _basePath;
-
-    public ContentLoader(IOptions<SiteOptions> options, ILogger<ContentLoader> logger)
-    {
-        _logger = logger;
-        _options = options.Value;
-        _basePath = Directory.GetCurrentDirectory();
-        _deserializer = new DeserializerBuilder()
+    private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly ILogger<ContentLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly string _basePath = Directory.GetCurrentDirectory();
+    private readonly IDeserializer _deserializer = new DeserializerBuilder()
             .WithNamingConvention(CamelCaseNamingConvention.Instance)
             .IgnoreUnmatchedProperties()
             .Build();
-    }
 
     public async Task<IReadOnlyList<ContentDocument>> LoadAsync(CancellationToken cancellationToken)
     {

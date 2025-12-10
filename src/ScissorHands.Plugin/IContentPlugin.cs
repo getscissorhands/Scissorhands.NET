@@ -1,6 +1,6 @@
-using ScissorHands.Web.Models;
+using ScissorHands.Core.Models;
 
-namespace ScissorHands.Web.Plugins;
+namespace ScissorHands.Plugin;
 
 public interface IContentPlugin
 {

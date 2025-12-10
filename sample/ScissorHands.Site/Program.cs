@@ -1,10 +1,11 @@
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Options;
 
+using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Services;
+using ScissorHands.Theme.MinimalBlog;
 using ScissorHands.Web.Infrastructure;
-using ScissorHands.Web.Models;
 using ScissorHands.Web.Rendering;
 using ScissorHands.Web.Services;
 
@@ -16,8 +17,11 @@ if (cli.Mode is CliMode.Unknown)
 }
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.Configure<SiteOptions>(builder.Configuration.GetSection("Site"));
-builder.Services.Configure<List<PluginDefinition>>(builder.Configuration.GetSection("Plugins"));
+var config = builder.Configuration;
+var siteManifest = config.GetSection("Site").Get<SiteManifest>();
+var pluginManifests = config.GetSection("Plugins").Get<List<PluginManifest>>();
+builder.Services.AddSingleton(siteManifest!);
+builder.Services.AddSingleton(pluginManifests ?? []);
 
 builder.Services.AddRazorComponents();
 
@@ -25,13 +29,13 @@ builder.Services.AddSingleton<ContentLoader>();
 builder.Services.AddSingleton<MarkdownService>();
 builder.Services.AddSingleton<PluginLoader>();
 builder.Services.AddSingleton<PluginRunner>();
-builder.Services.AddSingleton<ThemeService>();
+builder.Services.AddSingleton<IThemeService, ThemeService>();
 builder.Services.AddSingleton<ComponentRenderer>();
 builder.Services.AddSingleton<StaticSiteGenerator>();
 
 var app = builder.Build();
 var logger = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
-var siteOptions = app.Services.GetRequiredService<IOptions<SiteOptions>>().Value;
+var siteOptions = app.Services.GetRequiredService<SiteManifest>();
 var generator = app.Services.GetRequiredService<StaticSiteGenerator>();
 var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), siteOptions.ContentRoot));
 var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), "themes"));
@@ -43,7 +47,7 @@ if (cli.Mode is CliMode.Preview)
     {
         Directory.Delete(previewPath, recursive: true);
     }
-    await generator.BuildAsync(previewPath, preview: true, app.Lifetime.ApplicationStopping);
+    await generator.BuildAsync<MainLayout, IndexView, PostView, PageView>(previewPath, preview: true, app.Lifetime.ApplicationStopping);
 
     // serve generated preview files
     var fileProvider = new PhysicalFileProvider(previewPath);
@@ -63,7 +67,7 @@ if (cli.Mode is CliMode.Preview)
         async () =>
         {
             logger.LogInformation("Change detected; rebuilding preview...");
-            await generator.BuildAsync(previewPath, preview: true, CancellationToken.None);
+            await generator.BuildAsync<MainLayout, IndexView, PostView, PageView>(previewPath, preview: true, CancellationToken.None);
         },
         app.Services.GetRequiredService<ILogger<ContentWatcher>>());
 
@@ -78,7 +82,7 @@ else
         Directory.Delete(outputPath, recursive: true);
     }
 
-    await generator.BuildAsync(outputPath, preview: false, CancellationToken.None);
+    await generator.BuildAsync<MainLayout, IndexView, PostView, PageView>(outputPath, preview: false, CancellationToken.None);
     logger.LogInformation("Build complete. Output at {OutputPath}", outputPath);
 }
 

@@ -1,4 +1,4 @@
-namespace ScissorHands.Web.Models;
+namespace ScissorHands.Core.Manifests;
 
 public sealed class ThemeManifest
 {

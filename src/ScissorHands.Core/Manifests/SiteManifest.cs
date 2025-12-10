@@ -1,6 +1,6 @@
-namespace ScissorHands.Web.Models;
+namespace ScissorHands.Core.Manifests;
 
-public sealed class SiteOptions
+public sealed class SiteManifest
 {
     public string Title { get; init; } = "ScissorHands Blog";
     public string Description { get; init; } = "A Blazor-powered static blog with live preview.";

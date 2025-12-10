@@ -1,15 +1,5 @@
-@layout ScissorHands.Web.Themes.MinimalBlog.MainLayout
-
-@code {
-    [Parameter]
-    public ContentDocument Document { get; set; } = new();
-
-    [Parameter]
-    public ThemeManifest Theme { get; set; } = new();
-
-    [Parameter]
-    public SiteOptions Site { get; set; } = new();
-}
+@inherits ScissorHands.Theme.PostViewBase
+@layout MainLayout
 
 <section class="post">
     <header class="post__header">

@@ -1,20 +1,10 @@
-@layout ScissorHands.Web.Themes.MinimalBlog.MainLayout
-
-@code {
-    [Parameter]
-    public IEnumerable<ContentDocument> Documents { get; set; } = Enumerable.Empty<ContentDocument>();
-
-    [Parameter]
-    public ThemeManifest Theme { get; set; } = new();
-
-    [Parameter]
-    public SiteOptions Site { get; set; } = new();
-}
+@inherits ScissorHands.Theme.IndexViewBase
+@layout MainLayout
 
 <section class="home">
     <header class="home__hero">
         <p class="home__eyebrow">ScissorHands</p>
-        <h1 class="home__title">@Site.Title</h1>
+        <h1 class="home__title">@Site!.Title</h1>
         <p class="home__subtitle">A Blazor-powered static blog with live preview.</p>
     </header>
     <div class="home__list">
