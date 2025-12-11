@@ -1,27 +1,6 @@
 namespace ScissorHands.Core.Options;
 
 /// <summary>
-/// This specifies the command mode.
-/// </summary>
-public enum CommandMode
-{
-    /// <summary>
-    /// Identifies the mode is unknown.
-    /// </summary>
-    Unknown,
-
-    /// <summary>
-    /// Identifies the preview mode.
-    /// </summary>
-    Preview,
-
-    /// <summary>
-    /// Identifies the build mode.
-    /// </summary>
-    Build
-}
-
-/// <summary>
 /// This represents the record for the command options.
 /// </summary>
 /// <param name="Mode"><see cref="CommandMode"/> value.</param>
@@ -42,6 +21,11 @@ public sealed record CommandOptions(CommandMode Mode)
         if (args.Any(arg => string.Equals(arg, "--build", StringComparison.OrdinalIgnoreCase)))
         {
             return new CommandOptions(CommandMode.Build);
+        }
+
+        if (args.Any(arg => string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase)))
+        {
+            return new CommandOptions(CommandMode.Help);
         }
 
         return new CommandOptions(CommandMode.Unknown);

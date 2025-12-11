@@ -1,20 +1,14 @@
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
-using ScissorHands.Core.Services;
 using ScissorHands.Web.Extensions;
 using ScissorHands.Web.Generators;
-using ScissorHands.Web.Loaders;
-using ScissorHands.Web.Renderers;
-using ScissorHands.Web.Runners;
-using ScissorHands.Web.Services;
 using ScissorHands.Web.Watchers;
 
 namespace ScissorHands.Web;
@@ -35,7 +29,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
     private const string APP_LOGGER_NAME = "App";
 
     private readonly IEnumerable<string> _args = [.. args];
-    private CommandMode _mode = CommandMode.Unknown;
+    private CommandMode _mode;
     private WebApplication? _app;
     private ILogger? _logger;
     private SiteManifest? _site;
@@ -43,10 +37,23 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
     public IScissorHandsApplication VerifyCommandArguments()
     {
+        DisplayBanner();
+
         var command = CommandOptions.Parse(_args);
+        if (command.Mode is CommandMode.Help)
+        {
+            DisplayHelp();
+            Environment.Exit(0);
+        }
+
         if (command.Mode is CommandMode.Unknown)
         {
-            Console.Error.WriteLine("Specify a mode: --preview to run preview server, or --build for static build.");
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine();
+            Console.WriteLine("ERROR: No parameter provided.");
+            Console.ResetColor();
+            DisplayHelp();
+
             Environment.Exit(1);
         }
 
@@ -57,9 +64,6 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
     public async Task<IScissorHandsApplication> InitializeAsync()
     {
-        DisplayBanner();
-
-
         var builder = WebApplication.CreateBuilder([.. _args]);
 
         var config = builder.Configuration;
@@ -68,7 +72,6 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
                         .AddRazorComponents();
 
         _app = builder.Build();
-
 
         _logger = _app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
         _site = _app.Services.GetRequiredService<SiteManifest>();
@@ -92,6 +95,18 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         }
 
         await _app!.RunAsync();
+    }
+
+    private static void DisplayHelp()
+    {
+        Console.WriteLine();
+        Console.WriteLine("Usage: dotnet run -- [--preview | --build | --help]");
+        Console.WriteLine();
+        Console.WriteLine("Options:");
+        Console.WriteLine("  --preview    Run the preview server.");
+        Console.WriteLine("  --build      Build the static site.");
+        Console.WriteLine("  --help       Display this help message.");
+        Console.WriteLine();
     }
 
     private static void DisplayBanner()
@@ -121,6 +136,8 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             ConsoleColor.Red
         };
 
+        Console.WriteLine(new string('\n', Console.WindowHeight));
+
         for (var i = 0; i < banner.Length; i++)
         {
             Console.ForegroundColor = colors[i % colors.Length];
@@ -128,6 +145,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         }
 
         Console.ResetColor();
+        Console.WriteLine();
     }
 
     private async Task<IScissorHandsApplication> RunPreviewServerAsync()
