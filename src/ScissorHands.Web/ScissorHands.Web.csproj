@@ -6,7 +6,6 @@
     <ImplicitUsings>enable</ImplicitUsings>
 
     <LangVersion>latest</LangVersion>
-    <RazorLangVersion>latest</RazorLangVersion>
 
     <AssemblyName>ScissorHands.Web</AssemblyName>
     <RootNamespace>ScissorHands.Web</RootNamespace>
@@ -14,13 +13,20 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="System.Reactive" Version="6.0.0" />
+
+    <PackageReference Include="Markdig" Version="0.*" />
+    <PackageReference Include="System.Reactive" Version="6.*" />
+    <PackageReference Include="YamlDotNet" Version="16.*" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\ScissorHands.Core\ScissorHands.Core.csproj" />
     <ProjectReference Include="..\ScissorHands.Plugin\ScissorHands.Plugin.csproj" />
     <ProjectReference Include="..\ScissorHands.Theme\ScissorHands.Theme.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Folder Include="Extensions/" />
   </ItemGroup>
 
 </Project>

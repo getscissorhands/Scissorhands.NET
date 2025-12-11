@@ -1,16 +1,21 @@
 using ScissorHands.Core.Models;
 using ScissorHands.Plugin;
+using ScissorHands.Web.Loaders;
 
-namespace ScissorHands.Web.Services;
+namespace ScissorHands.Web.Runners;
 
-public sealed class PluginRunner
+public interface IPluginRunner
 {
-    private readonly IReadOnlyList<IContentPlugin> _plugins;
+    Task<ContentDocument> RunPreMarkdownAsync(ContentDocument document, CancellationToken cancellationToken);
 
-    public PluginRunner(PluginLoader loader)
-    {
-        _plugins = loader.Load();
-    }
+    Task<ContentDocument> RunPostMarkdownAsync(ContentDocument document, CancellationToken cancellationToken);
+
+    Task<string> RunPostHtmlAsync(string html, ContentDocument document, CancellationToken cancellationToken);
+}
+
+public sealed class PluginRunner(IPluginLoader loader) : IPluginRunner
+{
+    private readonly IReadOnlyList<IContentPlugin> _plugins = (loader ?? throw new ArgumentNullException(nameof(loader))).Load();
 
     public async Task<ContentDocument> RunPreMarkdownAsync(ContentDocument document, CancellationToken cancellationToken)
     {

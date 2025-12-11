@@ -13,6 +13,9 @@
 
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
+
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+    <GenerateTargetFrameworkAttribute>false</GenerateTargetFrameworkAttribute>
   </PropertyGroup>
 
   <ItemGroup>

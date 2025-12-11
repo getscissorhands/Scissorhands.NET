@@ -1,23 +1,24 @@
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
 using Microsoft.Extensions.Logging;
 
-namespace ScissorHands.Web.Infrastructure;
+namespace ScissorHands.Web.Watchers;
 
 public sealed class ContentWatcher : IDisposable
 {
-    private readonly ILogger<ContentWatcher> _logger;
     private readonly FileSystemWatcher _contentWatcher;
     private readonly FileSystemWatcher _themeWatcher;
+    private readonly ILogger<ContentWatcher> _logger;
     private readonly Subject<string> _changes = new();
     private readonly IDisposable _subscription;
 
     public ContentWatcher(string contentPath, string themePath, TimeSpan debounce, Func<Task> onChange, ILogger<ContentWatcher> logger)
     {
-        _logger = logger;
+        _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
-        _contentWatcher = CreateWatcher(contentPath);
-        _themeWatcher = CreateWatcher(themePath);
+        _contentWatcher = CreateWatcher(contentPath ?? throw new ArgumentNullException(nameof(contentPath)));
+        _themeWatcher = CreateWatcher(themePath ?? throw new ArgumentNullException(nameof(themePath)));
 
         _subscription = _changes
             .Throttle(debounce)

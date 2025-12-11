@@ -5,27 +5,38 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
-using ScissorHands.Web.Rendering;
+using ScissorHands.Theme;
+using ScissorHands.Web.Loaders;
+using ScissorHands.Web.Renderers;
+using ScissorHands.Web.Runners;
 
-namespace ScissorHands.Web.Services;
+namespace ScissorHands.Web.Generators;
+
+public interface IStaticSiteGenerator
+{
+    Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
+        where TMainLayout : MainLayoutBase
+        where TIndexView : IndexViewBase
+        where TPostView : PostViewBase
+        where TPageView : PageViewBase;
+}
 
 public sealed class StaticSiteGenerator(
-        ContentLoader contentLoader,
-        MarkdownService markdownService,
-        PluginRunner pluginRunner,
+        IContentLoader contentLoader,
+        IMarkdownService markdownService,
+        IPluginRunner pluginRunner,
         IThemeService themeService,
-        ComponentRenderer renderer,
+        IComponentRenderer renderer,
         SiteManifest options,
-        ILogger<StaticSiteGenerator> logger)
+        ILogger<StaticSiteGenerator> logger) : IStaticSiteGenerator
 {
-    private readonly ContentLoader _contentLoader = contentLoader ?? throw new ArgumentNullException(nameof(contentLoader));
-    private readonly MarkdownService _markdownService = markdownService ?? throw new ArgumentNullException(nameof(markdownService));
-    private readonly PluginRunner _pluginRunner = pluginRunner ?? throw new ArgumentNullException(nameof(pluginRunner));
+    private readonly IContentLoader _contentLoader = contentLoader ?? throw new ArgumentNullException(nameof(contentLoader));
+    private readonly IMarkdownService _markdownService = markdownService ?? throw new ArgumentNullException(nameof(markdownService));
+    private readonly IPluginRunner _pluginRunner = pluginRunner ?? throw new ArgumentNullException(nameof(pluginRunner));
     private readonly IThemeService _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
-    private readonly ComponentRenderer _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
+    private readonly IComponentRenderer _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-
 
     public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : ScissorHands.Theme.MainLayoutBase

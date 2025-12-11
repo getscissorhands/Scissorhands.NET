@@ -8,9 +8,14 @@ using ScissorHands.Core.Models;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace ScissorHands.Web.Services;
+namespace ScissorHands.Web.Loaders;
 
-public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> logger)
+public interface IContentLoader
+{
+    Task<IReadOnlyList<ContentDocument>> LoadAsync(CancellationToken cancellationToken);
+}
+
+public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> logger) : IContentLoader
 {
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<ContentLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));

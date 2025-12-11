@@ -6,9 +6,14 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Plugin;
 
-namespace ScissorHands.Web.Services;
+namespace ScissorHands.Web.Loaders;
 
-public sealed class PluginLoader(List<PluginManifest> pluginOptions, IServiceProvider services, ILogger<PluginLoader> logger)
+public interface IPluginLoader
+{
+    IReadOnlyList<IContentPlugin> Load();
+}
+
+public sealed class PluginLoader(List<PluginManifest> pluginOptions, IServiceProvider services, ILogger<PluginLoader> logger) : IPluginLoader
 {
     private readonly IReadOnlyList<PluginManifest> _definitions = pluginOptions ?? throw new ArgumentNullException(nameof(pluginOptions));
     private readonly IServiceProvider _services = services ?? throw new ArgumentNullException(nameof(services));

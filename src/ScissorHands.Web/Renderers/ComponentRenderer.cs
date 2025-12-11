@@ -3,21 +3,27 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
-namespace ScissorHands.Web.Rendering;
+namespace ScissorHands.Web.Renderers;
 
-public sealed class ComponentRenderer
+public interface IComponentRenderer
 {
-    private readonly IServiceScopeFactory _scopeFactory;
-    private readonly ILoggerFactory _loggerFactory;
+    Task<string> RenderAsync<TComponent>(
+        Type layoutType,
+        IDictionary<string, object?> parameters,
+        CancellationToken cancellationToken = default
+    ) where TComponent : IComponent;
+}
 
-    public ComponentRenderer(IServiceScopeFactory scopeFactory, ILoggerFactory loggerFactory)
-    {
-        _scopeFactory = scopeFactory;
-        _loggerFactory = loggerFactory;
-    }
+public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILoggerFactory loggerFactory) : IComponentRenderer
+{
+    private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
+    private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    public async Task<string> RenderAsync<TComponent>(Type layoutType, IDictionary<string, object?> parameters, CancellationToken cancellationToken = default)
-        where TComponent : IComponent
+    public async Task<string> RenderAsync<TComponent>(
+        Type layoutType,
+        IDictionary<string, object?> parameters,
+        CancellationToken cancellationToken = default
+    ) where TComponent : IComponent
     {
         cancellationToken.ThrowIfCancellationRequested();
 

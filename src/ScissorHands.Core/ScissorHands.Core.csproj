@@ -11,9 +11,4 @@
     <RootNamespace>ScissorHands.Core</RootNamespace>
   </PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Markdig" Version="0.37.0" />
-    <PackageReference Include="YamlDotNet" Version="15.3.0" />
-  </ItemGroup>
-
 </Project>
