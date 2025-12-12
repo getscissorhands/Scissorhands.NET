@@ -126,7 +126,9 @@ jobs:
     - name: Release to GitHub Package Registry
       shell: bash
       run: |
-        dotnet nuget push ./published/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
+        dotnet nuget push ./published/*.nupkg \
+          --source "https://nuget.pkg.github.com/getscissorhands/index.json" \
+          --api-key "${{ secrets.GITHUB_TOKEN }}"
 
     # - name: Release to NuGet
     #   shell: bash
