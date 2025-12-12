@@ -1,0 +1,134 @@
+name: Build, Test and Publish
+
+on:
+  push:
+    branches:
+    - main
+    - vnext
+    - feat/*
+    - hotfix/*
+    tags:
+      - 'v*'
+  pull_request:
+    branches:
+    - main
+    - vnext
+
+jobs:
+  build_and_test:
+    name: Build and test packages
+    strategy:
+      matrix:
+        os: [ 'windows-latest', 'macos-latest', 'ubuntu-latest' ]
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+    - name: Checkout the repository
+      uses: actions/checkout@v6
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.x'
+
+    - name: Check package version
+      id: version
+      shell: pwsh
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        if ($($env:GITHUB_REF).StartsWith('refs/tags/v') -eq $false) {
+          $version = "1.0.0"
+        }
+
+        "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+    - name: Clear NuGet local cache
+      if: matrix.os == 'windows-latest'
+      shell: pwsh
+      run: |
+        dotnet nuget locals all --clear
+
+    - name: Restore NuGet packages
+      shell: pwsh
+      run: |
+        dotnet restore
+
+    - name: Build solution
+      shell: pwsh
+      run: |
+        dotnet build -c Release -p:Version=${{ steps.version.outputs.value }}
+
+    - name: Run unit tests
+      shell: pwsh
+      run: |
+        dotnet test -c Release --no-build --verbosity normal
+
+    - name: Pack NuGet package
+      if: ${{ startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' }}
+      shell: bash
+      run: |
+        dotnet pack ./src/ScissorHands.Core -c Release -o published --include-symbols -p:Version=${{ steps.version.outputs.value }}
+        dotnet pack ./src/ScissorHands.Plugin -c Release -o published --include-symbols -p:Version=${{ steps.version.outputs.value }}
+        dotnet pack ./src/ScissorHands.Theme -c Release -o published --include-symbols -p:Version=${{ steps.version.outputs.value }}
+        dotnet pack ./src/ScissorHands.Web -c Release -o published --include-symbols -p:Version=${{ steps.version.outputs.value }}
+
+    - name: Upload Artifact
+      if: ${{ startsWith(github.ref, 'refs/tags/v') && matrix.os == 'ubuntu-latest' }}
+      uses: actions/upload-artifact@v5
+      with:
+        name: artifacts
+        path: ./published/
+
+  release:
+    name: Release packages
+    if: ${{ startsWith(github.ref, 'refs/tags/v') }}
+    needs:
+    - build_and_test
+
+    runs-on: ubuntu-latest
+
+    permissions:
+      packages: write
+      contents: write
+
+    steps:
+    - name: Check package version
+      id: version
+      shell: pwsh
+      run: |
+        $version = $env:GITHUB_REF -replace 'refs/tags/v', ''
+        if ($($env:GITHUB_REF).StartsWith('refs/tags/v') -eq $false) {
+          $version = "1.0.0"
+        }
+
+        "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+
+    - name: Download Artifact
+      uses: actions/download-artifact@v6
+      with:
+        name: artifacts
+        path: ./published
+
+    - name: Setup .NET SDK
+      uses: actions/setup-dotnet@v5
+      with:
+        dotnet-version: '10.x'
+
+    - name: Create Release to GitHub
+      uses: softprops/action-gh-release@v2
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        tag_name: "v${{ steps.version.outputs.value }}"
+        files: ./published/*.*
+        generate_release_notes: true
+
+    - name: Release to GitHub Package Registry
+      shell: bash
+      run: |
+        dotnet nuget push ./published/*.nupkg --source "github" --api-key ${{ secrets.GITHUB_TOKEN }}
+
+    # - name: Release to NuGet
+    #   shell: bash
+    #   run: |
+    #     dotnet nuget push ./published/*.nupkg --source https://api.nuget.org/v3/index.json --api-key ${{ secrets.NUGET_API_KEY }}
