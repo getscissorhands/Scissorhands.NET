@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Services;
+using ScissorHands.Plugin;
 using ScissorHands.Web.Generators;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
@@ -19,8 +20,8 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration config)
     {
-        var siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
-        var pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
+        SiteManifest? siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
+        IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
         services.AddSingleton(siteManifest!);
         services.AddSingleton(pluginManifests ?? []);
 
@@ -31,7 +32,12 @@ public static class ServiceCollectionExtensions
     {
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();
-        services.AddSingleton<IPluginLoader, PluginLoader>();
+
+        services.Scan(scan => scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+                                  .AddClasses(c => c.AssignableTo<IContentPlugin>())
+                                  .As<IContentPlugin>()
+                                  .WithSingletonLifetime());
+
         services.AddSingleton<IPluginRunner, PluginRunner>();
         services.AddSingleton<IThemeService, ThemeService>();
         services.AddSingleton<IComponentRenderer, ComponentRenderer>();
