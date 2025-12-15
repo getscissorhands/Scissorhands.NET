@@ -1,3 +1,5 @@
+using System.Reflection;
+
 using Microsoft.Extensions.Configuration;
 
 using Microsoft.Extensions.DependencyInjection;
@@ -21,7 +23,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration config)
     {
         SiteManifest? siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
-        siteManifest!.Generator += " v" + typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString();
+        siteManifest!.Generator += " v" + GetPackageVersion();
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
         services.AddSingleton(siteManifest!);
         services.AddSingleton(pluginManifests ?? []);
@@ -45,5 +47,17 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IStaticSiteGenerator, StaticSiteGenerator>();
 
         return services;
+    }
+
+    private static string GetPackageVersion()
+    {
+        var type = typeof(ServiceCollectionExtensions);
+        var attribute = type.Assembly
+                            .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        var version = attribute?.InformationalVersion;
+
+        return version
+            ?? typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString()
+            ?? "unknown";
     }
 }
