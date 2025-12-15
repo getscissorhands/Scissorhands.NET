@@ -484,6 +484,5 @@ $RECYCLE.BIN/
 *.swp
 
 # project-specific settings
-dist/
-output/
 preview/
+Preview.sln

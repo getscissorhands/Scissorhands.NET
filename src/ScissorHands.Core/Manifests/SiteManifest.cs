@@ -2,10 +2,11 @@ namespace ScissorHands.Core.Manifests;
 
 public sealed class SiteManifest
 {
-    public string Title { get; init; } = "ScissorHands Blog";
-    public string Description { get; init; } = "A Blazor-powered static blog with live preview.";
-    public string Author { get; init; } = "Your Name";
-    public string Theme { get; init; } = "MinimalBlog";
+    public string Generator { get; set; } = "ScissorHands.NET";
+    public string Title { get; init; } = "ScissorHands.NET";
+    public string Description { get; set; } = "A Blazor-powered static site generator.";
+    public string Author { get; init; } = "The ScissorHands Team";
+    public string Theme { get; init; } = string.Empty;
     public string ContentRoot { get; init; } = "contents";
     public string Output { get; init; } = "dist";
     public string PreviewOutput { get; init; } = "preview";

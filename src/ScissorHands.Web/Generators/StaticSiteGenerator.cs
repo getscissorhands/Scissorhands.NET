@@ -47,6 +47,7 @@ public sealed class StaticSiteGenerator(
         Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
+        _options.Description = await _markdownService.ToHtmlAsync(_options.Description, cancellationToken);
         var theme = _themeService.LoadManifest(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
 

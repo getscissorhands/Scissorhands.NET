@@ -21,6 +21,7 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration config)
     {
         SiteManifest? siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
+        siteManifest!.Generator += " v" + typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString();
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
         services.AddSingleton(siteManifest!);
         services.AddSingleton(pluginManifests ?? []);

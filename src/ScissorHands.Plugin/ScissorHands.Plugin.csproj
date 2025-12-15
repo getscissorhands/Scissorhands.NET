@@ -59,6 +59,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.*" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ScissorHands.Core\ScissorHands.Core.csproj" />
   </ItemGroup>
 

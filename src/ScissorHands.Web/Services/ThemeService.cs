@@ -69,6 +69,20 @@ public sealed class ThemeService(ILogger<ThemeService> logger) : IThemeService
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(file, destinationPath, overwrite: true);
         }
+
+        var allowedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
+        {
+            "manifest.json"
+        };
+
+        foreach (var file in Directory.EnumerateFiles(themeRoot, "*", SearchOption.AllDirectories)
+                     .Where(path => allowedFiles.Contains(Path.GetFileName(path))))
+        {
+            var relative = Path.GetRelativePath(themeRoot, file);
+            var destinationPath = Path.Combine(targetRoot, relative);
+            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
+            File.Copy(file, destinationPath, overwrite: true);
+        }
     }
 
     private static void CopyDirectory(string sourceDir, string destinationDir)
