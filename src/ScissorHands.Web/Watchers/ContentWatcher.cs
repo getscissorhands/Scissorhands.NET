@@ -5,6 +5,9 @@ using Microsoft.Extensions.Logging;
 
 namespace ScissorHands.Web.Watchers;
 
+/// <summary>
+/// This represents the content watcher entity.
+/// </summary>
 public sealed class ContentWatcher : IDisposable
 {
     private readonly FileSystemWatcher _contentWatcher;
@@ -13,6 +16,14 @@ public sealed class ContentWatcher : IDisposable
     private readonly Subject<string> _changes = new();
     private readonly IDisposable _subscription;
 
+    /// <summary>
+    /// Initializes a new instance of the <see cref="ContentWatcher"/> class.
+    /// </summary>
+    /// <param name="contentPath">Content directory path.</param>
+    /// <param name="themePath">Theme directory path.</param>
+    /// <param name="debounce">Debounce time span for change events.</param>
+    /// <param name="onChange">Callback function to invoke on change.</param>
+    /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
     public ContentWatcher(string contentPath, string themePath, TimeSpan debounce, Func<Task> onChange, ILogger<ContentWatcher> logger)
     {
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));

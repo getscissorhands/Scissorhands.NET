@@ -10,37 +10,41 @@ using YamlDotNet.Serialization.NamingConventions;
 
 namespace ScissorHands.Web.Loaders;
 
-public interface IContentLoader
-{
-    Task<IReadOnlyList<ContentDocument>> LoadAsync(CancellationToken cancellationToken);
-}
-
+/// <summary>
+/// This represents the content loader entity.
+/// </summary>
+/// <param name="options"><see cref="SiteManifest"/> instance.</param>
+/// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
 public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> logger) : IContentLoader
 {
+    private const string POST_DIRECTORY = "posts";
+    private const string PAGE_DIRECTORY = "pages";
+
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<ContentLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly string _basePath = Directory.GetCurrentDirectory();
     private readonly IDeserializer _deserializer = new DeserializerBuilder()
-            .WithNamingConvention(CamelCaseNamingConvention.Instance)
-            .IgnoreUnmatchedProperties()
-            .Build();
+                                                       .WithNamingConvention(CamelCaseNamingConvention.Instance)
+                                                       .IgnoreUnmatchedProperties()
+                                                       .Build();
 
-    public async Task<IReadOnlyList<ContentDocument>> LoadAsync(CancellationToken cancellationToken)
+    /// <inheritdoc />
+    public async Task<IEnumerable<ContentDocument>> LoadAsync(CancellationToken cancellationToken)
     {
         var documents = new List<ContentDocument>();
-        documents.AddRange(await LoadFromFolderAsync(ContentKind.Post, "posts", cancellationToken));
-        documents.AddRange(await LoadFromFolderAsync(ContentKind.Page, "pages", cancellationToken));
+        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Post, POST_DIRECTORY, cancellationToken));
+        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Page, PAGE_DIRECTORY, cancellationToken));
         return documents;
     }
 
-    private async Task<IReadOnlyList<ContentDocument>> LoadFromFolderAsync(ContentKind kind, string folder, CancellationToken cancellationToken)
+    private async Task<IReadOnlyList<ContentDocument>> LoadFromDirectoryAsync(ContentKind kind, string directory, CancellationToken cancellationToken)
     {
         var result = new List<ContentDocument>();
-        var root = Path.Combine(_basePath, _options.ContentRoot, folder);
+        var root = Path.Combine(_basePath, _options.ContentRoot, directory);
 
         if (!Directory.Exists(root))
         {
-            _logger.LogWarning("Content folder {Folder} not found at {Path}", folder, root);
+            _logger.LogWarning("Content directory {Directory} not found at {Path}", directory, root);
             return result;
         }
 
@@ -74,7 +78,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
     {
         using var reader = new StringReader(text);
         var firstLine = reader.ReadLine();
-        if (!string.Equals(firstLine?.Trim(), "---", StringComparison.Ordinal))
+        if (string.Equals(firstLine?.Trim(), "---", StringComparison.OrdinalIgnoreCase) == false)
         {
             return (new ContentMetadata { Title = Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
         }
@@ -83,7 +87,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
         string? line;
         while ((line = reader.ReadLine()) is not null)
         {
-            if (string.Equals(line.Trim(), "---", StringComparison.Ordinal))
+            if (string.Equals(line.Trim(), "---", StringComparison.OrdinalIgnoreCase) == true)
             {
                 break;
             }
@@ -95,14 +99,14 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
 
         try
         {
-            var map = _deserializer.Deserialize<Dictionary<string, object>>(yaml) ?? new();
+            var map = _deserializer.Deserialize<Dictionary<string, object>>(yaml) ?? [];
             var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : Path.GetFileNameWithoutExtension(sourcePath);
             var slug = map.TryGetValue("slug", out var slugValue) ? Convert.ToString(slugValue, CultureInfo.InvariantCulture) ?? string.Empty : string.Empty;
             var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : null;
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : null;
             var heroImage = map.TryGetValue("hero", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : null;
             var draft = map.TryGetValue("draft", out var draftValue) && bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out var parsedDraft) && parsedDraft;
-            var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue) : Array.Empty<string>();
+            var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue) : [];
             DateTimeOffset? published = null;
 
             if (map.TryGetValue("published", out var publishedValue) && DateTimeOffset.TryParse(Convert.ToString(publishedValue, CultureInfo.InvariantCulture), out var parsedPublished))
@@ -154,9 +158,9 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
     {
         return value switch
         {
-            IEnumerable<object> enumerable => enumerable.Select(v => Convert.ToString(v) ?? string.Empty).Where(s => !string.IsNullOrWhiteSpace(s)).ToArray(),
+            IEnumerable<object> enumerable => [.. enumerable.Select(v => Convert.ToString(v) ?? string.Empty).Where(s => !string.IsNullOrWhiteSpace(s))],
             string csv => csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            _ => Array.Empty<string>()
+            _ => []
         };
     }
 

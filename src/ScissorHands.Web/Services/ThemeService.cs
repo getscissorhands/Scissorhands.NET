@@ -7,37 +7,45 @@ using ScissorHands.Core.Services;
 
 namespace ScissorHands.Web.Services;
 
-public sealed class ThemeService(ILogger<ThemeService> logger) : IThemeService
+/// <summary>
+/// This represents the service entity for theme.
+/// </summary>
+/// <param name="site"><see cref="SiteManifest"/> instance.</param>
+/// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
+public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger) : IThemeService
 {
+    private readonly SiteManifest _site = site ?? throw new ArgumentNullException(nameof(site));
     private readonly ILogger<ThemeService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly string _basePath = Directory.GetCurrentDirectory();
 
-    public ThemeManifest LoadManifest(string themeName)
+    /// <inheritdoc />
+    public ThemeManifest LoadManifest(string themeSlug)
     {
-        var manifestPath = Path.Combine(_basePath, "themes", themeName, "theme.json");
+        var manifestPath = Path.Combine(_basePath, "themes", themeSlug, "theme.json");
         if (!File.Exists(manifestPath))
         {
             _logger.LogWarning("Theme manifest not found at {Path}", manifestPath);
-            return new ThemeManifest { Name = themeName };
+
+            return new ThemeManifest { Name = themeSlug };
         }
 
         try
         {
             var json = File.ReadAllText(manifestPath);
             return JsonSerializer.Deserialize<ThemeManifest>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
-                   ?? new ThemeManifest { Name = themeName };
+                   ?? new ThemeManifest { Name = themeSlug };
         }
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to read theme manifest {Path}", manifestPath);
-            return new ThemeManifest { Name = themeName };
+            return new ThemeManifest { Name = themeSlug };
         }
     }
 
-    public void CopyAssets(string themeName, string destination)
+    public void CopyAssets(string themeSlug, string destination)
     {
-        var themeRoot = Path.Combine(_basePath, "themes", themeName);
-        var targetRoot = Path.Combine(destination, "themes", themeName);
+        var themeRoot = Path.Combine(_basePath, "themes", themeSlug);
+        var targetRoot = Path.Combine(destination, "themes", themeSlug);
 
         if (!Directory.Exists(themeRoot))
         {

@@ -169,7 +169,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         });
 
         var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), _site.ContentRoot));
-        var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ThemeManifest.ThemeDirectory));
+        var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ThemeManifest.THEME_DIRECTORY));
 
         var watcher = new ContentWatcher(
             contentRoot,

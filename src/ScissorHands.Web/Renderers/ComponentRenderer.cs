@@ -5,25 +5,19 @@ using Microsoft.Extensions.Logging;
 
 namespace ScissorHands.Web.Renderers;
 
-public interface IComponentRenderer
-{
-    Task<string> RenderAsync<TComponent>(
-        Type layoutType,
-        IDictionary<string, object?> parameters,
-        CancellationToken cancellationToken = default
-    ) where TComponent : IComponent;
-}
-
+/// <summary>
+/// This represents the component renderer entity.
+/// </summary>
+/// <param name="scopeFactory"><see cref="IServiceScopeFactory"/> instance.</param>
+/// <param name="loggerFactory"><see cref="ILoggerFactory"/> instance.</param>
 public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILoggerFactory loggerFactory) : IComponentRenderer
 {
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
     private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
 
-    public async Task<string> RenderAsync<TComponent>(
-        Type layoutType,
-        IDictionary<string, object?> parameters,
-        CancellationToken cancellationToken = default
-    ) where TComponent : IComponent
+    /// <inheritdoc />
+    public async Task<string> RenderAsync<TComponent>(Type layoutType, IDictionary<string, object?> parameters, CancellationToken cancellationToken = default)
+        where TComponent : IComponent
     {
         cancellationToken.ThrowIfCancellationRequested();
 
