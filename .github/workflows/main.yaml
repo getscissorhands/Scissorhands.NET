@@ -43,6 +43,28 @@ jobs:
 
         "value=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
 
+    - name: Update package version
+      shell: pwsh
+      run: |
+        $csprojPaths = (Get-ChildItem -Path ./src/*.csproj -Recurse).FullName
+        $csprojPaths | ForEach-Object {
+          $csprojPath = $_
+          [xml]$xmlDoc = Get-Content -Path $csprojPath
+
+          # Find and replace the Version node value
+          $versionNode = $xmlDoc.SelectSingleNode("//PropertyGroup/Version")
+          if ($versionNode -ne $null) {
+              $versionNode.InnerText = "${{ steps.version.outputs.value }}"
+              Write-Host "Version updated to: $($versionNode.InnerText) in file $csprojPath"
+          } else {
+              Write-Host "Version node not found in file $csprojPath!"
+          }
+
+          # Save it with .xml extension
+          $xmlDoc.Save($csprojPath)
+          Write-Host "File saved: $csprojPath"
+        }
+
     - name: Clear NuGet local cache
       if: matrix.os == 'windows-latest'
       shell: pwsh

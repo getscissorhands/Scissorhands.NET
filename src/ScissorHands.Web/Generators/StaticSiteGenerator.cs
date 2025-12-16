@@ -12,8 +12,21 @@ using ScissorHands.Web.Runners;
 
 namespace ScissorHands.Web.Generators;
 
+/// <summary>
+/// This provides the interface to the static site generator.
+/// </summary>
 public interface IStaticSiteGenerator
 {
+    /// <summary>
+    /// Builds the static site contents.
+    /// </summary>
+    /// <typeparam name="TMainLayout">Type of the main layout component.</typeparam>
+    /// <typeparam name="TIndexView">Type of the index view component.</typeparam>
+    /// <typeparam name="TPostView">Type of the post view component.</typeparam>
+    /// <typeparam name="TPageView">Type of the page view component.</typeparam>
+    /// <param name="destination">The destination directory store the generated contents.</param>
+    /// <param name="preview">Indicates whether to generate a preview version.</param>
+    /// <param name="cancellationToken">A token to monitor for cancellation requests.</param>
     Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : MainLayoutBase
         where TIndexView : IndexViewBase
@@ -21,6 +34,16 @@ public interface IStaticSiteGenerator
         where TPageView : PageViewBase;
 }
 
+/// <summary>
+/// This represents the static site generator entity.
+/// </summary>
+/// <param name="contentLoader"><see cref="IContentLoader"/> instance.</param>
+/// <param name="markdownService"><see cref="IMarkdownService"/> instance.</param>
+/// <param name="pluginRunner"><see cref="IPluginRunner"/> instance.</param>
+/// <param name="themeService"><see cref="IThemeService"/> instance.</param>
+/// <param name="renderer"><see cref="IComponentRenderer"/> instance.</param>
+/// <param name="options"><see cref="SiteManifest"/> instance.</param>
+/// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
 public sealed class StaticSiteGenerator(
         IContentLoader contentLoader,
         IMarkdownService markdownService,
@@ -38,6 +61,7 @@ public sealed class StaticSiteGenerator(
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
+    /// <inheritdoc />
     public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : ScissorHands.Theme.MainLayoutBase
         where TIndexView : ScissorHands.Theme.IndexViewBase
@@ -48,11 +72,12 @@ public sealed class StaticSiteGenerator(
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
         _options.Description = await _markdownService.ToHtmlAsync(_options.Description, cancellationToken);
+        var plugins = _pluginRunner.Manifests;
         var theme = _themeService.LoadManifest(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
 
         var layoutType = typeof(TMainLayout);
-        await RenderIndexAsync<TIndexView>(documents, theme, destination, layoutType, cancellationToken);
+        await RenderIndexAsync<TIndexView>(documents, plugins, theme, destination, layoutType, cancellationToken);
 
         foreach (var document in documents)
         {
@@ -66,6 +91,7 @@ public sealed class StaticSiteGenerator(
             var parameters = new Dictionary<string, object?>
             {
                 ["Document"] = postMarkdown,
+                ["Plugins"] = plugins,
                 ["Theme"] = theme,
                 ["Site"] = _options
             };
@@ -87,7 +113,7 @@ public sealed class StaticSiteGenerator(
         _themeService.CopyAssets(_options.Theme, destination);
     }
 
-    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TIndexView : ScissorHands.Theme.IndexViewBase
     {
         var posts = documents
@@ -98,6 +124,7 @@ public sealed class StaticSiteGenerator(
         var parameters = new Dictionary<string, object?>
         {
             ["Documents"] = posts,
+            ["Plugins"] = plugins,
             ["Theme"] = theme,
             ["Site"] = _options
         };

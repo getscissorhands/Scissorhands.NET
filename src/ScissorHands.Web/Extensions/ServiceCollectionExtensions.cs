@@ -15,22 +15,38 @@ using ScissorHands.Web.Services;
 
 namespace ScissorHands.Web.Extensions;
 
+/// <summary>
+/// This represents the extensions entity for <see cref="IServiceCollection"/>
+/// </summary>
 public static class ServiceCollectionExtensions
 {
     private const string SITE_SETTINGS_SECTION_NAME = "Site";
     private const string PLUGIN_SETTINGS_SECTION_NAME = "Plugins";
 
+    /// <summary>
+    /// Adds the configurations from appsettings.json
+    /// </summary>
+    /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
+    /// <param name="config"><see cref="IConfiguration"/> instance.</param>
+    /// <returns>Returns the <see cref="IServiceCollection"/> instance.</returns>
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration config)
     {
         SiteManifest? siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
-        siteManifest!.Generator += " v" + GetPackageVersion();
+        siteManifest!.Generator += ";v" + GetPackageVersion();
+
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
+
         services.AddSingleton(siteManifest!);
         services.AddSingleton(pluginManifests ?? []);
 
         return services;
     }
 
+    /// <summary>
+    /// Adds dependencies to the <see cref="IServiceCollection"/>.
+    /// </summary>
+    /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
+    /// <returns>Returns the <see cref="IServiceCollection"/> instance.</returns>
     public static IServiceCollection AddServices(this IServiceCollection services)
     {
         services.AddSingleton<IContentLoader, ContentLoader>();
