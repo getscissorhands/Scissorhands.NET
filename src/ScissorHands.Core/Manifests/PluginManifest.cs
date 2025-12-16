@@ -13,5 +13,5 @@ public sealed class PluginManifest
     /// <summary>
     /// Gets the list of options for the plugin.
     /// </summary>
-    public IDictionary<string, object>? Options { get; init; }
+    public IDictionary<string, object?>? Options { get; init; }
 }
