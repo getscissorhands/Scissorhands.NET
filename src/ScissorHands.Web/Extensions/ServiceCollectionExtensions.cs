@@ -52,7 +52,12 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();
 
-        services.Scan(scan => scan.FromAssemblies(AppDomain.CurrentDomain.GetAssemblies())
+        var assemblies = Directory.GetFiles(AppContext.BaseDirectory, "*.dll")
+                                  .Select(Assembly.LoadFrom)
+                                  .ToArray()
+                                  .Union(AppDomain.CurrentDomain.GetAssemblies())
+                                  .ToArray();
+        services.Scan(scan => scan.FromAssemblies(assemblies)
                                   .AddClasses(c => c.AssignableTo<IContentPlugin>())
                                   .As<IContentPlugin>()
                                   .WithSingletonLifetime());

@@ -484,5 +484,6 @@ $RECYCLE.BIN/
 *.swp
 
 # project-specific settings
+.DS_Store
 preview/
 Preview.sln
