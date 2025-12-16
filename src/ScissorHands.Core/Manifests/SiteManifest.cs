@@ -66,7 +66,12 @@ public sealed class SiteManifest
     public string BaseUrl { get; init; } = "/";
 
     /// <summary>
-    /// Gets a value indicating whether to include date in post URL.
+    /// Gets a value indicating whether to include date in post URL or not.
     /// </summary>
     public bool IncludeDateInPostUrl { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether to enable debug mode or not.
+    /// </summary>
+    public bool Debug { get; init; }
 }

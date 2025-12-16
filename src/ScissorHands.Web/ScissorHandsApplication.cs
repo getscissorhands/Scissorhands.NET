@@ -16,7 +16,7 @@ namespace ScissorHands.Web;
 public interface IScissorHandsApplication
 {
     IScissorHandsApplication VerifyCommandArguments();
-    Task<IScissorHandsApplication> InitializeAsync();
+    Task<IScissorHandsApplication> BuildAsync();
     Task RunAsync();
 }
 
@@ -62,13 +62,13 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         return this;
     }
 
-    public async Task<IScissorHandsApplication> InitializeAsync()
+    public async Task<IScissorHandsApplication> BuildAsync()
     {
         var builder = WebApplication.CreateBuilder([.. _args]);
 
         var config = builder.Configuration;
         builder.Services.AddConfigurations(config)
-                        .AddServices()
+                        .AddServices(config)
                         .AddRazorComponents();
 
         _app = builder.Build();

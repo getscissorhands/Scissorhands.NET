@@ -46,8 +46,9 @@ public static class ServiceCollectionExtensions
     /// Adds dependencies to the <see cref="IServiceCollection"/>.
     /// </summary>
     /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
+    /// <param name="config"><see cref="IConfiguration"/> instance.</param>
     /// <returns>Returns the <see cref="IServiceCollection"/> instance.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services)
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config)
     {
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();
@@ -57,6 +58,16 @@ public static class ServiceCollectionExtensions
                                   .ToArray()
                                   .Union(AppDomain.CurrentDomain.GetAssemblies())
                                   .ToArray();
+
+        var siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
+        if (siteManifest?.Debug == true)
+        {
+            foreach (var assembly in assemblies)
+            {
+                Console.WriteLine($"Loaded Assembly: {assembly.FullName}");
+            }
+        }
+
         services.Scan(scan => scan.FromAssemblies(assemblies)
                                   .AddClasses(c => c.AssignableTo<IContentPlugin>())
                                   .As<IContentPlugin>()
