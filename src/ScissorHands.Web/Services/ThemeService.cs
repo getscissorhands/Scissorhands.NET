@@ -26,7 +26,7 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
         {
             _logger.LogWarning("Theme manifest not found at {Path}", manifestPath);
 
-            return new ThemeManifest { Name = themeSlug };
+            return new ThemeManifest { Name = "Default", Slug = "default" };
         }
 
         try
@@ -38,7 +38,7 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to read theme manifest {Path}", manifestPath);
-            return new ThemeManifest { Name = themeSlug };
+            return new ThemeManifest { Name = "Default", Slug = "default" };
         }
     }
 

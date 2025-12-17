@@ -1,0 +1,34 @@
+@inherits ScissorHands.Theme.MainLayoutBase
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <base href="@Site!.BaseUrl" />
+
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="icon" type="image/x-icon" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}/favicon.ico")" />
+    <meta name="generator" content="@Site!.Generator" />
+
+    <title>@Site!.Title</title>
+    <meta name="title" content="@Site!.Title" />
+    <meta name="description" content="@Site!.Description" />
+    @if (Theme!.Stylesheets is not null)
+    {
+        foreach (var css in Theme!.Stylesheets)
+        {
+            <link rel="stylesheet" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}{css}")" />
+        }
+    }
+</head>
+<body>
+    @Body
+    @if (Theme!.Scripts is not null)
+    {
+        foreach (var script in Theme!.Scripts)
+        {
+            <script src="@($"/themes/{Theme!.Slug.TrimEnd('/')}{script}")"></script>
+        }
+    }
+</body>
+</html>

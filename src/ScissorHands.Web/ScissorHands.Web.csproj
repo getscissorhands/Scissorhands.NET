@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -9,6 +9,8 @@
 
     <AssemblyName>ScissorHands.Web</AssemblyName>
     <RootNamespace>ScissorHands.Web</RootNamespace>
+
+    <EnableDefaultContentItems>false</EnableDefaultContentItems>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -56,6 +58,11 @@
       <Pack>True</Pack>
       <PackagePath>\</PackagePath>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="contents/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="themes/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
   <ItemGroup>

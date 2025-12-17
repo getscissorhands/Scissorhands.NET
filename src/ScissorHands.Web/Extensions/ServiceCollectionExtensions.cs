@@ -32,11 +32,13 @@ public static class ServiceCollectionExtensions
     public static IServiceCollection AddConfigurations(this IServiceCollection services, IConfiguration config)
     {
         SiteManifest? siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
+        siteManifest ??= new();
         siteManifest!.Generator += ";v" + GetPackageVersion();
+
+        services.AddSingleton(siteManifest!);
 
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
 
-        services.AddSingleton(siteManifest!);
         services.AddSingleton(pluginManifests ?? []);
 
         return services;
