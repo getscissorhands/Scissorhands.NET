@@ -36,6 +36,11 @@ public sealed class SiteManifest
     public string Description { get; set; } = "A Blazor-based static site generator.";
 
     /// <summary>
+    /// Gets or sets the site description.
+    /// </summary>
+    public string? DescriptionInHtml { get; set; }
+
+    /// <summary>
     /// Gets the site author.
     /// </summary>
     public string Author { get; init; } = "The ScissorHands";

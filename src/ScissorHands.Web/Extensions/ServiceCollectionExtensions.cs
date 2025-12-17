@@ -83,13 +83,17 @@ public static class ServiceCollectionExtensions
 
     private static string GetPackageVersion()
     {
-        var type = typeof(ServiceCollectionExtensions);
-        var attribute = type.Assembly
-                            .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
-        var version = attribute?.InformationalVersion;
+        // var type = typeof(ServiceCollectionExtensions);
+        // var attribute = type.Assembly
+        //                     .GetCustomAttribute<AssemblyInformationalVersionAttribute>();
+        // var version = attribute?.InformationalVersion;
 
-        return version
-            ?? typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString()
-            ?? "unknown";
+        // return version
+        //     ?? typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString()
+        //     ?? "unknown";
+
+        var version = typeof(ServiceCollectionExtensions).Assembly.GetName().Version?.ToString();
+
+        return version ?? "unknown";
     }
 }

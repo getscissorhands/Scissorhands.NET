@@ -48,7 +48,7 @@ public sealed class StaticSiteGenerator(
         Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
-        _options.Description = await _markdownService.ToHtmlAsync(_options.Description, cancellationToken);
+        _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
         var theme = _themeService.LoadManifest(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
@@ -61,7 +61,7 @@ public sealed class StaticSiteGenerator(
             cancellationToken.ThrowIfCancellationRequested();
 
             var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
-            var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken);
+            var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
             preProcessed.Html = html;
             var postMarkdown = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
 
