@@ -3,6 +3,23 @@
 
 <section class="home">
     <article>
-        Hello, ScissorHands.NET!
+        @if (Documents.Any() == false)
+        {
+            <p>Welcome aboard ScissorHands.NET!</p>
+        }
+        @foreach (var post in Documents)
+        {
+            <article>
+                <div>
+                    <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                </div>
+                @if (string.IsNullOrWhiteSpace(post.Metadata.Description) == false)
+                {
+                    <div>
+                        <p>@post.Metadata.Description</p>
+                    </div>
+                }
+            </article>
+        }
     </article>
 </section>
