@@ -150,7 +150,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
     private async Task<IScissorHandsApplication> RunPreviewServerAsync()
     {
-        var previewPath = Path.GetFullPath(_site!.PreviewOutput);
+        var previewPath = Path.GetFullPath(SiteManifest.PREVIEW_OUTPUT_DIRECTORY);
         if (Directory.Exists(previewPath))
         {
             Directory.Delete(previewPath, recursive: true);
@@ -165,10 +165,12 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         _app.Lifetime.ApplicationStarted.Register(() =>
         {
             var addresses = _app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses;
-            _logger!.LogInformation("Preview server running at {Address}", $"{string.Join(", ", addresses ?? []).TrimEnd('/')}{_site!.BaseUrl}");
+            var siteUrl = string.Join(", ", addresses ?? []).TrimEnd('/');
+            _site!.SiteUrl = siteUrl;
+            _logger!.LogInformation("Preview server running at {Address}", $"{siteUrl}/{_site!.BaseUrl.TrimStart('/')}");
         });
 
-        var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), _site.ContentRoot));
+        var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), SiteManifest.CONTENTS_DIRECTORY));
         var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ThemeManifest.THEME_DIRECTORY));
 
         var watcher = new ContentWatcher(
@@ -190,7 +192,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
     private async Task<IScissorHandsApplication> RunBuildAsync()
     {
-        var outputPath = Path.GetFullPath(_site!.Output);
+        var outputPath = Path.GetFullPath(SiteManifest.BUILD_OUTPUT_DIRECTORY);
         if (Directory.Exists(outputPath))
         {
             Directory.Delete(outputPath, recursive: true);

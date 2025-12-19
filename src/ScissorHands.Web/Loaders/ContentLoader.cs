@@ -40,7 +40,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
     private async Task<IReadOnlyList<ContentDocument>> LoadFromDirectoryAsync(ContentKind kind, string directory, CancellationToken cancellationToken)
     {
         var result = new List<ContentDocument>();
-        var root = Path.Combine(_basePath, _options.ContentRoot, directory);
+        var root = Path.Combine(_basePath, SiteManifest.CONTENTS_DIRECTORY, directory);
 
         if (!Directory.Exists(root))
         {
@@ -102,9 +102,10 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
             var map = _deserializer.Deserialize<Dictionary<string, object>>(yaml) ?? [];
             var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : Path.GetFileNameWithoutExtension(sourcePath);
             var slug = map.TryGetValue("slug", out var slugValue) ? Convert.ToString(slugValue, CultureInfo.InvariantCulture) ?? string.Empty : string.Empty;
-            var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : null;
-            var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : null;
-            var heroImage = map.TryGetValue("hero", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : null;
+            var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : default;
+            var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
+            var twitterHandle = map.TryGetValue("twitter_handle", out var twitterValue) ? Convert.ToString(twitterValue, CultureInfo.InvariantCulture) : default;
+            var heroImage = map.TryGetValue("hero_image", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : default;
             var draft = map.TryGetValue("draft", out var draftValue) && bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out var parsedDraft) && parsedDraft;
             var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue) : [];
             DateTimeOffset? published = null;
@@ -120,6 +121,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
                 Slug = slug,
                 Description = description,
                 Author = author,
+                TwitterHandle = twitterHandle,
                 HeroImage = heroImage,
                 Tags = tags,
                 Published = published,

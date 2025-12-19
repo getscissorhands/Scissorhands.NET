@@ -26,6 +26,11 @@ public sealed record ContentMetadata
     public string? Author { get; init; }
 
     /// <summary>
+    /// Gets the Twitter handle of the author.
+    /// </summary>
+    public string? TwitterHandle { get; init; }
+
+    /// <summary>
     /// Gets the hero image path of the content.
     /// </summary>
     public string? HeroImage { get; init; }

@@ -134,7 +134,7 @@ public sealed class StaticSiteGenerator(
 
     private void CopyContentAssets(string destination)
     {
-        var source = Path.Combine(Directory.GetCurrentDirectory(), _options.ContentRoot, "images");
+        var source = Path.Combine(Directory.GetCurrentDirectory(), SiteManifest.CONTENTS_DIRECTORY, "images");
         var target = Path.Combine(destination, "images");
 
         if (!Directory.Exists(source))

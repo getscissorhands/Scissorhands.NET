@@ -487,4 +487,4 @@ $RECYCLE.BIN/
 .DS_Store
 preview/
 Preview.sln
-src/ScissorHands.Plugin.GoogleAnalytics/
+src/ScissorHands.Plugin.*/

@@ -12,19 +12,19 @@ public abstract class ContentPlugin : IContentPlugin
     public abstract string Name { get; }
 
     /// <inheritdoc />
-    public virtual Task<ContentDocument> PreMarkdownAsync(ContentDocument document, PluginManifest manifest, CancellationToken cancellationToken = default)
+    public virtual Task<ContentDocument> PreMarkdownAsync(ContentDocument document, PluginManifest plugin, SiteManifest site, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(document);
     }
 
     /// <inheritdoc />
-    public virtual Task<ContentDocument> PostMarkdownAsync(ContentDocument document, PluginManifest manifest, CancellationToken cancellationToken = default)
+    public virtual Task<ContentDocument> PostMarkdownAsync(ContentDocument document, PluginManifest plugin, SiteManifest site, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(document);
     }
 
     /// <inheritdoc />
-    public virtual Task<string> PostHtmlAsync(string html, ContentDocument document, PluginManifest manifest, CancellationToken cancellationToken = default)
+    public virtual Task<string> PostHtmlAsync(string html, ContentDocument document, PluginManifest plugin, SiteManifest site, CancellationToken cancellationToken = default)
     {
         return Task.FromResult(html);
     }

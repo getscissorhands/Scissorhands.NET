@@ -9,8 +9,11 @@ namespace ScissorHands.Web.Runners;
 /// </summary>
 /// <param name="manifests">List of <see cref="PluginManifest"/> instances.</param>
 /// <param name="plugins">List of <see cref="IContentPlugin"/> instances.</param>
-public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumerable<IContentPlugin> plugins) : IPluginRunner
+/// <param name="site"><see cref="SiteManifest"/> instance.</param>
+public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumerable<IContentPlugin> plugins, SiteManifest site) : IPluginRunner
 {
+    private readonly SiteManifest _site = site ?? throw new ArgumentNullException(nameof(site));
+
     /// <inheritdoc />
     public IReadOnlyList<PluginManifest> Manifests { get; init; } = [.. manifests ?? throw new ArgumentNullException(nameof(manifests))];
 
@@ -31,7 +34,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
                 continue;
             }
 
-            current = await plugin.PreMarkdownAsync(current, manifest, cancellationToken);
+            current = await plugin.PreMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
         return current;
@@ -51,7 +54,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
                 continue;
             }
 
-            current = await plugin.PostMarkdownAsync(current, manifest, cancellationToken);
+            current = await plugin.PostMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
         return current;
@@ -71,7 +74,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
                 continue;
             }
 
-            current = await plugin.PostHtmlAsync(current, document, manifest, cancellationToken);
+            current = await plugin.PostHtmlAsync(current, document, manifest, _site, cancellationToken);
         }
 
         return current;
