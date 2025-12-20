@@ -25,17 +25,15 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
         var renderer = new HtmlRenderer(scope.ServiceProvider, _loggerFactory);
 
         #pragma warning disable ASP0006
-        var layoutParams = new Dictionary<string, object?>
+        var layoutParams = new Dictionary<string, object?>(parameters)
         {
-            ["Layout"] = layoutType,
-            ["ChildContent"] = (RenderFragment)(builder =>
+            ["Body"] = (RenderFragment)(builder =>
             {
                 builder.OpenComponent<TComponent>(0);
                 var seq = 1;
                 foreach (var kvp in parameters)
                 {
-                    builder.AddAttribute(seq, kvp.Key, kvp.Value);
-                    seq += 1;
+                    builder.AddAttribute(seq++, kvp.Key, kvp.Value);
                 }
                 builder.CloseComponent();
             })
@@ -45,8 +43,8 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
         var parameterView = ParameterView.FromDictionary(layoutParams);
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
-            var result = await renderer.RenderComponentAsync<LayoutView>(parameterView);
-            return result.ToHtmlString();
+            var root = await renderer.RenderComponentAsync(layoutType, parameterView);
+            return root.ToHtmlString();
         });
 
         return html;
