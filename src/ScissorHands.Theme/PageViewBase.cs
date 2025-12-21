@@ -8,7 +8,7 @@ namespace ScissorHands.Theme;
 /// <summary>
 /// This represents the base class entity for the page view component.
 /// </summary>
-public class PageViewBase : ComponentBase
+public abstract class PageViewBase : ComponentBase
 {
     /// <summary>
     /// Gets or sets the <see cref="ContentDocument"/> instance.

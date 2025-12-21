@@ -9,8 +9,13 @@ namespace ScissorHands.Theme;
 /// <summary>
 /// This represents the base class entity for the main layout component.
 /// </summary>
-public class MainLayoutBase : LayoutComponentBase
+public abstract class MainLayoutBase : LayoutComponentBase
 {
+    /// <summary>
+    /// Gets or sets the site title calculated.
+    /// </summary>
+    protected string? SiteTitle { get; set; }
+
     /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.
     /// </summary>
@@ -50,8 +55,25 @@ public class MainLayoutBase : LayoutComponentBase
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
+        SiteTitle = CalculateSiteTitle();
+
         Theme = ThemeService!.LoadManifest(Site!.Theme);
 
         await Task.CompletedTask;
+    }
+
+    /// <summary>
+    /// Calculates the site title based on the site and document title.
+    /// </summary>
+    /// <returns>Returns the site title calculated.</returns>
+    protected virtual string CalculateSiteTitle()
+    {
+        var title = Site?.Title;
+        if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Title) == false)
+        {
+            title = $"{Document.Metadata.Title} | {title}";
+        }
+
+        return title ?? string.Empty;
     }
 }

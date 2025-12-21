@@ -8,7 +8,7 @@ namespace ScissorHands.Theme;
 /// <summary>
 /// This represents the base class entity for the index view component.
 /// </summary>
-public class IndexViewBase : ComponentBase
+public abstract class IndexViewBase : ComponentBase
 {
     /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.

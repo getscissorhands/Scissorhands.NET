@@ -8,7 +8,7 @@ namespace ScissorHands.Theme;
 /// <summary>
 /// This represents the base class entity for the post view component.
 /// </summary>
-public class PostViewBase : ComponentBase
+public abstract class PostViewBase : ComponentBase
 {
     /// <summary>
     /// Gets or sets the <see cref="ContentDocument"/> instance.
