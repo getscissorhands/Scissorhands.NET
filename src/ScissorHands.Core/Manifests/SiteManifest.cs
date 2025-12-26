@@ -9,6 +9,7 @@ public sealed class SiteManifest
     private const string SITE_LOCALE = "en-US";
     private const string SITE_URL = "http://localhost:5000";
     private const string BASE_URL = "/";
+    private const string HERO_IMAGE_URL = "https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/hero.jpg";
 
     /// <summary>
     /// Defines the contents directory.
@@ -73,7 +74,7 @@ public sealed class SiteManifest
     /// <summary>
     /// Gets the site hero image.
     /// </summary>
-    public string? HeroImage { get; init; }
+    public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>
     /// Gets a value indicating whether to include date in post URL or not.
