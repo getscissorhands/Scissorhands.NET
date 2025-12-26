@@ -6,7 +6,9 @@ namespace ScissorHands.Core.Manifests;
 public sealed class SiteManifest
 {
     private const string SITE_TITLE = "ScissorHands.NET";
+    private const string SITE_DESCRIPTION = "A Blazor-based static site generator.";
     private const string SITE_LOCALE = "en-US";
+    private const string SITE_AUTHOR = "The ScissorHands";
     private const string SITE_URL = "http://localhost:5000";
     private const string BASE_URL = "/";
     private const string HERO_IMAGE_URL = "https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/hero.jpg";
@@ -39,7 +41,7 @@ public sealed class SiteManifest
     /// <summary>
     /// Gets or sets the site description.
     /// </summary>
-    public string Description { get; set; } = "A Blazor-based static site generator.";
+    public string Description { get; set; } = SITE_DESCRIPTION;
 
     /// <summary>
     /// Gets or sets the site description.
@@ -54,7 +56,7 @@ public sealed class SiteManifest
     /// <summary>
     /// Gets the site author.
     /// </summary>
-    public string Author { get; init; } = "The ScissorHands";
+    public string Author { get; init; } = SITE_AUTHOR;
 
     /// <summary>
     /// Gets the site theme slug.
