@@ -12,9 +12,14 @@ namespace ScissorHands.Theme;
 public abstract class MainLayoutBase : LayoutComponentBase
 {
     /// <summary>
-    /// Gets or sets the site title calculated.
+    /// Gets or sets the page title calculated.
     /// </summary>
-    protected string? SiteTitle { get; set; }
+    protected string? PageTitle { get; set; }
+
+    /// <summary>
+    /// Gets or sets the page description calculated.
+    /// </summary>
+    protected string? PageDescription { get; set; }
 
     /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.
@@ -55,7 +60,8 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
-        SiteTitle = CalculateSiteTitle();
+        PageTitle = CalculatePageTitle();
+        PageDescription = CalculatePageDescription();
 
         Theme = ThemeService!.LoadManifest(Site!.Theme);
 
@@ -63,10 +69,10 @@ public abstract class MainLayoutBase : LayoutComponentBase
     }
 
     /// <summary>
-    /// Calculates the site title based on the site and document title.
+    /// Calculates the page title based on the site and document title.
     /// </summary>
-    /// <returns>Returns the site title calculated.</returns>
-    protected virtual string CalculateSiteTitle()
+    /// <returns>Returns the page title calculated.</returns>
+    protected virtual string CalculatePageTitle()
     {
         var title = Site?.Title;
         if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Title) == false)
@@ -75,5 +81,21 @@ public abstract class MainLayoutBase : LayoutComponentBase
         }
 
         return title ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Calculates the page description based on the site and document description.
+    /// </summary>
+    /// <returns>Returns the page description calculated.</returns>
+    protected virtual string CalculatePageDescription()
+    {
+        var description = Site?.Description ?? string.Empty;
+
+        if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Description) == false)
+        {
+            description = Document.Metadata.Description;
+        }
+
+        return description ?? string.Empty;
     }
 }
