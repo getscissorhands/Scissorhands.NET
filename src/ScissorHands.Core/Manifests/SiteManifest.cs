@@ -79,9 +79,14 @@ public sealed class SiteManifest
     public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>
-    /// Gets a value indicating whether to include date in post URL or not.
+    /// Gets a value indicating whether to use locale in URL or not.
     /// </summary>
-    public bool IncludeDateInPostUrl { get; init; }
+    public bool UseLocaleInUrl { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether to use date in post URL or not.
+    /// </summary>
+    public bool UseDateInPostUrl { get; init; }
 
     /// <summary>
     /// Gets a value indicating whether to enable debug mode or not.

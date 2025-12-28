@@ -109,6 +109,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : _fileSystem.Path.GetFileNameWithoutExtension(sourcePath);
             var slug = map.TryGetValue("slug", out var slugValue) ? Convert.ToString(slugValue, CultureInfo.InvariantCulture) ?? string.Empty : string.Empty;
             var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : default;
+            var locale = map.TryGetValue("locale", out var localeValue) ? Convert.ToString(localeValue, CultureInfo.InvariantCulture) : default;
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
             var twitterHandle = map.TryGetValue("twitter_handle", out var twitterValue) ? Convert.ToString(twitterValue, CultureInfo.InvariantCulture) : default;
             var heroImage = map.TryGetValue("hero_image", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : default;
@@ -126,6 +127,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                 Title = title,
                 Slug = slug,
                 Description = description,
+                Locale = locale,
                 Author = author,
                 TwitterHandle = twitterHandle,
                 HeroImage = heroImage,
@@ -147,7 +149,9 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             ? InferSlugFromFile(file, root)
             : metadata.Slug.Trim('/');
 
-        if (kind == ContentKind.Post && _options.IncludeDateInPostUrl)
+        var effectiveLocale = string.IsNullOrWhiteSpace(metadata.Locale) ? _options.Locale : metadata.Locale;
+
+        if (kind == ContentKind.Post && _options.UseDateInPostUrl)
         {
             if (metadata.Published is { } published)
             {
@@ -155,11 +159,40 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             }
             else
             {
-                _logger.LogWarning("IncludeDateInPostUrl is enabled but no published date was found for {Path}; using slug without date", file);
+                _logger.LogWarning("UseDateInPostUrl is enabled but no published date was found for {Path}; using slug without date", file);
             }
         }
 
-        return metadata with { Slug = slug };
+        if (_options.UseLocaleInUrl)
+        {
+            var localeSegment = ToLocaleSegment(effectiveLocale);
+            if (!string.IsNullOrWhiteSpace(localeSegment))
+            {
+                slug = slug.Trim('/');
+                if (!string.IsNullOrWhiteSpace(slug)
+                    && !slug.Equals("404.html", StringComparison.OrdinalIgnoreCase)
+                    && !slug.Equals(localeSegment, StringComparison.OrdinalIgnoreCase)
+                    && !slug.StartsWith(localeSegment + "/", StringComparison.OrdinalIgnoreCase))
+                {
+                    slug = string.Concat(localeSegment, "/", slug);
+                }
+            }
+        }
+
+        return metadata with { Slug = slug, Locale = effectiveLocale };
+    }
+
+    private static string ToLocaleSegment(string? locale)
+    {
+        if (string.IsNullOrWhiteSpace(locale))
+        {
+            return string.Empty;
+        }
+
+        return locale.Trim()
+                     .Replace('_', '-')
+                     .Replace('/', '-')
+                     .ToLowerInvariant();
     }
 
     private static IEnumerable<string> ToTags(object value)

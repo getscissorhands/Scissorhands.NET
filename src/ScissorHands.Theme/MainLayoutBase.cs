@@ -22,6 +22,11 @@ public abstract class MainLayoutBase : LayoutComponentBase
     protected string? PageDescription { get; set; }
 
     /// <summary>
+    /// Gets or sets the page locale calculated.
+    /// </summary>
+    protected string? PageLocale { get; set; }
+
+    /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.
     /// </summary>
     [Parameter]
@@ -62,6 +67,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
     {
         PageTitle = CalculatePageTitle();
         PageDescription = CalculatePageDescription();
+        PageLocale = CalculatePageLocale();
 
         Theme = await ThemeService!.LoadManifestAsync(Site!.Theme);
     }
@@ -95,5 +101,21 @@ public abstract class MainLayoutBase : LayoutComponentBase
         }
 
         return description ?? string.Empty;
+    }
+
+    /// <summary>
+    /// Calculates the page locale based on the site and document locale.
+    /// </summary>
+    /// <returns>Returns the page locale calculated.</returns>
+    protected virtual string CalculatePageLocale()
+    {
+        var locale = Site?.Locale ?? string.Empty;
+
+        if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Locale) == false)
+        {
+            locale = Document.Metadata.Locale;
+        }
+
+        return locale.ToLowerInvariant() ?? string.Empty;
     }
 }
