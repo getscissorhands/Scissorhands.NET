@@ -108,6 +108,37 @@ public sealed class StaticSiteGenerator(
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
     }
 
+    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TIndexView : ScissorHands.Theme.IndexViewBase
+    {
+        var posts = documents
+            .Where(d => d.Kind == ContentKind.Post)
+            .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
+            .ToList();
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Documents"] = posts,
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+
+        var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Title = _options.Title, Slug = string.Empty },
+            Markdown = string.Empty,
+            Html = rendered
+        }, cancellationToken);
+
+        var outputPath = ResolveOutputPath(destination, string.Empty);
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
     private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
     {
@@ -154,37 +185,6 @@ public sealed class StaticSiteGenerator(
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, documentToRender, cancellationToken);
 
         var outputPath = _fileSystem.Path.Combine(destination, PAGE_NOT_FOUND_SLUG);
-        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
-        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
-        _logger.LogInformation("Wrote {OutputPath}", outputPath);
-    }
-
-    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
-        where TIndexView : ScissorHands.Theme.IndexViewBase
-    {
-        var posts = documents
-            .Where(d => d.Kind == ContentKind.Post)
-            .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
-            .ToList();
-
-        var parameters = new Dictionary<string, object?>
-        {
-            ["Documents"] = posts,
-            ["Plugins"] = plugins,
-            ["Theme"] = theme,
-            ["Site"] = _options
-        };
-
-        var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
-        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, new ContentDocument
-        {
-            Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = _options.Title, Slug = string.Empty },
-            Markdown = string.Empty,
-            Html = rendered
-        }, cancellationToken);
-
-        var outputPath = ResolveOutputPath(destination, string.Empty);
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);

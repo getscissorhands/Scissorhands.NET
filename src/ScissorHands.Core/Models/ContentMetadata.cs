@@ -21,6 +21,11 @@ public sealed record ContentMetadata
     public string? Description { get; init; }
 
     /// <summary>
+    /// Gets the locale of the content.
+    /// </summary>
+    public string? Locale { get; init; }
+
+    /// <summary>
     /// Gets the author of the content.
     /// </summary>
     public string? Author { get; init; }
