@@ -12,6 +12,132 @@ namespace ScissorHands.Web.Tests.Loaders;
 public class ContentLoaderTests
 {
     [Fact]
+    public async Task Given_UseLocaleInUrlEnabled_And_LocaleWithUnderscore_When_LoadAsync_Invoked_Then_It_Should_NormalizeLocaleSegment()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+
+        var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
+        var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
+
+        fileSystem.AddDirectory(postsRoot);
+        fileSystem.AddDirectory(pagesRoot);
+
+        var pagePath = fileSystem.Path.Combine(pagesRoot, "about.md");
+        var markdown = string.Join("\n", new[]
+        {
+            "---",
+            "title: About",
+            "locale: en_US",
+            "---",
+            "# About",
+        });
+
+        fileSystem.AddFile(pagePath, new MockFileData(markdown));
+
+        var options = new SiteManifest { Locale = "en-US", UseLocaleInUrl = true };
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+        var logger = Substitute.For<ILogger<ContentLoader>>();
+
+        var loader = new ContentLoader(paths, fileSystem, options, logger);
+
+        // Act
+        var docs = (await loader.LoadAsync(CancellationToken.None)).ToList();
+
+        // Assert
+        docs.Count.ShouldBe(1);
+        var doc = docs[0];
+        doc.Kind.ShouldBe(ContentKind.Page);
+        doc.Metadata.Locale.ShouldBe("en_US");
+        doc.Metadata.Slug.ShouldBe("en-us/about");
+    }
+
+    [Fact]
+    public async Task Given_UseLocaleInUrlEnabled_And_SlugAlreadyPrefixed_When_LoadAsync_Invoked_Then_It_Should_Not_DoublePrefix()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+
+        var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
+        var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
+
+        fileSystem.AddDirectory(postsRoot);
+        fileSystem.AddDirectory(pagesRoot);
+
+        var pagePath = fileSystem.Path.Combine(pagesRoot, "about.md");
+        var markdown = string.Join("\n", new[]
+        {
+            "---",
+            "title: About",
+            "slug: /en-us/about/",
+            "---",
+            "# About",
+        });
+
+        fileSystem.AddFile(pagePath, new MockFileData(markdown));
+
+        var options = new SiteManifest { Locale = "en-US", UseLocaleInUrl = true };
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+        var logger = Substitute.For<ILogger<ContentLoader>>();
+
+        var loader = new ContentLoader(paths, fileSystem, options, logger);
+
+        // Act
+        var docs = (await loader.LoadAsync(CancellationToken.None)).ToList();
+
+        // Assert
+        docs.Count.ShouldBe(1);
+        var doc = docs[0];
+        doc.Kind.ShouldBe(ContentKind.Page);
+        doc.Metadata.Slug.ShouldBe("en-us/about");
+        doc.Metadata.Locale.ShouldBe("en-US");
+    }
+
+    [Fact]
+    public async Task Given_UseLocaleInUrlDisabled_When_LoadAsync_Invoked_Then_It_Should_Not_PrefixSlug_But_Should_SetEffectiveLocale()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+
+        var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
+        var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
+
+        fileSystem.AddDirectory(postsRoot);
+        fileSystem.AddDirectory(pagesRoot);
+
+        var pagePath = fileSystem.Path.Combine(pagesRoot, "about.md");
+        fileSystem.AddFile(pagePath, new MockFileData("# About\n\nBody"));
+
+        var options = new SiteManifest { Locale = "en-US", UseLocaleInUrl = false };
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+        var logger = Substitute.For<ILogger<ContentLoader>>();
+
+        var loader = new ContentLoader(paths, fileSystem, options, logger);
+
+        // Act
+        var docs = (await loader.LoadAsync(CancellationToken.None)).ToList();
+
+        // Assert
+        docs.Count.ShouldBe(1);
+        var doc = docs[0];
+        doc.Kind.ShouldBe(ContentKind.Page);
+        doc.Metadata.Slug.ShouldBe("about");
+        doc.Metadata.Locale.ShouldBe("en-US");
+    }
+
+    [Fact]
     public async Task Given_UseLocaleInUrlEnabled_And_404HtmlSlug_When_LoadAsync_Invoked_Then_It_Should_Not_ApplyLocalePrefix()
     {
         // Arrange
