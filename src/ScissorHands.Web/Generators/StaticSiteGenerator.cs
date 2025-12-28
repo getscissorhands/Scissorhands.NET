@@ -50,7 +50,7 @@ public sealed class StaticSiteGenerator(
 
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
-        var theme = _themeService.LoadManifest(_options.Theme);
+        var theme = await _themeService.LoadManifestAsync(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
 
         var layoutType = typeof(TMainLayout);
@@ -87,7 +87,7 @@ public sealed class StaticSiteGenerator(
         }
 
         CopyContentAssets(destination);
-        _themeService.CopyAssets(_options.Theme, destination);
+        await _themeService.CopyAssetsAsync(_options.Theme, destination);
     }
 
     private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)

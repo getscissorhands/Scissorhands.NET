@@ -19,9 +19,9 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
     private readonly string _basePath = Directory.GetCurrentDirectory();
 
     /// <inheritdoc />
-    public ThemeManifest LoadManifest(string themeSlug)
+    public async Task<ThemeManifest> LoadManifestAsync(string themeSlug)
     {
-        var manifestPath = Path.Combine(_basePath, "themes", themeSlug, "theme.json");
+        var manifestPath = Path.Combine(_basePath, ThemeManifest.THEME_DIRECTORY, themeSlug, "theme.json");
         if (!File.Exists(manifestPath))
         {
             _logger.LogWarning("Theme manifest not found at {Path}", manifestPath);
@@ -31,7 +31,7 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
 
         try
         {
-            var json = File.ReadAllText(manifestPath);
+            var json = await File.ReadAllTextAsync(manifestPath);
             return JsonSerializer.Deserialize<ThemeManifest>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                    ?? new ThemeManifest { Name = themeSlug };
         }
@@ -42,10 +42,10 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
         }
     }
 
-    public void CopyAssets(string themeSlug, string destination)
+    public async Task CopyAssetsAsync(string themeSlug, string destination)
     {
-        var themeRoot = Path.Combine(_basePath, "themes", themeSlug);
-        var targetRoot = Path.Combine(destination, "themes", themeSlug);
+        var themeRoot = Path.Combine(_basePath, ThemeManifest.THEME_DIRECTORY, themeSlug);
+        var targetRoot = Path.Combine(destination, ThemeManifest.THEME_DIRECTORY, themeSlug);
 
         if (!Directory.Exists(themeRoot))
         {
@@ -91,6 +91,8 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
             Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
             File.Copy(file, destinationPath, overwrite: true);
         }
+
+        await Task.CompletedTask;
     }
 
     private static void CopyDirectory(string sourceDir, string destinationDir)
