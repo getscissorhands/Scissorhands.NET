@@ -5,9 +5,12 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
+using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
+
+using System.IO.Abstractions;
 
 namespace ScissorHands.Web.Generators;
 
@@ -27,6 +30,8 @@ public sealed class StaticSiteGenerator(
         IPluginRunner pluginRunner,
         IThemeService themeService,
         IComponentRenderer renderer,
+    IAppPaths paths,
+    IFileSystem fileSystem,
         SiteManifest options,
         ILogger<StaticSiteGenerator> logger) : IStaticSiteGenerator
 {
@@ -35,6 +40,8 @@ public sealed class StaticSiteGenerator(
     private readonly IPluginRunner _pluginRunner = pluginRunner ?? throw new ArgumentNullException(nameof(pluginRunner));
     private readonly IThemeService _themeService = themeService ?? throw new ArgumentNullException(nameof(themeService));
     private readonly IComponentRenderer _renderer = renderer ?? throw new ArgumentNullException(nameof(renderer));
+    private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+    private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
@@ -45,12 +52,12 @@ public sealed class StaticSiteGenerator(
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
     {
-        Directory.CreateDirectory(destination);
+        _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
-        var theme = _themeService.LoadManifest(_options.Theme);
+        var theme = await _themeService.LoadManifestAsync(_options.Theme);
         var documents = await _contentLoader.LoadAsync(cancellationToken);
 
         var layoutType = typeof(TMainLayout);
@@ -81,13 +88,13 @@ public sealed class StaticSiteGenerator(
 
             var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, postMarkdown, cancellationToken);
             var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
-            Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-            await File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+            await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
             _logger.LogInformation("Wrote {OutputPath}", outputPath);
         }
 
         CopyContentAssets(destination);
-        _themeService.CopyAssets(_options.Theme, destination);
+        await _themeService.CopyAssetsAsync(_options.Theme, destination);
     }
 
     private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -116,8 +123,8 @@ public sealed class StaticSiteGenerator(
         }, cancellationToken);
 
         var outputPath = ResolveOutputPath(destination, string.Empty);
-        Directory.CreateDirectory(Path.GetDirectoryName(outputPath)!);
-        await File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
     }
 
@@ -134,10 +141,10 @@ public sealed class StaticSiteGenerator(
 
     private void CopyContentAssets(string destination)
     {
-        var source = Path.Combine(Directory.GetCurrentDirectory(), SiteManifest.CONTENTS_DIRECTORY, "images");
-        var target = Path.Combine(destination, "images");
+        var source = _fileSystem.Path.Combine(_paths.GetContentsRoot(), "images");
+        var target = _fileSystem.Path.Combine(destination, "images");
 
-        if (!Directory.Exists(source))
+        if (!_fileSystem.Directory.Exists(source))
         {
             _logger.LogWarning("No content images found at {Path}", source);
             return;
@@ -146,20 +153,20 @@ public sealed class StaticSiteGenerator(
         CopyDirectory(source, target);
     }
 
-    private static void CopyDirectory(string sourceDir, string destinationDir)
+    private void CopyDirectory(string sourceDir, string destinationDir)
     {
-        Directory.CreateDirectory(destinationDir);
+        _fileSystem.Directory.CreateDirectory(destinationDir);
 
-        foreach (var file in Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        foreach (var file in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
-            var destFile = Path.Combine(destinationDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite: true);
+            var destFile = _fileSystem.Path.Combine(destinationDir, _fileSystem.Path.GetFileName(file));
+            _fileSystem.File.Copy(file, destFile, overwrite: true);
         }
 
-        foreach (var directory in Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        foreach (var directory in _fileSystem.Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
-            var name = Path.GetFileName(directory);
-            CopyDirectory(directory, Path.Combine(destinationDir, name));
+            var name = _fileSystem.Path.GetFileName(directory);
+            CopyDirectory(directory, _fileSystem.Path.Combine(destinationDir, name));
         }
     }
 }

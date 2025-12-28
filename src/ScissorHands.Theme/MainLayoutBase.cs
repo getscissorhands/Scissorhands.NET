@@ -63,9 +63,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
         PageTitle = CalculatePageTitle();
         PageDescription = CalculatePageDescription();
 
-        Theme = ThemeService!.LoadManifest(Site!.Theme);
-
-        await Task.CompletedTask;
+        Theme = await ThemeService!.LoadManifestAsync(Site!.Theme);
     }
 
     /// <summary>

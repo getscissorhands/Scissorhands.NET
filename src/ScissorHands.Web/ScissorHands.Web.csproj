@@ -71,6 +71,7 @@
     <PackageReference Include="Markdig" Version="0.*" />
     <PackageReference Include="Scrutor" Version="7.*" />
     <PackageReference Include="System.Reactive" Version="6.*" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.*" />
     <PackageReference Include="YamlDotNet" Version="16.*" />
   </ItemGroup>
 

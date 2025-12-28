@@ -18,6 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Using Include="Bunit" />
     <Using Include="NSubstitute" />
     <Using Include="Shouldly" />
     <Using Include="Xunit" />

@@ -7,19 +7,43 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
+using ScissorHands.Web.Application;
+using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Extensions;
 using ScissorHands.Web.Generators;
-using ScissorHands.Web.Watchers;
 
 namespace ScissorHands.Web;
 
+/// <summary>
+/// This provides the interface for ScissorHands application.
+/// </summary>
 public interface IScissorHandsApplication
 {
+    /// <summary>
+    /// Verifies the command arguments.
+    /// </summary>
+    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
     IScissorHandsApplication VerifyCommandArguments();
+
+    /// <summary>
+    /// Builds the application.
+    /// </summary>
+    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
     Task<IScissorHandsApplication> BuildAsync();
+
+    /// <summary>
+    /// Runs the application.
+    /// </summary>
     Task RunAsync();
 }
 
+/// <summary>
+/// This represents the ScissorHands application entity.
+/// </summary>
+/// <typeparam name="TMainLayout">Type of main layout component.</typeparam>
+/// <typeparam name="TIndexView">Type of index view component.</typeparam>
+/// <typeparam name="TPostView">Type of post view component.</typeparam>
+/// <typeparam name="TPageView">Type of page view component.</typeparam>
 public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageView>(params IEnumerable<string> args) : IScissorHandsApplication
     where TMainLayout : ScissorHands.Theme.MainLayoutBase
     where TIndexView : ScissorHands.Theme.IndexViewBase
@@ -35,18 +59,19 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
     private SiteManifest? _site;
     private IStaticSiteGenerator? _generator;
 
+    /// <inheritdoc />
     public IScissorHandsApplication VerifyCommandArguments()
     {
         DisplayBanner();
 
-        var command = CommandOptions.Parse(_args);
-        if (command.Mode is CommandMode.Help)
+        var validation = CommandArgumentValidator.Validate(_args);
+        if (validation.IsHelp)
         {
             DisplayHelp();
             Environment.Exit(0);
         }
 
-        if (command.Mode is CommandMode.Unknown)
+        if (validation.IsError)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine();
@@ -57,11 +82,12 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Environment.Exit(1);
         }
 
-        _mode = command.Mode;
+        _mode = validation.Mode;
 
         return this;
     }
 
+    /// <inheritdoc />
     public async Task<IScissorHandsApplication> BuildAsync()
     {
         var builder = WebApplication.CreateBuilder([.. _args]);
@@ -73,9 +99,20 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
         _app = builder.Build();
 
-        _logger = _app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
-        _site = _app.Services.GetRequiredService<SiteManifest>();
-        _generator = _app.Services.GetRequiredService<IStaticSiteGenerator>();
+        return this;
+    }
+
+    /// <inheritdoc />
+    public async Task RunAsync()
+    {
+        if (_mode is not CommandMode.Preview)
+        {
+            return;
+        }
+
+        _logger = _app!.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
+        _site = _app!.Services.GetRequiredService<SiteManifest>();
+        _generator = _app!.Services.GetRequiredService<IStaticSiteGenerator>();
 
         var result = _mode switch
         {
@@ -83,16 +120,6 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             CommandMode.Build => await RunBuildAsync(),
             _ => LogInvalidMode()
         };
-
-        return result;
-    }
-
-    public async Task RunAsync()
-    {
-        if (_mode is not CommandMode.Preview)
-        {
-            return;
-        }
 
         await _app!.RunAsync();
     }
@@ -170,10 +197,12 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             _logger!.LogInformation("Preview server running at {Address}", $"{siteUrl}/{_site!.BaseUrl.TrimStart('/')}");
         });
 
-        var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), SiteManifest.CONTENTS_DIRECTORY));
-        var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ThemeManifest.THEME_DIRECTORY));
+        var paths = _app.Services.GetRequiredService<IAppPaths>();
+        var contentRoot = paths.GetContentsRoot();
+        var themeRoot = paths.GetThemesRoot();
 
-        var watcher = new ContentWatcher(
+        var watcherFactory = _app.Services.GetRequiredService<IContentWatcherFactory>();
+        var watcher = watcherFactory.Create(
             contentRoot,
             themeRoot,
             TimeSpan.FromMilliseconds(500),
@@ -182,10 +211,9 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
                 _logger!.LogInformation("Change detected; rebuilding preview...");
                 await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(previewPath, preview: true, CancellationToken.None);
                 _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
-            },
-            _app.Services.GetRequiredService<ILogger<ContentWatcher>>());
+            });
 
-        _app.Lifetime.ApplicationStopping.Register(() => watcher.Dispose());
+        _app.Lifetime.ApplicationStopping.Register(watcher.Dispose);
 
         return this;
     }

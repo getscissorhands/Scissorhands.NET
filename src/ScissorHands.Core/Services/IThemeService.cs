@@ -12,12 +12,12 @@ public interface IThemeService
     /// </summary>
     /// <param name="themeSlug">Theme slug.</param>
     /// <returns>Returns the loaded <see cref="ThemeManifest"/>.</returns>
-    ThemeManifest LoadManifest(string themeSlug);
+    Task<ThemeManifest> LoadManifestAsync(string themeSlug);
 
     /// <summary>
     /// Copies the assets of the specified theme to the destination including stylesheets, JavaScripts and images.
     /// </summary>
     /// <param name="themeSlug">Theme slug.</param>
     /// <param name="destination">Destination path to copy the assets.</param>
-    void CopyAssets(string themeSlug, string destination);
+    Task CopyAssetsAsync(string themeSlug, string destination);
 }

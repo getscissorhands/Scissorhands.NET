@@ -4,25 +4,31 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Services;
+using ScissorHands.Web.Abstractions;
+
+using System.IO.Abstractions;
 
 namespace ScissorHands.Web.Services;
 
 /// <summary>
 /// This represents the service entity for theme.
 /// </summary>
+/// <param name="paths"><see cref="IAppPaths"/> instance.</param>
+/// <param name="fileSystem"><see cref="IFileSystem"/> instance.</param>
 /// <param name="site"><see cref="SiteManifest"/> instance.</param>
 /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
-public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger) : IThemeService
+public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteManifest site, ILogger<ThemeService> logger) : IThemeService
 {
+    private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+    private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
     private readonly SiteManifest _site = site ?? throw new ArgumentNullException(nameof(site));
     private readonly ILogger<ThemeService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly string _basePath = Directory.GetCurrentDirectory();
 
     /// <inheritdoc />
-    public ThemeManifest LoadManifest(string themeSlug)
+    public async Task<ThemeManifest> LoadManifestAsync(string themeSlug)
     {
-        var manifestPath = Path.Combine(_basePath, "themes", themeSlug, "theme.json");
-        if (!File.Exists(manifestPath))
+        var manifestPath = _fileSystem.Path.Combine(_paths.GetThemesRoot(), themeSlug, "theme.json");
+        if (!_fileSystem.File.Exists(manifestPath))
         {
             _logger.LogWarning("Theme manifest not found at {Path}", manifestPath);
 
@@ -31,7 +37,7 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
 
         try
         {
-            var json = File.ReadAllText(manifestPath);
+            var json = await _fileSystem.File.ReadAllTextAsync(manifestPath);
             return JsonSerializer.Deserialize<ThemeManifest>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                    ?? new ThemeManifest { Name = themeSlug };
         }
@@ -42,20 +48,21 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
         }
     }
 
-    public void CopyAssets(string themeSlug, string destination)
+    /// <inheritdoc />
+    public async Task CopyAssetsAsync(string themeSlug, string destination)
     {
-        var themeRoot = Path.Combine(_basePath, "themes", themeSlug);
-        var targetRoot = Path.Combine(destination, "themes", themeSlug);
+        var themeRoot = _fileSystem.Path.Combine(_paths.GetThemesRoot(), themeSlug);
+        var targetRoot = _fileSystem.Path.Combine(destination, ThemeManifest.THEME_DIRECTORY, themeSlug);
 
-        if (!Directory.Exists(themeRoot))
+        if (!_fileSystem.Directory.Exists(themeRoot))
         {
             _logger.LogWarning("Theme folder not found at {Path}", themeRoot);
             return;
         }
 
-        var sourceAssets = Path.Combine(themeRoot, "assets");
-        var targetAssets = Path.Combine(targetRoot, "assets");
-        if (Directory.Exists(sourceAssets))
+        var sourceAssets = _fileSystem.Path.Combine(themeRoot, "assets");
+        var targetAssets = _fileSystem.Path.Combine(targetRoot, "assets");
+        if (_fileSystem.Directory.Exists(sourceAssets))
         {
             CopyDirectory(sourceAssets, targetAssets);
         }
@@ -69,13 +76,13 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
             ".png", ".jpg", ".jpeg", ".gif", ".webp", ".ico"
         };
 
-        foreach (var file in Directory.EnumerateFiles(themeRoot, "*", SearchOption.AllDirectories)
-                     .Where(path => allowedExtensions.Contains(Path.GetExtension(path))))
+        foreach (var file in _fileSystem.Directory.EnumerateFiles(themeRoot, "*", SearchOption.AllDirectories)
+                     .Where(path => allowedExtensions.Contains(_fileSystem.Path.GetExtension(path))))
         {
-            var relative = Path.GetRelativePath(themeRoot, file);
-            var destinationPath = Path.Combine(targetRoot, relative);
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            File.Copy(file, destinationPath, overwrite: true);
+            var relative = _fileSystem.Path.GetRelativePath(themeRoot, file);
+            var destinationPath = _fileSystem.Path.Combine(targetRoot, relative);
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(destinationPath)!);
+            _fileSystem.File.Copy(file, destinationPath, overwrite: true);
         }
 
         var allowedFiles = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
@@ -83,30 +90,32 @@ public sealed class ThemeService(SiteManifest site, ILogger<ThemeService> logger
             "manifest.json"
         };
 
-        foreach (var file in Directory.EnumerateFiles(themeRoot, "*", SearchOption.AllDirectories)
-                     .Where(path => allowedFiles.Contains(Path.GetFileName(path))))
+        foreach (var file in _fileSystem.Directory.EnumerateFiles(themeRoot, "*", SearchOption.AllDirectories)
+                     .Where(path => allowedFiles.Contains(_fileSystem.Path.GetFileName(path))))
         {
-            var relative = Path.GetRelativePath(themeRoot, file);
-            var destinationPath = Path.Combine(targetRoot, relative);
-            Directory.CreateDirectory(Path.GetDirectoryName(destinationPath)!);
-            File.Copy(file, destinationPath, overwrite: true);
+            var relative = _fileSystem.Path.GetRelativePath(themeRoot, file);
+            var destinationPath = _fileSystem.Path.Combine(targetRoot, relative);
+            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(destinationPath)!);
+            _fileSystem.File.Copy(file, destinationPath, overwrite: true);
         }
+
+        await Task.CompletedTask;
     }
 
-    private static void CopyDirectory(string sourceDir, string destinationDir)
+    private void CopyDirectory(string sourceDir, string destinationDir)
     {
-        Directory.CreateDirectory(destinationDir);
+        _fileSystem.Directory.CreateDirectory(destinationDir);
 
-        foreach (var file in Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        foreach (var file in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
-            var destFile = Path.Combine(destinationDir, Path.GetFileName(file));
-            File.Copy(file, destFile, overwrite: true);
+            var destFile = _fileSystem.Path.Combine(destinationDir, _fileSystem.Path.GetFileName(file));
+            _fileSystem.File.Copy(file, destFile, overwrite: true);
         }
 
-        foreach (var directory in Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
+        foreach (var directory in _fileSystem.Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
-            var name = Path.GetFileName(directory);
-            CopyDirectory(directory, Path.Combine(destinationDir, name));
+            var name = _fileSystem.Path.GetFileName(directory);
+            CopyDirectory(directory, _fileSystem.Path.Combine(destinationDir, name));
         }
     }
 }
