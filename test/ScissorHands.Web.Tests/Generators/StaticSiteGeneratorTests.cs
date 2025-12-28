@@ -97,6 +97,10 @@ public class StaticSiteGeneratorTests
             .RenderAsync<TestPageView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult("PAGE"));
 
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+
         var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
 
         var generator = new StaticSiteGenerator(
@@ -111,7 +115,7 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView>(destination, preview: false, CancellationToken.None);
 
         // Assert
         site.DescriptionInHtml.ShouldBe("HTML:My Description");
@@ -121,6 +125,119 @@ public class StaticSiteGeneratorTests
 
         fileSystem.File.Exists(fileSystem.Path.Combine(destination, "blog", "post-1", "index.html")).ShouldBeTrue();
         fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "blog", "post-1", "index.html")).ShouldBe("FINAL:POST");
+
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "about", "index.html")).ShouldBeTrue();
+        fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "about", "index.html")).ShouldBe("FINAL:PAGE");
+
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "404.html")).ShouldBeTrue();
+        fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "404.html")).ShouldBe("FINAL:NOTFOUND");
+    }
+
+    [Fact]
+    public async Task Given_404MarkdownPage_When_BuildAsync_Invoked_Then_It_Should_PassItToNotFoundView_And_NotRenderAsNormalPage()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
+
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+
+        var site = new SiteManifest
+        {
+            Title = "My Site",
+            Description = "My Description",
+            Theme = "minimal"
+        };
+
+        var notFoundPage = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# Custom 404",
+            Metadata = new ContentMetadata { Title = "Custom 404", Slug = "404.html" }
+        };
+
+        var about = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# About",
+            Metadata = new ContentMetadata { Title = "About", Slug = "about" }
+        };
+
+        var contentLoader = Substitute.For<IContentLoader>();
+        contentLoader
+            .LoadAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<ContentDocument>>(new[] { notFoundPage, about }));
+
+        var markdownService = Substitute.For<IMarkdownService>();
+        markdownService
+            .ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"HTML:{callInfo.ArgAt<string>(0)}"));
+
+        var pluginRunner = Substitute.For<IPluginRunner>();
+        pluginRunner.Manifests.Returns([]);
+        pluginRunner
+            .RunPreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"FINAL:{callInfo.ArgAt<string>(0)}"));
+
+        var themeService = Substitute.For<IThemeService>();
+        themeService
+            .LoadManifestAsync(Arg.Any<string>())
+            .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
+        themeService
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
+
+        IDictionary<string, object?>? capturedNotFoundParams = null;
+
+        var renderer = Substitute.For<IComponentRenderer>();
+        renderer
+            .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("INDEX"));
+        renderer
+            .RenderAsync<TestPageView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("PAGE"));
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Do<IDictionary<string, object?>>(p => capturedNotFoundParams = p), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+
+        var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
+
+        var generator = new StaticSiteGenerator(
+            contentLoader,
+            markdownService,
+            pluginRunner,
+            themeService,
+            renderer,
+            paths,
+            fileSystem,
+            site,
+            logger);
+
+        // Act
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView>(destination, preview: false, CancellationToken.None);
+
+        // Assert
+        capturedNotFoundParams.ShouldNotBeNull();
+        capturedNotFoundParams!.ContainsKey("Document").ShouldBeTrue();
+
+        var passedDocument = capturedNotFoundParams["Document"]!.ShouldBeAssignableTo<ContentDocument>();
+        passedDocument.Metadata.Slug.ShouldBe("404.html");
+        passedDocument.Html.ShouldBe("HTML:# Custom 404");
+
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "404.html")).ShouldBeTrue();
+        fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "404.html")).ShouldBe("FINAL:NOTFOUND");
+
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "404.html", "index.html")).ShouldBeFalse();
 
         fileSystem.File.Exists(fileSystem.Path.Combine(destination, "about", "index.html")).ShouldBeTrue();
         fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "about", "index.html")).ShouldBe("FINAL:PAGE");
@@ -181,6 +298,10 @@ public class StaticSiteGeneratorTests
             .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult("INDEX"));
 
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+
         var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
 
         var generator = new StaticSiteGenerator(
@@ -195,7 +316,7 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView>(destination, preview: false, CancellationToken.None);
 
         // Assert
         fileSystem.Directory.Exists(fileSystem.Path.Combine(destination, "images")).ShouldBeFalse();
@@ -259,6 +380,10 @@ public class StaticSiteGeneratorTests
             .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult("INDEX"));
 
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+
         var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
 
         var generator = new StaticSiteGenerator(
@@ -273,7 +398,7 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView>(destination, preview: false, CancellationToken.None);
 
         // Assert
         fileSystem.File.Exists(fileSystem.Path.Combine(destination, "images", "a.png")).ShouldBeTrue();
@@ -358,6 +483,10 @@ public class StaticSiteGeneratorTests
             .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Do<IDictionary<string, object?>>(p => captured = p), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult("INDEX"));
 
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+
         var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
 
         var generator = new StaticSiteGenerator(
@@ -372,7 +501,7 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView>(destination, preview: false, CancellationToken.None);
 
         // Assert
         captured.ShouldNotBeNull();
@@ -408,6 +537,13 @@ internal sealed class TestPostView : ScissorHands.Theme.PostViewBase
 }
 
 internal sealed class TestPageView : ScissorHands.Theme.PageViewBase
+{
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+    }
+}
+
+internal sealed class TestNotFoundView : ScissorHands.Theme.NotFoundViewBase
 {
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {

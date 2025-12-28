@@ -10,9 +10,9 @@
     <link rel="icon" type="image/x-icon" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}/favicon.ico")" />
     <meta name="generator" content="@Site!.Generator" />
 
-    <title>@Site!.Title</title>
-    <meta name="title" content="@Site!.Title" />
-    <meta name="description" content="@Site!.Description" />
+    <title>@PageTitle</title>
+    <meta name="title" content="@PageTitle" />
+    <meta name="description" content="@PageDescription" />
     @if (Theme!.Stylesheets is not null)
     {
         foreach (var css in Theme!.Stylesheets)
