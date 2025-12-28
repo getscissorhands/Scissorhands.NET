@@ -44,11 +44,13 @@ public interface IScissorHandsApplication
 /// <typeparam name="TIndexView">Type of index view component.</typeparam>
 /// <typeparam name="TPostView">Type of post view component.</typeparam>
 /// <typeparam name="TPageView">Type of page view component.</typeparam>
-public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageView>(params IEnumerable<string> args) : IScissorHandsApplication
+/// <typeparam name="TNotFoundView">Type of not found (404) view component.</typeparam>
+public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(params IEnumerable<string> args) : IScissorHandsApplication
     where TMainLayout : ScissorHands.Theme.MainLayoutBase
     where TIndexView : ScissorHands.Theme.IndexViewBase
     where TPostView : ScissorHands.Theme.PostViewBase
     where TPageView : ScissorHands.Theme.PageViewBase
+    where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
 {
     private const string APP_LOGGER_NAME = "App";
 
@@ -183,7 +185,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Directory.Delete(previewPath, recursive: true);
         }
 
-        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(previewPath, preview: true, _app!.Lifetime.ApplicationStopping);
+        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(previewPath, preview: true, _app!.Lifetime.ApplicationStopping);
 
         var fileProvider = new PhysicalFileProvider(previewPath);
         _app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
@@ -209,7 +211,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             async () =>
             {
                 _logger!.LogInformation("Change detected; rebuilding preview...");
-                await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(previewPath, preview: true, CancellationToken.None);
+                await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(previewPath, preview: true, CancellationToken.None);
                 _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
             });
 
@@ -226,7 +228,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Directory.Delete(outputPath, recursive: true);
         }
 
-        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(outputPath, preview: false, CancellationToken.None);
+        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(outputPath, preview: false, CancellationToken.None);
         _logger!.LogInformation("Build complete. Output at {OutputPath}", outputPath);
 
         return this;

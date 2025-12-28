@@ -1,0 +1,18 @@
+@inherits ScissorHands.Theme.NotFoundViewBase
+@layout MainLayout
+
+<section class="not-found">
+    @if (string.IsNullOrWhiteSpace(Document.Html))
+    {
+        <article>
+            <h1>404 - Not Found</h1>
+            <p>The page you are looking for does not exist.</p>
+        </article>
+    }
+    else
+    {
+        <article>
+            @((MarkupString)Document.Html)
+        </article>
+    }
+</section>

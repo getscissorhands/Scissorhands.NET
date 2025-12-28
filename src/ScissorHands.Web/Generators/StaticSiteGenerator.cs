@@ -35,6 +35,8 @@ public sealed class StaticSiteGenerator(
         SiteManifest options,
         ILogger<StaticSiteGenerator> logger) : IStaticSiteGenerator
 {
+    private const string PAGE_NOT_FOUND_SLUG = "404.html";
+
     private readonly IContentLoader _contentLoader = contentLoader ?? throw new ArgumentNullException(nameof(contentLoader));
     private readonly IMarkdownService _markdownService = markdownService ?? throw new ArgumentNullException(nameof(markdownService));
     private readonly IPluginRunner _pluginRunner = pluginRunner ?? throw new ArgumentNullException(nameof(pluginRunner));
@@ -46,11 +48,12 @@ public sealed class StaticSiteGenerator(
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
-    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(string destination, bool preview, CancellationToken cancellationToken)
+    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : ScissorHands.Theme.MainLayoutBase
         where TIndexView : ScissorHands.Theme.IndexViewBase
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
+        where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
     {
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
@@ -63,9 +66,17 @@ public sealed class StaticSiteGenerator(
         var layoutType = typeof(TMainLayout);
         await RenderIndexAsync<TIndexView>(documents, plugins, theme, destination, layoutType, cancellationToken);
 
+        var notFoundDocument = documents.SingleOrDefault(d => d.Kind == ContentKind.Page && string.Equals(d.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase));
+        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, plugins, theme, destination, layoutType, cancellationToken);
+
         foreach (var document in documents)
         {
             cancellationToken.ThrowIfCancellationRequested();
+
+            if (document.Kind == ContentKind.Page && string.Equals(document.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase))
+            {
+                continue;
+            }
 
             var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
             var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
@@ -95,6 +106,57 @@ public sealed class StaticSiteGenerator(
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
+    }
+
+    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
+    {
+        ContentDocument documentToRender;
+        if (notFoundDocument is null)
+        {
+            documentToRender = new ContentDocument
+            {
+                Kind = ContentKind.Page,
+                Metadata = new ContentMetadata { Title = "404 - Not Found", Description = "Page not found", Slug = PAGE_NOT_FOUND_SLUG },
+                Markdown = string.Empty,
+                Html = string.Empty
+            };
+        }
+        else
+        {
+            var preProcessed = await _pluginRunner.RunPreMarkdownAsync(notFoundDocument, cancellationToken);
+            var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
+            preProcessed.Html = html;
+            documentToRender = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
+
+            if (string.IsNullOrWhiteSpace(documentToRender.Metadata.Title))
+            {
+                documentToRender = new ContentDocument
+                {
+                    SourcePath = documentToRender.SourcePath,
+                    Kind = documentToRender.Kind,
+                    Metadata = documentToRender.Metadata,
+                    Markdown = documentToRender.Markdown,
+                    Html = documentToRender.Html
+                };
+            }
+        }
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Document"] = documentToRender,
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+
+        var rendered = await _renderer.RenderAsync<TNotFoundView>(layoutType, parameters, cancellationToken);
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, documentToRender, cancellationToken);
+
+        var outputPath = _fileSystem.Path.Combine(destination, PAGE_NOT_FOUND_SLUG);
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _logger.LogInformation("Wrote {OutputPath}", outputPath);
     }
 
     private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
