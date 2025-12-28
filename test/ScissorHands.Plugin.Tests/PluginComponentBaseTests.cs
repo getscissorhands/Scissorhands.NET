@@ -8,7 +8,7 @@ namespace ScissorHands.Plugin.Tests;
 public class PluginComponentBaseTests
 {
     [Fact]
-    public void Given_Parameters_When_ComponentRendered_Then_It_Should_BindAllParameters()
+    public void Given_CascadingValues_When_ComponentRendered_Then_It_Should_BindAllCascadingParameters()
     {
         // Arrange
         using var context = new BunitContext();
@@ -26,23 +26,30 @@ public class PluginComponentBaseTests
 
         // Act
         var cut = context.Renderer.Render<TestPluginComponent>(parameters => parameters
-            .Add(p => p.Documents, documents)
-            .Add(p => p.Document, document)
-            .Add(p => p.Plugins, plugins)
-            .Add(p => p.Theme, theme)
-            .Add(p => p.Site, site));
+            .Add(p => p.Name, "Test")
+            .AddCascadingValue(documents)
+            .AddCascadingValue(document)
+            .AddCascadingValue(plugins)
+            .AddCascadingValue(theme)
+            .AddCascadingValue(site));
 
         // Assert
-        cut.Instance.Documents.ShouldBeSameAs(documents);
-        cut.Instance.Document.ShouldBeSameAs(document);
-        cut.Instance.Plugins.ShouldBeSameAs(plugins);
-        cut.Instance.Theme.ShouldBeSameAs(theme);
-        cut.Instance.Site.ShouldBeSameAs(site);
+        cut.Instance.BoundDocuments.ShouldBeSameAs(documents);
+        cut.Instance.BoundDocument.ShouldBeSameAs(document);
+        cut.Instance.BoundPlugins.ShouldBeSameAs(plugins);
+        cut.Instance.BoundTheme.ShouldBeSameAs(theme);
+        cut.Instance.BoundSite.ShouldBeSameAs(site);
     }
 }
 
 internal class TestPluginComponent : PluginComponentBase
 {
+    public IEnumerable<ContentDocument>? BoundDocuments => Documents;
+    public ContentDocument? BoundDocument => Document;
+    public IEnumerable<PluginManifest>? BoundPlugins => Plugins;
+    public ThemeManifest? BoundTheme => Theme;
+    public SiteManifest? BoundSite => Site;
+
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         // Intentionally empty: we only care about parameter binding.

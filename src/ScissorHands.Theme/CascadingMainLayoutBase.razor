@@ -1,0 +1,49 @@
+<CascadingValue Value="Site">
+    <CascadingValue Value="Theme">
+        <CascadingValue Value="Plugins">
+            <CascadingValue Value="Document">
+                <CascadingValue Value="Documents">
+                    @ChildContent
+                </CascadingValue>
+            </CascadingValue>
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
+
+@code {
+    /// <summary>
+    /// Gets or sets the child content.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collection of <see cref="ContentDocument"/> instances.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<ContentDocument>? Documents { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current <see cref="ContentDocument"/> instance.
+    /// </summary>
+    [Parameter]
+    public ContentDocument? Document { get; set; }
+
+    /// <summary>
+    /// Gets or sets the collection of <see cref="PluginManifest"/> instances.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<PluginManifest>? Plugins { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current <see cref="ThemeManifest"/> instance.
+    /// </summary>
+    [Parameter]
+    public ThemeManifest? Theme { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current <see cref="SiteManifest"/> instance.
+    /// </summary>
+    [Parameter]
+    public SiteManifest? Site { get; set; }
+}

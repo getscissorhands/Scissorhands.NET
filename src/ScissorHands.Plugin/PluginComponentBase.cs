@@ -22,34 +22,34 @@ public class PluginComponentBase : ComponentBase
     public string Name { get; set; } = string.Empty;
 
     /// <summary>
-    /// Gets or sets the list of <see cref="ContentDocument"/> instances.
+    /// Gets or sets the cascaded list of <see cref="ContentDocument"/> instances.
     /// </summary>
-    [Parameter]
-    public IEnumerable<ContentDocument>? Documents { get; set; }
+    [CascadingParameter]
+    protected IEnumerable<ContentDocument>? Documents { get; set; }
 
     /// <summary>
-    /// Gets or sets the <see cref="ContentDocument"/> instance.
+    /// Gets or sets the cascaded <see cref="ContentDocument"/> instance.
     /// </summary>
-    [Parameter]
-    public ContentDocument? Document { get; set; }
+    [CascadingParameter]
+    protected ContentDocument? Document { get; set; }
 
     /// <summary>
-    /// Gets or sets the <see cref="PluginManifest"/> instance.
+    /// Gets or sets the cascaded list of <see cref="PluginManifest"/> instances.
     /// </summary>
-    [Parameter]
-    public IEnumerable<PluginManifest>? Plugins { get; set; }
+    [CascadingParameter]
+    protected IEnumerable<PluginManifest>? Plugins { get; set; }
 
     /// <summary>
-    /// Gets or sets the <see cref="ThemeManifest"/> instance.
+    /// Gets or sets the cascaded <see cref="ThemeManifest"/> instance.
     /// </summary>
-    [Parameter]
-    public ThemeManifest? Theme { get; set; }
+    [CascadingParameter]
+    protected ThemeManifest? Theme { get; set; }
 
     /// <summary>
-    /// Gets or sets the <see cref="SiteManifest"/> instance.
+    /// Gets or sets the cascaded <see cref="SiteManifest"/> instance.
     /// </summary>
-    [Parameter]
-    public SiteManifest? Site { get; set; }
+    [CascadingParameter]
+    protected SiteManifest? Site { get; set; }
 
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
