@@ -49,7 +49,7 @@ Perform janitorial tasks on C#/.NET codebases. Focus on code cleanup, modernizat
 
 ## Documentation Resources
 
-Use `microsoft.docs.mcp` tool to:
+Use `microsoft-docs` tool to:
 
 - Look up current .NET best practices and patterns
 - Find official Microsoft documentation for APIs
