@@ -15,11 +15,13 @@ public class ThemeServiceTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var site = new SiteManifest();
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ThemeService>>();
 
         var service = new ThemeService(paths, fileSystem, site, logger);
@@ -38,15 +40,17 @@ public class ThemeServiceTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var themeRoot = fileSystem.Path.Combine(themesRoot, "bad");
         fileSystem.AddDirectory(themeRoot);
         fileSystem.AddFile(fileSystem.Path.Combine(themeRoot, "theme.json"), new MockFileData("{ not-json"));
 
         var site = new SiteManifest();
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ThemeService>>();
 
         var service = new ThemeService(paths, fileSystem, site, logger);
@@ -64,8 +68,10 @@ public class ThemeServiceTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var themeRoot = fileSystem.Path.Combine(themesRoot, "minimal");
         fileSystem.AddDirectory(themeRoot);
@@ -74,7 +80,7 @@ public class ThemeServiceTests
         fileSystem.AddFile(fileSystem.Path.Combine(themeRoot, "theme.json"), new MockFileData(json));
 
         var site = new SiteManifest();
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ThemeService>>();
 
         var service = new ThemeService(paths, fileSystem, site, logger);
@@ -93,8 +99,10 @@ public class ThemeServiceTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var themeSlug = "minimal";
         var themeRoot = fileSystem.Path.Combine(themesRoot, themeSlug);
@@ -107,10 +115,10 @@ public class ThemeServiceTests
         fileSystem.AddFile(fileSystem.Path.Combine(themeRoot, "manifest.json"), new MockFileData("{}"));
         fileSystem.AddFile(fileSystem.Path.Combine(themeRoot, "ignored.txt"), new MockFileData("no"));
 
-        var destination = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "out");
+        var destination = fileSystem.Path.Combine(root, "out");
 
         var site = new SiteManifest();
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ThemeService>>();
 
         var service = new ThemeService(paths, fileSystem, site, logger);

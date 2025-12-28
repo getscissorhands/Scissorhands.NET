@@ -16,8 +16,10 @@ public class ContentLoaderTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
         var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
@@ -29,7 +31,7 @@ public class ContentLoaderTests
         fileSystem.AddFile(postPath, new MockFileData("# Hello\n\nBody"));
 
         var options = new SiteManifest { IncludeDateInPostUrl = false };
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
         var loader = new ContentLoader(paths, fileSystem, options, logger);
@@ -52,8 +54,10 @@ public class ContentLoaderTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
         var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
@@ -78,7 +82,7 @@ public class ContentLoaderTests
         fileSystem.AddFile(postPath, new MockFileData(markdown));
 
         var options = new SiteManifest { IncludeDateInPostUrl = true };
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
         var loader = new ContentLoader(paths, fileSystem, options, logger);
@@ -101,8 +105,10 @@ public class ContentLoaderTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
 
         var postsRoot = fileSystem.Path.Combine(contentsRoot, "posts");
         var pagesRoot = fileSystem.Path.Combine(contentsRoot, "pages");
@@ -123,7 +129,7 @@ public class ContentLoaderTests
         fileSystem.AddFile(postPath, new MockFileData(markdown));
 
         var options = new SiteManifest();
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
         var loader = new ContentLoader(paths, fileSystem, options, logger);

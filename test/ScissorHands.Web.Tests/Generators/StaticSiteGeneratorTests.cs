@@ -21,11 +21,13 @@ public class StaticSiteGeneratorTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
-        var destination = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "out");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
 
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
 
         var site = new SiteManifest
         {
@@ -129,11 +131,13 @@ public class StaticSiteGeneratorTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
-        var destination = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "out");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
 
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
 
         var site = new SiteManifest
         {
@@ -202,14 +206,16 @@ public class StaticSiteGeneratorTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
-        var destination = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "out");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
 
         fileSystem.AddFile(fileSystem.Path.Combine(contentsRoot, "images", "a.png"), new MockFileData("A"));
         fileSystem.AddFile(fileSystem.Path.Combine(contentsRoot, "images", "nested", "b.png"), new MockFileData("B"));
 
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
 
         var site = new SiteManifest
         {
@@ -279,11 +285,13 @@ public class StaticSiteGeneratorTests
     {
         // Arrange
         var fileSystem = new MockFileSystem();
-        var contentsRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "contents");
-        var themesRoot = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "base", "themes");
-        var destination = fileSystem.Path.Combine(fileSystem.Path.DirectorySeparatorChar.ToString(), "out");
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
 
-        var paths = new TestAppPaths(basePath: "/base", contentsRoot, themesRoot);
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
 
         var site = new SiteManifest
         {
