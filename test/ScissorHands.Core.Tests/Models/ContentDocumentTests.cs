@@ -1,6 +1,6 @@
-namespace ScissorHands.Core.Tests.Models;
-
 using ScissorHands.Core.Models;
+
+namespace ScissorHands.Core.Tests.Models;
 
 public sealed class ContentDocumentTests
 {

@@ -1,6 +1,6 @@
-namespace ScissorHands.Core.Tests.Options;
-
 using ScissorHands.Core.Options;
+
+namespace ScissorHands.Core.Tests.Options;
 
 public sealed class CommandOptionsTests
 {

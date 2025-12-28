@@ -1,6 +1,6 @@
-namespace ScissorHands.Core.Tests.Manifests;
-
 using ScissorHands.Core.Manifests;
+
+namespace ScissorHands.Core.Tests.Manifests;
 
 public sealed class PluginManifestTests
 {
