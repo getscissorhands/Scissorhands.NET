@@ -2,7 +2,7 @@ using ScissorHands.Core.Options;
 
 namespace ScissorHands.Core.Tests.Options;
 
-public sealed class CommandOptionsTests
+public class CommandOptionsTests
 {
     [Theory]
     [InlineData(new[] { "--preview" }, CommandMode.Preview)]

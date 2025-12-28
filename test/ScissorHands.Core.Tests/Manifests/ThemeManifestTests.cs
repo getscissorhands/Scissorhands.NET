@@ -2,7 +2,7 @@ using ScissorHands.Core.Manifests;
 
 namespace ScissorHands.Core.Tests.Manifests;
 
-public sealed class ThemeManifestTests
+public class ThemeManifestTests
 {
     [Fact]
     public void Given_DefaultThemeManifest_When_Constructed_Then_It_Should_HaveExpectedDefaults()

@@ -3,13 +3,8 @@ using ScissorHands.Core.Models;
 
 namespace ScissorHands.Plugin.Tests;
 
-public sealed class ContentPluginTests
+public class ContentPluginTests
 {
-    private sealed class TestPlugin : ContentPlugin
-    {
-        public override string Name => "Test";
-    }
-
     [Fact]
     public async Task Given_DefaultContentPlugin_When_PreMarkdownAsync_Invoked_Then_It_Should_ReturnSameDocumentInstance()
     {
@@ -59,3 +54,9 @@ public sealed class ContentPluginTests
         result.ShouldBe(html);
     }
 }
+
+internal class TestPlugin : ContentPlugin
+{
+    public override string Name => "Test";
+}
+

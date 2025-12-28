@@ -2,7 +2,7 @@ using ScissorHands.Core.Manifests;
 
 namespace ScissorHands.Core.Tests.Manifests;
 
-public sealed class SiteManifestTests
+public class SiteManifestTests
 {
     [Fact]
     public void Given_DefaultSiteManifest_When_Constructed_Then_It_Should_HaveReasonableDefaults()

@@ -5,16 +5,8 @@ using ScissorHands.Core.Models;
 
 namespace ScissorHands.Plugin.Tests;
 
-public sealed class PluginComponentBaseTests
+public class PluginComponentBaseTests
 {
-    private sealed class TestPluginComponent : PluginComponentBase
-    {
-        protected override void BuildRenderTree(RenderTreeBuilder builder)
-        {
-            // Intentionally empty: we only care about parameter binding.
-        }
-    }
-
     [Fact]
     public void Given_Parameters_When_ComponentRendered_Then_It_Should_BindAllParameters()
     {
@@ -33,7 +25,7 @@ public sealed class PluginComponentBaseTests
         var site = new SiteManifest();
 
         // Act
-        var cut = context.Render<TestPluginComponent>(parameters => parameters
+        var cut = context.Renderer.Render<TestPluginComponent>(parameters => parameters
             .Add(p => p.Documents, documents)
             .Add(p => p.Document, document)
             .Add(p => p.Plugin, plugin)
@@ -48,3 +40,12 @@ public sealed class PluginComponentBaseTests
         cut.Instance.Site.ShouldBeSameAs(site);
     }
 }
+
+internal class TestPluginComponent : PluginComponentBase
+{
+    protected override void BuildRenderTree(RenderTreeBuilder builder)
+    {
+        // Intentionally empty: we only care about parameter binding.
+    }
+}
+

@@ -2,7 +2,7 @@ using ScissorHands.Core.Models;
 
 namespace ScissorHands.Core.Tests.Models;
 
-public sealed class ContentDocumentTests
+public class ContentDocumentTests
 {
     [Fact]
     public void Given_DefaultContentDocument_When_Constructed_Then_It_Should_HaveNonNullDefaults()

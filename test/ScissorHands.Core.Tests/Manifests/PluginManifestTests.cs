@@ -2,7 +2,7 @@ using ScissorHands.Core.Manifests;
 
 namespace ScissorHands.Core.Tests.Manifests;
 
-public sealed class PluginManifestTests
+public class PluginManifestTests
 {
     [Fact]
     public void Given_DefaultPluginManifest_When_Constructed_Then_It_Should_HaveNullOptionalProperties()
