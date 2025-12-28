@@ -8,9 +8,9 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
 using ScissorHands.Web.Application;
+using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Extensions;
 using ScissorHands.Web.Generators;
-using ScissorHands.Web.Watchers;
 
 namespace ScissorHands.Web;
 
@@ -99,18 +99,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
 
         _app = builder.Build();
 
-        _logger = _app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
-        _site = _app.Services.GetRequiredService<SiteManifest>();
-        _generator = _app.Services.GetRequiredService<IStaticSiteGenerator>();
-
-        var result = _mode switch
-        {
-            CommandMode.Preview => await RunPreviewServerAsync(),
-            CommandMode.Build => await RunBuildAsync(),
-            _ => LogInvalidMode()
-        };
-
-        return result;
+        return this;
     }
 
     /// <inheritdoc />
@@ -120,6 +109,17 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         {
             return;
         }
+
+        _logger = _app!.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
+        _site = _app!.Services.GetRequiredService<SiteManifest>();
+        _generator = _app!.Services.GetRequiredService<IStaticSiteGenerator>();
+
+        var result = _mode switch
+        {
+            CommandMode.Preview => await RunPreviewServerAsync(),
+            CommandMode.Build => await RunBuildAsync(),
+            _ => LogInvalidMode()
+        };
 
         await _app!.RunAsync();
     }
@@ -197,10 +197,12 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             _logger!.LogInformation("Preview server running at {Address}", $"{siteUrl}/{_site!.BaseUrl.TrimStart('/')}");
         });
 
-        var contentRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), SiteManifest.CONTENTS_DIRECTORY));
-        var themeRoot = Path.GetFullPath(Path.Combine(Directory.GetCurrentDirectory(), ThemeManifest.THEME_DIRECTORY));
+        var paths = _app.Services.GetRequiredService<IAppPaths>();
+        var contentRoot = paths.GetContentsRoot();
+        var themeRoot = paths.GetThemesRoot();
 
-        var watcher = new ContentWatcher(
+        var watcherFactory = _app.Services.GetRequiredService<IContentWatcherFactory>();
+        var watcher = watcherFactory.Create(
             contentRoot,
             themeRoot,
             TimeSpan.FromMilliseconds(500),
@@ -209,10 +211,9 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
                 _logger!.LogInformation("Change detected; rebuilding preview...");
                 await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView>(previewPath, preview: true, CancellationToken.None);
                 _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
-            },
-            _app.Services.GetRequiredService<ILogger<ContentWatcher>>());
+            });
 
-        _app.Lifetime.ApplicationStopping.Register(() => watcher.Dispose());
+        _app.Lifetime.ApplicationStopping.Register(watcher.Dispose);
 
         return this;
     }

@@ -60,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IFileSystem, FileSystem>();
         services.AddSingleton<IAppPaths, CurrentDirectoryAppPaths>();
         services.AddSingleton<IAssemblyCatalog, DefaultAssemblyCatalog>();
+        services.AddSingleton<IContentWatcherFactory, ContentWatcherFactory>();
 
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();

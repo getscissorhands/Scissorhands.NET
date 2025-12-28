@@ -20,7 +20,7 @@ public class PluginComponentBaseTests
         };
 
         var document = new ContentDocument { SourcePath = "current.md", Kind = ContentKind.Post };
-        var plugin = new PluginManifest { Name = "Test" };
+        var plugins = new[] { new PluginManifest { Name = "Test" } };
         var theme = new ThemeManifest { Name = "Minimal", Slug = "minimal" };
         var site = new SiteManifest();
 
@@ -28,14 +28,14 @@ public class PluginComponentBaseTests
         var cut = context.Renderer.Render<TestPluginComponent>(parameters => parameters
             .Add(p => p.Documents, documents)
             .Add(p => p.Document, document)
-            .Add(p => p.Plugin, plugin)
+            .Add(p => p.Plugins, plugins)
             .Add(p => p.Theme, theme)
             .Add(p => p.Site, site));
 
         // Assert
         cut.Instance.Documents.ShouldBeSameAs(documents);
         cut.Instance.Document.ShouldBeSameAs(document);
-        cut.Instance.Plugin.ShouldBeSameAs(plugin);
+        cut.Instance.Plugins.ShouldBeSameAs(plugins);
         cut.Instance.Theme.ShouldBeSameAs(theme);
         cut.Instance.Site.ShouldBeSameAs(site);
     }
