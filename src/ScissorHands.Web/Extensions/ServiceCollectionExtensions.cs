@@ -7,11 +7,15 @@ using Microsoft.Extensions.DependencyInjection;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Services;
 using ScissorHands.Plugin;
+using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Generators;
+using ScissorHands.Web.Infrastructure;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 using ScissorHands.Web.Services;
+
+using System.IO.Abstractions;
 
 namespace ScissorHands.Web.Extensions;
 
@@ -49,17 +53,19 @@ public static class ServiceCollectionExtensions
     /// </summary>
     /// <param name="services"><see cref="IServiceCollection"/> instance.</param>
     /// <param name="config"><see cref="IConfiguration"/> instance.</param>
+    /// <param name="pluginAssemblies">Optional override assemblies for plugin scanning (useful for deterministic tests).</param>
     /// <returns>Returns the <see cref="IServiceCollection"/> instance.</returns>
-    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config)
+    public static IServiceCollection AddServices(this IServiceCollection services, IConfiguration config, IEnumerable<Assembly>? pluginAssemblies = null)
     {
+        services.AddSingleton<IFileSystem, FileSystem>();
+        services.AddSingleton<IAppPaths, CurrentDirectoryAppPaths>();
+        services.AddSingleton<IAssemblyCatalog, DefaultAssemblyCatalog>();
+
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();
 
-        var assemblies = Directory.GetFiles(AppContext.BaseDirectory, "*.dll")
-                                  .Select(Assembly.LoadFrom)
-                                  .ToArray()
-                                  .Union(AppDomain.CurrentDomain.GetAssemblies())
-                                  .ToArray();
+        var assemblies = pluginAssemblies?.ToArray()
+                   ?? [.. new DefaultAssemblyCatalog().GetAssemblies()];
 
         var siteManifest = config.GetSection(SITE_SETTINGS_SECTION_NAME).Get<SiteManifest>();
         if (siteManifest?.Debug == true)

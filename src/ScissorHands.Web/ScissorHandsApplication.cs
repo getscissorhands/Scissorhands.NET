@@ -7,19 +7,43 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
+using ScissorHands.Web.Application;
 using ScissorHands.Web.Extensions;
 using ScissorHands.Web.Generators;
 using ScissorHands.Web.Watchers;
 
 namespace ScissorHands.Web;
 
+/// <summary>
+/// This provides the interface for ScissorHands application.
+/// </summary>
 public interface IScissorHandsApplication
 {
+    /// <summary>
+    /// Verifies the command arguments.
+    /// </summary>
+    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
     IScissorHandsApplication VerifyCommandArguments();
+
+    /// <summary>
+    /// Builds the application.
+    /// </summary>
+    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
     Task<IScissorHandsApplication> BuildAsync();
+
+    /// <summary>
+    /// Runs the application.
+    /// </summary>
     Task RunAsync();
 }
 
+/// <summary>
+/// This represents the ScissorHands application entity.
+/// </summary>
+/// <typeparam name="TMainLayout">Type of main layout component.</typeparam>
+/// <typeparam name="TIndexView">Type of index view component.</typeparam>
+/// <typeparam name="TPostView">Type of post view component.</typeparam>
+/// <typeparam name="TPageView">Type of page view component.</typeparam>
 public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageView>(params IEnumerable<string> args) : IScissorHandsApplication
     where TMainLayout : ScissorHands.Theme.MainLayoutBase
     where TIndexView : ScissorHands.Theme.IndexViewBase
@@ -35,18 +59,19 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
     private SiteManifest? _site;
     private IStaticSiteGenerator? _generator;
 
+    /// <inheritdoc />
     public IScissorHandsApplication VerifyCommandArguments()
     {
         DisplayBanner();
 
-        var command = CommandOptions.Parse(_args);
-        if (command.Mode is CommandMode.Help)
+        var validation = CommandArgumentValidator.Validate(_args);
+        if (validation.IsHelp)
         {
             DisplayHelp();
             Environment.Exit(0);
         }
 
-        if (command.Mode is CommandMode.Unknown)
+        if (validation.IsError)
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine();
@@ -57,11 +82,12 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Environment.Exit(1);
         }
 
-        _mode = command.Mode;
+        _mode = validation.Mode;
 
         return this;
     }
 
+    /// <inheritdoc />
     public async Task<IScissorHandsApplication> BuildAsync()
     {
         var builder = WebApplication.CreateBuilder([.. _args]);
@@ -87,6 +113,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         return result;
     }
 
+    /// <inheritdoc />
     public async Task RunAsync()
     {
         if (_mode is not CommandMode.Preview)

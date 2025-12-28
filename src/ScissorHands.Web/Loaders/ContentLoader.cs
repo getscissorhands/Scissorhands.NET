@@ -4,6 +4,9 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Web.Abstractions;
+
+using System.IO.Abstractions;
 
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
@@ -13,16 +16,19 @@ namespace ScissorHands.Web.Loaders;
 /// <summary>
 /// This represents the content loader entity.
 /// </summary>
+/// <param name="paths"><see cref="IAppPaths"/> instance.</param>
+/// <param name="fileSystem"><see cref="IFileSystem"/> instance.</param>
 /// <param name="options"><see cref="SiteManifest"/> instance.</param>
 /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
-public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> logger) : IContentLoader
+public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteManifest options, ILogger<ContentLoader> logger) : IContentLoader
 {
     private const string POST_DIRECTORY = "posts";
     private const string PAGE_DIRECTORY = "pages";
 
+    private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
+    private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly ILogger<ContentLoader> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-    private readonly string _basePath = Directory.GetCurrentDirectory();
     private readonly IDeserializer _deserializer = new DeserializerBuilder()
                                                        .WithNamingConvention(CamelCaseNamingConvention.Instance)
                                                        .IgnoreUnmatchedProperties()
@@ -40,17 +46,17 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
     private async Task<IReadOnlyList<ContentDocument>> LoadFromDirectoryAsync(ContentKind kind, string directory, CancellationToken cancellationToken)
     {
         var result = new List<ContentDocument>();
-        var root = Path.Combine(_basePath, SiteManifest.CONTENTS_DIRECTORY, directory);
+        var root = _fileSystem.Path.Combine(_paths.GetContentsRoot(), directory);
 
-        if (!Directory.Exists(root))
+        if (!_fileSystem.Directory.Exists(root))
         {
             _logger.LogWarning("Content directory {Directory} not found at {Path}", directory, root);
             return result;
         }
 
-        foreach (var file in Directory.EnumerateFiles(root, "*.md", SearchOption.AllDirectories))
+        foreach (var file in _fileSystem.Directory.EnumerateFiles(root, "*.md", SearchOption.AllDirectories))
         {
-            var text = await File.ReadAllTextAsync(file, cancellationToken);
+            var text = await _fileSystem.File.ReadAllTextAsync(file, cancellationToken);
             var (metadata, markdown) = ParseFrontMatter(text, file);
             metadata = ApplySlug(metadata, kind, file, root);
 
@@ -80,7 +86,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
         var firstLine = reader.ReadLine();
         if (string.Equals(firstLine?.Trim(), "---", StringComparison.OrdinalIgnoreCase) == false)
         {
-            return (new ContentMetadata { Title = Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
+            return (new ContentMetadata { Title = _fileSystem.Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
         }
 
         var yamlLines = new List<string>();
@@ -100,7 +106,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
         try
         {
             var map = _deserializer.Deserialize<Dictionary<string, object>>(yaml) ?? [];
-            var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : Path.GetFileNameWithoutExtension(sourcePath);
+            var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : _fileSystem.Path.GetFileNameWithoutExtension(sourcePath);
             var slug = map.TryGetValue("slug", out var slugValue) ? Convert.ToString(slugValue, CultureInfo.InvariantCulture) ?? string.Empty : string.Empty;
             var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : default;
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
@@ -131,7 +137,7 @@ public sealed class ContentLoader(SiteManifest options, ILogger<ContentLoader> l
         catch (Exception ex)
         {
             _logger.LogWarning(ex, "Failed to parse frontmatter for {Path}", sourcePath);
-            return (new ContentMetadata { Title = Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
+            return (new ContentMetadata { Title = _fileSystem.Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
         }
     }
 
