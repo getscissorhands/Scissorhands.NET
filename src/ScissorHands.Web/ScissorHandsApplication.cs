@@ -45,6 +45,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
     private SiteManifest? _site;
     private IStaticSiteGenerator? _generator;
     private MethodInfo? _cachedBuildMethod;
+    private readonly object _cacheLock = new object();
 
     internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, Type mainLayout, Type indexView, Type postView, Type pageView, Type notFoundView)
     {
@@ -219,11 +220,17 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
             // Use cached method info if available, otherwise find and cache it
             if (_cachedBuildMethod == null)
             {
-                _cachedBuildMethod = GetBuildAsyncMethod();
+                lock (_cacheLock)
+                {
+                    if (_cachedBuildMethod == null)
+                    {
+                        _cachedBuildMethod = GetBuildAsyncMethod();
+                    }
+                }
             }
 
             var closedMethod = _cachedBuildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView);
-            var task = (Task?)closedMethod.Invoke(_generator, [destination, preview, cancellationToken]);
+            var task = (Task?)closedMethod.Invoke(_generator, new object[] { destination, preview, cancellationToken });
 
             return task ?? Task.CompletedTask;
         }
@@ -235,6 +242,12 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         catch (TargetInvocationException ex)
         {
             _logger?.LogError(ex.InnerException ?? ex, "BuildAsync method threw an exception during execution.");
+            
+            // Re-throw the inner exception if it exists to preserve the original exception context
+            if (ex.InnerException != null)
+            {
+                throw ex.InnerException;
+            }
             throw;
         }
         catch (ArgumentException ex)
