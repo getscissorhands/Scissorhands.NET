@@ -3,11 +3,13 @@
 
 <section class="home">
     <article>
-        @if (Documents?.Any() == false)
+        @if (Documents?.Any() != true)
         {
             <p>Welcome aboard ScissorHands.NET!</p>
         }
-        @foreach (var post in Documents!)
+        else
+        {
+            @foreach (var post in Documents!)
         {
             <article>
                 <div>
@@ -20,6 +22,7 @@
                     </div>
                 }
             </article>
+            }
         }
     </article>
 </section>
