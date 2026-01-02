@@ -69,10 +69,10 @@ public sealed class StaticSiteGenerator(
         var notFoundDocument = documents.SingleOrDefault(d => d.Kind == ContentKind.Page && string.Equals(d.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase));
         await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, plugins, theme, destination, layoutType, cancellationToken);
 
-        var buildTasks = documents.Where(d => IsNotFoundPage(d) == false)
-                                  .Select(d => RenderDocumentAsync<TPostView, TPageView>(d, plugins, theme, destination, layoutType, cancellationToken))
-                                  .ToList();
-        await Task.WhenAll(buildTasks);
+        foreach (var document in documents.Where(d => IsNotFoundPage(d) == false))
+        {
+            await RenderDocumentAsync<TPostView, TPageView>(document, plugins, theme, destination, layoutType, cancellationToken);
+        }
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
