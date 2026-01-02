@@ -13,24 +13,24 @@ public abstract class IndexViewBase : ComponentBase
     /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.
     /// </summary>
-    [Parameter]
-    public IEnumerable<ContentDocument> Documents { get; set; } = [];
+    [CascadingParameter]
+    public IEnumerable<ContentDocument>? Documents { get; set; }
 
     /// <summary>
     /// Gets or sets the list of <see cref="PluginManifest"/> instances.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public IEnumerable<PluginManifest>? Plugins { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="ThemeManifest"/> instance.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public ThemeManifest? Theme { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="SiteManifest"/> instance.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public SiteManifest? Site { get; set; }
 }

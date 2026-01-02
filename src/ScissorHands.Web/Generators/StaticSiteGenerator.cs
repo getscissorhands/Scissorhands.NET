@@ -30,8 +30,8 @@ public sealed class StaticSiteGenerator(
         IPluginRunner pluginRunner,
         IThemeService themeService,
         IComponentRenderer renderer,
-    IAppPaths paths,
-    IFileSystem fileSystem,
+        IAppPaths paths,
+        IFileSystem fileSystem,
         SiteManifest options,
         ILogger<StaticSiteGenerator> logger) : IStaticSiteGenerator
 {

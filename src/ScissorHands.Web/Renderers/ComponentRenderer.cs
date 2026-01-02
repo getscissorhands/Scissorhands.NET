@@ -31,8 +31,23 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             {
                 builder.OpenComponent<TComponent>(0);
                 var seq = 1;
+
+                var cascadingKeys = new HashSet<string>(StringComparer.Ordinal)
+                {
+                    "Documents",
+                    "Document",
+                    "Plugins",
+                    "Theme",
+                    "Site"
+                };
+
                 foreach (var kvp in parameters)
                 {
+                    if (cascadingKeys.Contains(kvp.Key))
+                    {
+                        continue;
+                    }
+
                     builder.AddAttribute(seq++, kvp.Key, kvp.Value);
                 }
                 builder.CloseComponent();
