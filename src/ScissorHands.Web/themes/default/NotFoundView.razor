@@ -2,7 +2,7 @@
 @layout MainLayout
 
 <section class="not-found">
-    @if (string.IsNullOrWhiteSpace(Document.Html))
+    @if (string.IsNullOrWhiteSpace(Document?.Html) == true)
     {
         <article>
             <h1>404 - Not Found</h1>

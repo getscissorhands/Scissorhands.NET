@@ -14,24 +14,24 @@ public abstract class NotFoundViewBase : ComponentBase
     /// Gets or sets the <see cref="ContentDocument"/> instance.
     /// If a page document with the slug <c>404.html</c> exists, it will be provided here.
     /// </summary>
-    [Parameter]
-    public ContentDocument Document { get; set; } = new();
+    [CascadingParameter]
+    public ContentDocument? Document { get; set; }
 
     /// <summary>
     /// Gets or sets the list of <see cref="PluginManifest"/> instances.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public IEnumerable<PluginManifest>? Plugins { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="ThemeManifest"/> instance.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public ThemeManifest? Theme { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="SiteManifest"/> instance.
     /// </summary>
-    [Parameter]
+    [CascadingParameter]
     public SiteManifest? Site { get; set; }
 }
