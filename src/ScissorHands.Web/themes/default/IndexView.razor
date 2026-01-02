@@ -3,11 +3,11 @@
 
 <section class="home">
     <article>
-        @if (Documents.Any() == false)
+        @if (Documents?.Any() == false)
         {
             <p>Welcome aboard ScissorHands.NET!</p>
         }
-        @foreach (var post in Documents)
+        @foreach (var post in Documents!)
         {
             <article>
                 <div>

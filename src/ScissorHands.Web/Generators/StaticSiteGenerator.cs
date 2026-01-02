@@ -69,40 +69,10 @@ public sealed class StaticSiteGenerator(
         var notFoundDocument = documents.SingleOrDefault(d => d.Kind == ContentKind.Page && string.Equals(d.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase));
         await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, plugins, theme, destination, layoutType, cancellationToken);
 
-        foreach (var document in documents)
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-
-            if (document.Kind == ContentKind.Page && string.Equals(document.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase))
-            {
-                continue;
-            }
-
-            var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
-            var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
-            preProcessed.Html = html;
-            var postMarkdown = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
-
-            var parameters = new Dictionary<string, object?>
-            {
-                ["Document"] = postMarkdown,
-                ["Plugins"] = plugins,
-                ["Theme"] = theme,
-                ["Site"] = _options
-            };
-
-            var rendered = postMarkdown.Kind switch
-            {
-                ContentKind.Page => await _renderer.RenderAsync<TPageView>(layoutType, parameters, cancellationToken),
-                _ => await _renderer.RenderAsync<TPostView>(layoutType, parameters, cancellationToken)
-            };
-
-            var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, postMarkdown, cancellationToken);
-            var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
-            _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
-            await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
-            _logger.LogInformation("Wrote {OutputPath}", outputPath);
-        }
+        var buildTasks = documents.Where(d => IsNotFoundPage(d) == false)
+                                  .Select(d => RenderDocumentAsync<TPostView, TPageView>(d, plugins, theme, destination, layoutType, cancellationToken))
+                                  .ToList();
+        await Task.WhenAll(buildTasks);
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
@@ -188,6 +158,44 @@ public sealed class StaticSiteGenerator(
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
+    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TPostView : ScissorHands.Theme.PostViewBase
+        where TPageView : ScissorHands.Theme.PageViewBase
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+
+        var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
+        var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
+        preProcessed.Html = html;
+        var postMarkdown = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Document"] = postMarkdown,
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+
+        var rendered = postMarkdown.Kind switch
+        {
+            ContentKind.Page => await _renderer.RenderAsync<TPageView>(layoutType, parameters, cancellationToken),
+            _ => await _renderer.RenderAsync<TPostView>(layoutType, parameters, cancellationToken)
+        };
+
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, postMarkdown, cancellationToken);
+        var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
+    private static bool IsNotFoundPage(ContentDocument document)
+    {
+        return document.Kind == ContentKind.Page &&
+               string.Equals(document.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase) == true;
     }
 
     private static string ResolveOutputPath(string root, string slug)
