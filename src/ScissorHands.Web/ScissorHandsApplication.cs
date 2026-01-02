@@ -1,4 +1,5 @@
 using System.Reflection;
+using System.Runtime.ExceptionServices;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -32,6 +33,8 @@ public interface IScissorHandsApplication
 public sealed class ScissorHandsApplication : IScissorHandsApplication
 {
     private const string APP_LOGGER_NAME = "App";
+    private const int EXPECTED_GENERIC_PARAMETER_COUNT = 5;
+    private const int EXPECTED_METHOD_PARAMETER_COUNT = 3;
 
     private readonly string[] _args;
     private readonly Type _mainLayout;
@@ -230,7 +233,8 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
             }
 
             var closedMethod = _cachedBuildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView);
-            var task = (Task?)closedMethod.Invoke(_generator, new object[] { destination, preview, cancellationToken });
+            var parameters = new object[] { destination, preview, cancellationToken };
+            var task = (Task?)closedMethod.Invoke(_generator, parameters);
 
             return task ?? Task.CompletedTask;
         }
@@ -243,10 +247,10 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         {
             _logger?.LogError(ex.InnerException ?? ex, "BuildAsync method threw an exception during execution.");
             
-            // Re-throw the inner exception if it exists to preserve the original exception context
+            // Re-throw the inner exception while preserving the stack trace
             if (ex.InnerException != null)
             {
-                throw ex.InnerException;
+                ExceptionDispatchInfo.Capture(ex.InnerException).Throw();
             }
             throw;
         }
@@ -276,13 +280,13 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         }
 
         // Filter to the expected signature: 5 generic parameters, 3 method parameters
-        var matchingMethods = methods.Where(m => m.GetGenericArguments().Length == 5 &&
-                                                  m.GetParameters().Length == 3)
+        var matchingMethods = methods.Where(m => m.GetGenericArguments().Length == EXPECTED_GENERIC_PARAMETER_COUNT &&
+                                                  m.GetParameters().Length == EXPECTED_METHOD_PARAMETER_COUNT)
             .ToList();
 
         if (matchingMethods.Count == 0)
         {
-            throw new InvalidOperationException($"No BuildAsync method with the expected signature (5 generic parameters, 3 method parameters) found on type {generatorType.Name}.");
+            throw new InvalidOperationException($"No BuildAsync method with the expected signature ({EXPECTED_GENERIC_PARAMETER_COUNT} generic parameters, {EXPECTED_METHOD_PARAMETER_COUNT} method parameters) found on type {generatorType.Name}.");
         }
 
         if (matchingMethods.Count > 1)
