@@ -28,9 +28,9 @@ A Blazor-based static site generator
     ```csharp
     using ScissorHands.Web;
 
-    var app = await new ScissorHandsApplication<MainLayout, IndexView, PostView, PageView>(args)
-                        .VerifyCommandArguments()
-                        .BuildAsync();
+    var app = new ScissorHandsApplicationBuilder(args)
+                  .AddLayouts<MainLayout, IndexView, PostView, PageView, NotFoundView>()
+                  .Build();
     await app.RunAsync();
     ```
 
