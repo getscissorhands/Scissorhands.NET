@@ -7,9 +7,8 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
-using ScissorHands.Web.Application;
 using ScissorHands.Web.Abstractions;
-using ScissorHands.Web.Extensions;
+using ScissorHands.Web.Application;
 using ScissorHands.Web.Generators;
 
 namespace ScissorHands.Web;
@@ -20,18 +19,6 @@ namespace ScissorHands.Web;
 public interface IScissorHandsApplication
 {
     /// <summary>
-    /// Verifies the command arguments.
-    /// </summary>
-    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
-    IScissorHandsApplication VerifyCommandArguments();
-
-    /// <summary>
-    /// Builds the application.
-    /// </summary>
-    /// <returns>Returns the <see cref="IScissorHandsApplication"/> instance.</returns>
-    Task<IScissorHandsApplication> BuildAsync();
-
-    /// <summary>
     /// Runs the application.
     /// </summary>
     Task RunAsync();
@@ -40,29 +27,34 @@ public interface IScissorHandsApplication
 /// <summary>
 /// This represents the ScissorHands application entity.
 /// </summary>
-/// <typeparam name="TMainLayout">Type of main layout component.</typeparam>
-/// <typeparam name="TIndexView">Type of index view component.</typeparam>
-/// <typeparam name="TPostView">Type of post view component.</typeparam>
-/// <typeparam name="TPageView">Type of page view component.</typeparam>
-/// <typeparam name="TNotFoundView">Type of not found (404) view component.</typeparam>
-public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(params IEnumerable<string> args) : IScissorHandsApplication
-    where TMainLayout : ScissorHands.Theme.MainLayoutBase
-    where TIndexView : ScissorHands.Theme.IndexViewBase
-    where TPostView : ScissorHands.Theme.PostViewBase
-    where TPageView : ScissorHands.Theme.PageViewBase
-    where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
+public sealed class ScissorHandsApplication : IScissorHandsApplication
 {
     private const string APP_LOGGER_NAME = "App";
 
-    private readonly IEnumerable<string> _args = [.. args];
+    private readonly string[] _args;
+    private readonly Type _mainLayout;
+    private readonly Type _indexView;
+    private readonly Type _postView;
+    private readonly Type _pageView;
+    private readonly Type _notFoundView;
     private CommandMode _mode;
-    private WebApplication? _app;
+    private readonly WebApplication _app;
     private ILogger? _logger;
     private SiteManifest? _site;
     private IStaticSiteGenerator? _generator;
 
-    /// <inheritdoc />
-    public IScissorHandsApplication VerifyCommandArguments()
+    internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, Type mainLayout, Type indexView, Type postView, Type pageView, Type notFoundView)
+    {
+        _app = app ?? throw new ArgumentNullException(nameof(app));
+        _args = args?.ToArray() ?? throw new ArgumentNullException(nameof(args));
+        _mainLayout = mainLayout ?? throw new ArgumentNullException(nameof(mainLayout));
+        _indexView = indexView ?? throw new ArgumentNullException(nameof(indexView));
+        _postView = postView ?? throw new ArgumentNullException(nameof(postView));
+        _pageView = pageView ?? throw new ArgumentNullException(nameof(pageView));
+        _notFoundView = notFoundView ?? throw new ArgumentNullException(nameof(notFoundView));
+    }
+
+    private void VerifyCommandArguments()
     {
         DisplayBanner();
 
@@ -77,7 +69,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         {
             Console.ForegroundColor = ConsoleColor.Red;
             Console.WriteLine();
-            Console.WriteLine("ERROR: No parameter provided.");
+            Console.WriteLine("ERROR: No parameter or invalid parameter provided.");
             Console.ResetColor();
             DisplayHelp();
 
@@ -85,45 +77,28 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
         }
 
         _mode = validation.Mode;
-
-        return this;
-    }
-
-    /// <inheritdoc />
-    public async Task<IScissorHandsApplication> BuildAsync()
-    {
-        var builder = WebApplication.CreateBuilder([.. _args]);
-
-        var config = builder.Configuration;
-        builder.Services.AddConfigurations(config)
-                        .AddServices(config)
-                        .AddRazorComponents();
-
-        _app = builder.Build();
-
-        return this;
     }
 
     /// <inheritdoc />
     public async Task RunAsync()
     {
-        if (_mode is not CommandMode.Preview)
-        {
-            return;
-        }
+        VerifyCommandArguments();
 
-        _logger = _app!.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
-        _site = _app!.Services.GetRequiredService<SiteManifest>();
-        _generator = _app!.Services.GetRequiredService<IStaticSiteGenerator>();
+        _logger = _app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
+        _site = _app.Services.GetRequiredService<SiteManifest>();
+        _generator = _app.Services.GetRequiredService<IStaticSiteGenerator>();
 
-        var result = _mode switch
+        _ = _mode switch
         {
             CommandMode.Preview => await RunPreviewServerAsync(),
             CommandMode.Build => await RunBuildAsync(),
             _ => LogInvalidMode()
         };
 
-        await _app!.RunAsync();
+        if (_mode == CommandMode.Preview)
+        {
+            await _app.RunAsync();
+        }
     }
 
     private static void DisplayHelp()
@@ -185,7 +160,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Directory.Delete(previewPath, recursive: true);
         }
 
-        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(previewPath, preview: true, _app!.Lifetime.ApplicationStopping);
+        await BuildSiteAsync(previewPath, preview: true, _app.Lifetime.ApplicationStopping);
 
         var fileProvider = new PhysicalFileProvider(previewPath);
         _app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
@@ -211,7 +186,7 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             async () =>
             {
                 _logger!.LogInformation("Change detected; rebuilding preview...");
-                await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(previewPath, preview: true, CancellationToken.None);
+                await BuildSiteAsync(previewPath, preview: true, CancellationToken.None);
                 _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
             });
 
@@ -228,10 +203,25 @@ public class ScissorHandsApplication<TMainLayout, TIndexView, TPostView, TPageVi
             Directory.Delete(outputPath, recursive: true);
         }
 
-        await _generator!.BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(outputPath, preview: false, CancellationToken.None);
+        await BuildSiteAsync(outputPath, preview: false, CancellationToken.None);
         _logger!.LogInformation("Build complete. Output at {OutputPath}", outputPath);
 
         return this;
+    }
+
+    private Task BuildSiteAsync(string destination, bool preview, CancellationToken cancellationToken)
+    {
+        var buildMethod = _generator!.GetType()
+                                     .GetMethods()
+                                     .Single(m => string.Equals(m.Name, nameof(IStaticSiteGenerator.BuildAsync), StringComparison.Ordinal) &&
+                                                  m.IsGenericMethodDefinition &&
+                                                  m.GetGenericArguments().Length == 5 &&
+                                                  m.GetParameters().Length == 3);
+
+        var closedMethod = buildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView);
+        var task = (Task?)closedMethod.Invoke(_generator, [ destination, preview, cancellationToken ]);
+
+        return task ?? Task.CompletedTask;
     }
 
     private IScissorHandsApplication LogInvalidMode()
