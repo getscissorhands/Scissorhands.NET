@@ -26,18 +26,27 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
         // Discover all types in the ScissorHands.Theme assembly that have cascading parameters
         var themeAssembly = typeof(PageViewBase).Assembly;
-        var allTypes = themeAssembly.GetTypes();
-
-        foreach (var type in allTypes)
+        
+        try
         {
-            // Find all properties with CascadingParameter attribute
-            var cascadingProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
-                .Where(p => p.GetCustomAttribute<CascadingParameterAttribute>() != null);
+            var allTypes = themeAssembly.GetExportedTypes();
 
-            foreach (var property in cascadingProperties)
+            foreach (var type in allTypes)
             {
-                parameterNames.Add(property.Name);
+                // Find all properties with CascadingParameter attribute
+                var cascadingProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
+                    .Where(p => p.GetCustomAttribute<CascadingParameterAttribute>() is not null);
+
+                foreach (var property in cascadingProperties)
+                {
+                    parameterNames.Add(property.Name);
+                }
             }
+        }
+        catch (ReflectionTypeLoadException)
+        {
+            // If type loading fails, fall back to empty set
+            // This should not happen in normal operation, but provides safety
         }
 
         return parameterNames;
