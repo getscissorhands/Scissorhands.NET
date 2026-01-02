@@ -1,7 +1,11 @@
+using System.Reflection;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+using ScissorHands.Theme;
 
 namespace ScissorHands.Web.Renderers;
 
@@ -14,6 +18,35 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 {
     private readonly IServiceScopeFactory _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
     private readonly ILoggerFactory _loggerFactory = loggerFactory ?? throw new ArgumentNullException(nameof(loggerFactory));
+
+    // Lazy initialization of cascading parameter names discovered via reflection
+    private static readonly Lazy<HashSet<string>> _cascadingParameterNames = new(() =>
+    {
+        var parameterNames = new HashSet<string>(StringComparer.Ordinal);
+
+        // Get all view base classes from the ScissorHands.Theme assembly
+        var viewBaseTypes = new[]
+        {
+            typeof(PageViewBase),
+            typeof(PostViewBase),
+            typeof(IndexViewBase),
+            typeof(NotFoundViewBase)
+        };
+
+        foreach (var type in viewBaseTypes)
+        {
+            // Find all properties with CascadingParameter attribute
+            var cascadingProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                .Where(p => p.GetCustomAttribute<CascadingParameterAttribute>() != null);
+
+            foreach (var property in cascadingProperties)
+            {
+                parameterNames.Add(property.Name);
+            }
+        }
+
+        return parameterNames;
+    });
 
     /// <inheritdoc />
     public async Task<string> RenderAsync<TComponent>(Type layoutType, IDictionary<string, object?> parameters, CancellationToken cancellationToken = default)
@@ -32,18 +65,9 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
                 builder.OpenComponent<TComponent>(0);
                 var seq = 1;
 
-                var cascadingKeys = new HashSet<string>(StringComparer.Ordinal)
-                {
-                    "Documents",
-                    "Document",
-                    "Plugins",
-                    "Theme",
-                    "Site"
-                };
-
                 foreach (var kvp in parameters)
                 {
-                    if (cascadingKeys.Contains(kvp.Key))
+                    if (_cascadingParameterNames.Value.Contains(kvp.Key))
                     {
                         continue;
                     }
