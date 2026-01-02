@@ -24,19 +24,14 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
     {
         var parameterNames = new HashSet<string>(StringComparer.Ordinal);
 
-        // Get all view base classes from the ScissorHands.Theme assembly
-        var viewBaseTypes = new[]
-        {
-            typeof(PageViewBase),
-            typeof(PostViewBase),
-            typeof(IndexViewBase),
-            typeof(NotFoundViewBase)
-        };
+        // Discover all types in the ScissorHands.Theme assembly that have cascading parameters
+        var themeAssembly = typeof(PageViewBase).Assembly;
+        var allTypes = themeAssembly.GetTypes();
 
-        foreach (var type in viewBaseTypes)
+        foreach (var type in allTypes)
         {
             // Find all properties with CascadingParameter attribute
-            var cascadingProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            var cascadingProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly)
                 .Where(p => p.GetCustomAttribute<CascadingParameterAttribute>() != null);
 
             foreach (var property in cascadingProperties)
