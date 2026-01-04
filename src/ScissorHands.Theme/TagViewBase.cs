@@ -14,20 +14,20 @@ public abstract class TagViewBase : ComponentBase
     /// <summary>
     /// Gets or sets the tag name.
     /// </summary>
-    [CascadingParameter]
+    [CascadingParameter(Name = "Tag")]
     public string? Tag { get; set; }
 
     /// <summary>
     /// Gets or sets the list of posts for this tag.
     /// </summary>
-    [CascadingParameter]
-    public IEnumerable<ContentDocument>? Posts { get; set; }
+    [CascadingParameter(Name = "TaggedPosts")]
+    public IEnumerable<ContentDocument>? TaggedPosts { get; set; }
 
     /// <summary>
     /// Gets or sets the list of pages for this tag.
     /// </summary>
-    [CascadingParameter]
-    public IEnumerable<ContentDocument>? Pages { get; set; }
+    [CascadingParameter(Name = "TaggedPages")]
+    public IEnumerable<ContentDocument>? TaggedPages { get; set; }
 
     /// <summary>
     /// Gets or sets the list of <see cref="PluginManifest"/> instances.

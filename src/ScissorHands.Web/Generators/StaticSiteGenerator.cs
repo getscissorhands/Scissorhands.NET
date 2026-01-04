@@ -292,8 +292,8 @@ public sealed class StaticSiteGenerator(
         var parameters = new Dictionary<string, object?>
         {
             ["Tag"] = tag,
-            ["Posts"] = posts,
-            ["Pages"] = pages,
+            ["TaggedPosts"] = posts,
+            ["TaggedPages"] = pages,
             ["Plugins"] = plugins,
             ["Theme"] = theme,
             ["Site"] = _options

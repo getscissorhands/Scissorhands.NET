@@ -25,7 +25,7 @@
                                 <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
                                 @if (post.Metadata.Published.HasValue)
                                 {
-                                    <span class="date">(@post.Metadata.Published.Value.ToString("yyyy-MM-dd"))</span>
+                                    <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
                                 }
                             </li>
                         }

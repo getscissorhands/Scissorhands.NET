@@ -15,7 +15,7 @@ public abstract class TagListViewBase : ComponentBase
     /// Gets or sets the dictionary of tags and their associated documents.
     /// The key is the tag name, and the value is the tuple of posts and pages.
     /// </summary>
-    [CascadingParameter]
+    [CascadingParameter(Name = "TaggedDocuments")]
     public IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)>? TaggedDocuments { get; set; }
 
     /// <summary>
