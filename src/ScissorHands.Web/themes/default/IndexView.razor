@@ -21,6 +21,12 @@
                         <p>@post.Metadata.Description</p>
                     </div>
                 }
+                <ul>
+                    @foreach (var tag in post.Metadata.Tags ?? Array.Empty<string>())
+                    {
+                        <li><a href="/tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
+                    }
+                </ul>
             </article>
             }
         }

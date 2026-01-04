@@ -13,7 +13,7 @@
         {
             <section class="tag-section">
                 <h2>
-                    <a href="/tags/@tagEntry.Key">@tagEntry.Key</a>
+                    <a href="/tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">@tagEntry.Key</a>
                 </h2>
                 @if (tagEntry.Value.Posts.Any())
                 {
