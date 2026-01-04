@@ -843,6 +843,366 @@ public class StaticSiteGeneratorTests
     }
 
     [Fact]
+    public async Task Given_DocumentsWithMixedCaseTags_When_BuildAsync_Invoked_Then_It_Should_NormalizeTagsToLowercase()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
+
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+
+        var site = new SiteManifest
+        {
+            Title = "My Site",
+            Description = "My Description",
+            Theme = "minimal"
+        };
+
+        var post = new ContentDocument
+        {
+            Kind = ContentKind.Post,
+            Markdown = "# Post",
+            Metadata = new ContentMetadata
+            {
+                Title = "Post",
+                Slug = "blog/post",
+                Tags = ["Azure"]
+            }
+        };
+
+        var page = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# Page",
+            Metadata = new ContentMetadata
+            {
+                Title = "Page",
+                Slug = "page",
+                Tags = ["azure"]
+            }
+        };
+
+        var contentLoader = Substitute.For<IContentLoader>();
+        contentLoader
+            .LoadAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<ContentDocument>>(new[] { post, page }));
+
+        var markdownService = Substitute.For<IMarkdownService>();
+        markdownService
+            .ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"HTML:{callInfo.ArgAt<string>(0)}"));
+
+        var pluginRunner = Substitute.For<IPluginRunner>();
+        pluginRunner.Manifests.Returns([]);
+        pluginRunner
+            .RunPreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"FINAL:{callInfo.ArgAt<string>(0)}"));
+
+        var themeService = Substitute.For<IThemeService>();
+        themeService
+            .LoadManifestAsync(Arg.Any<string>())
+            .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
+        themeService
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
+
+        var capturedTagViewParams = new List<IDictionary<string, object?>>();
+
+        var renderer = Substitute.For<IComponentRenderer>();
+        renderer
+            .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("INDEX"));
+        renderer
+            .RenderAsync<TestPostView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("POST"));
+        renderer
+            .RenderAsync<TestPageView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("PAGE"));
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+        renderer
+            .RenderAsync<TestTagListView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAGLIST"));
+        renderer
+            .RenderAsync<TestTagView>(Arg.Any<Type>(), Arg.Do<IDictionary<string, object?>>(p => capturedTagViewParams.Add(p)), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAG"));
+
+        var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
+
+        var generator = new StaticSiteGenerator(
+            contentLoader,
+            markdownService,
+            pluginRunner,
+            themeService,
+            renderer,
+            paths,
+            fileSystem,
+            site,
+            logger);
+
+        // Act
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: false, CancellationToken.None);
+
+        // Assert
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "azure", "index.html")).ShouldBeTrue();
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "Azure", "index.html")).ShouldBeFalse();
+
+        capturedTagViewParams.Count.ShouldBe(1);
+        capturedTagViewParams[0].ContainsKey("Tag").ShouldBeTrue();
+        capturedTagViewParams[0]["Tag"].ShouldBe("azure");
+    }
+
+    [Fact]
+    public async Task Given_404DocumentWithTags_When_BuildAsync_Invoked_Then_It_Should_NotGenerateTagPageFor404()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
+
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+
+        var site = new SiteManifest
+        {
+            Title = "My Site",
+            Description = "My Description",
+            Theme = "minimal"
+        };
+
+        var notFoundPage = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# 404",
+            Metadata = new ContentMetadata
+            {
+                Title = "404",
+                Slug = "404.html",
+                Tags = ["Hidden"]
+            }
+        };
+
+        var post = new ContentDocument
+        {
+            Kind = ContentKind.Post,
+            Markdown = "# Post",
+            Metadata = new ContentMetadata
+            {
+                Title = "Post",
+                Slug = "blog/post",
+                Tags = ["Visible"]
+            }
+        };
+
+        var contentLoader = Substitute.For<IContentLoader>();
+        contentLoader
+            .LoadAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<ContentDocument>>(new[] { notFoundPage, post }));
+
+        var markdownService = Substitute.For<IMarkdownService>();
+        markdownService
+            .ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"HTML:{callInfo.ArgAt<string>(0)}"));
+
+        var pluginRunner = Substitute.For<IPluginRunner>();
+        pluginRunner.Manifests.Returns([]);
+        pluginRunner
+            .RunPreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"FINAL:{callInfo.ArgAt<string>(0)}"));
+
+        var themeService = Substitute.For<IThemeService>();
+        themeService
+            .LoadManifestAsync(Arg.Any<string>())
+            .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
+        themeService
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
+
+        IDictionary<string, object?>? capturedTagListParams = null;
+
+        var renderer = Substitute.For<IComponentRenderer>();
+        renderer
+            .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("INDEX"));
+        renderer
+            .RenderAsync<TestPostView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("POST"));
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+        renderer
+            .RenderAsync<TestTagListView>(Arg.Any<Type>(), Arg.Do<IDictionary<string, object?>>(p => capturedTagListParams = p), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAGLIST"));
+        renderer
+            .RenderAsync<TestTagView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAG"));
+
+        var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
+
+        var generator = new StaticSiteGenerator(
+            contentLoader,
+            markdownService,
+            pluginRunner,
+            themeService,
+            renderer,
+            paths,
+            fileSystem,
+            site,
+            logger);
+
+        // Act
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: false, CancellationToken.None);
+
+        // Assert
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "visible", "index.html")).ShouldBeTrue();
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "hidden", "index.html")).ShouldBeFalse();
+
+        capturedTagListParams.ShouldNotBeNull();
+        var taggedDocs = capturedTagListParams!["TaggedDocuments"]!.ShouldBeAssignableTo<IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)>>();
+        taggedDocs.ContainsKey("hidden").ShouldBeFalse();
+        taggedDocs.ContainsKey("visible").ShouldBeTrue();
+    }
+
+    [Fact]
+    public async Task Given_MultipleTaggedPages_When_BuildAsync_Invoked_Then_TaggedPages_Should_BeSortedByTitleAscending()
+    {
+        // Arrange
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var destination = fileSystem.Path.Combine(root, "out");
+
+        var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
+
+        var site = new SiteManifest
+        {
+            Title = "My Site",
+            Description = "My Description",
+            Theme = "minimal"
+        };
+
+        var pageZeta = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# Zeta",
+            Metadata = new ContentMetadata
+            {
+                Title = "Zeta",
+                Slug = "zeta",
+                Tags = ["docs"]
+            }
+        };
+
+        var pageAlpha = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Markdown = "# Alpha",
+            Metadata = new ContentMetadata
+            {
+                Title = "Alpha",
+                Slug = "alpha",
+                Tags = ["docs"]
+            }
+        };
+
+        var contentLoader = Substitute.For<IContentLoader>();
+        contentLoader
+            .LoadAsync(Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult<IEnumerable<ContentDocument>>(new[] { pageZeta, pageAlpha }));
+
+        var markdownService = Substitute.For<IMarkdownService>();
+        markdownService
+            .ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult($"HTML:{callInfo.ArgAt<string>(0)}"));
+
+        var pluginRunner = Substitute.For<IPluginRunner>();
+        pluginRunner.Manifests.Returns([]);
+        pluginRunner
+            .RunPreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<ContentDocument>(0)));
+        pluginRunner
+            .RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(callInfo => Task.FromResult(callInfo.ArgAt<string>(0)));
+
+        var themeService = Substitute.For<IThemeService>();
+        themeService
+            .LoadManifestAsync(Arg.Any<string>())
+            .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
+        themeService
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .Returns(Task.CompletedTask);
+
+        IDictionary<string, object?>? capturedTagListParams = null;
+
+        var renderer = Substitute.For<IComponentRenderer>();
+        renderer
+            .RenderAsync<TestIndexView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("INDEX"));
+        renderer
+            .RenderAsync<TestPageView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("PAGE"));
+        renderer
+            .RenderAsync<TestNotFoundView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("NOTFOUND"));
+        renderer
+            .RenderAsync<TestTagListView>(Arg.Any<Type>(), Arg.Do<IDictionary<string, object?>>(p => capturedTagListParams = p), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAGLIST"));
+        renderer
+            .RenderAsync<TestTagView>(Arg.Any<Type>(), Arg.Any<IDictionary<string, object?>>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult("TAG"));
+
+        var logger = Substitute.For<ILogger<StaticSiteGenerator>>();
+
+        var generator = new StaticSiteGenerator(
+            contentLoader,
+            markdownService,
+            pluginRunner,
+            themeService,
+            renderer,
+            paths,
+            fileSystem,
+            site,
+            logger);
+
+        // Act
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: false, CancellationToken.None);
+
+        // Assert
+        capturedTagListParams.ShouldNotBeNull();
+        var taggedDocs = capturedTagListParams!["TaggedDocuments"]!.ShouldBeAssignableTo<IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)>>();
+
+        taggedDocs.ContainsKey("docs").ShouldBeTrue();
+        var docsPages = taggedDocs["docs"].Pages.ToList();
+        docsPages.Count.ShouldBe(2);
+        docsPages[0].Metadata.Title.ShouldBe("Alpha");
+        docsPages[1].Metadata.Title.ShouldBe("Zeta");
+    }
+
+    [Fact]
     public async Task Given_NoDocumentsWithTags_When_BuildAsync_Invoked_Then_It_Should_NotGenerateTagPages()
     {
         // Arrange
