@@ -48,12 +48,14 @@ public sealed class StaticSiteGenerator(
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
-    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(string destination, bool preview, CancellationToken cancellationToken)
+    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView, TTagListView, TTagView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : ScissorHands.Theme.MainLayoutBase
         where TIndexView : ScissorHands.Theme.IndexViewBase
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+        where TTagView : ScissorHands.Theme.TagViewBase
     {
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
@@ -73,6 +75,8 @@ public sealed class StaticSiteGenerator(
         {
             await RenderDocumentAsync<TPostView, TPageView>(document, plugins, theme, destination, layoutType, cancellationToken);
         }
+
+        await RenderTagPagesAsync<TTagListView, TTagView>(documents, plugins, theme, destination, layoutType, cancellationToken);
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
@@ -207,6 +211,108 @@ public sealed class StaticSiteGenerator(
 
         var safeSlug = slug.Trim('/');
         return Path.Combine(root, safeSlug, "index.html");
+    }
+
+    private async Task RenderTagPagesAsync<TTagListView, TTagView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+        where TTagView : ScissorHands.Theme.TagViewBase
+    {
+        // Build the tag dictionary: for each tag, group posts (sorted by published date descending) and pages (sorted by title ascending)
+        var taggedDocuments = documents
+            .Where(d => d.Metadata.Tags.Any() && IsNotFoundPage(d) == false)
+            .SelectMany(d => d.Metadata.Tags.Select(tag => (Tag: tag.ToLowerInvariant(), Document: d)))
+            .GroupBy(x => x.Tag)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var posts = g
+                        .Where(x => x.Document.Kind == ContentKind.Post)
+                        .Select(x => x.Document)
+                        .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
+                        .ToList()
+                        .AsEnumerable();
+
+                    var pages = g
+                        .Where(x => x.Document.Kind == ContentKind.Page)
+                        .Select(x => x.Document)
+                        .OrderBy(d => d.Metadata.Title)
+                        .ToList()
+                        .AsEnumerable();
+
+                    return (Posts: posts, Pages: pages);
+                });
+
+        if (taggedDocuments.Count == 0)
+        {
+            _logger.LogInformation("No tags found in content documents; skipping tag pages");
+            return;
+        }
+
+        // Render the tag list page at /tags
+        await RenderTagListPageAsync<TTagListView>(taggedDocuments, plugins, theme, destination, layoutType, cancellationToken);
+
+        // Render individual tag pages at /tags/{tag}
+        foreach (var tagEntry in taggedDocuments)
+        {
+            await RenderTagPageAsync<TTagView>(tagEntry.Key, tagEntry.Value.Posts, tagEntry.Value.Pages, plugins, theme, destination, layoutType, cancellationToken);
+        }
+    }
+
+    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["TaggedDocuments"] = taggedDocuments,
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+
+        var rendered = await _renderer.RenderAsync<TTagListView>(layoutType, parameters, cancellationToken);
+        var tagListDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Title = "Tags", Slug = "tags" },
+            Markdown = string.Empty,
+            Html = rendered
+        };
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, tagListDocument, cancellationToken);
+
+        var outputPath = ResolveOutputPath(destination, "tags");
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
+    private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagView : ScissorHands.Theme.TagViewBase
+    {
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Tag"] = tag,
+            ["Posts"] = posts,
+            ["Pages"] = pages,
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+
+        var rendered = await _renderer.RenderAsync<TTagView>(layoutType, parameters, cancellationToken);
+        var tagDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = $"tags/{tag}" },
+            Markdown = string.Empty,
+            Html = rendered
+        };
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, tagDocument, cancellationToken);
+
+        var outputPath = ResolveOutputPath(destination, $"tags/{tag}");
+        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
+        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
+        _logger.LogInformation("Wrote {OutputPath}", outputPath);
     }
 
     private void CopyContentAssets(string destination)

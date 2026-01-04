@@ -1,0 +1,49 @@
+@inherits ScissorHands.Theme.TagListViewBase
+@layout MainLayout
+
+<section class="tags">
+    <h1>Tags</h1>
+    @if (TaggedDocuments?.Any() != true)
+    {
+        <p>No tags found.</p>
+    }
+    else
+    {
+        @foreach (var tagEntry in TaggedDocuments!.OrderBy(t => t.Key))
+        {
+            <section class="tag-section">
+                <h2>
+                    <a href="/tags/@tagEntry.Key">@tagEntry.Key</a>
+                </h2>
+                @if (tagEntry.Value.Posts.Any())
+                {
+                    <h3>Posts</h3>
+                    <ul>
+                        @foreach (var post in tagEntry.Value.Posts)
+                        {
+                            <li>
+                                <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                                @if (post.Metadata.Published.HasValue)
+                                {
+                                    <span class="date">(@post.Metadata.Published.Value.ToString("yyyy-MM-dd"))</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                }
+                @if (tagEntry.Value.Pages.Any())
+                {
+                    <h3>Pages</h3>
+                    <ul>
+                        @foreach (var pageDoc in tagEntry.Value.Pages)
+                        {
+                            <li>
+                                <a href="/@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
+                            </li>
+                        }
+                    </ul>
+                }
+            </section>
+        }
+    }
+</section>

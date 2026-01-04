@@ -62,6 +62,34 @@ public abstract class MainLayoutBase : LayoutComponentBase
     [Parameter]
     public SiteManifest? Site { get; init; }
 
+    /// <summary>
+    /// Gets or sets the dictionary of tags and their associated documents.
+    /// Used for tag list view.
+    /// </summary>
+    [Parameter]
+    public IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)>? TaggedDocuments { get; set; }
+
+    /// <summary>
+    /// Gets or sets the current tag name.
+    /// Used for individual tag view.
+    /// </summary>
+    [Parameter]
+    public string? Tag { get; set; }
+
+    /// <summary>
+    /// Gets or sets the posts for the current tag.
+    /// Used for individual tag view.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<ContentDocument>? Posts { get; set; }
+
+    /// <summary>
+    /// Gets or sets the pages for the current tag.
+    /// Used for individual tag view.
+    /// </summary>
+    [Parameter]
+    public IEnumerable<ContentDocument>? Pages { get; set; }
+
     /// <inheritdoc />
     protected override async Task OnInitializedAsync()
     {
