@@ -956,7 +956,14 @@ public class StaticSiteGeneratorTests
 
         // Assert
         fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "azure", "index.html")).ShouldBeTrue();
-        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "tags", "Azure", "index.html")).ShouldBeFalse();
+
+        await pluginRunner
+              .Received()
+              .RunPostHtmlAsync(Arg.Any<string>(), Arg.Is<ContentDocument>(d => d.Metadata.Slug == "tags/azure"), Arg.Any<CancellationToken>());
+
+        await pluginRunner
+              .DidNotReceive()
+              .RunPostHtmlAsync(Arg.Any<string>(), Arg.Is<ContentDocument>(d => d.Metadata.Slug == "tags/Azure"), Arg.Any<CancellationToken>());
 
         capturedTagViewParams.Count.ShouldBe(1);
         capturedTagViewParams[0].ContainsKey("Tag").ShouldBeTrue();
