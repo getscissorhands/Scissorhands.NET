@@ -48,12 +48,14 @@ public sealed class StaticSiteGenerator(
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
-    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView>(string destination, bool preview, CancellationToken cancellationToken)
+    public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView, TTagListView, TTagView>(string destination, bool preview, CancellationToken cancellationToken)
         where TMainLayout : ScissorHands.Theme.MainLayoutBase
         where TIndexView : ScissorHands.Theme.IndexViewBase
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+        where TTagView : ScissorHands.Theme.TagViewBase
     {
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
@@ -74,6 +76,8 @@ public sealed class StaticSiteGenerator(
             await RenderDocumentAsync<TPostView, TPageView>(document, plugins, theme, destination, layoutType, cancellationToken);
         }
 
+        await RenderTagPagesAsync<TTagListView, TTagView>(documents, plugins, theme, destination, layoutType, cancellationToken);
+
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination);
     }
@@ -86,27 +90,20 @@ public sealed class StaticSiteGenerator(
             .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
             .ToList();
 
-        var parameters = new Dictionary<string, object?>
-        {
-            ["Documents"] = posts,
-            ["Plugins"] = plugins,
-            ["Theme"] = theme,
-            ["Site"] = _options
-        };
+        var parameters = CreateBaseParameters(plugins, theme);
+        parameters["Documents"] = posts;
 
         var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
-        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, new ContentDocument
+        var indexDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
             Metadata = new ContentMetadata { Title = _options.Title, Slug = string.Empty },
             Markdown = string.Empty,
             Html = rendered
-        }, cancellationToken);
+        };
 
         var outputPath = ResolveOutputPath(destination, string.Empty);
-        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
-        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
-        _logger.LogInformation("Wrote {OutputPath}", outputPath);
+        await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, cancellationToken);
     }
 
     private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -125,10 +122,7 @@ public sealed class StaticSiteGenerator(
         }
         else
         {
-            var preProcessed = await _pluginRunner.RunPreMarkdownAsync(notFoundDocument, cancellationToken);
-            var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
-            preProcessed.Html = html;
-            documentToRender = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
+            documentToRender = await ConvertMarkdownToHtmlAsync(notFoundDocument, cancellationToken);
 
             if (string.IsNullOrWhiteSpace(documentToRender.Metadata.Title))
             {
@@ -143,21 +137,13 @@ public sealed class StaticSiteGenerator(
             }
         }
 
-        var parameters = new Dictionary<string, object?>
-        {
-            ["Document"] = documentToRender,
-            ["Plugins"] = plugins,
-            ["Theme"] = theme,
-            ["Site"] = _options
-        };
+        var parameters = CreateBaseParameters(plugins, theme);
+        parameters["Document"] = documentToRender;
 
         var rendered = await _renderer.RenderAsync<TNotFoundView>(layoutType, parameters, cancellationToken);
-        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, documentToRender, cancellationToken);
 
         var outputPath = _fileSystem.Path.Combine(destination, PAGE_NOT_FOUND_SLUG);
-        _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
-        await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
-        _logger.LogInformation("Wrote {OutputPath}", outputPath);
+        await WriteRenderedHtmlAsync(outputPath, rendered, documentToRender, cancellationToken);
     }
 
     private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -166,47 +152,131 @@ public sealed class StaticSiteGenerator(
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
-        var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
-        preProcessed.Html = html;
-        var postMarkdown = await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
+        var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
 
-        var parameters = new Dictionary<string, object?>
-        {
-            ["Document"] = postMarkdown,
-            ["Plugins"] = plugins,
-            ["Theme"] = theme,
-            ["Site"] = _options
-        };
+        var parameters = CreateBaseParameters(plugins, theme);
+        parameters["Document"] = postMarkdown;
 
         var rendered = postMarkdown.Kind switch
         {
             ContentKind.Page => await _renderer.RenderAsync<TPageView>(layoutType, parameters, cancellationToken),
             _ => await _renderer.RenderAsync<TPostView>(layoutType, parameters, cancellationToken)
         };
-
-        var finalHtml = await _pluginRunner.RunPostHtmlAsync(rendered, postMarkdown, cancellationToken);
         var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
+
+        await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, cancellationToken);
+    }
+
+    private async Task RenderTagPagesAsync<TTagListView, TTagView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+        where TTagView : ScissorHands.Theme.TagViewBase
+    {
+        // Build the tag dictionary: for each tag, group posts (sorted by published date descending) and pages (sorted by title ascending)
+        var taggedDocuments = documents
+            .Where(d => d.Metadata.Tags.Any() && IsNotFoundPage(d) == false)
+            .SelectMany(d => d.Metadata.Tags.Select(tag => (Tag: tag.ToLowerInvariant(), Document: d)))
+            .GroupBy(x => x.Tag)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var posts = g
+                        .Where(x => x.Document.Kind == ContentKind.Post)
+                        .Select(x => x.Document)
+                        .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
+                        .ToList()
+                        .AsEnumerable();
+
+                    var pages = g
+                        .Where(x => x.Document.Kind == ContentKind.Page)
+                        .Select(x => x.Document)
+                        .OrderBy(d => d.Metadata.Title)
+                        .ToList()
+                        .AsEnumerable();
+
+                    return (Posts: posts, Pages: pages);
+                });
+
+        if (taggedDocuments.Count == 0)
+        {
+            _logger.LogInformation("No tags found in content documents; skipping tag pages");
+            return;
+        }
+
+        // Render the tag list page at /tags
+        await RenderTagListPageAsync<TTagListView>(taggedDocuments, plugins, theme, destination, layoutType, cancellationToken);
+
+        // Render individual tag pages at /tags/{tag}
+        foreach (var tagEntry in taggedDocuments)
+        {
+            await RenderTagPageAsync<TTagView>(tagEntry.Key, tagEntry.Value.Posts, tagEntry.Value.Pages, plugins, theme, destination, layoutType, cancellationToken);
+        }
+    }
+
+    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagListView : ScissorHands.Theme.TagListViewBase
+    {
+        var parameters = CreateBaseParameters(plugins, theme);
+        parameters["TaggedDocuments"] = taggedDocuments;
+
+        var rendered = await _renderer.RenderAsync<TTagListView>(layoutType, parameters, cancellationToken);
+        var tagListDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Title = "Tags", Slug = "tags" },
+            Markdown = string.Empty,
+            Html = rendered
+        };
+        var outputPath = ResolveOutputPath(destination, "tags");
+        await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, cancellationToken);
+    }
+
+    private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+        where TTagView : ScissorHands.Theme.TagViewBase
+    {
+        var parameters = CreateBaseParameters(plugins, theme);
+        parameters["Tag"] = tag;
+        parameters["TaggedPosts"] = posts;
+        parameters["TaggedPages"] = pages;
+
+        var rendered = await _renderer.RenderAsync<TTagView>(layoutType, parameters, cancellationToken);
+        var tagDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = $"tags/{tag}" },
+            Markdown = string.Empty,
+            Html = rendered
+        };
+        var outputPath = ResolveOutputPath(destination, $"tags/{tag}");
+        await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, cancellationToken);
+    }
+
+    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme)
+    {
+        return new Dictionary<string, object?>
+        {
+            ["Plugins"] = plugins,
+            ["Theme"] = theme,
+            ["Site"] = _options
+        };
+    }
+
+    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, CancellationToken cancellationToken)
+    {
+        var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
+
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
     }
 
-    private static bool IsNotFoundPage(ContentDocument document)
+    private async Task<ContentDocument> ConvertMarkdownToHtmlAsync(ContentDocument document, CancellationToken cancellationToken)
     {
-        return document.Kind == ContentKind.Page &&
-               string.Equals(document.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase) == true;
-    }
+        var preProcessed = await _pluginRunner.RunPreMarkdownAsync(document, cancellationToken);
+        var html = await _markdownService.ToHtmlAsync(preProcessed.Markdown, cancellationToken: cancellationToken);
+        preProcessed.Html = html;
 
-    private static string ResolveOutputPath(string root, string slug)
-    {
-        if (string.IsNullOrWhiteSpace(slug))
-        {
-            return Path.Combine(root, "index.html");
-        }
-
-        var safeSlug = slug.Trim('/');
-        return Path.Combine(root, safeSlug, "index.html");
+        return await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
     }
 
     private void CopyContentAssets(string destination)
@@ -238,5 +308,22 @@ public sealed class StaticSiteGenerator(
             var name = _fileSystem.Path.GetFileName(directory);
             CopyDirectory(directory, _fileSystem.Path.Combine(destinationDir, name));
         }
+    }
+
+    private static bool IsNotFoundPage(ContentDocument document)
+    {
+        return document.Kind == ContentKind.Page &&
+               string.Equals(document.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase) == true;
+    }
+
+    private static string ResolveOutputPath(string root, string slug)
+    {
+        if (string.IsNullOrWhiteSpace(slug))
+        {
+            return Path.Combine(root, "index.html");
+        }
+
+        var safeSlug = slug.Trim('/');
+        return Path.Combine(root, safeSlug, "index.html");
     }
 }

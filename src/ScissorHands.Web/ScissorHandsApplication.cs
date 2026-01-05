@@ -33,7 +33,7 @@ public interface IScissorHandsApplication
 public sealed class ScissorHandsApplication : IScissorHandsApplication
 {
     private const string APP_LOGGER_NAME = "App";
-    private const int EXPECTED_GENERIC_PARAMETER_COUNT = 5;
+    private const int EXPECTED_GENERIC_PARAMETER_COUNT = 7;
     private const int EXPECTED_METHOD_PARAMETER_COUNT = 3;
 
     private readonly string[] _args;
@@ -42,6 +42,8 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
     private readonly Type _postView;
     private readonly Type _pageView;
     private readonly Type _notFoundView;
+    private readonly Type _tagListView;
+    private readonly Type _tagView;
     private CommandMode _mode;
     private readonly WebApplication _app;
     private ILogger? _logger;
@@ -50,7 +52,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
     private MethodInfo? _cachedBuildMethod;
     private readonly object _cacheLock = new object();
 
-    internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, Type mainLayout, Type indexView, Type postView, Type pageView, Type notFoundView)
+    internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, Type mainLayout, Type indexView, Type postView, Type pageView, Type notFoundView, Type tagListView, Type tagView)
     {
         _app = app ?? throw new ArgumentNullException(nameof(app));
         _args = args?.ToArray() ?? throw new ArgumentNullException(nameof(args));
@@ -59,6 +61,8 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         _postView = postView ?? throw new ArgumentNullException(nameof(postView));
         _pageView = pageView ?? throw new ArgumentNullException(nameof(pageView));
         _notFoundView = notFoundView ?? throw new ArgumentNullException(nameof(notFoundView));
+        _tagListView = tagListView ?? throw new ArgumentNullException(nameof(tagListView));
+        _tagView = tagView ?? throw new ArgumentNullException(nameof(tagView));
     }
 
     private void VerifyCommandArguments()
@@ -232,7 +236,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
                 }
             }
 
-            var closedMethod = _cachedBuildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView);
+            var closedMethod = _cachedBuildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView, _tagListView, _tagView);
             var parameters = new object[] { destination, preview, cancellationToken };
             var task = (Task?)closedMethod.Invoke(_generator, parameters);
 

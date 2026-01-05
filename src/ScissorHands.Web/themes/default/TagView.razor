@@ -1,0 +1,45 @@
+@inherits ScissorHands.Theme.TagViewBase
+@layout MainLayout
+
+<section class="tag">
+    <h1>Tag: @Tag</h1>
+    @if ((TaggedPosts?.Any() != true) && (TaggedPages?.Any() != true))
+    {
+        <p>No content found for this tag.</p>
+    }
+    else
+    {
+        @if (TaggedPosts?.Any() == true)
+        {
+            <section class="tag-posts">
+                <h2>Posts</h2>
+                <ul>
+                    @foreach (var post in TaggedPosts!)
+                    {
+                        <li>
+                            <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                            @if (post.Metadata.Published.HasValue)
+                            {
+                                <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
+                            }
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+        @if (TaggedPages?.Any() == true)
+        {
+            <section class="tag-pages">
+                <h2>Pages</h2>
+                <ul>
+                    @foreach (var pageDoc in TaggedPages!)
+                    {
+                        <li>
+                            <a href="/@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
+                        </li>
+                    }
+                </ul>
+            </section>
+        }
+    }
+</section>
