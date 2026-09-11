@@ -4,20 +4,17 @@
   <PropertyGroup>
     <AssemblyName>$(MSBuildProjectName)</AssemblyName>
     <RootNamespace>$(MSBuildProjectName)</RootNamespace>
-  </PropertyGroup>
 
-  <PropertyGroup>
     <IsPackable>true</IsPackable>
     <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
     <IncludeSymbols>true</IncludeSymbols>
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <Title>$(MSBuildProjectName)</Title>
-    <Summary>$(MSBuildProjectName): Building a static website using .NET</Summary>
     <Description>This is a library that builds a static website using .NET</Description>
     <Version>1.0.0</Version>
 
-    <Authors>Justin Yoo</Authors>
+    <Authors>justinyoo;getscissorhands</Authors>
     <Company>GetScissorHands</Company>
     <Copyright>© GetScissorHands. All rights reserved.</Copyright>
 
@@ -27,17 +24,17 @@
 
     <PackageId>$(MSBuildProjectName)</PackageId>
     <PackageIcon>ScissorHands.png</PackageIcon>
-    <PackageIconUrl>https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/ScissorHands.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/getscissorhands/Scissorhands.NET</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeSource Condition="Exists('$(MSBuildProjectDirectory)\README.md')">$(MSBuildProjectDirectory)\README.md</PackageReadmeSource>
+    <PackageReadmeSource Condition="'$(PackageReadmeSource)' == ''">$(MSBuildThisFileDirectory)..\README.md</PackageReadmeSource>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>true</PackageRequireLicenseAcceptance>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="$(MSBuildThisFileDirectory)..\assets\ScissorHands.png" Pack="true" PackagePath="\" />
     <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="\" />
-    <None Include="$(MSBuildThisFileDirectory)..\README.md" Pack="true" PackagePath="\" />
+    <None Include="$(PackageReadmeSource)" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

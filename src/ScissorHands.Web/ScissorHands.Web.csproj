@@ -2,13 +2,9 @@
 
   <PropertyGroup>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
+    <PackageDescription>The ScissorHands.NET static site generation engine for Markdown content and Razor themes.</PackageDescription>
     <PackageTags>scissorhands;web;static-site</PackageTags>
   </PropertyGroup>
-
-  <ItemGroup>
-    <Content Include="contents/**/*" CopyToOutputDirectory="PreserveNewest" />
-    <Content Include="themes/**/*" CopyToOutputDirectory="PreserveNewest" />
-  </ItemGroup>
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
@@ -24,6 +20,11 @@
     <ProjectReference Include="..\ScissorHands.Core\ScissorHands.Core.csproj" />
     <ProjectReference Include="..\ScissorHands.Plugin\ScissorHands.Plugin.csproj" />
     <ProjectReference Include="..\ScissorHands.Theme\ScissorHands.Theme.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="contents/**/*" CopyToOutputDirectory="PreserveNewest" />
+    <Content Include="themes/**/*" CopyToOutputDirectory="PreserveNewest" />
   </ItemGroup>
 
 </Project>
