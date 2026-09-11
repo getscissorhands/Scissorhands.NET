@@ -1,49 +1,24 @@
 @inherits ScissorHands.Theme.TagListViewBase
 @layout MainLayout
 
-<section class="tags">
+<section class="tags prose">
     <h1>Tags</h1>
+    <p>Browse all topics used across published content.</p>
     @if (TaggedDocuments?.Any() != true)
     {
         <p>No tags found.</p>
     }
     else
     {
-        @foreach (var tagEntry in TaggedDocuments!.OrderBy(t => t.Key))
-        {
-            <section class="tag-section">
-                <h2>
-                    <a href="tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">@tagEntry.Key</a>
-                </h2>
-                @if (tagEntry.Value.Posts.Any())
-                {
-                    <h3>Posts</h3>
-                    <ul>
-                        @foreach (var post in tagEntry.Value.Posts)
-                        {
-                            <li>
-                                <a href="@post.Metadata.Slug">@post.Metadata.Title</a>
-                                @if (post.Metadata.Published.HasValue)
-                                {
-                                    <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
-                                }
-                            </li>
-                        }
-                    </ul>
-                }
-                @if (tagEntry.Value.Pages.Any())
-                {
-                    <h3>Pages</h3>
-                    <ul>
-                        @foreach (var pageDoc in tagEntry.Value.Pages)
-                        {
-                            <li>
-                                <a href="@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
-                            </li>
-                        }
-                    </ul>
-                }
-            </section>
-        }
+        <div class="tag-grid">
+            @foreach (var tagEntry in TaggedDocuments!.OrderBy(t => t.Key))
+            {
+                var count = tagEntry.Value.Posts.Count() + tagEntry.Value.Pages.Count();
+                <a class="tag-card" href="tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">
+                    <span>#@tagEntry.Key</span>
+                    <small>@count @(count == 1 ? "item" : "items")</small>
+                </a>
+            }
+        </div>
     }
 </section>

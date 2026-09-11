@@ -2,13 +2,36 @@
 @layout MainLayout
 
 <section class="post">
-    <ul>
-        @foreach (var tag in Document?.Metadata.Tags ?? Array.Empty<string>())
+    <a class="back-link" href=".">&larr; Back to posts</a>
+    <article class="prose">
+        @if (!string.IsNullOrWhiteSpace(Document?.Metadata.HeroImage))
         {
-            <li><a href="tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
+            <img class="hero-image" src="@ContentUrl(Document.Metadata.HeroImage)" alt="" />
         }
-    </ul>
-    <article>
+
+        @if (Document?.Metadata.Published is not null)
+        {
+            <header class="post-header">
+                <time datetime="@Document.Metadata.Published.Value.ToString("O")">
+                    @Document.Metadata.Published.Value.ToString("D")
+                </time>
+            </header>
+        }
+
         @((MarkupString)Document?.Html!)
+
+        @if (Document?.Metadata.Tags.Any() == true)
+        {
+            <ul class="tag-list" aria-label="Post tags">
+                @foreach (var tag in Document.Metadata.Tags)
+                {
+                    <li><a href="tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">#@tag</a></li>
+                }
+            </ul>
+        }
     </article>
 </section>
+
+@code {
+    private static string ContentUrl(string path) => path.TrimStart('/');
+}

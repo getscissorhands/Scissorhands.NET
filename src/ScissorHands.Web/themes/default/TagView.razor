@@ -1,8 +1,9 @@
 @inherits ScissorHands.Theme.TagViewBase
 @layout MainLayout
 
-<section class="tag">
-    <h1>Tag: @Tag</h1>
+<section class="tag prose">
+    <a class="back-link" href="tags">&larr; All tags</a>
+    <h1>#@Tag</h1>
     @if ((TaggedPosts?.Any() != true) && (TaggedPages?.Any() != true))
     {
         <p>No content found for this tag.</p>
@@ -11,35 +12,28 @@
     {
         @if (TaggedPosts?.Any() == true)
         {
-            <section class="tag-posts">
-                <h2>Posts</h2>
-                <ul>
-                    @foreach (var post in TaggedPosts!)
-                    {
-                        <li>
-                            <a href="@post.Metadata.Slug">@post.Metadata.Title</a>
-                            @if (post.Metadata.Published.HasValue)
-                            {
-                                <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
-                            }
-                        </li>
-                    }
-                </ul>
-            </section>
+            <h2>Posts</h2>
+            <ul class="post-list">
+                @foreach (var post in TaggedPosts)
+                {
+                    <li>
+                        <time datetime="@post.Metadata.Published?.ToString("O")">
+                            @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
+                        </time>
+                        <div><a class="post-link" href="@post.Metadata.Slug">@post.Metadata.Title</a></div>
+                    </li>
+                }
+            </ul>
         }
         @if (TaggedPages?.Any() == true)
         {
-            <section class="tag-pages">
-                <h2>Pages</h2>
-                <ul>
-                    @foreach (var pageDoc in TaggedPages!)
-                    {
-                        <li>
-                            <a href="@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
-                        </li>
-                    }
-                </ul>
-            </section>
+            <h2>Pages</h2>
+            <ul class="page-list">
+                @foreach (var pageDocument in TaggedPages)
+                {
+                    <li><a href="@pageDocument.Metadata.Slug">@pageDocument.Metadata.Title</a></li>
+                }
+            </ul>
         }
     }
 </section>
