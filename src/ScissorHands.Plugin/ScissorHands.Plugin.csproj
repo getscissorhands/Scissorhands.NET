@@ -2,6 +2,7 @@
 
   <PropertyGroup>
     <Description>Plugin abstractions and Razor component base types for extending ScissorHands.NET.</Description>
+
     <PackageTags>scissorhands;plugin;static-site</PackageTags>
   </PropertyGroup>
 
