@@ -174,4 +174,32 @@ public class ThemeServiceTests
         await Should.ThrowAsync<OperationCanceledException>(() =>
             service.LoadManifestAsync("minimal", cancellation.Token));
     }
+
+    [Fact]
+    public async Task Given_BundledDefaultThemeAssets_When_ProjectThemeFolderMissing_Then_It_Should_CopyBundledAssets()
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var bundledFavicon = fileSystem.Path.Combine(
+            AppContext.BaseDirectory,
+            ThemeManifest.THEME_DIRECTORY,
+            "default",
+            "favicon.ico");
+        fileSystem.AddFile(bundledFavicon, new MockFileData([1, 2, 3]));
+        var destination = fileSystem.Path.Combine(root, "output");
+        var service = new ThemeService(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest(),
+            Substitute.For<ILogger<ThemeService>>());
+
+        await service.CopyAssetsAsync("default", destination, CancellationToken.None);
+
+        fileSystem.File.Exists(
+            fileSystem.Path.Combine(destination, ThemeManifest.THEME_DIRECTORY, "default", "favicon.ico"))
+            .ShouldBeTrue();
+    }
 }

@@ -31,7 +31,8 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
     /// <inheritdoc />
     public async Task<ThemeManifest> LoadManifestAsync(string themeSlug, CancellationToken cancellationToken = default)
     {
-        var manifestPath = _fileSystem.Path.Combine(_paths.GetThemesRoot(), themeSlug, "theme.json");
+        var themeRoot = ResolveThemeRoot(themeSlug);
+        var manifestPath = _fileSystem.Path.Combine(themeRoot, "theme.json");
         if (!_fileSystem.File.Exists(manifestPath))
         {
             if (string.IsNullOrWhiteSpace(themeSlug)
@@ -82,12 +83,16 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
     /// <inheritdoc />
     public Task CopyAssetsAsync(string themeSlug, string destination, CancellationToken cancellationToken = default)
     {
-        var themeRoot = _fileSystem.Path.Combine(_paths.GetThemesRoot(), themeSlug);
+        var themeRoot = ResolveThemeRoot(themeSlug);
         var targetRoot = _fileSystem.Path.Combine(destination, ThemeManifest.THEME_DIRECTORY, themeSlug);
 
         if (!_fileSystem.Directory.Exists(themeRoot))
         {
-            _logger.LogWarning("Theme folder not found at {Path}", themeRoot);
+            if (!string.Equals(themeSlug, "default", StringComparison.OrdinalIgnoreCase))
+            {
+                _logger.LogWarning("Theme folder not found at {Path}", themeRoot);
+            }
+
             return Task.CompletedTask;
         }
 
@@ -97,7 +102,7 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
         {
             CopyDirectory(sourceAssets, targetAssets, cancellationToken);
         }
-        else
+        else if (!string.Equals(themeSlug, "default", StringComparison.OrdinalIgnoreCase))
         {
             _logger.LogWarning("Theme assets not found at {Path}", sourceAssets);
         }
@@ -133,6 +138,18 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
         }
 
         return Task.CompletedTask;
+    }
+
+    private string ResolveThemeRoot(string themeSlug)
+    {
+        var contentRoot = _fileSystem.Path.Combine(_paths.GetThemesRoot(), themeSlug);
+        if (_fileSystem.Directory.Exists(contentRoot))
+        {
+            return contentRoot;
+        }
+
+        var bundledRoot = _fileSystem.Path.Combine(AppContext.BaseDirectory, ThemeManifest.THEME_DIRECTORY, themeSlug);
+        return _fileSystem.Directory.Exists(bundledRoot) ? bundledRoot : contentRoot;
     }
 
     private void CopyDirectory(string sourceDir, string destinationDir, CancellationToken cancellationToken)

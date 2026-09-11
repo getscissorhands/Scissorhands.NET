@@ -57,6 +57,17 @@ A Blazor-based static site generator
 
 > **NOTE**: For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart/) page.
 
+## Sample Application
+
+The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project
+references the engine projects directly and uses the built-in default theme.
+It can be used to preview local engine changes without publishing packages:
+
+```bash
+cd samples/ScissorHands.Sample
+dotnet run
+```
+
 ## vNext Compatibility
 
 This release contains three source and binary breaking public-member changes:

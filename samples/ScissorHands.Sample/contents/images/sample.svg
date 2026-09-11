@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 320" role="img" aria-labelledby="title description">
+  <title id="title">ScissorHands.NET sample</title>
+  <desc id="description">A simple illustration representing Markdown transformed into HTML.</desc>
+  <rect width="640" height="320" rx="24" fill="#151b23" />
+  <rect x="48" y="56" width="220" height="208" rx="12" fill="#f0f6fc" />
+  <path d="M88 112h140M88 152h104M88 192h128" stroke="#59636e" stroke-width="12" stroke-linecap="round" />
+  <path d="M332 92h260v136H332z" fill="#238636" />
+  <path d="m300 160 48-40v80z" fill="#58a6ff" />
+  <text x="462" y="175" fill="#fff" font-family="sans-serif" font-size="40" text-anchor="middle">HTML</text>
+</svg>

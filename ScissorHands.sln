@@ -23,6 +23,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScissorHands.Theme.Tests", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScissorHands.Web.Tests", "test\ScissorHands.Web.Tests\ScissorHands.Web.Tests.csproj", "{3BD9CB16-3C20-4152-9239-7CBE59187395}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "samples", "samples", "{5D20AA90-6969-D8BD-9DCD-8634F4692FDA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ScissorHands.Sample", "samples\ScissorHands.Sample\ScissorHands.Sample.csproj", "{513856A7-12EE-4AC9-AC75-3F2956702528}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +133,18 @@ Global
 		{3BD9CB16-3C20-4152-9239-7CBE59187395}.Release|x64.Build.0 = Release|Any CPU
 		{3BD9CB16-3C20-4152-9239-7CBE59187395}.Release|x86.ActiveCfg = Release|Any CPU
 		{3BD9CB16-3C20-4152-9239-7CBE59187395}.Release|x86.Build.0 = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|x64.Build.0 = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Debug|x86.Build.0 = Debug|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|Any CPU.Build.0 = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|x64.ActiveCfg = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|x64.Build.0 = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|x86.ActiveCfg = Release|Any CPU
+		{513856A7-12EE-4AC9-AC75-3F2956702528}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -142,5 +158,6 @@ Global
 		{A81ABA3E-7D97-43FA-8578-779A170002A6} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{193435D1-8A6B-4B42-8770-78F4F6CFCB91} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
 		{3BD9CB16-3C20-4152-9239-7CBE59187395} = {0C88DD14-F956-CE84-757C-A364CCF449FC}
+		{513856A7-12EE-4AC9-AC75-3F2956702528} = {5D20AA90-6969-D8BD-9DCD-8634F4692FDA}
 	EndGlobalSection
 EndGlobal
