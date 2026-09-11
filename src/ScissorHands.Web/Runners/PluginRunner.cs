@@ -27,6 +27,7 @@ public sealed class PluginRunner : IPluginRunner
         Manifests = [.. manifests];
         Plugins = [.. plugins];
         _manifestsByName = CreateManifestLookup(Manifests);
+        ValidatePluginConfiguration(Plugins, _manifestsByName);
     }
 
     /// <inheritdoc />
@@ -109,5 +110,33 @@ public sealed class PluginRunner : IPluginRunner
         }
 
         return result;
+    }
+
+    private static void ValidatePluginConfiguration(
+        IEnumerable<IContentPlugin> plugins,
+        IReadOnlyDictionary<string, PluginManifest> manifests)
+    {
+        var pluginNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var plugin in plugins)
+        {
+            if (string.IsNullOrWhiteSpace(plugin.Name))
+            {
+                throw new InvalidOperationException("Every installed plugin must have a non-empty name.");
+            }
+
+            if (!pluginNames.Add(plugin.Name))
+            {
+                throw new InvalidOperationException($"Installed plugin name '{plugin.Name}' is not unique.");
+            }
+        }
+
+        foreach (var manifestName in manifests.Keys)
+        {
+            if (!pluginNames.Contains(manifestName))
+            {
+                throw new InvalidOperationException(
+                    $"Plugin manifest '{manifestName}' does not match any installed plugin.");
+            }
+        }
     }
 }
