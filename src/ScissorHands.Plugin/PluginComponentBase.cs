@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Validation;
 
 namespace ScissorHands.Plugin;
 
@@ -16,7 +17,13 @@ public class PluginComponentBase : ComponentBase
     protected PluginManifest? Plugin { get; set; }
 
     /// <summary>
-    /// Gets or sets the plugin name.
+    /// Gets or sets the required lowercase kebab-case ID of the plugin to select.
+    /// </summary>
+    [Parameter]
+    public string Id { get; set; } = string.Empty;
+
+    /// <summary>
+    /// Gets or sets display text. This is not used to select the plugin.
     /// </summary>
     [Parameter]
     public string Name { get; set; } = string.Empty;
@@ -56,6 +63,26 @@ public class PluginComponentBase : ComponentBase
     {
         base.OnParametersSet();
 
-        Plugin = Plugins?.SingleOrDefault(p => string.Equals(p.Name, Name, StringComparison.OrdinalIgnoreCase));
+        PluginIdValidator.Validate(Id, "Plugin component");
+        Plugin = null;
+        if (Plugins is null)
+        {
+            return;
+        }
+
+        var ids = new HashSet<string>(StringComparer.Ordinal);
+        foreach (var manifest in Plugins)
+        {
+            PluginIdValidator.Validate(manifest.Id, "Configured plugin manifest");
+            if (!ids.Add(manifest.Id))
+            {
+                throw new InvalidOperationException($"Plugin manifest ID '{manifest.Id}' is configured more than once.");
+            }
+
+            if (string.Equals(manifest.Id, Id, StringComparison.Ordinal))
+            {
+                Plugin = manifest;
+            }
+        }
     }
 }

@@ -10,7 +10,12 @@ public sealed class PluginManifest
     private IReadOnlyDictionary<string, object?>? _options;
 
     /// <summary>
-    /// Gets the name of the plugin.
+    /// Gets the required lowercase kebab-case plugin ID. Validated before the manifest is used.
+    /// </summary>
+    public string? Id { get; init; }
+
+    /// <summary>
+    /// Gets the optional display name. This does not identify the plugin.
     /// </summary>
     public string? Name { get; init; }
 

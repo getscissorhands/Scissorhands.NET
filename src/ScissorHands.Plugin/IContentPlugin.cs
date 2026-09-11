@@ -9,7 +9,12 @@ namespace ScissorHands.Plugin;
 public interface IContentPlugin
 {
     /// <summary>
-    /// Gets the name of the plugin.
+    /// Gets the stable, unique lowercase kebab-case ID of the plugin.
+    /// </summary>
+    string Id { get; }
+
+    /// <summary>
+    /// Gets the display name of the plugin. This does not identify the plugin.
     /// </summary>
     string Name { get; }
 

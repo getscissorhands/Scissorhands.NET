@@ -1,5 +1,6 @@
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Validation;
 using ScissorHands.Plugin;
 
 namespace ScissorHands.Web.Runners;
@@ -12,7 +13,8 @@ namespace ScissorHands.Web.Runners;
 /// <param name="site"><see cref="SiteManifest"/> instance.</param>
 public sealed class PluginRunner : IPluginRunner
 {
-    private readonly IReadOnlyDictionary<string, PluginManifest> _manifestsByName;
+    private readonly IReadOnlyDictionary<string, PluginManifest> _manifestsById;
+    private readonly IReadOnlyDictionary<PluginStage, IReadOnlyList<IContentPlugin>> _pluginsByStage;
     private readonly SiteManifest _site;
 
     /// <summary>
@@ -26,8 +28,9 @@ public sealed class PluginRunner : IPluginRunner
         _site = site ?? throw new ArgumentNullException(nameof(site));
         Manifests = [.. manifests];
         Plugins = [.. plugins];
-        _manifestsByName = CreateManifestLookup(Manifests);
-        ValidatePluginConfiguration(Plugins, _manifestsByName);
+        _manifestsById = CreateManifestLookup(Manifests);
+        ValidatePluginConfiguration(Plugins, _manifestsById);
+        _pluginsByStage = PluginDependencyResolver.Resolve(Plugins, _manifestsById);
     }
 
     /// <inheritdoc />
@@ -42,13 +45,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = document;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PreMarkdown])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsById[plugin.Id];
             current = await plugin.PreMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
@@ -61,13 +60,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = document;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PostMarkdown])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsById[plugin.Id];
             current = await plugin.PostMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
@@ -80,13 +75,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = html;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PostHtml])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsById[plugin.Id];
             current = await plugin.PostHtmlAsync(current, document, manifest, _site, cancellationToken);
         }
 
@@ -95,17 +86,13 @@ public sealed class PluginRunner : IPluginRunner
 
     private static IReadOnlyDictionary<string, PluginManifest> CreateManifestLookup(IEnumerable<PluginManifest> manifests)
     {
-        var result = new Dictionary<string, PluginManifest>(StringComparer.OrdinalIgnoreCase);
+        var result = new Dictionary<string, PluginManifest>(StringComparer.Ordinal);
         foreach (var manifest in manifests)
         {
-            if (string.IsNullOrWhiteSpace(manifest.Name))
+            PluginIdValidator.Validate(manifest.Id, "Configured plugin manifest");
+            if (!result.TryAdd(manifest.Id, manifest))
             {
-                throw new InvalidOperationException("Every configured plugin manifest must have a non-empty name.");
-            }
-
-            if (!result.TryAdd(manifest.Name, manifest))
-            {
-                throw new InvalidOperationException($"Plugin manifest '{manifest.Name}' is configured more than once.");
+                throw new InvalidOperationException($"Plugin manifest ID '{manifest.Id}' is configured more than once.");
             }
         }
 
@@ -116,26 +103,27 @@ public sealed class PluginRunner : IPluginRunner
         IEnumerable<IContentPlugin> plugins,
         IReadOnlyDictionary<string, PluginManifest> manifests)
     {
-        var pluginNames = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        var pluginIds = new HashSet<string>(StringComparer.Ordinal);
         foreach (var plugin in plugins)
         {
+            PluginIdValidator.Validate(plugin.Id, $"Installed plugin '{plugin.Name}'");
             if (string.IsNullOrWhiteSpace(plugin.Name))
             {
-                throw new InvalidOperationException("Every installed plugin must have a non-empty name.");
+                throw new InvalidOperationException($"Installed plugin '{plugin.Id}' must have a non-empty display name.");
             }
 
-            if (!pluginNames.Add(plugin.Name))
+            if (!pluginIds.Add(plugin.Id))
             {
-                throw new InvalidOperationException($"Installed plugin name '{plugin.Name}' is not unique.");
+                throw new InvalidOperationException($"Installed plugin ID '{plugin.Id}' is not unique.");
             }
         }
 
-        foreach (var manifestName in manifests.Keys)
+        foreach (var manifestId in manifests.Keys)
         {
-            if (!pluginNames.Contains(manifestName))
+            if (!pluginIds.Contains(manifestId))
             {
                 throw new InvalidOperationException(
-                    $"Plugin manifest '{manifestName}' does not match any installed plugin.");
+                    $"Plugin manifest ID '{manifestId}' does not match any installed plugin.");
             }
         }
     }

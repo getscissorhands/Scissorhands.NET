@@ -157,12 +157,13 @@ Theme assets and metadata live under `themes/{slug}/`, including a `theme.json` 
 
 ## Plugins
 
-Install plugin packages and configure each enabled plugin by its unique name:
+Install plugin packages and configure each enabled plugin by its stable, unique kebab-case ID:
 
 ```json
 {
   "Plugins": [
     {
+      "Id": "example-plugin",
       "Name": "Example Plugin",
       "Options": {
         "Enabled": true
@@ -173,6 +174,14 @@ Install plugin packages and configure each enabled plugin by its unique name:
 ```
 
 Plugins can transform a document before Markdown conversion, after Markdown conversion, or after the final Razor HTML render.
+
+At every stage, each plugin's output feeds the next. IDs must be lowercase ASCII kebab-case and are matched ordinally; installed plugins without a manifest remain disabled. Manifest `Name` values are optional display labels, not identifiers. Missing or invalid IDs, duplicate IDs, and unmatched manifests fail without name fallback or automatic normalization.
+
+Execution order is resolved from optional, stage-scoped `DependsOn` declarations provided by plugins, not the `Plugins` array position or registration order. Declared dependencies must be installed and enabled. Missing or disabled dependencies, invalid declarations, and cycles fail when the runner is constructed, before any plugin hooks execute. Dependencies are never automatically installed or enabled.
+
+Within each stage, the engine chooses among ready plugins by ordinal ID ordering for deterministic output. A plugin without dependency declarations must not rely on another plugin's execution order.
+
+**Migration:** plugin implementations must now expose `Id`, configured manifests must include it, dependency references must use IDs, and Razor plugin components must select with `Id` instead of `Name`. Rebuild existing plugin and consuming assemblies; name-only configuration is no longer accepted. Follow the [plugin ID migration guide](../ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
 
 ## Learn more
 
