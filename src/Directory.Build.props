@@ -22,7 +22,6 @@
     <Copyright>© GetScissorHands. All rights reserved.</Copyright>
 
     <Product>$(MSBuildProjectName)</Product>
-    <Owners>justinyoo;getscissorhands</Owners>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/getscissorhands/Scissorhands.NET</RepositoryUrl>
 
