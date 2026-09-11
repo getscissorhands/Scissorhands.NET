@@ -24,6 +24,7 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
     private readonly ILogger<ThemeService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
+    [Obsolete("Use LoadManifestAsync(string, CancellationToken). This overload will be removed in the next major version.")]
     public Task<ThemeManifest> LoadManifestAsync(string themeSlug)
         => LoadManifestAsync(themeSlug, CancellationToken.None);
 
@@ -74,6 +75,7 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
     }
 
     /// <inheritdoc />
+    [Obsolete("Use CopyAssetsAsync(string, string, CancellationToken). This overload will be removed in the next major version.")]
     public Task CopyAssetsAsync(string themeSlug, string destination)
         => CopyAssetsAsync(themeSlug, destination, CancellationToken.None);
 

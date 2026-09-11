@@ -69,8 +69,9 @@ The collections are defensively copied during initialization. Existing object
 initializers continue to work, but themes and plugins must no longer mutate
 manifest collections after construction.
 
-The existing one-argument `IThemeService` methods remain supported. New
-cancellation-aware overloads are used by the generator.
+The existing one-argument `IThemeService` methods remain temporarily supported
+but are marked obsolete for removal in the next major version.
+Cancellation-aware overloads are used by the generator.
 
 ## Issues?
 

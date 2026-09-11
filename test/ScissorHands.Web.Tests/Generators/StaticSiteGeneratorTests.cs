@@ -77,11 +77,11 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
 
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -199,10 +199,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedNotFoundParams = null;
@@ -301,10 +301,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -392,10 +392,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -501,10 +501,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? captured = null;
@@ -635,10 +635,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -774,10 +774,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -911,10 +911,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var capturedTagViewParams = new List<IDictionary<string, object?>>();
@@ -1039,10 +1039,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -1158,10 +1158,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -1266,10 +1266,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();

@@ -27,7 +27,8 @@ public class ThemeServiceTests
         var service = new ThemeService(paths, fileSystem, site, logger);
 
         // Act
-        var exception = await Should.ThrowAsync<FileNotFoundException>(() => service.LoadManifestAsync("missing"));
+        var exception = await Should.ThrowAsync<FileNotFoundException>(() =>
+            service.LoadManifestAsync("missing", CancellationToken.None));
 
         // Assert
         exception.FileName.ShouldEndWith(fileSystem.Path.Combine("missing", "theme.json"));
@@ -47,7 +48,7 @@ public class ThemeServiceTests
             new SiteManifest(),
             Substitute.For<ILogger<ThemeService>>());
 
-        var manifest = await service.LoadManifestAsync("default");
+        var manifest = await service.LoadManifestAsync("default", CancellationToken.None);
 
         manifest.Name.ShouldBe("Default");
         manifest.Slug.ShouldBe("default");
@@ -74,7 +75,8 @@ public class ThemeServiceTests
         var service = new ThemeService(paths, fileSystem, site, logger);
 
         // Act
-        var exception = await Should.ThrowAsync<InvalidDataException>(() => service.LoadManifestAsync("bad"));
+        var exception = await Should.ThrowAsync<InvalidDataException>(() =>
+            service.LoadManifestAsync("bad", CancellationToken.None));
 
         // Assert
         exception.Message.ShouldContain("invalid JSON");
@@ -103,7 +105,7 @@ public class ThemeServiceTests
         var service = new ThemeService(paths, fileSystem, site, logger);
 
         // Act
-        var manifest = await service.LoadManifestAsync("minimal");
+        var manifest = await service.LoadManifestAsync("minimal", CancellationToken.None);
 
         // Assert
         manifest.Name.ShouldBe("Minimal Blog");
@@ -141,7 +143,7 @@ public class ThemeServiceTests
         var service = new ThemeService(paths, fileSystem, site, logger);
 
         // Act
-        await service.CopyAssetsAsync(themeSlug, destination);
+        await service.CopyAssetsAsync(themeSlug, destination, CancellationToken.None);
 
         // Assert
         var targetRoot = fileSystem.Path.Combine(destination, ThemeManifest.THEME_DIRECTORY, themeSlug);

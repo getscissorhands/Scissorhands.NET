@@ -37,7 +37,7 @@ public class MainLayoutBaseTests
         cut.Instance.ExposedPageDescription.ShouldBe("My Description");
         cut.Instance.ExposedPageLocale.ShouldBe("en-us");
         cut.Instance.Theme.ShouldBeSameAs(expectedTheme);
-        themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!);
+        themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!, default);
     }
 
     [Fact]
@@ -79,10 +79,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Title = siteTitle, Theme = "minimal" };
@@ -110,10 +106,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Title = "My Site", Theme = "minimal" };
@@ -138,10 +130,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Description = siteDescription, Theme = "minimal" };
