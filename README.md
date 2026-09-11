@@ -33,9 +33,7 @@ A Blazor-based static site generator
     await app.RunAsync();
     ```
 
-   The theme is discovered automatically from the `Site:Theme` slug in `appsettings.json`.
-   Theme Razor components should share a namespace whose normalized suffix matches the
-   theme slug, such as `ScissorHands.Theme.MinimalBlog` for `minimal-blog`.
+   The theme is discovered automatically from the `Site:Theme` slug in `appsettings.json`. Theme Razor components should share a namespace whose normalized suffix matches the theme slug, such as `ScissorHands.Theme.MinimalBlog` for `minimal-blog`.
 
 1. Build the app.
 
@@ -59,9 +57,7 @@ A Blazor-based static site generator
 
 ## Sample Application
 
-The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project
-references the engine projects directly and uses the built-in default theme.
-It can be used to preview local engine changes without publishing packages:
+The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. It can be used to preview local engine changes without publishing packages:
 
 ```bash
 cd samples/ScissorHands.Sample
@@ -76,13 +72,9 @@ This release contains three source and binary breaking public-member changes:
 - `ThemeManifest.Scripts` is now `IReadOnlyList<string>`.
 - `PluginManifest.Options` is now `IReadOnlyDictionary<string, object?>`.
 
-The collections are defensively copied during initialization. Existing object
-initializers continue to work, but themes and plugins must no longer mutate
-manifest collections after construction.
+The collections are defensively copied during initialization. Existing object initializers continue to work, but themes and plugins must no longer mutate manifest collections after construction.
 
-The existing one-argument `IThemeService` methods remain temporarily supported
-but are marked obsolete for removal in the next major version.
-Cancellation-aware overloads are used by the generator.
+The existing one-argument `IThemeService` methods remain temporarily supported but are marked obsolete for removal in the next major version. Cancellation-aware overloads are used by the generator.
 
 ## Issues?
 

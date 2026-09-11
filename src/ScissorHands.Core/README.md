@@ -3,13 +3,9 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Core.svg)](https://www.nuget.org/packages/ScissorHands.Core)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE)
 
-`ScissorHands.Core` contains the shared contracts, manifests, models, and
-command options used by the ScissorHands.NET static site generator.
+`ScissorHands.Core` contains the shared contracts, manifests, models, and command options used by the ScissorHands.NET static site generator.
 
-Most applications should install
-[`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web), which
-references this package automatically. Install `ScissorHands.Core` directly
-when building a custom integration, theme service, or Markdown service.
+Most applications should install [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web), which references this package automatically. Install `ScissorHands.Core` directly when building a custom integration, theme service, or Markdown service.
 
 ## Install
 
@@ -21,8 +17,7 @@ ScissorHands.NET currently targets .NET 10.
 
 ## Content models
 
-`ContentDocument` represents a Markdown source document as it moves through the
-generation pipeline:
+`ContentDocument` represents a Markdown source document as it moves through the generation pipeline:
 
 ```csharp
 using ScissorHands.Core.Models;
@@ -63,8 +58,7 @@ var site = new SiteManifest
 };
 ```
 
-During generation, `IsPreview` indicates whether the engine is creating the
-preview site or the production output.
+During generation, `IsPreview` indicates whether the engine is creating the preview site or the production output.
 
 ## Theme manifest
 
@@ -80,8 +74,7 @@ var theme = new ThemeManifest
 };
 ```
 
-`Stylesheets` and `Scripts` are non-null read-only collections and are
-defensively copied during initialization.
+`Stylesheets` and `Scripts` are non-null read-only collections and are defensively copied during initialization.
 
 ## Plugin manifest
 
@@ -98,8 +91,7 @@ var plugin = new PluginManifest
 };
 ```
 
-`Options` is exposed as a nullable `IReadOnlyDictionary<string, object?>` and
-should be treated as immutable configuration.
+`Options` is exposed as a nullable `IReadOnlyDictionary<string, object?>` and should be treated as immutable configuration.
 
 ## Service contracts
 
@@ -108,9 +100,7 @@ The package exposes:
 - `IMarkdownService` for Markdown-to-HTML conversion
 - `IThemeService` for loading manifests and copying theme assets
 
-Both contracts support cancellation. The legacy non-cancellable
-`IThemeService` overloads are obsolete and scheduled for removal in the next
-major version.
+Both contracts support cancellation. The legacy non-cancellable `IThemeService` overloads are obsolete and scheduled for removal in the next major version.
 
 ## Learn more
 
@@ -121,5 +111,4 @@ major version.
 
 ## License
 
-ScissorHands.NET is licensed under the
-[MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
+ScissorHands.NET is licensed under the [MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).

@@ -3,10 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Web.svg)](https://www.nuget.org/packages/ScissorHands.Web)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE)
 
-`ScissorHands.Web` is the static site generation engine for
-[ScissorHands.NET](https://getscissorhands.app). It turns Markdown documents
-with YAML frontmatter into static HTML using Razor themes and optional content
-plugins.
+`ScissorHands.Web` is the static site generation engine for [ScissorHands.NET](https://getscissorhands.app). It turns Markdown documents with YAML frontmatter into static HTML using Razor themes and optional content plugins.
 
 ## Features
 
@@ -46,8 +43,7 @@ var app = new ScissorHandsApplicationBuilder(args).Build();
 await app.RunAsync();
 ```
 
-No theme component types need to be registered in `Program.cs`. The built-in
-theme is used when `Site:Theme` is `default`.
+No theme component types need to be registered in `Program.cs`. The built-in theme is used when `Site:Theme` is `default`.
 
 ## Configure the site
 
@@ -118,8 +114,7 @@ Supported frontmatter fields are:
 - `tags`
 - `draft`
 
-Invalid frontmatter, unsafe routes, and duplicate output paths fail the build
-with the source file included in the error.
+Invalid frontmatter, unsafe routes, and duplicate output paths fail the build with the source file included in the error.
 
 To provide a custom not-found page, add a page with `slug: 404.html`.
 
@@ -137,9 +132,7 @@ Generate the static site into `dist/`:
 dotnet run -- --build
 ```
 
-Preview mode regenerates the site after content or theme-file changes. Refresh
-the browser to display regenerated HTML. Razor or C# changes still require
-recompilation, typically with `dotnet watch`.
+Preview mode regenerates the site after content or theme-file changes. Refresh the browser to display regenerated HTML. Razor or C# changes still require recompilation, typically with `dotnet watch`.
 
 ## Themes
 
@@ -151,19 +144,16 @@ A custom theme provides concrete Razor components derived from:
 - `PageViewBase`
 - `NotFoundViewBase`
 
-`TagListViewBase` and `TagViewBase` are optional; the built-in tag views are
-used when they are omitted.
+`TagListViewBase` and `TagViewBase` are optional; the built-in tag views are used when they are omitted.
 
-Keep the components in one namespace whose normalized suffix matches the
-configured theme slug. For example:
+Keep the components in one namespace whose normalized suffix matches the configured theme slug. For example:
 
 ```text
 Site:Theme = minimal-blog
 Namespace  = ScissorHands.Theme.MinimalBlog
 ```
 
-Theme assets and metadata live under `themes/{slug}/`, including a
-`theme.json` manifest.
+Theme assets and metadata live under `themes/{slug}/`, including a `theme.json` manifest.
 
 ## Plugins
 
@@ -182,8 +172,7 @@ Install plugin packages and configure each enabled plugin by its unique name:
 }
 ```
 
-Plugins can transform a document before Markdown conversion, after Markdown
-conversion, or after the final Razor HTML render.
+Plugins can transform a document before Markdown conversion, after Markdown conversion, or after the final Razor HTML render.
 
 ## Learn more
 
@@ -195,9 +184,6 @@ conversion, or after the final Razor HTML render.
 
 ## License
 
-ScissorHands.NET is licensed under the
-[MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
+ScissorHands.NET is licensed under the [MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
 
-The built-in theme is adapted from
-[PlainPage](https://github.com/ChurchTao/PlainPage). Its attribution is
-included in `THIRD-PARTY-NOTICES.md`.
+The built-in theme is adapted from [PlainPage](https://github.com/ChurchTao/PlainPage). Its attribution is included in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).

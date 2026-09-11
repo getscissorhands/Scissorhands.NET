@@ -3,12 +3,9 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Plugin.svg)](https://www.nuget.org/packages/ScissorHands.Plugin)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE)
 
-`ScissorHands.Plugin` provides the contracts and Razor component base type for
-extending the ScissorHands.NET content generation pipeline.
+`ScissorHands.Plugin` provides the contracts and Razor component base type for extending the ScissorHands.NET content generation pipeline.
 
-Install this package when authoring a plugin. Applications that only consume
-plugins should install
-[`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web).
+Install this package when authoring a plugin. Applications that only consume plugins should install [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web).
 
 ## Install
 
@@ -63,8 +60,7 @@ The output from each plugin becomes the input to the next configured plugin.
 
 ## Configure a plugin
 
-Install the plugin assembly in the application and add its manifest to
-`appsettings.json`:
+Install the plugin assembly in the application and add its manifest to `appsettings.json`:
 
 ```json
 {
@@ -79,13 +75,9 @@ Install the plugin assembly in the application and add its manifest to
 }
 ```
 
-Plugin names are matched case-insensitively and must be non-empty and unique.
-A configured manifest that does not match an installed plugin fails startup.
-Installed plugins without a manifest remain disabled.
+Plugin names are matched case-insensitively and must be non-empty and unique. A configured manifest that does not match an installed plugin fails startup. Installed plugins without a manifest remain disabled.
 
-`PluginManifest.Options` is nullable and exposed as
-`IReadOnlyDictionary<string, object?>`. Treat it as immutable input and validate
-the type and value of every option your plugin consumes.
+`PluginManifest.Options` is nullable and exposed as `IReadOnlyDictionary<string, object?>`. Treat it as immutable input and validate the type and value of every option your plugin consumes.
 
 ## Create a Razor plugin component
 
@@ -100,17 +92,13 @@ Derive from `PluginComponentBase` when a theme needs to render plugin output:
 }
 ```
 
-Set the component's `Name` parameter to the plugin manifest name. The base type
-provides the current document, document collection, plugin manifests, theme,
-and site through cascading parameters.
+Set the component's `Name` parameter to the plugin manifest name. The base type provides the current document, document collection, plugin manifests, theme, and site through cascading parameters.
 
 ## Preview behavior
 
-`SiteManifest.IsPreview` is set before plugin hooks and Razor rendering. Use it
-to suppress production-only side effects when appropriate.
+`SiteManifest.IsPreview` is set before plugin hooks and Razor rendering. Use it to suppress production-only side effects when appropriate.
 
-Internal URLs emitted by a plugin should be relative to `SiteManifest.BaseUrl`
-rather than hardcoded to the domain root.
+Internal URLs emitted by a plugin should be relative to `SiteManifest.BaseUrl` rather than hardcoded to the domain root.
 
 ## Learn more
 
@@ -121,5 +109,4 @@ rather than hardcoded to the domain root.
 
 ## License
 
-ScissorHands.NET is licensed under the
-[MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
+ScissorHands.NET is licensed under the [MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
