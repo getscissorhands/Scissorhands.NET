@@ -1,0 +1,22 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/samples/">
+    <Project Path="samples/ScissorHands.Sample/ScissorHands.Sample.csproj" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/ScissorHands.Core/ScissorHands.Core.csproj" />
+    <Project Path="src/ScissorHands.Plugin/ScissorHands.Plugin.csproj" />
+    <Project Path="src/ScissorHands.Theme/ScissorHands.Theme.csproj" />
+    <Project Path="src/ScissorHands.Web/ScissorHands.Web.csproj" />
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/ScissorHands.Core.Tests/ScissorHands.Core.Tests.csproj" />
+    <Project Path="test/ScissorHands.Plugin.Tests/ScissorHands.Plugin.Tests.csproj" />
+    <Project Path="test/ScissorHands.Theme.Tests/ScissorHands.Theme.Tests.csproj" />
+    <Project Path="test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj" />
+  </Folder>
+</Solution>
