@@ -1,6 +1,5 @@
-using System.Text.RegularExpressions;
-
 using Markdig;
+using Markdig.Syntax;
 
 using ScissorHands.Core.Services;
 
@@ -11,8 +10,6 @@ namespace ScissorHands.Web.Services;
 /// </summary>
 public sealed class MarkdownService : IMarkdownService
 {
-    private static readonly Regex trimRegex = new(@"^<p>(.*)</p>\s*$", RegexOptions.Singleline);
-
     private readonly MarkdownPipeline _pipeline = new MarkdownPipelineBuilder()
                                                       .UseAdvancedExtensions()
                                                       .UseSmartyPants()
@@ -23,10 +20,16 @@ public sealed class MarkdownService : IMarkdownService
     {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var html = Markdown.ToHtml(markdown, _pipeline);
-        if (trim == true)
+        var document = Markdown.Parse(markdown, _pipeline);
+        var html = document.ToHtml(_pipeline);
+        if (trim == true && document.Count == 1 && document[0] is ParagraphBlock)
         {
-            html = trimRegex.Replace(html, "$1");
+            var trimmedHtml = html.TrimEnd();
+            if (trimmedHtml.StartsWith("<p>", StringComparison.Ordinal)
+                && trimmedHtml.EndsWith("</p>", StringComparison.Ordinal))
+            {
+                html = trimmedHtml[3..^4];
+            }
         }
 
         return Task.FromResult(html);

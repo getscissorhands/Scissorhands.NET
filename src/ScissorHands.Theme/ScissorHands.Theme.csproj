@@ -1,67 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <ImplicitUsings>enable</ImplicitUsings>
+    <Description>Theme and Razor view base types for building ScissorHands.NET themes.</Description>
 
-    <LangVersion>latest</LangVersion>
-
-    <AssemblyName>ScissorHands.Theme</AssemblyName>
-    <RootNamespace>ScissorHands.Theme</RootNamespace>
-  </PropertyGroup>
-
-  <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-
-    <PackageId>ScissorHands.Theme</PackageId>
-    <Version>1.0.0</Version>
-
-    <Title>ScissorHands.Theme</Title>
-    <Authors>Justin Yoo</Authors>
-    <Company>GetScissorHands</Company>
-    <Product>ScissorHands.Theme</Product>
-    <Summary>ScissorHands.Theme: Building a static website using .NET</Summary>
-    <Description>This is a library that builds a static website using .NET</Description>
-    <Copyright>© GetScissorHands. All rights reserved.</Copyright>
-    <Owners>justinyoo</Owners>
-
-    <PackageProjectUrl>https://github.com/getscissorhands/Scissorhands.NET</PackageProjectUrl>
-    <PackageIcon>ScissorHands.png</PackageIcon>
-    <PackageIconUrl>https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/ScissorHands.png</PackageIconUrl>
-    <PackageReadmeFile>README.md</PackageReadmeFile>
     <PackageTags>scissorhands;theme;static-site</PackageTags>
-
-    <PackageLicenseExpression>MIT</PackageLicenseExpression>
-    <PackageRequireLicenseAcceptance>True</PackageRequireLicenseAcceptance>
-
-    <RepositoryUrl>https://github.com/getscissorhands/Scissorhands.NET</RepositoryUrl>
-    <RepositoryType>git</RepositoryType>
-
-    <IncludeSymbols>True</IncludeSymbols>
-    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\..\LICENSE">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\..\README.md">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
-    <None Include="..\..\assets\ScissorHands.png">
-      <Pack>True</Pack>
-      <PackagePath>\</PackagePath>
-    </None>
+    <PackageReference Include="Microsoft.AspNetCore.Components.Web" />
   </ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.Components.Web" Version="10.*" />
-  </ItemGroup>
-  
   <ItemGroup>
     <ProjectReference Include="..\ScissorHands.Core\ScissorHands.Core.csproj" />
   </ItemGroup>

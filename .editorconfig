@@ -3,7 +3,7 @@ root = true
 # All files
 [*]
 charset = utf-8
-trim_trailing_whitespace = false
+trim_trailing_whitespace = true
 
 # Indentation and spacing
 indent_style = space
@@ -12,7 +12,7 @@ tab_width = 4
 
 # New line preferences
 end_of_line = crlf
-insert_final_newline = false
+insert_final_newline = true
 
 # XML files
 [*.{xml,csproj,props,targets,ruleset,config,nuspec,resx}]
@@ -388,4 +388,3 @@ dotnet_naming_style.s_camelcase.required_prefix = s_
 dotnet_naming_style.s_camelcase.required_suffix = 
 dotnet_naming_style.s_camelcase.word_separator = 
 dotnet_naming_style.s_camelcase.capitalization = camel_case
-

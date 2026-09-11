@@ -1,34 +1,35 @@
 @inherits ScissorHands.Theme.IndexViewBase
 @layout MainLayout
 
-<section class="home">
-    <article>
-        @if (Documents?.Any() != true)
-        {
-            <p>Welcome aboard ScissorHands.NET!</p>
-        }
-        else
-        {
-            @foreach (var post in Documents!)
-        {
-            <article>
-                <div>
-                    <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
-                </div>
-                @if (string.IsNullOrWhiteSpace(post.Metadata.Description) == false)
-                {
+<section class="home prose">
+    @if (!string.IsNullOrWhiteSpace(Site?.DescriptionInHtml))
+    {
+        <div class="site-introduction">@((MarkupString)Site.DescriptionInHtml)</div>
+    }
+
+    @if (Documents?.Any() != true)
+    {
+        <p>No posts have been published yet.</p>
+    }
+    else
+    {
+        <h1>Latest posts</h1>
+        <ul class="post-list">
+            @foreach (var post in Documents)
+            {
+                <li>
+                    <time datetime="@post.Metadata.Published?.ToString("O")">
+                        @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
+                    </time>
                     <div>
-                        <p>@post.Metadata.Description</p>
+                        <a class="post-link" href="@post.Metadata.Slug">@post.Metadata.Title</a>
+                        @if (!string.IsNullOrWhiteSpace(post.Metadata.Description))
+                        {
+                            <p>@post.Metadata.Description</p>
+                        }
                     </div>
-                }
-                <ul>
-                    @foreach (var tag in post.Metadata.Tags ?? Array.Empty<string>())
-                    {
-                        <li><a href="/tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
-                    }
-                </ul>
-            </article>
+                </li>
             }
-        }
-    </article>
+        </ul>
+    }
 </section>

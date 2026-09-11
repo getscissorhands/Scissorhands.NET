@@ -1,38 +1,72 @@
 @inherits ScissorHands.Theme.MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" Plugins="@Plugins" Theme="@Theme" Site="@Site">
+    <!DOCTYPE html>
+    <html lang="@PageLocale">
+    <head>
+        <base href="@Site!.BaseUrl" />
 
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <base href="@Site!.BaseUrl" />
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <meta name="generator" content="@Site.Generator" />
+        <meta name="theme-color" content="#fffcf5" />
+        <link rel="icon" type="image/x-icon" href="@ThemeUrl("favicon.ico")" />
 
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}/favicon.ico")" />
-    <meta name="generator" content="@Site!.Generator" />
-
-    <title>@PageTitle</title>
-    <meta name="title" content="@PageTitle" />
-    <meta name="description" content="@PageDescription" />
-    @if (Theme!.Stylesheets is not null)
-    {
-        foreach (var css in Theme!.Stylesheets)
+        <title>@PageTitle</title>
+        <meta name="title" content="@PageTitle" />
+        <meta name="description" content="@PageDescription" />
+        <script>
+            (() => {
+                const stored = localStorage.getItem("theme");
+                const preferred = stored ?? (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+                document.documentElement.dataset.theme = preferred;
+            })();
+        </script>
+        @foreach (var css in Theme!.Stylesheets)
         {
-            <link rel="stylesheet" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}{css}")" />
+            <link rel="stylesheet" href="@ThemeUrl(css)" />
         }
-    }
-</head>
-<body>
-    @Body
-    @if (Theme!.Scripts is not null)
-    {
-        foreach (var script in Theme!.Scripts)
-        {
-            <script src="@($"/themes/{Theme!.Slug.TrimEnd('/')}{script}")"></script>
-        }
-    }
-</body>
-</html>
+    </head>
+    <body>
+        <header class="site-header">
+            <a class="site-title" href=".">@Site.Title</a>
+            <nav aria-label="Primary navigation">
+                <a href=".">Home</a>
+                <a href="tags">Tags</a>
+                <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
+                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
+                    </svg>
+                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
+                        <circle cx="12" cy="12" r="4"></circle>
+                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
+                    </svg>
+                </button>
+            </nav>
+        </header>
 
+        <main>
+            @Body
+        </main>
+
+        <footer class="site-footer">
+            <small>Powered by <a href="https://github.com/getscissorhands/ScissorHands.NET">ScissorHands.NET</a></small>
+            <small>Default theme adapted from <a href="https://github.com/ChurchTao/PlainPage">PlainPage</a>.</small>
+            @if (!string.IsNullOrWhiteSpace(Site.Author))
+            {
+                <small>&copy; @DateTimeOffset.UtcNow.Year @Site.Author</small>
+            }
+        </footer>
+
+        @foreach (var script in Theme.Scripts)
+        {
+            <script src="@ThemeUrl(script)"></script>
+        }
+    </body>
+    </html>
 </CascadingMainLayoutBase>
+
+@code {
+    private string ThemeUrl(string path)
+        => $"themes/{Theme!.Slug.TrimEnd('/')}/{path.TrimStart('/')}";
+}

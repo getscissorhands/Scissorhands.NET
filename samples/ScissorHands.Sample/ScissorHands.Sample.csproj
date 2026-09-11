@@ -1,0 +1,7 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\ScissorHands.Web\ScissorHands.Web.csproj" />
+  </ItemGroup>
+
+</Project>

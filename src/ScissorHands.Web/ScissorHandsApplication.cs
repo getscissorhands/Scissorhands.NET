@@ -6,10 +6,12 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Options;
+using ScissorHands.Theme;
 using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Application;
 using ScissorHands.Web.Generators;
@@ -37,13 +39,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
     private const int EXPECTED_METHOD_PARAMETER_COUNT = 3;
 
     private readonly string[] _args;
-    private readonly Type _mainLayout;
-    private readonly Type _indexView;
-    private readonly Type _postView;
-    private readonly Type _pageView;
-    private readonly Type _notFoundView;
-    private readonly Type _tagListView;
-    private readonly Type _tagView;
+    private ThemeComponentSet? _themeComponents;
     private CommandMode _mode;
     private readonly WebApplication _app;
     private ILogger? _logger;
@@ -52,20 +48,14 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
     private MethodInfo? _cachedBuildMethod;
     private readonly object _cacheLock = new object();
 
-    internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, Type mainLayout, Type indexView, Type postView, Type pageView, Type notFoundView, Type tagListView, Type tagView)
+    internal ScissorHandsApplication(WebApplication app, IEnumerable<string> args, ThemeComponentSet? themeComponents)
     {
         _app = app ?? throw new ArgumentNullException(nameof(app));
         _args = args?.ToArray() ?? throw new ArgumentNullException(nameof(args));
-        _mainLayout = mainLayout ?? throw new ArgumentNullException(nameof(mainLayout));
-        _indexView = indexView ?? throw new ArgumentNullException(nameof(indexView));
-        _postView = postView ?? throw new ArgumentNullException(nameof(postView));
-        _pageView = pageView ?? throw new ArgumentNullException(nameof(pageView));
-        _notFoundView = notFoundView ?? throw new ArgumentNullException(nameof(notFoundView));
-        _tagListView = tagListView ?? throw new ArgumentNullException(nameof(tagListView));
-        _tagView = tagView ?? throw new ArgumentNullException(nameof(tagView));
+        _themeComponents = themeComponents;
     }
 
-    private void VerifyCommandArguments()
+    private bool VerifyCommandArguments()
     {
         DisplayBanner();
 
@@ -73,7 +63,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         if (validation.IsHelp)
         {
             DisplayHelp();
-            Environment.Exit(0);
+            return false;
         }
 
         if (validation.IsError)
@@ -84,32 +74,33 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
             Console.ResetColor();
             DisplayHelp();
 
-            Environment.Exit(1);
+            Environment.ExitCode = 1;
+            return false;
         }
 
         _mode = validation.Mode;
+        return true;
     }
 
     /// <inheritdoc />
     public async Task RunAsync()
     {
-        VerifyCommandArguments();
+        if (!VerifyCommandArguments())
+        {
+            return;
+        }
 
         _logger = _app.Services.GetRequiredService<ILoggerFactory>().CreateLogger(APP_LOGGER_NAME);
         _site = _app.Services.GetRequiredService<SiteManifest>();
         _generator = _app.Services.GetRequiredService<IStaticSiteGenerator>();
+        _themeComponents ??= _app.Services.GetRequiredService<IThemeComponentResolver>().Resolve(_site.Theme);
 
-        _ = _mode switch
+        await (_mode switch
         {
-            CommandMode.Preview => await RunPreviewServerAsync(),
-            CommandMode.Build => await RunBuildAsync(),
-            _ => LogInvalidMode()
-        };
-
-        if (_mode == CommandMode.Preview)
-        {
-            await _app.RunAsync();
-        }
+            CommandMode.Preview => RunPreviewServerAsync(),
+            CommandMode.Build => RunBuildAsync(),
+            _ => Task.FromResult(LogInvalidMode())
+        });
     }
 
     private static void DisplayHelp()
@@ -126,7 +117,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
 
     private static void DisplayBanner()
     {
-        var banner = new [] {
+        var banner = new[] {
             "███████╗ ██████╗██╗███████╗███████╗ ██████╗ ██████╗",
             "██╔════╝██╔════╝██║██╔════╝██╔════╝██╔═══██╗██╔══██╗",
             "███████╗██║     ██║███████╗███████╗██║   ██║██████╔╝",
@@ -151,15 +142,21 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
             ConsoleColor.Red
         };
 
-        Console.WriteLine(new string('\n', Console.WindowHeight));
-
         for (var i = 0; i < banner.Length; i++)
         {
-            Console.ForegroundColor = colors[i % colors.Length];
+            if (!Console.IsOutputRedirected)
+            {
+                Console.ForegroundColor = colors[i % colors.Length];
+            }
+
             Console.WriteLine(banner[i]);
         }
 
-        Console.ResetColor();
+        if (!Console.IsOutputRedirected)
+        {
+            Console.ResetColor();
+        }
+
         Console.WriteLine();
     }
 
@@ -171,37 +168,42 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
             Directory.Delete(previewPath, recursive: true);
         }
 
-        await BuildSiteAsync(previewPath, preview: true, _app.Lifetime.ApplicationStopping);
+        Directory.CreateDirectory(previewPath);
 
         var fileProvider = new PhysicalFileProvider(previewPath);
         _app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
         _app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
 
-        _app.Lifetime.ApplicationStarted.Register(() =>
+        await _app.StartAsync();
+        try
         {
             var addresses = _app.Services.GetRequiredService<IServer>().Features.Get<IServerAddressesFeature>()?.Addresses;
-            var siteUrl = string.Join(", ", addresses ?? []).TrimEnd('/');
+            var siteUrl = addresses?.FirstOrDefault()?.TrimEnd('/')
+                          ?? throw new InvalidOperationException("The preview server did not report a listening address.");
             _site!.SiteUrl = siteUrl;
-            _logger!.LogInformation("Preview server running at {Address}", $"{siteUrl}/{_site!.BaseUrl.TrimStart('/')}");
-        });
 
-        var paths = _app.Services.GetRequiredService<IAppPaths>();
-        var contentRoot = paths.GetContentsRoot();
-        var themeRoot = paths.GetThemesRoot();
+            await BuildSiteAsync(previewPath, preview: true, _app.Lifetime.ApplicationStopping);
 
-        var watcherFactory = _app.Services.GetRequiredService<IContentWatcherFactory>();
-        var watcher = watcherFactory.Create(
-            contentRoot,
-            themeRoot,
-            TimeSpan.FromMilliseconds(500),
-            async () =>
-            {
-                _logger!.LogInformation("Change detected; rebuilding preview...");
-                await BuildSiteAsync(previewPath, preview: true, CancellationToken.None);
-                _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
-            });
+            var paths = _app.Services.GetRequiredService<IAppPaths>();
+            var watcherFactory = _app.Services.GetRequiredService<IContentWatcherFactory>();
+            using var watcher = watcherFactory.Create(
+                paths.GetContentsRoot(),
+                paths.GetThemesRoot(),
+                TimeSpan.FromMilliseconds(500),
+                async () =>
+                {
+                    _logger!.LogInformation("Change detected; rebuilding preview...");
+                    await BuildSiteAsync(previewPath, preview: true, _app.Lifetime.ApplicationStopping);
+                    _logger!.LogInformation("Preview rebuilt. Refresh your browser to see the changes.");
+                });
 
-        _app.Lifetime.ApplicationStopping.Register(watcher.Dispose);
+            _logger!.LogInformation("Preview server running at {Address}", $"{siteUrl}/{_site.BaseUrl.TrimStart('/')}");
+            await _app.WaitForShutdownAsync();
+        }
+        finally
+        {
+            await _app.StopAsync();
+        }
 
         return this;
     }
@@ -236,7 +238,16 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
                 }
             }
 
-            var closedMethod = _cachedBuildMethod.MakeGenericMethod(_mainLayout, _indexView, _postView, _pageView, _notFoundView, _tagListView, _tagView);
+            var themeComponents = _themeComponents
+                                  ?? throw new InvalidOperationException("Theme components have not been resolved.");
+            var closedMethod = _cachedBuildMethod.MakeGenericMethod(
+                themeComponents.MainLayout,
+                themeComponents.IndexView,
+                themeComponents.PostView,
+                themeComponents.PageView,
+                themeComponents.NotFoundView,
+                themeComponents.TagListView,
+                themeComponents.TagView);
             var parameters = new object[] { destination, preview, cancellationToken };
             var task = (Task?)closedMethod.Invoke(_generator, parameters);
 
@@ -250,7 +261,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         catch (TargetInvocationException ex)
         {
             _logger?.LogError(ex.InnerException ?? ex, "BuildAsync method threw an exception during execution.");
-            
+
             // Re-throw the inner exception while preserving the stack trace
             if (ex.InnerException != null)
             {

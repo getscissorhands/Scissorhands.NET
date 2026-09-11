@@ -1,3 +1,5 @@
+using System.IO.Abstractions.TestingHelpers;
+
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Logging;
 
@@ -9,8 +11,6 @@ using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 using ScissorHands.Web.Tests.TestDoubles;
-
-using System.IO.Abstractions.TestingHelpers;
 
 namespace ScissorHands.Web.Tests.Generators;
 
@@ -77,11 +77,11 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
 
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -199,10 +199,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedNotFoundParams = null;
@@ -301,10 +301,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -338,9 +338,10 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: true, CancellationToken.None);
 
         // Assert
+        site.IsPreview.ShouldBeTrue();
         fileSystem.Directory.Exists(fileSystem.Path.Combine(destination, "images")).ShouldBeFalse();
     }
 
@@ -391,10 +392,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -500,10 +501,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? captured = null;
@@ -634,10 +635,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();
@@ -773,10 +774,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -910,10 +911,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var capturedTagViewParams = new List<IDictionary<string, object?>>();
@@ -1038,10 +1039,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -1157,10 +1158,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         IDictionary<string, object?>? capturedTagListParams = null;
@@ -1265,10 +1266,10 @@ public class StaticSiteGeneratorTests
 
         var themeService = Substitute.For<IThemeService>();
         themeService
-            .LoadManifestAsync(Arg.Any<string>())
+            .LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new ThemeManifest { Name = "Minimal", Slug = "minimal" }));
         themeService
-            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>())
+            .CopyAssetsAsync(Arg.Any<string>(), Arg.Any<string>(), Arg.Any<CancellationToken>())
             .Returns(Task.CompletedTask);
 
         var renderer = Substitute.For<IComponentRenderer>();

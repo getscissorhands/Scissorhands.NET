@@ -92,4 +92,9 @@ public sealed class SiteManifest
     /// Gets a value indicating whether to enable debug mode or not.
     /// </summary>
     public bool Debug { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the current generation is for preview.
+    /// </summary>
+    public bool IsPreview { get; set; }
 }

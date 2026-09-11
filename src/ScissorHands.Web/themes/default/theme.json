@@ -1,0 +1,12 @@
+{
+  "name": "ScissorHands Plain",
+  "version": "1.0.0",
+  "description": "A fast, responsive, text-focused theme adapted from PlainPage.",
+  "slug": "default",
+  "stylesheets": [
+    "/assets/theme.css"
+  ],
+  "scripts": [
+    "/assets/theme.js"
+  ]
+}

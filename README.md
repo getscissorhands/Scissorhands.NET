@@ -29,10 +29,11 @@ A Blazor-based static site generator
     using ScissorHands.Web;
 
     var app = new ScissorHandsApplicationBuilder(args)
-                  .AddLayouts<MainLayout, IndexView, PostView, PageView, NotFoundView>()
                   .Build();
     await app.RunAsync();
     ```
+
+   The theme is discovered automatically from the `Site:Theme` slug in `appsettings.json`. Theme Razor components should share a namespace whose normalized suffix matches the theme slug, such as `ScissorHands.Theme.MinimalBlog` for `minimal-blog`.
 
 1. Build the app.
 
@@ -53,6 +54,27 @@ A Blazor-based static site generator
     ```
 
 > **NOTE**: For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart/) page.
+
+## Sample Application
+
+The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. It can be used to preview local engine changes without publishing packages:
+
+```bash
+cd samples/ScissorHands.Sample
+dotnet run
+```
+
+## vNext Compatibility
+
+This release contains three source and binary breaking public-member changes:
+
+- `ThemeManifest.Stylesheets` is now `IReadOnlyList<string>`.
+- `ThemeManifest.Scripts` is now `IReadOnlyList<string>`.
+- `PluginManifest.Options` is now `IReadOnlyDictionary<string, object?>`.
+
+The collections are defensively copied during initialization. Existing object initializers continue to work, but themes and plugins must no longer mutate manifest collections after construction.
+
+The existing one-argument `IThemeService` methods remain temporarily supported but are marked obsolete for removal in the next major version. Cancellation-aware overloads are used by the generator.
 
 ## Issues?
 

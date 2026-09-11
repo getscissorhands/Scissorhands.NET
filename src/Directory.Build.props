@@ -1,0 +1,39 @@
+<Project>
+  <Import Project="$(MSBuildThisFileDirectory)..\Directory.Build.props" />
+
+  <PropertyGroup>
+    <AssemblyName>$(MSBuildProjectName)</AssemblyName>
+    <RootNamespace>$(MSBuildProjectName)</RootNamespace>
+
+    <IsPackable>true</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <Title>$(MSBuildProjectName)</Title>
+    <Version>1.0.0</Version>
+
+    <Authors>justinyoo;getscissorhands</Authors>
+    <Company>GetScissorHands</Company>
+    <Copyright>© GetScissorHands. All rights reserved.</Copyright>
+
+    <Product>$(MSBuildProjectName)</Product>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/getscissorhands/Scissorhands.NET</RepositoryUrl>
+
+    <PackageId>$(MSBuildProjectName)</PackageId>
+    <PackageIcon>ScissorHands.png</PackageIcon>
+    <PackageProjectUrl>https://github.com/getscissorhands/Scissorhands.NET</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <PackageReadmeSource Condition="Exists('$(MSBuildProjectDirectory)\README.md')">$(MSBuildProjectDirectory)\README.md</PackageReadmeSource>
+    <PackageReadmeSource Condition="'$(PackageReadmeSource)' == ''">$(MSBuildThisFileDirectory)..\README.md</PackageReadmeSource>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="$(MSBuildThisFileDirectory)..\assets\ScissorHands.png" Pack="true" PackagePath="\" />
+    <None Include="$(MSBuildThisFileDirectory)..\LICENSE" Pack="true" PackagePath="\" />
+    <None Include="$(PackageReadmeSource)" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+</Project>

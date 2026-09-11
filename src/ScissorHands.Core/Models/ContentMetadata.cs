@@ -5,6 +5,8 @@ namespace ScissorHands.Core.Models;
 /// </summary>
 public sealed record ContentMetadata
 {
+    private IReadOnlyList<string> _tags = Array.Empty<string>();
+
     /// <summary>
     /// Gets the title of the content.
     /// </summary>
@@ -48,7 +50,11 @@ public sealed record ContentMetadata
     /// <summary>
     /// Gets the tags of the content.
     /// </summary>
-    public IEnumerable<string> Tags { get; init; } = [];
+    public IEnumerable<string> Tags
+    {
+        get => _tags;
+        init => _tags = Array.AsReadOnly((value ?? Array.Empty<string>()).ToArray());
+    }
 
     /// <summary>
     /// Gets a value indicating whether the content is a draft or not.

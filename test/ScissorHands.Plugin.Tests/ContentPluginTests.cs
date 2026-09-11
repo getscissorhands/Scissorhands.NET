@@ -15,7 +15,7 @@ public class ContentPluginTests
         var site = new SiteManifest();
 
         // Act
-        var result = await plugin.PreMarkdownAsync(document, pluginManifest, site);
+        var result = await plugin.PreMarkdownAsync(document, pluginManifest, site, Xunit.TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldBeSameAs(document);
@@ -31,7 +31,7 @@ public class ContentPluginTests
         var site = new SiteManifest();
 
         // Act
-        var result = await plugin.PostMarkdownAsync(document, pluginManifest, site);
+        var result = await plugin.PostMarkdownAsync(document, pluginManifest, site, Xunit.TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldBeSameAs(document);
@@ -48,7 +48,7 @@ public class ContentPluginTests
         var html = "<p>Hello</p>";
 
         // Act
-        var result = await plugin.PostHtmlAsync(html, document, pluginManifest, site);
+        var result = await plugin.PostHtmlAsync(html, document, pluginManifest, site, Xunit.TestContext.Current.CancellationToken);
 
         // Assert
         result.ShouldBe(html);

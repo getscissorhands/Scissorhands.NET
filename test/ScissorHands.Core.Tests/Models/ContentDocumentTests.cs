@@ -43,4 +43,15 @@ public class ContentDocumentTests
         // Assert
         actual.ShouldBe(kind);
     }
+
+    [Fact]
+    public void Given_MetadataTags_When_SourceCollectionMutates_Then_MetadataShouldRetainSnapshot()
+    {
+        var tags = new List<string> { "dotnet" };
+        var metadata = new ContentMetadata { Tags = tags };
+
+        tags.Add("blazor");
+
+        metadata.Tags.ShouldBe(["dotnet"]);
+    }
 }

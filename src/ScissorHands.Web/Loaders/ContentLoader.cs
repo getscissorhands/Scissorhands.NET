@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.IO.Abstractions;
 
 using Microsoft.Extensions.Logging;
 
@@ -6,8 +7,7 @@ using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Web.Abstractions;
 
-using System.IO.Abstractions;
-
+using YamlDotNet.Core;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
@@ -24,6 +24,19 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
 {
     private const string POST_DIRECTORY = "posts";
     private const string PAGE_DIRECTORY = "pages";
+    private static readonly HashSet<string> SupportedMetadataKeys = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "title",
+        "slug",
+        "description",
+        "locale",
+        "author",
+        "twitter_handle",
+        "hero_image",
+        "draft",
+        "tags",
+        "published",
+    };
 
     private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
     private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
@@ -100,12 +113,24 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             yamlLines.Add(line);
         }
 
+        if (line is null)
+        {
+            throw new InvalidDataException($"Frontmatter in '{sourcePath}' is missing its closing delimiter.");
+        }
+
         var markdownBody = reader.ReadToEnd();
         var yaml = string.Join(Environment.NewLine, yamlLines);
 
         try
         {
             var map = _deserializer.Deserialize<Dictionary<string, object>>(yaml) ?? [];
+            var unsupportedKeys = map.Keys.Where(key => !SupportedMetadataKeys.Contains(key)).ToList();
+            if (unsupportedKeys.Count > 0)
+            {
+                throw new InvalidDataException(
+                    $"Unsupported frontmatter field(s) in '{sourcePath}': {string.Join(", ", unsupportedKeys)}.");
+            }
+
             var title = map.TryGetValue("title", out var titleValue) ? Convert.ToString(titleValue, CultureInfo.InvariantCulture) ?? string.Empty : _fileSystem.Path.GetFileNameWithoutExtension(sourcePath);
             var slug = map.TryGetValue("slug", out var slugValue) ? Convert.ToString(slugValue, CultureInfo.InvariantCulture) ?? string.Empty : string.Empty;
             var description = map.TryGetValue("description", out var descValue) ? Convert.ToString(descValue, CultureInfo.InvariantCulture) : default;
@@ -113,12 +138,28 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
             var twitterHandle = map.TryGetValue("twitter_handle", out var twitterValue) ? Convert.ToString(twitterValue, CultureInfo.InvariantCulture) : default;
             var heroImage = map.TryGetValue("hero_image", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : default;
-            var draft = map.TryGetValue("draft", out var draftValue) && bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out var parsedDraft) && parsedDraft;
-            var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue) : [];
+            var draft = false;
+            if (map.TryGetValue("draft", out var draftValue)
+                && !bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out draft))
+            {
+                throw new InvalidDataException($"Frontmatter field 'draft' in '{sourcePath}' must be true or false.");
+            }
+
+            var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue, sourcePath) : [];
             DateTimeOffset? published = null;
 
-            if (map.TryGetValue("published", out var publishedValue) && DateTimeOffset.TryParse(Convert.ToString(publishedValue, CultureInfo.InvariantCulture), out var parsedPublished))
+            if (map.TryGetValue("published", out var publishedValue))
             {
+                if (!DateTimeOffset.TryParse(
+                        Convert.ToString(publishedValue, CultureInfo.InvariantCulture),
+                        CultureInfo.InvariantCulture,
+                        DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
+                        out var parsedPublished))
+                {
+                    throw new InvalidDataException(
+                        $"Frontmatter field 'published' in '{sourcePath}' must be a valid date and time.");
+                }
+
                 published = parsedPublished;
             }
 
@@ -136,10 +177,9 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                 Draft = draft,
             }, markdownBody.Trim());
         }
-        catch (Exception ex)
+        catch (YamlException ex)
         {
-            _logger.LogWarning(ex, "Failed to parse frontmatter for {Path}", sourcePath);
-            return (new ContentMetadata { Title = _fileSystem.Path.GetFileNameWithoutExtension(sourcePath), Slug = string.Empty }, text);
+            throw new InvalidDataException($"Failed to parse frontmatter in '{sourcePath}'.", ex);
         }
     }
 
@@ -195,13 +235,14 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                      .ToLowerInvariant();
     }
 
-    private static IEnumerable<string> ToTags(object value)
+    private static IEnumerable<string> ToTags(object value, string sourcePath)
     {
         return value switch
         {
             IEnumerable<object> enumerable => [.. enumerable.Select(v => Convert.ToString(v) ?? string.Empty).Where(s => !string.IsNullOrWhiteSpace(s))],
             string csv => csv.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries),
-            _ => []
+            _ => throw new InvalidDataException(
+                $"Frontmatter field 'tags' in '{sourcePath}' must be a YAML list or comma-separated string."),
         };
     }
 

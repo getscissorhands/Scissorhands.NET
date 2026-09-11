@@ -37,8 +37,32 @@ public class PluginComponentBaseTests
         cut.Instance.BoundDocuments.ShouldBeSameAs(documents);
         cut.Instance.BoundDocument.ShouldBeSameAs(document);
         cut.Instance.BoundPlugins.ShouldBeSameAs(plugins);
+        cut.Instance.BoundPlugin.ShouldBeSameAs(plugins[0]);
         cut.Instance.BoundTheme.ShouldBeSameAs(theme);
         cut.Instance.BoundSite.ShouldBeSameAs(site);
+    }
+
+    [Fact]
+    public void Given_UpdatedPluginName_When_ComponentRerendered_Then_It_Should_UpdateSelectedPlugin()
+    {
+        using var context = new BunitContext();
+        var plugins = new[]
+        {
+            new PluginManifest { Name = "First" },
+            new PluginManifest { Name = "Second" },
+            new PluginManifest(),
+        };
+
+        var cut = context.Renderer.Render<TestPluginComponent>(parameters => parameters
+            .Add(p => p.Name, "First")
+            .AddCascadingValue(plugins));
+
+        cut.Instance.BoundPlugin.ShouldBeSameAs(plugins[0]);
+
+        cut.Render(parameters => parameters
+            .Add(p => p.Name, "Second"));
+
+        cut.Instance.BoundPlugin.ShouldBeSameAs(plugins[1]);
     }
 }
 
@@ -47,6 +71,7 @@ internal class TestPluginComponent : PluginComponentBase
     public IEnumerable<ContentDocument>? BoundDocuments => Documents;
     public ContentDocument? BoundDocument => Document;
     public IEnumerable<PluginManifest>? BoundPlugins => Plugins;
+    public PluginManifest? BoundPlugin => Plugin;
     public ThemeManifest? BoundTheme => Theme;
     public SiteManifest? BoundSite => Site;
 
@@ -55,4 +80,3 @@ internal class TestPluginComponent : PluginComponentBase
         // Intentionally empty: we only care about parameter binding.
     }
 }
-

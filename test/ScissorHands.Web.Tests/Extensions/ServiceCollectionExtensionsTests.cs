@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Reflection;
 
 using Microsoft.Extensions.Configuration;
@@ -14,12 +15,32 @@ using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 
-using System.IO.Abstractions;
-
 namespace ScissorHands.Web.Tests.Extensions;
 
 public class ServiceCollectionExtensionsTests
 {
+    [Fact]
+    public void Given_PluginOptions_When_AddConfigurationsInvoked_Then_It_Should_BindReadOnlyOptions()
+    {
+        var services = new ServiceCollection();
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Plugins:0:Name"] = "Example",
+                ["Plugins:0:Options:Enabled"] = "true",
+            })
+            .Build();
+
+        services.AddConfigurations(config);
+
+        using var provider = services.BuildServiceProvider();
+        var manifest = provider.GetRequiredService<IEnumerable<PluginManifest>>().Single();
+
+        manifest.Name.ShouldBe("Example");
+        manifest.Options.ShouldNotBeNull();
+        manifest.Options.ShouldContainKey("Enabled");
+    }
+
     [Fact]
     public void Given_ServiceCollection_When_AddServicesInvokedWithOverrideAssemblies_Then_It_Should_RegisterExpectedServicesAndPlugins()
     {

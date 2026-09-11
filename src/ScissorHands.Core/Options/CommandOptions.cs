@@ -13,21 +13,26 @@ public sealed record CommandOptions(CommandMode Mode)
     /// <returns>Parsed <see cref="CommandOptions"/> instance.</returns>
     public static CommandOptions Parse(IEnumerable<string> args)
     {
-        if (args.Any(arg => string.Equals(arg, "--preview", StringComparison.OrdinalIgnoreCase)))
+        ArgumentNullException.ThrowIfNull(args);
+
+        var mode = CommandMode.Unknown;
+        foreach (var arg in args)
         {
-            return new CommandOptions(CommandMode.Preview);
+            if (string.Equals(arg, "--preview", StringComparison.OrdinalIgnoreCase))
+            {
+                return new CommandOptions(CommandMode.Preview);
+            }
+
+            if (string.Equals(arg, "--build", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = CommandMode.Build;
+            }
+            else if (mode == CommandMode.Unknown && string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase))
+            {
+                mode = CommandMode.Help;
+            }
         }
 
-        if (args.Any(arg => string.Equals(arg, "--build", StringComparison.OrdinalIgnoreCase)))
-        {
-            return new CommandOptions(CommandMode.Build);
-        }
-
-        if (args.Any(arg => string.Equals(arg, "--help", StringComparison.OrdinalIgnoreCase)))
-        {
-            return new CommandOptions(CommandMode.Help);
-        }
-
-        return new CommandOptions(CommandMode.Unknown);
+        return new CommandOptions(mode);
     }
 }

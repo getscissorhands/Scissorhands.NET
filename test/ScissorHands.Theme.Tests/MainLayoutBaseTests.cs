@@ -10,7 +10,7 @@ namespace ScissorHands.Theme.Tests;
 public class MainLayoutBaseTests
 {
     [Fact]
-    public async Task Given_SiteAndThemeService_When_OnInitializedAsync_Invoked_Then_It_Should_SetPageTitleDescription_And_LoadThemeManifest()
+    public void Given_SiteAndTheme_When_Rendered_Then_It_Should_SetPageMetadata_And_UseProvidedTheme()
     {
         // Arrange
         using var context = new BunitContext();
@@ -18,10 +18,6 @@ public class MainLayoutBaseTests
         var expectedTheme = new ThemeManifest { Name = "Expected", Slug = "minimal" };
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync("minimal")
-            .Returns(Task.FromResult(expectedTheme));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest
@@ -31,23 +27,46 @@ public class MainLayoutBaseTests
             Theme = "minimal",
         };
 
-        var oldTheme = new ThemeManifest { Name = "Old", Slug = "old" };
-
         // Act
         var cut = context.Renderer.Render<TestMainLayout>(parameters => parameters
             .Add(p => p.Site, site)
-            .Add(p => p.Theme, oldTheme));
+            .Add(p => p.Theme, expectedTheme));
 
         // Assert
-        cut.WaitForAssertion(() =>
-        {
-            themeService.Received(1).LoadManifestAsync("minimal");
-            cut.Instance.ExposedPageTitle.ShouldBe("My Site");
-            cut.Instance.ExposedPageDescription.ShouldBe("My Description");
-            cut.Instance.Theme.ShouldBeSameAs(expectedTheme);
-        });
+        cut.Instance.ExposedPageTitle.ShouldBe("My Site");
+        cut.Instance.ExposedPageDescription.ShouldBe("My Description");
+        cut.Instance.ExposedPageLocale.ShouldBe("en-us");
+        cut.Instance.Theme.ShouldBeSameAs(expectedTheme);
+        themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!, Xunit.TestContext.Current.CancellationToken);
+    }
 
-        await Task.CompletedTask;
+    [Fact]
+    public void Given_UpdatedDocument_When_ComponentRerendered_Then_It_Should_RecalculatePageMetadata()
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+
+        var site = new SiteManifest { Title = "My Site", Description = "Site Description" };
+        var first = new ContentDocument
+        {
+            Metadata = new ContentMetadata { Title = "First", Description = "First Description", Locale = "en-US" }
+        };
+        var second = new ContentDocument
+        {
+            Metadata = new ContentMetadata { Title = "Second", Description = "Second Description", Locale = "ko-KR" }
+        };
+
+        var cut = context.Renderer.Render<TestMainLayout>(parameters => parameters
+            .Add(p => p.Site, site)
+            .Add(p => p.Document, first));
+
+        cut.Render(parameters => parameters
+            .Add(p => p.Site, site)
+            .Add(p => p.Document, second));
+
+        cut.Instance.ExposedPageTitle.ShouldBe("Second | My Site");
+        cut.Instance.ExposedPageDescription.ShouldBe("Second Description");
+        cut.Instance.ExposedPageLocale.ShouldBe("ko-kr");
     }
 
     [Theory]
@@ -60,10 +79,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Title = siteTitle, Theme = "minimal" };
@@ -91,10 +106,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Title = "My Site", Theme = "minimal" };
@@ -119,10 +130,6 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
 
         var themeService = Substitute.For<IThemeService>();
-        themeService
-            .LoadManifestAsync(Arg.Any<string>())
-            .Returns(Task.FromResult(new ThemeManifest()));
-
         context.Services.AddSingleton(themeService);
 
         var site = new SiteManifest { Description = siteDescription, Theme = "minimal" };
@@ -163,16 +170,14 @@ internal class TestMainLayout : MainLayoutBase
 {
     public string? ExposedPageTitle => PageTitle;
     public string? ExposedPageDescription => PageDescription;
+    public string? ExposedPageLocale => PageLocale;
 
     public string InvokeCalculatePageTitle() => CalculatePageTitle();
 
     public string InvokeCalculatePageDescription() => CalculatePageDescription();
-
-    public Task InvokeOnInitializedAsync() => base.OnInitializedAsync();
 
     protected override void BuildRenderTree(RenderTreeBuilder builder)
     {
         // Intentionally empty: these tests focus on base behavior, not markup.
     }
 }
-
