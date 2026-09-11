@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <EnableDefaultContentItems>false</EnableDefaultContentItems>
-    <PackageDescription>The ScissorHands.NET static site generation engine for Markdown content and Razor themes.</PackageDescription>
+    <Description>The ScissorHands.NET static site generation engine for Markdown content and Razor themes.</Description>
     <PackageTags>scissorhands;web;static-site</PackageTags>
   </PropertyGroup>
 

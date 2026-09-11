@@ -11,7 +11,6 @@
     <SymbolPackageFormat>snupkg</SymbolPackageFormat>
 
     <Title>$(MSBuildProjectName)</Title>
-    <Description>This is a library that builds a static website using .NET</Description>
     <Version>1.0.0</Version>
 
     <Authors>justinyoo;getscissorhands</Authors>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <PackageDescription>Plugin abstractions and Razor component base types for extending ScissorHands.NET.</PackageDescription>
+    <Description>Plugin abstractions and Razor component base types for extending ScissorHands.NET.</Description>
     <PackageTags>scissorhands;plugin;static-site</PackageTags>
   </PropertyGroup>
 

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <PackageDescription>Core manifests, content models, options, and service contracts for ScissorHands.NET.</PackageDescription>
+    <Description>Core manifests, content models, options, and service contracts for ScissorHands.NET.</Description>
     <PackageTags>scissorhands;core;static-site</PackageTags>
   </PropertyGroup>
 

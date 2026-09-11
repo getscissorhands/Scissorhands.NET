@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
 
   <PropertyGroup>
-    <PackageDescription>Theme and Razor view base types for building ScissorHands.NET themes.</PackageDescription>
+    <Description>Theme and Razor view base types for building ScissorHands.NET themes.</Description>
     <PackageTags>scissorhands;theme;static-site</PackageTags>
   </PropertyGroup>
 
