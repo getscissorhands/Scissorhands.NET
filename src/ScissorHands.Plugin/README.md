@@ -56,7 +56,30 @@ Plugins can participate in three ordered stages:
 - `PostMarkdownAsync`: transform the document after `Html` is populated.
 - `PostHtmlAsync`: transform the final HTML after Razor rendering.
 
-The output from each plugin becomes the input to the next configured plugin.
+The output from each plugin becomes the input to the next enabled plugin. Execution order is determined by optional stage-scoped dependencies, not manifest, assembly discovery, or dependency injection registration order.
+
+## Plugin dependencies
+
+Dependency declarations are optional. Plugins without declarations have no ordering requirements and must not rely on another plugin having already run in the same stage.
+
+When a hook consumes another plugin's output, override `DependsOn` in your `ContentPlugin` subclass. For example, a table-of-contents plugin that needs heading IDs in the post-Markdown stage declares:
+
+```csharp
+public override IReadOnlyList<PluginDependency> DependsOn =>
+[
+    new("Heading IDs", PluginStage.PostMarkdown),
+];
+```
+
+The dependency name is the target plugin's `Name`, matched case-insensitively. `PluginStage` supports `PreMarkdown`, `PostMarkdown`, and `PostHtml`. A declaration means that the target must be installed and enabled, and its hook must run before the declaring plugin's hook in that stage. Declare the same target separately for each stage that requires it.
+
+`ContentPlugin.DependsOn` defaults to an empty list. Plugins implementing `IContentPlugin` directly can opt in by also implementing `IContentPluginDependencies`. `IContentPlugin` itself is unchanged; existing implementations need no new members. Declarations belong to plugin code, not `PluginManifest.Options` or a new JSON setting.
+
+The engine resolves transitive dependencies separately for each stage, without changing the Markdown/Razor stage boundaries. Cross-stage dependencies cannot be expressed. Among plugins whose requirements are satisfied, the engine selects the next by ordinal case-insensitive name for deterministic output. Manifest position does not affect execution.
+
+The runner snapshots declarations at construction and rejects missing or disabled dependencies, empty names, unknown stages, self-dependencies, duplicate declarations within a stage, and cycles before any hooks run. Diagnostics identify the affected plugin and stage where applicable. A disabled plugin's declarations are ignored; dependencies are never installed or enabled automatically.
+
+If a plugin previously relied on discovery or registration order, declare its actual dependencies instead. Unrelated plugins still execute sequentially, but must not rely on the tie-breaking order as a substitute for a dependency.
 
 ## Configure a plugin
 

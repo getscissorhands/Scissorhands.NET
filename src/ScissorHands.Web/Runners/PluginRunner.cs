@@ -13,6 +13,7 @@ namespace ScissorHands.Web.Runners;
 public sealed class PluginRunner : IPluginRunner
 {
     private readonly IReadOnlyDictionary<string, PluginManifest> _manifestsByName;
+    private readonly IReadOnlyDictionary<PluginStage, IReadOnlyList<IContentPlugin>> _pluginsByStage;
     private readonly SiteManifest _site;
 
     /// <summary>
@@ -28,6 +29,7 @@ public sealed class PluginRunner : IPluginRunner
         Plugins = [.. plugins];
         _manifestsByName = CreateManifestLookup(Manifests);
         ValidatePluginConfiguration(Plugins, _manifestsByName);
+        _pluginsByStage = PluginDependencyResolver.Resolve(Plugins, _manifestsByName);
     }
 
     /// <inheritdoc />
@@ -42,13 +44,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = document;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PreMarkdown])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsByName[plugin.Name];
             current = await plugin.PreMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
@@ -61,13 +59,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = document;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PostMarkdown])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsByName[plugin.Name];
             current = await plugin.PostMarkdownAsync(current, manifest, _site, cancellationToken);
         }
 
@@ -80,13 +74,9 @@ public sealed class PluginRunner : IPluginRunner
         cancellationToken.ThrowIfCancellationRequested();
 
         var current = html;
-        foreach (var plugin in Plugins)
+        foreach (var plugin in _pluginsByStage[PluginStage.PostHtml])
         {
-            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
-            {
-                continue;
-            }
-
+            var manifest = _manifestsByName[plugin.Name];
             current = await plugin.PostHtmlAsync(current, document, manifest, _site, cancellationToken);
         }
 

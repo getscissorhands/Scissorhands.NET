@@ -6,6 +6,14 @@ namespace ScissorHands.Plugin.Tests;
 public class ContentPluginTests
 {
     [Fact]
+    public void Given_DefaultContentPlugin_When_DependenciesRead_Then_It_Should_DeclareNoRequirements()
+    {
+        IContentPluginDependencies plugin = new TestPlugin();
+
+        plugin.DependsOn.ShouldBeEmpty();
+    }
+
+    [Fact]
     public async Task Given_DefaultContentPlugin_When_PreMarkdownAsync_Invoked_Then_It_Should_ReturnSameDocumentInstance()
     {
         // Arrange
@@ -59,4 +67,3 @@ internal class TestPlugin : ContentPlugin
 {
     public override string Name => "Test";
 }
-

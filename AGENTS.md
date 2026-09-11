@@ -63,7 +63,7 @@ The sample launch profile injects `--preview`; use `--no-launch-profile` to sele
 
 - Keep dependencies directed inward: Plugin and Theme depend on Core; Web depends on Core, Plugin, and Theme. Do not introduce reverse references or cycles.
 - Put shared contracts in Core, extension contracts in Plugin or Theme, and engine implementations in the existing Web folders. Reuse abstractions and dependency injection registrations rather than creating parallel implementations.
-- Preserve the pipeline order: pre-Markdown plugins, Markdown conversion, post-Markdown plugins, Razor rendering, then post-HTML plugins. Configured plugin order matters, and each plugin's output feeds the next.
+- Preserve the pipeline order: pre-Markdown plugins, Markdown conversion, post-Markdown plugins, Razor rendering, then post-HTML plugins. Honor optional stage-scoped `DependsOn` declarations: declared dependencies must be enabled and run before their dependents. Manifest and registration order do not control execution; use ordinal case-insensitive plugin names to break ties between ready plugins. Each plugin's output feeds the next.
 - Preserve automatic theme discovery from `Site:Theme` and the normalized component namespace suffix, explicit `AddLayouts` overrides, and built-in tag-view fallbacks.
 - Keep generated links and assets compatible with `SiteManifest.BaseUrl`, including subpath hosting. Maintain preview/build distinctions and cancellation propagation.
 - Treat manifest collections as immutable input. Preserve source and binary compatibility unless a breaking change is explicitly requested; do not remove obsolete overloads merely as cleanup.

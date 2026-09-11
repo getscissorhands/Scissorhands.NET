@@ -6,14 +6,17 @@ namespace ScissorHands.Web.Runners;
 
 /// <summary>
 /// This provides an interface to <see cref="PluginRunner"/>.
+/// </summary>
 public interface IPluginRunner
 {
     /// <summary>
-    /// Gets the list of <see cref="PluginManifest"/> instances.
+    /// Gets the manifests in configuration order, which does not determine hook execution order.
+    /// </summary>
     IReadOnlyList<PluginManifest> Manifests { get; }
 
     /// <summary>
-    /// Gets the list of <see cref="IContentPlugin"/> instances.
+    /// Gets all installed plugins in registration order, including disabled plugins.
+    /// Hook execution uses a separate dependency order for each stage.
     /// </summary>
     IReadOnlyList<IContentPlugin> Plugins { get; }
 

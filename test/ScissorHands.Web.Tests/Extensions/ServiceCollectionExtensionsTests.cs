@@ -1,5 +1,6 @@
 using System.IO.Abstractions;
 using System.Reflection;
+using System.Text;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -19,6 +20,45 @@ namespace ScissorHands.Web.Tests.Extensions;
 
 public class ServiceCollectionExtensionsTests
 {
+    [Fact]
+    public async Task Given_JsonConfigurationAndPluginDependency_When_ResolvedRunnerInvoked_Then_It_Should_UseDependencyOrder()
+    {
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes("""
+            {
+              "Plugins": [
+                { "Name": "alpha", "Options": { "Suffix": "2" } },
+                { "Name": "Zulu", "Options": { "Suffix": "1" } }
+              ]
+            }
+            """));
+        var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
+        var first = Substitute.For<IContentPlugin>();
+        first.Name.Returns("Zulu");
+        var second = Substitute.For<IContentPlugin, IContentPluginDependencies>();
+        second.Name.Returns("Alpha");
+        ((IContentPluginDependencies)second).DependsOn.Returns([new PluginDependency("zulu", PluginStage.PreMarkdown)]);
+        foreach (var plugin in new[] { first, second })
+        {
+            plugin.PreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<PluginManifest>(), Arg.Any<SiteManifest>(), Arg.Any<CancellationToken>())
+                .Returns(call => new ContentDocument
+                {
+                    Markdown = call.Arg<ContentDocument>().Markdown + call.Arg<PluginManifest>().Options!["Suffix"],
+                });
+        }
+        var services = new ServiceCollection();
+        services.AddConfigurations(config);
+        services.AddServices(config, []);
+        services.AddSingleton(second);
+        services.AddSingleton(first);
+        using var provider = services.BuildServiceProvider();
+        var runner = provider.GetRequiredService<IPluginRunner>();
+
+        var result = await runner.RunPreMarkdownAsync(new ContentDocument { Markdown = "source" }, Xunit.TestContext.Current.CancellationToken);
+
+        runner.Manifests.Select(manifest => manifest.Name).ShouldBe(["alpha", "Zulu"]);
+        result.Markdown.ShouldBe("source12");
+    }
+
     [Fact]
     public void Given_PluginOptions_When_AddConfigurationsInvoked_Then_It_Should_BindReadOnlyOptions()
     {

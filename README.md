@@ -76,6 +76,8 @@ The collections are defensively copied during initialization. Existing object in
 
 The existing one-argument `IThemeService` methods remain temporarily supported but are marked obsolete for removal in the next major version. Cancellation-aware overloads are used by the generator.
 
+Plugin hooks now honor optional, stage-scoped `DependsOn` declarations rather than assembly discovery, registration, or manifest order. Existing plugins remain compatible, but plugins that relied on an incidental execution order must declare their dependencies. Ready plugins are selected by ordinal case-insensitive name for deterministic output. See the [plugin guide](src/ScissorHands.Plugin/README.md#plugin-dependencies).
+
 ## Issues?
 
 If you find any issues, please [report them](../../issues).

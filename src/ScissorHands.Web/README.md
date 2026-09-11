@@ -174,6 +174,12 @@ Install plugin packages and configure each enabled plugin by its unique name:
 
 Plugins can transform a document before Markdown conversion, after Markdown conversion, or after the final Razor HTML render.
 
+At every stage, each plugin's output feeds the next. Names are matched case-insensitively; installed plugins without a manifest remain disabled.
+
+Execution order is resolved from optional, stage-scoped `DependsOn` declarations provided by plugins, not the `Plugins` array position or registration order. Declared dependencies must be installed and enabled. Missing or disabled dependencies, invalid declarations, and cycles fail when the runner is constructed, before any plugin hooks execute. Dependencies are never automatically installed or enabled.
+
+Within each stage, the engine chooses among ready plugins by ordinal case-insensitive name for deterministic output. A plugin without dependency declarations must not rely on another plugin's execution order. Existing plugin implementations remain supported; plugins relying on the previous incidental order should declare their requirements as described in the [plugin guide](../ScissorHands.Plugin/README.md#plugin-dependencies).
+
 ## Learn more
 
 - [Documentation](https://getscissorhands.app/docs/)

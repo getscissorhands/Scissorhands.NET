@@ -6,10 +6,13 @@ namespace ScissorHands.Plugin;
 /// <summary>
 /// This represents the base entity for content plugins.
 /// </summary>
-public abstract class ContentPlugin : IContentPlugin
+public abstract class ContentPlugin : IContentPlugin, IContentPluginDependencies
 {
     /// <inheritdoc />
     public abstract string Name { get; }
+
+    /// <inheritdoc />
+    public virtual IReadOnlyList<PluginDependency> DependsOn => [];
 
     /// <inheritdoc />
     public virtual Task<ContentDocument> PreMarkdownAsync(ContentDocument document, PluginManifest plugin, SiteManifest site, CancellationToken cancellationToken = default)
