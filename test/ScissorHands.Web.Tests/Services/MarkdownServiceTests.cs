@@ -9,7 +9,7 @@ public class MarkdownServiceTests
     {
         var service = new MarkdownService();
 
-        var html = await service.ToHtmlAsync("This is **important**.", trim: true);
+        var html = await service.ToHtmlAsync("This is **important**.", trim: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
         html.ShouldBe("This is <strong>important</strong>.");
     }
@@ -19,7 +19,7 @@ public class MarkdownServiceTests
     {
         var service = new MarkdownService();
 
-        var html = await service.ToHtmlAsync("First paragraph.\n\nSecond paragraph.", trim: true);
+        var html = await service.ToHtmlAsync("First paragraph.\n\nSecond paragraph.", trim: true, cancellationToken: Xunit.TestContext.Current.CancellationToken);
 
         html.ShouldBe("<p>First paragraph.</p>\n<p>Second paragraph.</p>\n");
     }

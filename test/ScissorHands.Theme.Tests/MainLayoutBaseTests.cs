@@ -37,7 +37,7 @@ public class MainLayoutBaseTests
         cut.Instance.ExposedPageDescription.ShouldBe("My Description");
         cut.Instance.ExposedPageLocale.ShouldBe("en-us");
         cut.Instance.Theme.ShouldBeSameAs(expectedTheme);
-        themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!, default);
+        themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!, Xunit.TestContext.Current.CancellationToken);
     }
 
     [Fact]

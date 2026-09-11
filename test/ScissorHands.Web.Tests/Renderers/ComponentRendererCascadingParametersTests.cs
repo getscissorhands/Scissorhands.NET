@@ -44,7 +44,7 @@ public class ComponentRendererCascadingParametersTests
         };
 
         // Act
-        var html = await renderer.RenderAsync<TestCascadingPageView>(typeof(TestCascadingLayout), parameters);
+        var html = await renderer.RenderAsync<TestCascadingPageView>(typeof(TestCascadingLayout), parameters, Xunit.TestContext.Current.CancellationToken);
 
         // Assert
         html.ShouldContain("extra");
@@ -82,9 +82,7 @@ public class ComponentRendererCascadingParametersTests
             ["Plugins"] = Array.Empty<PluginManifest>(),
         };
 
-        var html = await renderer.RenderAsync<ScissorHands.Web.PageView>(
-            typeof(ScissorHands.Web.MainLayout),
-            parameters);
+        var html = await renderer.RenderAsync<ScissorHands.Web.PageView>(typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
 
         html.ShouldContain("<html lang=\"ko-kr\">");
         html.ShouldContain("<base href=\"/docs/\"");

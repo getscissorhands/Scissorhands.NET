@@ -93,6 +93,6 @@ public class PluginRunnerTests
         var result = await runner.RunPreMarkdownAsync(document, CancellationToken.None);
 
         result.ShouldBeSameAs(document);
-        await plugin.DidNotReceiveWithAnyArgs().PreMarkdownAsync(default!, default!, default!, default);
+        await plugin.DidNotReceiveWithAnyArgs().PreMarkdownAsync(default!, default!, default!, Xunit.TestContext.Current.CancellationToken);
     }
 }
