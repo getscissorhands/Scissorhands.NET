@@ -5,6 +5,9 @@ namespace ScissorHands.Core.Manifests;
 /// </summary>
 public sealed class ThemeManifest
 {
+    private IReadOnlyList<string> _stylesheets = Array.Empty<string>();
+    private IReadOnlyList<string> _scripts = Array.Empty<string>();
+
     /// <summary>
     /// Defines the theme directory name.
     /// </summary>
@@ -33,10 +36,18 @@ public sealed class ThemeManifest
     /// <summary>
     /// Gets the list of CSS stylesheets included in the theme.
     /// </summary>
-    public List<string> Stylesheets { get; init; } = [];
+    public IReadOnlyList<string> Stylesheets
+    {
+        get => _stylesheets;
+        init => _stylesheets = Array.AsReadOnly((value ?? Array.Empty<string>()).ToArray());
+    }
 
     /// <summary>
     /// Gets the list of JavaScript files included in the theme.
     /// </summary>
-    public List<string> Scripts { get; init; } = [];
+    public IReadOnlyList<string> Scripts
+    {
+        get => _scripts;
+        init => _scripts = Array.AsReadOnly((value ?? Array.Empty<string>()).ToArray());
+    }
 }

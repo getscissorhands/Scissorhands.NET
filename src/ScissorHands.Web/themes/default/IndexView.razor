@@ -13,7 +13,7 @@
         {
             <article>
                 <div>
-                    <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                    <a href="@post.Metadata.Slug">@post.Metadata.Title</a>
                 </div>
                 @if (string.IsNullOrWhiteSpace(post.Metadata.Description) == false)
                 {
@@ -24,7 +24,7 @@
                 <ul>
                     @foreach (var tag in post.Metadata.Tags ?? Array.Empty<string>())
                     {
-                        <li><a href="/tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
+                        <li><a href="tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
                     }
                 </ul>
             </article>

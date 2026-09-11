@@ -17,7 +17,7 @@
                     @foreach (var post in TaggedPosts!)
                     {
                         <li>
-                            <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                            <a href="@post.Metadata.Slug">@post.Metadata.Title</a>
                             @if (post.Metadata.Published.HasValue)
                             {
                                 <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
@@ -35,7 +35,7 @@
                     @foreach (var pageDoc in TaggedPages!)
                     {
                         <li>
-                            <a href="/@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
+                            <a href="@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
                         </li>
                     }
                 </ul>

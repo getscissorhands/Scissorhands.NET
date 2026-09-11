@@ -1,3 +1,5 @@
+using System.IO.Abstractions.TestingHelpers;
+
 using Microsoft.AspNetCore.Components.Rendering;
 using Microsoft.Extensions.Logging;
 
@@ -9,8 +11,6 @@ using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 using ScissorHands.Web.Tests.TestDoubles;
-
-using System.IO.Abstractions.TestingHelpers;
 
 namespace ScissorHands.Web.Tests.Generators;
 
@@ -338,9 +338,10 @@ public class StaticSiteGeneratorTests
             logger);
 
         // Act
-        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: false, CancellationToken.None);
+        await generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(destination, preview: true, CancellationToken.None);
 
         // Assert
+        site.IsPreview.ShouldBeTrue();
         fileSystem.Directory.Exists(fileSystem.Path.Combine(destination, "images")).ShouldBeFalse();
     }
 

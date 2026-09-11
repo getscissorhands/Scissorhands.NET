@@ -1,7 +1,7 @@
+using System.IO.Abstractions;
 using System.Reflection;
 
 using Microsoft.Extensions.Configuration;
-
 using Microsoft.Extensions.DependencyInjection;
 
 using ScissorHands.Core.Manifests;
@@ -14,8 +14,6 @@ using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 using ScissorHands.Web.Services;
-
-using System.IO.Abstractions;
 
 namespace ScissorHands.Web.Extensions;
 
@@ -84,6 +82,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton<IPluginRunner, PluginRunner>();
         services.AddSingleton<IThemeService, ThemeService>();
+        services.AddSingleton<IThemeComponentResolver, ThemeComponentResolver>();
         services.AddSingleton<IComponentRenderer, ComponentRenderer>();
         services.AddSingleton<IStaticSiteGenerator, StaticSiteGenerator>();
 

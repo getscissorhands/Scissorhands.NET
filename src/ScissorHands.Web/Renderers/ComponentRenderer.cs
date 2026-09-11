@@ -26,7 +26,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
         // Discover all types in the ScissorHands.Theme assembly that have cascading parameters
         var themeAssembly = typeof(PageViewBase).Assembly;
-        
+
         try
         {
             var allTypes = themeAssembly.GetExportedTypes();
@@ -59,9 +59,9 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
         cancellationToken.ThrowIfCancellationRequested();
 
         using var scope = _scopeFactory.CreateScope();
-        var renderer = new HtmlRenderer(scope.ServiceProvider, _loggerFactory);
+        await using var renderer = new HtmlRenderer(scope.ServiceProvider, _loggerFactory);
 
-        #pragma warning disable ASP0006
+#pragma warning disable ASP0006
         var layoutParams = new Dictionary<string, object?>(parameters)
         {
             ["Body"] = (RenderFragment)(builder =>
@@ -81,7 +81,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
                 builder.CloseComponent();
             })
         };
-        #pragma warning restore ASP0006
+#pragma warning restore ASP0006
 
         var parameterView = ParameterView.FromDictionary(layoutParams);
         var html = await renderer.Dispatcher.InvokeAsync(async () =>

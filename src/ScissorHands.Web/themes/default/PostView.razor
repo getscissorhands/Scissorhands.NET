@@ -5,7 +5,7 @@
     <ul>
         @foreach (var tag in Document?.Metadata.Tags ?? Array.Empty<string>())
         {
-            <li><a href="/tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
+            <li><a href="tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">@tag</a></li>
         }
     </ul>
     <article>

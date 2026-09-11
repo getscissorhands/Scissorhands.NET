@@ -51,6 +51,48 @@ public class ComponentRendererCascadingParametersTests
         html.ShouldContain("Hello");
     }
 
+    [Fact]
+    public async Task Given_DefaultThemeAndBaseUrl_When_Rendered_Then_LinksShouldResolveBelowBaseUrl()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<ScissorHands.Core.Services.IThemeService>());
+        using var provider = services.BuildServiceProvider();
+        var renderer = new ComponentRenderer(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILoggerFactory>());
+        var site = new SiteManifest { BaseUrl = "/docs/", Locale = "ko-KR" };
+        var theme = new ThemeManifest
+        {
+            Name = "Minimal",
+            Slug = "minimal",
+            Stylesheets = ["/assets/css/theme.css"],
+            Scripts = ["/assets/js/theme.js"],
+        };
+        var document = new ContentDocument
+        {
+            Metadata = new ContentMetadata { Title = "About", Slug = "about", Locale = "ko-KR" },
+            Html = "<p>About</p>",
+        };
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Site"] = site,
+            ["Theme"] = theme,
+            ["Document"] = document,
+            ["Plugins"] = Array.Empty<PluginManifest>(),
+        };
+
+        var html = await renderer.RenderAsync<ScissorHands.Web.PageView>(
+            typeof(ScissorHands.Web.MainLayout),
+            parameters);
+
+        html.ShouldContain("<html lang=\"ko-kr\">");
+        html.ShouldContain("<base href=\"/docs/\"");
+        html.ShouldContain("href=\"themes/minimal/assets/css/theme.css\"");
+        html.ShouldContain("src=\"themes/minimal/assets/js/theme.js\"");
+        html.ShouldNotContain("href=\"/themes/");
+    }
+
     private sealed class TestCascadingLayout : LayoutComponentBase
     {
         [Parameter]

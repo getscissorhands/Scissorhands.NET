@@ -10,15 +10,30 @@ namespace ScissorHands.Web.Runners;
 /// <param name="manifests">List of <see cref="PluginManifest"/> instances.</param>
 /// <param name="plugins">List of <see cref="IContentPlugin"/> instances.</param>
 /// <param name="site"><see cref="SiteManifest"/> instance.</param>
-public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumerable<IContentPlugin> plugins, SiteManifest site) : IPluginRunner
+public sealed class PluginRunner : IPluginRunner
 {
-    private readonly SiteManifest _site = site ?? throw new ArgumentNullException(nameof(site));
+    private readonly IReadOnlyDictionary<string, PluginManifest> _manifestsByName;
+    private readonly SiteManifest _site;
+
+    /// <summary>
+    /// Initializes a new instance of the <see cref="PluginRunner"/> class.
+    /// </summary>
+    public PluginRunner(IEnumerable<PluginManifest> manifests, IEnumerable<IContentPlugin> plugins, SiteManifest site)
+    {
+        ArgumentNullException.ThrowIfNull(manifests);
+        ArgumentNullException.ThrowIfNull(plugins);
+
+        _site = site ?? throw new ArgumentNullException(nameof(site));
+        Manifests = [.. manifests];
+        Plugins = [.. plugins];
+        _manifestsByName = CreateManifestLookup(Manifests);
+    }
 
     /// <inheritdoc />
-    public IReadOnlyList<PluginManifest> Manifests { get; init; } = [.. manifests ?? throw new ArgumentNullException(nameof(manifests))];
+    public IReadOnlyList<PluginManifest> Manifests { get; }
 
     /// <inheritdoc />
-    public IReadOnlyList<IContentPlugin> Plugins { get; init; } = [.. plugins ?? throw new ArgumentNullException(nameof(plugins))];
+    public IReadOnlyList<IContentPlugin> Plugins { get; }
 
     /// <inheritdoc />
     public async Task<ContentDocument> RunPreMarkdownAsync(ContentDocument document, CancellationToken cancellationToken)
@@ -28,8 +43,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
         var current = document;
         foreach (var plugin in Plugins)
         {
-            var manifest = Manifests.SingleOrDefault(m => m.Name == plugin.Name);
-            if (manifest == null)
+            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
             {
                 continue;
             }
@@ -48,8 +62,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
         var current = document;
         foreach (var plugin in Plugins)
         {
-            var manifest = Manifests.SingleOrDefault(m => m.Name == plugin.Name);
-            if (manifest == null)
+            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
             {
                 continue;
             }
@@ -68,8 +81,7 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
         var current = html;
         foreach (var plugin in Plugins)
         {
-            var manifest = Manifests.SingleOrDefault(m => m.Name == plugin.Name);
-            if (manifest == null)
+            if (!_manifestsByName.TryGetValue(plugin.Name, out var manifest))
             {
                 continue;
             }
@@ -78,5 +90,24 @@ public sealed class PluginRunner(IEnumerable<PluginManifest> manifests, IEnumera
         }
 
         return current;
+    }
+
+    private static IReadOnlyDictionary<string, PluginManifest> CreateManifestLookup(IEnumerable<PluginManifest> manifests)
+    {
+        var result = new Dictionary<string, PluginManifest>(StringComparer.OrdinalIgnoreCase);
+        foreach (var manifest in manifests)
+        {
+            if (string.IsNullOrWhiteSpace(manifest.Name))
+            {
+                throw new InvalidOperationException("Every configured plugin manifest must have a non-empty name.");
+            }
+
+            if (!result.TryAdd(manifest.Name, manifest))
+            {
+                throw new InvalidOperationException($"Plugin manifest '{manifest.Name}' is configured more than once.");
+            }
+        }
+
+        return result;
     }
 }

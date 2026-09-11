@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
@@ -91,13 +91,13 @@ public abstract class MainLayoutBase : LayoutComponentBase
     public SiteManifest? Site { get; init; }
 
     /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
+        base.OnParametersSet();
+
         PageTitle = CalculatePageTitle();
         PageDescription = CalculatePageDescription();
         PageLocale = CalculatePageLocale();
-
-        Theme = await ThemeService!.LoadManifestAsync(Site!.Theme);
     }
 
     /// <summary>

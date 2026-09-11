@@ -40,5 +40,8 @@ public class PluginManifestTests
         manifest.Options.ShouldNotBeNull();
         manifest.Options["enabled"].ShouldBe(true);
         manifest.Options["trackingId"].ShouldBe("UA-123");
+
+        options["enabled"] = false;
+        manifest.Options["enabled"].ShouldBe(true);
     }
 }

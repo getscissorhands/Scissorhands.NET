@@ -37,4 +37,22 @@ public class ThemeManifestTests
         // Assert
         dir.ShouldBe("themes");
     }
+
+    [Fact]
+    public void Given_ThemeCollections_When_SourceListsMutate_Then_ManifestShouldRetainSnapshots()
+    {
+        var stylesheets = new List<string> { "/theme.css" };
+        var scripts = new List<string> { "/theme.js" };
+        var manifest = new ThemeManifest
+        {
+            Stylesheets = stylesheets,
+            Scripts = scripts,
+        };
+
+        stylesheets.Add("/later.css");
+        scripts.Clear();
+
+        manifest.Stylesheets.ShouldBe(["/theme.css"]);
+        manifest.Scripts.ShouldBe(["/theme.js"]);
+    }
 }

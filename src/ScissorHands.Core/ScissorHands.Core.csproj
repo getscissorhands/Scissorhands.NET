@@ -13,7 +13,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 
     <PackageId>ScissorHands.Core</PackageId>
     <Version>1.0.0</Version>

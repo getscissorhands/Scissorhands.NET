@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
@@ -52,10 +52,10 @@ public class PluginComponentBase : ComponentBase
     protected SiteManifest? Site { get; set; }
 
     /// <inheritdoc />
-    protected override async Task OnInitializedAsync()
+    protected override void OnParametersSet()
     {
-        await base.OnInitializedAsync();
+        base.OnParametersSet();
 
-        Plugin = Plugins?.SingleOrDefault(p => p.Name!.Equals(Name, StringComparison.OrdinalIgnoreCase));
+        Plugin = Plugins?.SingleOrDefault(p => string.Equals(p.Name, Name, StringComparison.OrdinalIgnoreCase));
     }
 }

@@ -12,7 +12,8 @@ namespace ScissorHands.Web;
 public interface IScissorHandsApplicationBuilder
 {
     /// <summary>
-    /// Add layouts to the application.
+    /// Adds an explicit theme component override to the application.
+    /// Theme components are discovered automatically when this method is not called.
     /// </summary>
     /// <typeparam name="TMainLayout">Type of the main layout.</typeparam>
     /// <typeparam name="TIndexView">Type of the index view.</typeparam>
@@ -32,7 +33,8 @@ public interface IScissorHandsApplicationBuilder
         where TTagView : TagViewBase;
 
     /// <summary>
-    /// Add layouts to the application.
+    /// Adds an explicit theme component override to the application.
+    /// Theme components are discovered automatically when this method is not called.
     /// </summary>
     /// <param name="mainLayout">Type of the main layout.</param>
     /// <param name="indexView">Type of the index view.</param>
@@ -56,15 +58,9 @@ public interface IScissorHandsApplicationBuilder
 /// </summary>
 public sealed class ScissorHandsApplicationBuilder(IEnumerable<string>? args = null) : IScissorHandsApplicationBuilder
 {
-    private readonly string[] _args = (string[])(args ?? []);
+    private readonly string[] _args = args?.ToArray() ?? [];
 
-    private Type? _mainLayout;
-    private Type? _indexView;
-    private Type? _postView;
-    private Type? _pageView;
-    private Type? _notFoundView;
-    private Type? _tagListView;
-    private Type? _tagView;
+    private ThemeComponentSet? _themeComponents;
 
     /// <inheritdoc />
     public IScissorHandsApplicationBuilder AddLayouts<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView, TTagListView, TTagView>()
@@ -98,13 +94,7 @@ public sealed class ScissorHandsApplicationBuilder(IEnumerable<string>? args = n
         EnsureAssignableTo<TagListViewBase>(tagListView, nameof(tagListView));
         EnsureAssignableTo<TagViewBase>(tagView, nameof(tagView));
 
-        _mainLayout = mainLayout;
-        _indexView = indexView;
-        _postView = postView;
-        _pageView = pageView;
-        _notFoundView = notFoundView;
-        _tagListView = tagListView;
-        _tagView = tagView;
+        _themeComponents = new ThemeComponentSet(mainLayout, indexView, postView, pageView, notFoundView, tagListView, tagView);
 
         return this;
     }
@@ -112,11 +102,6 @@ public sealed class ScissorHandsApplicationBuilder(IEnumerable<string>? args = n
     /// <inheritdoc />
     public IScissorHandsApplication Build()
     {
-        if (_mainLayout is null || _indexView is null || _postView is null || _pageView is null || _notFoundView is null || _tagListView is null || _tagView is null)
-        {
-            throw new InvalidOperationException("Layouts are not configured. Call AddLayouts(...) before Build().");
-        }
-
         var builder = WebApplication.CreateBuilder(_args);
 
         var config = builder.Configuration;
@@ -127,7 +112,7 @@ public sealed class ScissorHandsApplicationBuilder(IEnumerable<string>? args = n
 
         var app = builder.Build();
 
-        return new ScissorHandsApplication(app, _args, _mainLayout, _indexView, _postView, _pageView, _notFoundView, _tagListView, _tagView);
+        return new ScissorHandsApplication(app, _args, _themeComponents);
     }
 
     private static void EnsureAssignableTo<TBase>(Type type, string paramName)

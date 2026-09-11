@@ -13,7 +13,7 @@
         {
             <section class="tag-section">
                 <h2>
-                    <a href="/tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">@tagEntry.Key</a>
+                    <a href="tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">@tagEntry.Key</a>
                 </h2>
                 @if (tagEntry.Value.Posts.Any())
                 {
@@ -22,7 +22,7 @@
                         @foreach (var post in tagEntry.Value.Posts)
                         {
                             <li>
-                                <a href="/@post.Metadata.Slug">@post.Metadata.Title</a>
+                                <a href="@post.Metadata.Slug">@post.Metadata.Title</a>
                                 @if (post.Metadata.Published.HasValue)
                                 {
                                     <span class="date"> | @post.Metadata.Published.Value.ToString("yyyy-MM-dd")</span>
@@ -38,7 +38,7 @@
                         @foreach (var pageDoc in tagEntry.Value.Pages)
                         {
                             <li>
-                                <a href="/@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
+                                <a href="@pageDoc.Metadata.Slug">@pageDoc.Metadata.Title</a>
                             </li>
                         }
                     </ul>

@@ -3,13 +3,13 @@
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" Plugins="@Plugins" Theme="@Theme" Site="@Site">
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="@PageLocale">
 <head>
     <base href="@Site!.BaseUrl" />
 
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link rel="icon" type="image/x-icon" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}/favicon.ico")" />
+    <link rel="icon" type="image/x-icon" href="@($"themes/{Theme!.Slug.TrimEnd('/')}/favicon.ico")" />
     <meta name="generator" content="@Site!.Generator" />
 
     <title>@PageTitle</title>
@@ -19,7 +19,7 @@
     {
         foreach (var css in Theme!.Stylesheets)
         {
-            <link rel="stylesheet" href="@($"/themes/{Theme!.Slug.TrimEnd('/')}{css}")" />
+            <link rel="stylesheet" href="@($"themes/{Theme!.Slug.TrimEnd('/')}/{css.TrimStart('/')}")" />
         }
     }
 </head>
@@ -29,7 +29,7 @@
     {
         foreach (var script in Theme!.Scripts)
         {
-            <script src="@($"/themes/{Theme!.Slug.TrimEnd('/')}{script}")"></script>
+            <script src="@($"themes/{Theme!.Slug.TrimEnd('/')}/{script.TrimStart('/')}")"></script>
         }
     }
 </body>

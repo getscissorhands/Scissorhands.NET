@@ -1,11 +1,11 @@
+using System.IO.Abstractions.TestingHelpers;
+
 using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Tests.TestDoubles;
-
-using System.IO.Abstractions.TestingHelpers;
 
 namespace ScissorHands.Web.Tests.Loaders;
 
@@ -445,5 +445,80 @@ public class ContentLoaderTests
 
         // Assert
         docs.ShouldBeEmpty();
+    }
+
+    [Fact]
+    public async Task Given_UnterminatedFrontMatter_When_LoadAsyncInvoked_Then_It_Should_ReportTheSourcePath()
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var pagePath = fileSystem.Path.Combine(contentsRoot, "pages", "broken.md");
+        fileSystem.AddFile(pagePath, new MockFileData("---\ntitle: Broken\n# Missing delimiter"));
+
+        var loader = new ContentLoader(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest(),
+            Substitute.For<ILogger<ContentLoader>>());
+
+        var exception = await Should.ThrowAsync<InvalidDataException>(() => loader.LoadAsync(CancellationToken.None));
+
+        exception.Message.ShouldContain(pagePath);
+        exception.Message.ShouldContain("closing delimiter");
+    }
+
+    [Fact]
+    public async Task Given_InvalidFrontMatterYaml_When_LoadAsyncInvoked_Then_It_Should_ReportTheSourcePath()
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var pagePath = fileSystem.Path.Combine(contentsRoot, "pages", "broken.md");
+        fileSystem.AddFile(pagePath, new MockFileData("---\ntitle: [broken\n---\nBody"));
+
+        var loader = new ContentLoader(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest(),
+            Substitute.For<ILogger<ContentLoader>>());
+
+        var exception = await Should.ThrowAsync<InvalidDataException>(() => loader.LoadAsync(CancellationToken.None));
+
+        exception.Message.ShouldContain(pagePath);
+        exception.InnerException.ShouldNotBeNull();
+    }
+
+    [Theory]
+    [InlineData("unknown: value", "Unsupported frontmatter field")]
+    [InlineData("draft: sometimes", "must be true or false")]
+    [InlineData("published: not-a-date", "must be a valid date and time")]
+    [InlineData("tags: { key: value }", "must be a YAML list or comma-separated string")]
+    public async Task Given_InvalidFrontMatterValue_When_LoadAsyncInvoked_Then_It_Should_ReportTheField(
+        string frontMatter,
+        string expectedMessage)
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var pagePath = fileSystem.Path.Combine(contentsRoot, "pages", "invalid.md");
+        fileSystem.AddFile(pagePath, new MockFileData($"---\n{frontMatter}\n---\nBody"));
+
+        var loader = new ContentLoader(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest(),
+            Substitute.For<ILogger<ContentLoader>>());
+
+        var exception = await Should.ThrowAsync<InvalidDataException>(() => loader.LoadAsync(CancellationToken.None));
+
+        exception.Message.ShouldContain(expectedMessage);
+        exception.Message.ShouldContain(pagePath);
     }
 }

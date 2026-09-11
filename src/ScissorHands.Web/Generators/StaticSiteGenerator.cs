@@ -1,3 +1,4 @@
+using System.IO.Abstractions;
 using System.Text;
 
 using Microsoft.Extensions.Logging;
@@ -9,8 +10,6 @@ using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
-
-using System.IO.Abstractions;
 
 namespace ScissorHands.Web.Generators;
 
@@ -60,10 +59,12 @@ public sealed class StaticSiteGenerator(
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
+        _options.IsPreview = preview;
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
-        var theme = await _themeService.LoadManifestAsync(_options.Theme);
-        var documents = await _contentLoader.LoadAsync(cancellationToken);
+        var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
+        var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
+        ValidateOutputRoutes(destination, documents);
 
         var layoutType = typeof(TMainLayout);
         await RenderIndexAsync<TIndexView>(documents, plugins, theme, destination, layoutType, cancellationToken);
@@ -79,7 +80,7 @@ public sealed class StaticSiteGenerator(
         await RenderTagPagesAsync<TTagListView, TTagView>(documents, plugins, theme, destination, layoutType, cancellationToken);
 
         CopyContentAssets(destination);
-        await _themeService.CopyAssetsAsync(_options.Theme, destination);
+        await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
     }
 
     private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -130,7 +131,7 @@ public sealed class StaticSiteGenerator(
                 {
                     SourcePath = documentToRender.SourcePath,
                     Kind = documentToRender.Kind,
-                    Metadata = documentToRender.Metadata,
+                    Metadata = documentToRender.Metadata with { Title = "404 - Not Found" },
                     Markdown = documentToRender.Markdown,
                     Html = documentToRender.Html
                 };
@@ -243,11 +244,11 @@ public sealed class StaticSiteGenerator(
         var tagDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = $"tags/{tag}" },
+            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = $"tags/{ToTagSlug(tag)}" },
             Markdown = string.Empty,
             Html = rendered
         };
-        var outputPath = ResolveOutputPath(destination, $"tags/{tag}");
+        var outputPath = ResolveOutputPath(destination, $"tags/{ToTagSlug(tag)}");
         await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, cancellationToken);
     }
 
@@ -318,12 +319,105 @@ public sealed class StaticSiteGenerator(
 
     private static string ResolveOutputPath(string root, string slug)
     {
+        var fullRoot = Path.GetFullPath(root);
         if (string.IsNullOrWhiteSpace(slug))
         {
-            return Path.Combine(root, "index.html");
+            return Path.Combine(fullRoot, "index.html");
         }
 
-        var safeSlug = slug.Trim('/');
-        return Path.Combine(root, safeSlug, "index.html");
+        var safeSlug = NormalizeRoute(slug);
+        var outputPath = Path.GetFullPath(Path.Combine(fullRoot, safeSlug.Replace('/', Path.DirectorySeparatorChar), "index.html"));
+        var rootPrefix = fullRoot.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar) + Path.DirectorySeparatorChar;
+        if (!outputPath.StartsWith(rootPrefix, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new InvalidDataException($"Route '{slug}' resolves outside the output directory.");
+        }
+
+        return outputPath;
+    }
+
+    private static void ValidateOutputRoutes(string destination, IEnumerable<ContentDocument> documents)
+    {
+        var routes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+
+        AddRoute(string.Empty, "site index");
+        AddOutputPath(Path.Combine(Path.GetFullPath(destination), PAGE_NOT_FOUND_SLUG), "not-found page");
+
+        var taggedDocuments = false;
+        var tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
+        foreach (var document in documents)
+        {
+            if (!IsNotFoundPage(document))
+            {
+                AddRoute(document.Metadata.Slug, document.SourcePath);
+            }
+
+            foreach (var tag in document.Metadata.Tags)
+            {
+                taggedDocuments = true;
+                tags.Add(tag);
+            }
+        }
+
+        if (taggedDocuments)
+        {
+            AddRoute("tags", "tag index");
+            foreach (var tag in tags)
+            {
+                AddRoute($"tags/{ToTagSlug(tag)}", $"tag '{tag}'");
+            }
+        }
+
+        void AddRoute(string route, string owner)
+            => AddOutputPath(ResolveOutputPath(destination, route), owner);
+
+        void AddOutputPath(string outputPath, string owner)
+        {
+            var fullPath = Path.GetFullPath(outputPath);
+            if (routes.TryGetValue(fullPath, out var existingOwner))
+            {
+                throw new InvalidDataException(
+                    $"Output collision at '{fullPath}' between '{existingOwner}' and '{owner}'.");
+            }
+
+            var separator = Path.DirectorySeparatorChar.ToString();
+            var conflictingRoute = routes.FirstOrDefault(route =>
+                fullPath.StartsWith(route.Key + separator, StringComparison.OrdinalIgnoreCase)
+                || route.Key.StartsWith(fullPath + separator, StringComparison.OrdinalIgnoreCase));
+            if (!string.IsNullOrEmpty(conflictingRoute.Key))
+            {
+                throw new InvalidDataException(
+                    $"Output collision between file '{conflictingRoute.Key}' from '{conflictingRoute.Value}' and '{fullPath}' from '{owner}'.");
+            }
+
+            routes.Add(fullPath, owner);
+        }
+    }
+
+    private static string NormalizeRoute(string route)
+    {
+        var normalized = route.Trim().Trim('/').Replace('\\', '/');
+        if (string.IsNullOrWhiteSpace(normalized))
+        {
+            return string.Empty;
+        }
+
+        var segments = normalized.Split('/', StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => segment is "." or ".."))
+        {
+            throw new InvalidDataException($"Route '{route}' contains a relative path segment.");
+        }
+
+        return string.Join('/', segments);
+    }
+
+    private static string ToTagSlug(string tag)
+    {
+        if (string.IsNullOrWhiteSpace(tag))
+        {
+            throw new InvalidDataException("Tags cannot be empty.");
+        }
+
+        return Uri.EscapeDataString(tag.Trim().ToLowerInvariant());
     }
 }

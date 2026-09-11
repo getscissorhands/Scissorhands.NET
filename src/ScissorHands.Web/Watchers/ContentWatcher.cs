@@ -33,17 +33,19 @@ public sealed class ContentWatcher : IDisposable
 
         _subscription = _changes
             .Throttle(debounce)
-            .Subscribe(async _ =>
-            {
-                try
+            .Select(_ => Observable.FromAsync(async () =>
                 {
-                    await onChange();
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogWarning(ex, "Watcher handler failed");
-                }
-            });
+                    try
+                    {
+                        await onChange();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Watcher handler failed");
+                    }
+                }))
+            .Concat()
+            .Subscribe();
 
         _contentWatcher.Changed += (_, __) => _changes.OnNext("content");
         _contentWatcher.Created += (_, __) => _changes.OnNext("content");
@@ -61,6 +63,8 @@ public sealed class ContentWatcher : IDisposable
 
     private static FileSystemWatcher CreateWatcher(string path)
     {
+        Directory.CreateDirectory(path);
+
         var watcher = new FileSystemWatcher(path)
         {
             IncludeSubdirectories = true,

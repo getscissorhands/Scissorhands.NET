@@ -15,7 +15,7 @@
 
   <PropertyGroup>
     <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <GeneratePackageOnBuild>False</GeneratePackageOnBuild>
 
     <PackageId>ScissorHands.Web</PackageId>
     <Version>1.0.0</Version>
@@ -68,11 +68,11 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
 
-    <PackageReference Include="Markdig" Version="0.*" />
-    <PackageReference Include="Scrutor" Version="7.*" />
-    <PackageReference Include="System.Reactive" Version="6.*" />
-    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" Version="22.*" />
-    <PackageReference Include="YamlDotNet" Version="16.*" />
+    <PackageReference Include="Markdig" />
+    <PackageReference Include="Scrutor" />
+    <PackageReference Include="System.Reactive" />
+    <PackageReference Include="TestableIO.System.IO.Abstractions.Wrappers" />
+    <PackageReference Include="YamlDotNet" />
   </ItemGroup>
 
   <ItemGroup>
