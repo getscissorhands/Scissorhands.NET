@@ -26,16 +26,18 @@ public class ServiceCollectionExtensionsTests
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("""
             {
               "Plugins": [
-                { "Name": "alpha", "Options": { "Suffix": "2" } },
-                { "Name": "Zulu", "Options": { "Suffix": "1" } }
+                { "Id": "alpha", "Options": { "Suffix": "2" } },
+                { "Id": "zulu", "Options": { "Suffix": "1" } }
               ]
             }
             """));
         var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
         var first = Substitute.For<IContentPlugin>();
-        first.Name.Returns("Zulu");
+        first.Id.Returns("zulu");
+        first.Name.Returns("Shared display name");
         var second = Substitute.For<IContentPlugin, IContentPluginDependencies>();
-        second.Name.Returns("Alpha");
+        second.Id.Returns("alpha");
+        second.Name.Returns("Shared display name");
         ((IContentPluginDependencies)second).DependsOn.Returns([new PluginDependency("zulu", PluginStage.PreMarkdown)]);
         foreach (var plugin in new[] { first, second })
         {
@@ -55,7 +57,8 @@ public class ServiceCollectionExtensionsTests
 
         var result = await runner.RunPreMarkdownAsync(new ContentDocument { Markdown = "source" }, Xunit.TestContext.Current.CancellationToken);
 
-        runner.Manifests.Select(manifest => manifest.Name).ShouldBe(["alpha", "Zulu"]);
+        runner.Manifests.Select(manifest => manifest.Id).ShouldBe(["alpha", "zulu"]);
+        runner.Manifests.ShouldAllBe(manifest => manifest.Name == null);
         result.Markdown.ShouldBe("source12");
     }
 
@@ -66,6 +69,7 @@ public class ServiceCollectionExtensionsTests
         var config = new ConfigurationBuilder()
             .AddInMemoryCollection(new Dictionary<string, string?>
             {
+                ["Plugins:0:Id"] = "example",
                 ["Plugins:0:Name"] = "Example",
                 ["Plugins:0:Options:Enabled"] = "true",
             })
@@ -76,9 +80,39 @@ public class ServiceCollectionExtensionsTests
         using var provider = services.BuildServiceProvider();
         var manifest = provider.GetRequiredService<IEnumerable<PluginManifest>>().Single();
 
+        manifest.Id.ShouldBe("example");
         manifest.Name.ShouldBe("Example");
         manifest.Options.ShouldNotBeNull();
         manifest.Options.ShouldContainKey("Enabled");
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("Example")]
+    [InlineData("example_plugin")]
+    public void Given_MissingOrInvalidConfiguredId_When_RunnerResolved_Then_It_Should_ReportMigrationError(string? id)
+    {
+        var config = new ConfigurationBuilder()
+            .AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["Plugins:0:Id"] = id,
+                ["Plugins:0:Name"] = "Example",
+            })
+            .Build();
+        var plugin = Substitute.For<IContentPlugin>();
+        plugin.Id.Returns("example");
+        plugin.Name.Returns("Example");
+        var services = new ServiceCollection();
+        services.AddConfigurations(config);
+        services.AddServices(config, []);
+        services.AddSingleton(plugin);
+        using var provider = services.BuildServiceProvider();
+
+        var exception = Should.Throw<InvalidOperationException>(() => provider.GetRequiredService<IPluginRunner>());
+
+        exception.Message.ShouldContain("Configured plugin manifest");
+        exception.Message.ShouldContain("invalid plugin ID");
+        exception.Message.ShouldContain("kebab-case");
     }
 
     [Fact]
@@ -123,6 +157,8 @@ public class ServiceCollectionExtensionsTests
 
 public sealed class DummyContentPlugin : IContentPlugin
 {
+    public string Id => "dummy";
+
     public string Name => "Dummy";
 
     public Task<ContentDocument> PreMarkdownAsync(ContentDocument document, PluginManifest plugin, SiteManifest site, CancellationToken cancellationToken = default)

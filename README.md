@@ -66,17 +66,21 @@ dotnet run
 
 ## vNext Compatibility
 
-This release contains three source and binary breaking public-member changes:
+This release includes the following source and binary breaking public-member changes:
 
 - `ThemeManifest.Stylesheets` is now `IReadOnlyList<string>`.
 - `ThemeManifest.Scripts` is now `IReadOnlyList<string>`.
 - `PluginManifest.Options` is now `IReadOnlyDictionary<string, object?>`.
+- Plugin implementations must provide `IContentPlugin.Id` or override `ContentPlugin.Id`.
+- `PluginDependency` identifies its target through `PluginId`, not `Name`.
 
 The collections are defensively copied during initialization. Existing object initializers continue to work, but themes and plugins must no longer mutate manifest collections after construction.
 
 The existing one-argument `IThemeService` methods remain temporarily supported but are marked obsolete for removal in the next major version. Cancellation-aware overloads are used by the generator.
 
-Plugin hooks now honor optional, stage-scoped `DependsOn` declarations rather than assembly discovery, registration, or manifest order. Existing plugins remain compatible, but plugins that relied on an incidental execution order must declare their dependencies. Ready plugins are selected by ordinal case-insensitive name for deterministic output. See the [plugin guide](src/ScissorHands.Plugin/README.md#plugin-dependencies).
+Plugin identity is now a required, stable lowercase kebab-case ID such as `heading-ids`. Add `Id` to every configured plugin manifest, reference IDs in dependency declarations, and select Razor plugin components with their `Id` parameter. `Name` is display-only and need not be unique. Missing or invalid IDs are rejected without name fallback or automatic normalization. Rebuild plugin assemblies and deploy them with the updated configuration and themes. See the [plugin ID migration guide](src/ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
+
+Plugin hooks honor optional, stage-scoped `DependsOn` declarations rather than assembly discovery, registration, or manifest order. Plugins that relied on an incidental execution order must declare their dependencies. Ready plugins are selected by ordinal ID ordering for deterministic output. See the [plugin dependency guide](src/ScissorHands.Plugin/README.md#plugin-dependencies).
 
 ## Issues?
 

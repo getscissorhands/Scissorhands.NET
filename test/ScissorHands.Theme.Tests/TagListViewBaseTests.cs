@@ -24,7 +24,7 @@ public class TagListViewBaseTests
         using var context = new BunitContext();
 
         var documents = new List<ContentDocument> { new() };
-        var plugins = new List<PluginManifest> { new() };
+        var plugins = new List<PluginManifest> { new() { Id = "test" } };
         var theme = new ThemeManifest { Name = "test", Slug = "test" };
         var site = new SiteManifest();
 

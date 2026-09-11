@@ -30,7 +30,7 @@ public class ComponentRendererCascadingParametersTests
         {
             Metadata = new ContentMetadata { Title = "Hello", Slug = "hello" }
         };
-        var plugins = new List<PluginManifest> { new() };
+        var plugins = new List<PluginManifest> { new() { Id = "test" } };
         var theme = new ThemeManifest { Name = "test", Slug = "test" };
         var site = new SiteManifest();
 

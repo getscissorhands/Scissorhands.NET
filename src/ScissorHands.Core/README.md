@@ -83,6 +83,7 @@ var theme = new ThemeManifest
 ```csharp
 var plugin = new PluginManifest
 {
+    Id = "example-plugin",
     Name = "Example Plugin",
     Options = new Dictionary<string, object?>
     {
@@ -91,7 +92,11 @@ var plugin = new PluginManifest
 };
 ```
 
+`Id` is required when a manifest is used and must be lowercase ASCII kebab-case, such as `example-plugin`. IDs are matched ordinally, must be unique, and are never inferred from `Name`. The optional `Name` is display metadata and can change or be shared by multiple plugins without changing identity. The engine and Razor plugin components validate IDs before using manifests.
+
 `Options` is exposed as a nullable `IReadOnlyDictionary<string, object?>` and should be treated as immutable configuration.
+
+Name-only manifests are no longer supported. Add explicit IDs to existing configuration and update plugin implementations, dependencies, and component selectors together. See the [plugin migration guide](../ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
 
 ## Service contracts
 

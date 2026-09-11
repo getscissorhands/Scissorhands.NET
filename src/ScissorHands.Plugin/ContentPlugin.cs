@@ -9,6 +9,9 @@ namespace ScissorHands.Plugin;
 public abstract class ContentPlugin : IContentPlugin, IContentPluginDependencies
 {
     /// <inheritdoc />
+    public abstract string Id { get; }
+
+    /// <inheritdoc />
     public abstract string Name { get; }
 
     /// <inheritdoc />

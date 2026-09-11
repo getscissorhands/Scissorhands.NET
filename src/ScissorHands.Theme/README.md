@@ -116,6 +116,10 @@ Page view base types expose the data needed for each generated surface:
 
 Rendered Markdown is available through `ContentDocument.Html` and can be written with `MarkupString`.
 
+## Plugin components
+
+When a theme renders a component derived from `PluginComponentBase`, supply its required kebab-case `Id` parameter to select the plugin manifest. `Name` is display-only and cannot be used as a selector. Existing themes using name-based selectors must update and rebuild; see the [plugin migration guide](../ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
+
 ## Assets and URLs
 
 Store theme assets below `themes/{slug}/assets/` and list them in `theme.json`.

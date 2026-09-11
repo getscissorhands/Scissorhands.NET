@@ -27,7 +27,7 @@ public class NotFoundViewBaseTests
         {
             Metadata = new ContentMetadata { Title = "Not Found", Slug = "404.html" }
         };
-        var plugins = new List<PluginManifest> { new() };
+        var plugins = new List<PluginManifest> { new() { Id = "test" } };
         var theme = new ThemeManifest { Name = "test", Slug = "test" };
         var site = new SiteManifest();
 

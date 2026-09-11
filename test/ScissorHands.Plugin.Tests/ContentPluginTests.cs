@@ -19,7 +19,7 @@ public class ContentPluginTests
         // Arrange
         var plugin = new TestPlugin();
         var document = new ContentDocument { SourcePath = "source.md", Kind = ContentKind.Post };
-        var pluginManifest = new PluginManifest { Name = "Test" };
+        var pluginManifest = new PluginManifest { Id = "test", Name = "Test" };
         var site = new SiteManifest();
 
         // Act
@@ -35,7 +35,7 @@ public class ContentPluginTests
         // Arrange
         var plugin = new TestPlugin();
         var document = new ContentDocument { SourcePath = "source.md", Kind = ContentKind.Page };
-        var pluginManifest = new PluginManifest { Name = "Test" };
+        var pluginManifest = new PluginManifest { Id = "test", Name = "Test" };
         var site = new SiteManifest();
 
         // Act
@@ -51,7 +51,7 @@ public class ContentPluginTests
         // Arrange
         var plugin = new TestPlugin();
         var document = new ContentDocument();
-        var pluginManifest = new PluginManifest { Name = "Test" };
+        var pluginManifest = new PluginManifest { Id = "test", Name = "Test" };
         var site = new SiteManifest();
         var html = "<p>Hello</p>";
 
@@ -65,5 +65,7 @@ public class ContentPluginTests
 
 internal class TestPlugin : ContentPlugin
 {
+    public override string Id => "test";
+
     public override string Name => "Test";
 }

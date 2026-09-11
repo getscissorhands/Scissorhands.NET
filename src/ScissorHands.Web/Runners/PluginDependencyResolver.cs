@@ -1,4 +1,5 @@
 using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Validation;
 using ScissorHands.Plugin;
 
 namespace ScissorHands.Web.Runners;
@@ -9,95 +10,90 @@ internal static class PluginDependencyResolver
         IReadOnlyList<IContentPlugin> plugins,
         IReadOnlyDictionary<string, PluginManifest> manifests)
     {
-        var installed = plugins.ToDictionary(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase);
-        var enabled = plugins.Where(plugin => manifests.ContainsKey(plugin.Name))
-                             .ToDictionary(plugin => plugin.Name, StringComparer.OrdinalIgnoreCase);
-        var dependenciesByName = new Dictionary<string, PluginDependency[]>(StringComparer.OrdinalIgnoreCase);
+        var installed = plugins.ToDictionary(plugin => plugin.Id, StringComparer.Ordinal);
+        var enabled = plugins.Where(plugin => manifests.ContainsKey(plugin.Id))
+                             .ToDictionary(plugin => plugin.Id, StringComparer.Ordinal);
+        var dependenciesById = new Dictionary<string, PluginDependency[]>(StringComparer.Ordinal);
         foreach (var plugin in enabled.Values)
         {
             var dependencies = plugin is IContentPluginDependencies declaration
                 ? declaration.DependsOn?.ToArray()
-                    ?? throw new InvalidOperationException($"Plugin '{plugin.Name}' must return a non-null DependsOn list.")
+                    ?? throw new InvalidOperationException($"Plugin '{plugin.Id}' must return a non-null DependsOn list.")
                 : [];
             foreach (var dependency in dependencies)
             {
                 if (dependency is null)
                 {
-                    throw new InvalidOperationException($"Plugin '{plugin.Name}' has a null dependency declaration.");
+                    throw new InvalidOperationException($"Plugin '{plugin.Id}' has a null dependency declaration.");
                 }
 
                 if (!Enum.IsDefined(dependency.Stage))
                 {
                     throw new InvalidOperationException(
-                        $"Plugin '{plugin.Name}' declares dependency '{dependency.Name}' with invalid stage '{dependency.Stage}'.");
+                        $"Plugin '{plugin.Id}' declares dependency '{dependency.PluginId}' with invalid stage '{dependency.Stage}'.");
                 }
 
-                if (string.IsNullOrWhiteSpace(dependency.Name))
+                PluginIdValidator.Validate(dependency.PluginId, $"Plugin '{plugin.Id}' dependency in stage '{dependency.Stage}'");
+                if (string.Equals(plugin.Id, dependency.PluginId, StringComparison.Ordinal))
                 {
                     throw new InvalidOperationException(
-                        $"Plugin '{plugin.Name}' has a dependency with an empty name in stage '{dependency.Stage}'.");
+                        $"Plugin '{plugin.Id}' cannot depend on itself in stage '{dependency.Stage}'.");
                 }
 
-                if (string.Equals(plugin.Name, dependency.Name, StringComparison.OrdinalIgnoreCase))
+                if (!installed.ContainsKey(dependency.PluginId))
                 {
                     throw new InvalidOperationException(
-                        $"Plugin '{plugin.Name}' cannot depend on itself in stage '{dependency.Stage}'.");
+                        $"Plugin '{plugin.Id}' requires plugin '{dependency.PluginId}' in stage '{dependency.Stage}', but it is not installed.");
                 }
 
-                if (!installed.ContainsKey(dependency.Name))
+                if (!enabled.ContainsKey(dependency.PluginId))
                 {
                     throw new InvalidOperationException(
-                        $"Plugin '{plugin.Name}' requires plugin '{dependency.Name}' in stage '{dependency.Stage}', but it is not installed.");
-                }
-
-                if (!enabled.ContainsKey(dependency.Name))
-                {
-                    throw new InvalidOperationException(
-                        $"Plugin '{plugin.Name}' requires plugin '{dependency.Name}' in stage '{dependency.Stage}', but it is not enabled. Add its manifest to the Plugins configuration.");
+                        $"Plugin '{plugin.Id}' requires plugin '{dependency.PluginId}' in stage '{dependency.Stage}', but it is not enabled. Add its manifest to the Plugins configuration.");
                 }
             }
 
-            dependenciesByName.Add(plugin.Name, dependencies);
+            dependenciesById.Add(plugin.Id, dependencies);
         }
 
         return Enum.GetValues<PluginStage>()
-                   .ToDictionary(stage => stage, stage => ResolveStage(stage, enabled, dependenciesByName));
+                   .ToDictionary(stage => stage, stage => ResolveStage(stage, enabled, dependenciesById));
     }
 
     private static IReadOnlyList<IContentPlugin> ResolveStage(
         PluginStage stage,
         IReadOnlyDictionary<string, IContentPlugin> enabled,
-        IReadOnlyDictionary<string, PluginDependency[]> dependenciesByName)
+        IReadOnlyDictionary<string, PluginDependency[]> dependenciesById)
     {
-        var remainingDependencies = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);
-        var dependents = enabled.Keys.ToDictionary(name => name, _ => new List<string>(), StringComparer.OrdinalIgnoreCase);
-        foreach (var name in enabled.Keys)
+        var remainingDependencies = new Dictionary<string, int>(StringComparer.Ordinal);
+        var dependents = enabled.Keys.ToDictionary(id => id, _ => new List<string>(), StringComparer.Ordinal);
+        foreach (var id in enabled.Keys)
         {
-            var requirements = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-            foreach (var dependency in dependenciesByName[name].Where(dependency => dependency.Stage == stage))
+            var requirements = new HashSet<string>(StringComparer.Ordinal);
+            foreach (var dependency in dependenciesById[id].Where(dependency => dependency.Stage == stage))
             {
-                if (!requirements.Add(dependency.Name))
+                if (!requirements.Add(dependency.PluginId))
                 {
                     throw new InvalidOperationException(
-                        $"Plugin '{name}' declares dependency '{dependency.Name}' more than once in stage '{stage}'.");
+                        $"Plugin '{id}' declares dependency '{dependency.PluginId}' more than once in stage '{stage}'.");
                 }
 
-                dependents[dependency.Name].Add(name);
+                dependents[dependency.PluginId].Add(id);
             }
 
-            remainingDependencies.Add(name, requirements.Count);
+            remainingDependencies.Add(id, requirements.Count);
         }
 
         var ready = new SortedSet<string>(
             remainingDependencies.Where(pair => pair.Value == 0).Select(pair => pair.Key),
-            StringComparer.OrdinalIgnoreCase);
+            StringComparer.Ordinal);
         var ordered = new List<IContentPlugin>(enabled.Count);
         while (ready.Count > 0)
         {
-            var name = ready.First();
-            ready.Remove(name);
-            ordered.Add(enabled[name]);
-            foreach (var dependent in dependents[name])
+            var id = ready.First();
+            ready.Remove(id);
+            ordered.Add(enabled[id]);
+            foreach (var dependent in dependents[id])
             {
                 remainingDependencies[dependent]--;
                 if (remainingDependencies[dependent] == 0)
@@ -111,7 +107,7 @@ internal static class PluginDependencyResolver
         {
             var unresolved = remainingDependencies.Where(pair => pair.Value > 0)
                                                   .Select(pair => pair.Key)
-                                                  .Order(StringComparer.OrdinalIgnoreCase);
+                                                  .Order(StringComparer.Ordinal);
             throw new InvalidOperationException(
                 $"Plugin dependency cycle detected in stage '{stage}'. Unresolved plugins: {string.Join(", ", unresolved)}.");
         }

@@ -61,7 +61,7 @@ public class StaticSiteGeneratorTests
             .Returns(callInfo => Task.FromResult($"HTML:{callInfo.ArgAt<string>(0)}"));
 
         var pluginRunner = Substitute.For<IPluginRunner>();
-        pluginRunner.Manifests.Returns(new List<PluginManifest> { new() { Name = "Plugin" } });
+        pluginRunner.Manifests.Returns(new List<PluginManifest> { new() { Id = "plugin", Name = "Plugin" } });
 
         pluginRunner
             .RunPreMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
