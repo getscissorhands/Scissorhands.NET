@@ -4,29 +4,29 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.3 |
+| Document version | 0.4 |
 | Status | Review-ready |
-| Last updated | 2026-09-12 |
-| Baselines consulted | 2026-09-11 |
+| Last updated | 2026-09-13 |
+| Baselines consulted | 2026-09-13 |
 | Product owner | @justinyoo |
 | Design approver | @justinyoo |
 | Implementation owners | Not assigned |
-| Sign-off | Approved by @justinyoo on 2026-09-12 |
-| Approval scope | Current design baseline, confirmed choices, and documented gaps/deferrals; not resolution of unspecified technical details, passing verification, or authorization to implement/release |
+| Sign-off | v0.3 approved by @justinyoo on 2026-09-12; v0.4 alignment revision not separately signed off |
+| Approval scope | Historical approval covers v0.3 design, choices and gaps; the requested alignment is not new sign-off, technical-gap resolution, passing verification, or implementation/release authorization |
 | Decision confirmation | @justinyoo confirmed DEC-001's per-write ownership approach on 2026-09-11 and DEC-002's prefix-aware static serving on 2026-09-12 |
 | Intended audience | Engine, theme, and plugin contributors reviewing implementation mechanisms and compatibility |
-| Release scope | Current vNext baseline; no additional product capabilities |
-| PRD baseline | [PRD.md](PRD.md) v0.6, Implementation-ready product baseline; approved by @justinyoo on 2026-09-11 |
-| TRD baseline | [TRD.md](TRD.md) v0.2, Review-ready with document approval by @justinyoo on 2026-09-11; TG-001 remains unresolved |
-| Implementation baseline | `getscissorhands/Scissorhands.NET` at `43a4c3bd7bfa025e625fc7084be5b7251e450578`; source inspection, not executed validation |
+| Release scope | Current vNext baseline including merged #86/#87; no speculative capabilities |
+| PRD baseline | [PRD.md](PRD.md) v0.7, Review-ready alignment; historical v0.6 approval retained |
+| TRD baseline | [TRD.md](TRD.md) v0.3, Review-ready alignment; historical v0.2 approval retained and TG-001 unresolved |
+| Implementation baseline | `getscissorhands/Scissorhands.NET` at `1f963adfd5a1e807f9adca901043d9c72c17d951`; source inspection, not executed validation |
 
-**Authority:** the PRD owns product scope and acceptance; the TRD owns technical obligations; this approved TDD records the design baseline. Document approval accepts its design direction and recorded gaps/deferrals, but does not supply missing URL rules, settle unspecified integration details, or prove implementation coverage. V-001 through V-007 remain next-phase work. No code changes, experiments, dependency installation, publication, or deployment are authorized merely by approving this document.
+**Authority:** the PRD owns product scope and acceptance; the TRD owns technical obligations; this TDD explains the corresponding design. v0.4 aligns merged behavior at the user's request without extending historical v0.3 sign-off to new text. Existing DEC-001/002 confirmations stand, but URL-policy and integration gaps remain unresolved. V-001 through V-007 remain open verification areas; no execution results or authority to implement, experiment, install, publish, or deploy are supplied by this update.
 
 ## 1. Design context and scope
 
 Retain the four-package, local .NET application: Core defines shared models/contracts; Plugin and Theme extend Core; Web composes loading, transformations, rendering, filesystem output, and preview. Visitors receive static files, not a server-interactive Blazor application. Existing interfaces and the owner-controlled executable-extension boundary are the starting point, not a reason to replace the engine.
 
-The target is the existing architecture with focused corrections where needed to satisfy the approved obligations. This document separates **Confirmed** constraints/current mechanisms, **Proposed** implementation changes, and **Unknown** details or feasibility. Approval accepts this baseline with its explicit proposals and gaps; mechanisms dependent on unresolved details remain conditional rather than finalized. A confirmed source mechanism is not a claim that it satisfies every associated requirement.
+The target is the existing architecture with focused corrections where needed to satisfy the governing obligations. This document separates **Confirmed** constraints/current mechanisms, **Proposed** changes, and **Unknown** details or feasibility. Current navigation and URL mechanisms are source-backed, not new design proposals; existing hardening/mount proposals remain distinct. A confirmed mechanism is not a claim that it satisfies every associated requirement.
 
 | Driver / constraint | Source and status | Design consequence |
 | --- | --- | --- |
@@ -36,27 +36,27 @@ The target is the existing architecture with focused corrections where needed to
 | Fixed stage ordering and existing public compatibility | Confirmed: TR-004/010/011 and package guides | Preserve returned plugin values, ordinal stage order, seven theme roles, collection snapshots, and obsolete adapters |
 | Non-atomic generation and next-phase evidence | Confirmed: PRD Sections 4/7, TR-012/016/019/020 | Do not introduce full-site buffering, rollback, a graceful-shutdown deadline, an incremental guarantee, or an SLA as implicit requirements |
 
-**Non-goals:** hosted CMS/accounts, a database, managed publishing, arbitrary Razor-route discovery, new feeds/search/example plugins, draft preview, scheduling, automatic browser reload, an extension sandbox, and offline guarantees remain excluded. No standalone ADR or existing TDD was found among the repository Markdown documents. No external design records or owner-blog benchmark dataset were supplied.
+**Non-goals:** hosted CMS/accounts, a database, managed publishing, arbitrary Razor-route discovery, new feeds/search/example plugins, draft preview, scheduling, automatic browser reload, an extension sandbox, and offline guarantees remain excluded. The original design assessment found no standalone ADR or preceding TDD; this revision preserves its local decision records. No external design records or owner-blog benchmark dataset were supplied.
 
-**Source limits:** the PRD/TRD were read together with the engine, core model/service declarations, package guides, built-in layout/index/post presentation, relevant client assets, and selected tests. This is not an exhaustive rendering-sink inventory, a security audit, a browser assessment, or proof that a test passes. No external research was performed.
+**Source limits:** the current PRD/TRD, #86/#87 diffs, Core models/helpers, engine navigation/renderer/loader, package guides, [website handoff](docs\website-documentation.md), built-in presentation/client assets, and selected regression source inform this alignment. Unchanged mechanisms retain their earlier source references. This is not a complete sink inventory, security audit, browser assessment, or passing test record; no external research was performed.
 
 ## 2. Design baseline
 
 ### Architecture and responsibilities
 
-Design IDs identify mechanisms, not new public APIs. Proposed internal helper names below describe responsibilities; final public signatures are not being added here.
+Design IDs identify mechanisms, not new public APIs. Existing `ContentUrlHelper`, `NavigationNode`, and `NavigationTreeBuilder` declarations are current contracts; proposed containment helpers below describe responsibilities, not finalized signatures.
 
 | ID | Component / mechanism | Responsibility and owned state | Interfaces / dependencies | Requirements and state |
 | --- | --- | --- | --- | --- |
 | DES-001 | Application composition and mode host | Own application configuration, selected theme component set, mode, and output lifecycle | Builder, application, DI extensions, `IAppPaths` | TR-001/007/015/020; Confirmed existing composition |
 | DES-002 | Content loading and route composition | Produce the document list; parse metadata; exclude drafts; derive date/locale routes | `IContentLoader`, IO abstractions, YamlDotNet, Core models | TR-002/003/011; Confirmed current mechanism, proposed composition correction where needed |
 | DES-003 | Plugin registry and stage execution | Snapshot installed/configured plugins and stage dependency orders; propagate hook results sequentially | `IPluginRunner`, `IContentPlugin`, dependency resolver, shared ID validator | TR-004/009/010/015/016; Confirmed existing mechanism |
-| DES-004 | Generation orchestration and view data | Own one generation invocation, collection selection, original route preflight, rendering order, and output requests | `IStaticSiteGenerator`, loader, Markdown service, renderer, theme service | TR-003/004/006/020; Confirmed orchestration, proposed final-write ownership integration |
-| DES-005 | Static Razor rendering | Create a scope/renderer per render; pass layout parameters and cascading view context; return HTML | `IComponentRenderer`, `HtmlRenderer`, Theme base components | TR-005/014/016; Confirmed rendering, unresolved URL-policy integration |
+| DES-004 | Generation orchestration and view data | Own generation, collection selection, navigation snapshot/tree, original route preflight, render order and output requests | `IStaticSiteGenerator`, loader, navigation builder, Markdown service, renderer, theme service | TR-003/004/006/020; Current orchestration/navigation confirmed; final-write ownership proposed |
+| DES-005 | Static Razor rendering | Scope/renderer per render; separate layout-only navigation from view/cascading context; adapt flat-only callers | `IComponentRenderer`, `HtmlRenderer`, Theme base components | TR-005/006/011/014/016; Current rendering/compatibility confirmed; broader URL policy unresolved |
 | DES-006 | Theme resolution and assets | Resolve component roles and manifest; select/copy the supported asset inventory | Theme resolver/service, assembly catalog, IO abstractions | TR-007/008/011/013; Confirmed discovery/copy surfaces, proposed guarded copying |
 | DES-007 | Root containment and output ownership | Share path checks; track file ownership for a single build before engine writes/copies | Internal Web helpers using existing IO seams; explicit per-build context | TR-003/008/013/015/020; Per-write approach confirmed in DEC-001; integration/feasibility remain DQ-002 |
 | DES-008 | Preview serving and regeneration | Own the static-file mount, watcher subscription, serialized rebuild callback, and shutdown lifetime | ASP.NET Core static-file middleware, watcher factory, Rx | TR-012/016/017/020; Existing watcher mechanism and DEC-002 mount design confirmed; mount implementation remains pending |
-| DES-009 | Built-in presentation and URL emitters | Produce metadata/navigation; keep intentional raw content separate; own browser theme preference | Razor views, layout helpers, theme CSS/JS | TR-014/017/018; Confirmed presentation, URL rules blocked by TG-001 |
+| DES-009 | Built-in presentation and URL emitters | Render prepared hierarchy/metadata/tag links; keep raw content separate; own disclosure and theme preference behavior | Core URL helper, Theme wrappers, Razor views, CSS/JS | TR-006/014/017/018; Current formatting/presentation confirmed; broader scheme policy remains TG-001 |
 | DES-010 | Compatibility and failure boundaries | Preserve existing public contracts and distinguish failures/cancellation from completion without exposing sensitive payloads | Core interfaces/models, application, runner, renderer, logging | TR-011/015/016/020; Confirmed obligations, proposed focused corrections |
 | DES-011 | Resource model and verification instrumentation | Explain cost/latency drivers and collect later evidence without production telemetry | Existing logs, tests/sample, external measurement tools when authorized | TR-019 and V-001 through V-007; Proposed measurement approach, no executed results |
 
@@ -69,7 +69,7 @@ Design IDs identify mechanisms, not new public APIs. Proposed internal helper na
 The [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs) currently runs this sequence:
 
 1. Create the destination, set `IsPreview`, convert site description Markdown, load the theme manifest, and load the document list.
-2. Preflight original page routes, index, 404, and planned tag destinations.
+2. Preflight original page routes, index, 404, and planned tag destinations; select visible navigation pages and build one hierarchy before document hooks.
 3. Render/write the index, then the source-backed or synthetic 404.
 4. Process/render/write ordinary documents sequentially, then render/write tag surfaces.
 5. Copy content images and supported theme assets. Return only after the invocation's work completes.
@@ -82,10 +82,13 @@ For each source-backed document, run pre-Markdown, convert Markdown into `Html`,
 
 [ContentLoader](src\ScissorHands.Web\Loaders\ContentLoader.cs) reads posts then pages recursively, splits optional frontmatter, validates supported fields, parses dates with invariant culture, applies route settings, and removes drafts before returning documents. Missing optional roots warn; malformed content fails. There is no future-date withholding or preview-only draft path.
 
+`ReadBooleanMetadata` parses both `draft` and `show_in_navigation`, defaulting missing fields to false and rejecting invalid values with source/field context. The latter populates `ContentMetadata.ShowInNavigation`, not a generation permission. `InferSlugFromFile` collapses only nested page files named `index` (case-insensitively) to their containing directory when the slug is omitted/blank. Explicit slugs, root page `index`, and post inference retain their behavior; locale/date composition follows inference.
+
 | State / artifact | Ownership and lifecycle | Design boundary |
 | --- | --- | --- |
 | Markdown, frontmatter, and configuration | Owner-managed files; read for generation, not rewritten | Validate before use; never infer permission to read unrelated paths |
 | `ContentDocument` / `ContentMetadata` | Loaded per build; metadata is a record, document `Html` is mutable, hooks can return replacement documents | Assign every returned value. Do not describe all models as deeply immutable |
+| `NavigationPages` / `NavigationTree` | Build-local flat read-only list and immutable hierarchy shared across layout renders | Flat entries reference loaded documents; tree records snapshot titles/escaped paths/URLs/children before document hooks. Groups are not documents or routes to generate |
 | Theme assets and manifest | Local selected theme root or application-bundled fallback; manifest loaded per build | Preserve selected-root precedence and supported inventory; do not download external references |
 | Plugin manifests and dependency orders | Singleton runner snapshots at construction | Configuration/dependency changes require reconstructing the host/runner; no live reconfiguration is introduced |
 | Output registry in DES-007 | Proposed ephemeral state for one build | Not a persistent catalog, cleanup manifest, source snapshot, cross-process lock, or retry journal |
@@ -100,6 +103,16 @@ Index posts remain newest-first, undated last. Tag data groups lowercased names 
 
 **Collection mutation boundary:** current collection views use the loaded list, while an ordinary document's own renderer receives a replacement returned by hooks. The generator does not automatically replace that entry throughout previously rendered collections. Whether route-changing plugins require updated collection links is an unresolved interaction between TR-004 and TR-017 (DQ-006); this TDD does not silently prohibit metadata changes or promise a two-pass renderer.
 
+### DES-004: Navigation selection and hierarchy
+
+The generator records normalized routes of loaded hidden pages, then selects non-draft, non-404 pages with `ShowInNavigation`. It rejects candidates with a hidden ancestor using ordinal comparisons of complete slash-separated route prefixes, not text-prefix matching. Drafts are already absent from the normal loader result; they are not retained as hidden-parent markers. The flat list sorts by ordinal title then slug and is wrapped read-only.
+
+[NavigationTreeBuilder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs) accepts that visibility-filtered list, formats each route through `ContentUrlHelper.GetContentUrl`, and adds missing ancestors as null-URL groups. Labels decode the final path segment, replace hyphens/underscores with spaces, and apply invariant title casing. A real visible parent retains its title/link; a hidden existing parent has already removed the branch. When locale routing is enabled, remove synthesized effective-locale nodes, not actual visible locale landing pages. Parent lookup uses escaped paths and siblings sort by ordinal title then path. With no visible descendants, there is nothing from which to synthesize an empty group.
+
+The builder returns read-only lists of Core [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs) records; each node snapshots `Children` and carries only `Title`, `Path`, nullable `Url`, and children, with no HTML/CSS/DOM identifiers. It checks cancellation at entry and during construction; invalid routes fail through the shared helper rather than becoming placeholder links. Groups never participate in output planning or asset ownership.
+
+One `NavigationContext` carries the flat list and tree into `CreateBaseParameters` for index, ordinary documents, custom/synthetic 404, and tag layouts. Themes render it rather than rebuilding hierarchy. Construction precedes pre-/post-Markdown hooks, so later replacement metadata does not refresh navigation titles, URLs, or membership. Preserve that snapshot boundary while recording the wider post-plugin collection-link question in DQ-006; no new pipeline pass is implied.
+
 ### DES-003: Extension ordering and execution
 
 [PluginRunner](src\ScissorHands.Web\Runners\PluginRunner.cs) builds an ordinal manifest lookup, validates every installed implementation's ID/display-name contract, rejects duplicate/unmatched configuration, and enables only IDs with manifests. It delegates stage ordering to [PluginDependencyResolver](src\ScissorHands.Web\Runners\PluginDependencyResolver.cs).
@@ -112,6 +125,8 @@ The assembly catalog discovers application assemblies, including installed assem
 
 [ComponentRenderer](src\ScissorHands.Web\Renderers\ComponentRenderer.cs) creates a DI scope and `HtmlRenderer`, builds a layout `Body` fragment, and filters cascading-only values from ordinary view attributes. It invokes rendering on the renderer dispatcher, awaits the root, and returns `ToHtmlString()`. [CascadingMainLayoutBase](src\ScissorHands.Theme\CascadingMainLayoutBase.razor) supplies documents, tag collections, manifests, and site context. Preserve this separation and disposal, rather than crawling routes or launching a browser to generate pages.
 
+`NavigationPages` and `NavigationTree` are explicit layout parameters excluded from content-view attributes and not added to automatic cascades. Both default to empty lists on `MainLayoutBase`. For a layout derived from that base, `ComponentRenderer` builds a tree only if the parameter dictionary lacks a tree and supplies an `IReadOnlyList<ContentDocument>` flat list, forwarding site/token context. An explicitly supplied tree is retained. Direct component rendering has no such adapter and should supply the prepared tree.
+
 The [layout base](src\ScissorHands.Theme\MainLayoutBase.cs) derives title/description/locale from document values with site fallbacks. [MarkdownService](src\ScissorHands.Web\Services\MarkdownService.cs) retains its existing Markdig pipeline; the optional trim removes an enclosing paragraph only for a single paragraph block.
 
 The following is a **partial source inventory**, not TG-001's completed scheme policy:
@@ -120,13 +135,16 @@ The following is a **partial source inventory**, not TG-001's completed scheme p
 | --- | --- | --- |
 | Page title, description meta attribute, locale, index title/description text | Normal Razor interpolation | Preserve encoding; validate the actual sink rather than pre-encoding text and causing double encoding |
 | Layout `<base href>` | `Site.BaseUrl` interpolated into an attribute | URL validation is separate from HTML encoding; supported forms and failure cases belong to TG-001 |
-| Theme stylesheet/script/icon references | Layout `ThemeUrl` combines a theme-local prefix and manifest entry | Preserve theme-local semantics; do not assume this helper already supports arbitrary external stylesheet/script URLs |
-| Post hero image | Post `ContentUrl` trims a leading slash | Distinguish supported local/external references and scheme handling under TG-001 before replacing the helper |
-| Post/index/tag navigation | Slug interpolation and encoded tag route segments | Keep route/base-path resolution separate from executable-scheme rejection |
+| Theme stylesheet/script/icon references | Protected layout `GetThemeUrl` delegates to Core `ContentUrlHelper.GetThemeUrl` | Preserve theme-local concatenation and exception behavior; not arbitrary external stylesheet/script support or a sanitizer |
+| Post hero image | Protected `GetImageUrl` strips leading forward slashes only via Core | Preserve HTTP(S), query/fragment and existing encoding; do not apply content-slug escaping or imply scheme validation |
+| Post/index/tag links and prepared navigation | Shared content segment escaping and normalized tag URLs; tree URLs are already formatted | Keep base-relative formatting separate from scheme policy; render group `Title` as text and do not link its `Path` |
+| Post/page tag lists | `GetTagUrl` wrappers and normal Razor interpolation | Share trim/lowercase/one-segment escaping with engine tag destinations; invalid empty/dot tags fail |
 | Site introduction | `DescriptionInHtml` rendered as `MarkupString` | Intentional Markdown-derived HTML, even though its source is a site setting; not equivalent to the plain description meta attribute |
 | Document body and post-HTML plugin output | Intentional raw rendered HTML | Preserve the explicit trust boundary; no blanket sanitizer, arbitrary HTML rewrite, or universal safety guarantee for custom themes |
 
 **Recommendation:** after TG-001 is resolved in the TRD, implement context-specific checks at the responsible built-in URL emitters and relevant engine input boundaries, reusing local helpers instead of creating a general HTML rewriting layer. Cover post-plugin values where that boundary consumes them. Do not invent an allowlist, reinterpret all Markdown as unsafe text, or change external-asset compatibility in this document.
+
+**Current helper integration:** Core owns `ContentUrlHelper`; the loader reuses locale normalization and the generator reuses tag route formatting, wrapping invalid tag-route arguments as contextual `InvalidDataException`. Theme base wrappers expose the applicable content/theme/image/tag operations to derived layouts/views. TR-017 and the [helper reference](docs\website-documentation.md#shared-url-helpers) specify exact input/output rules. Helpers do not prepend `Site.BaseUrl`; the layout's `<base>` resolves relative URLs. This reuse neither supplies the missing full scheme policy nor implements DEC-002's preview mount.
 
 ### DES-006 / DES-007: Theme assets, containment, and ownership
 
@@ -162,11 +180,13 @@ The current middleware has no corresponding configured prefix handling even thou
 
 ### DES-009 / DES-010: Client behavior, diagnostics, and compatibility
 
-Retain the built-in native anchors/button, navigation label, CSS `:focus-visible` rules, and light/dark custom properties. [Theme JavaScript](src\ScissorHands.Web\themes\default\assets\theme.js) updates `data-theme`, the toggle's accessible label, and the stored preference, responding to system preference changes when no stored preference exists. No client Blazor runtime is needed. Existing affordances are not evidence that keyboard use or contrast is acceptable in every required browser.
+The built-in layout recursively renders `NavigationTree`: page nodes are anchors, groups are text, and nodes with children receive a separate labelled native button with `aria-controls`/`aria-expanded`. Child lists are visible and buttons hidden in static markup. [Theme JavaScript](src\ScissorHands.Web\themes\default\assets\theme.js) initializes collapsed lists and reveals controls, preserving a readable no-JavaScript hierarchy without recomputing frontmatter visibility.
+
+Native button activation handles mouse/touch/Enter/Space. Toggle handlers close siblings and reset descendants when collapsing; Escape closes the applicable group and focuses its button. Focus leaving navigation, window blur, and outside clicks close menus. Retain CSS focus styling and responsive behavior. Post/page views render tag links through the shared tag helper. The independent theme-preference handler updates `data-theme`, accessible labels, and localStorage, following system preference when no stored choice exists. No Blazor client runtime is needed; source affordances are not proof of browser or accessibility coverage.
 
 For TG-002, the proposed evidence method is to record rendered foreground/background pairs, affected text/control states, actual browser conditions, and an owner/reviewer assessment for both themes; contrast ratios may inform that assessment. A new numerical pass threshold or conformance level would change acceptance and must go through the TRD, not appear as an automatic TDD decision. Preserve the agreed desktop/mobile matrix and document/site locale behavior.
 
-Retain public interfaces and model snapshots. Required plugin IDs, `PluginDependency.PluginId`, rebuilt consuming assemblies, and read-only theme/plugin collections remain the existing vNext migration, not new breaking changes from this design. Arbitrary values inside plugin options are not deeply frozen. Legacy theme-service adapters must keep their pre-delegation cancellation check.
+Retain public interfaces, navigation/helper compatibility and model snapshots. Current vNext migration includes required plugin IDs/`PluginDependency.PluginId`, read-only manifest collections, all seven theme roles, and nested page directory-index routes. Supply missing tag components and rebuild; use explicit old slugs when preserving nested-index URLs. The sample requires an explicit mode. These are implemented changes recorded here, not additional changes proposed by the design. Arbitrary plugin option values are not deeply frozen; legacy theme-service adapters retain their cancellation check.
 
 Production CLI generation currently receives `CancellationToken.None`; preview receives `ApplicationStopping`. The renderer checks cancellation before rendering, and synchronous Markdown conversion/copying and third-party hook internals do not gain automatic interruptibility. Proposed cancellation checks between engine-controlled operations must preserve those limits and avoid a completed-build message after observed cancellation; no bounded graceful Ctrl+C behavior is added.
 
@@ -185,7 +205,7 @@ Logs should carry bounded identifiers and context, not content bodies, whole con
 
 ### DES-011: Resource model and measurement
 
-The loader materializes source documents; collection views sort/group that list; rendering creates a scope and renderer per page and writes pages sequentially. Plugin graphs are resolved at runner construction rather than per document. These existing mechanisms avoid a new database/cache but still retain source strings and generated content in memory and pay per-page renderer/extension costs.
+The loader materializes source documents; collection views sort/group that list; rendering creates a scope and renderer per page and writes pages sequentially. Navigation selection and ancestor/tree construction run once per generation, retaining node/path metadata shared by layout renders; only compatibility callers supplying no tree rebuild it in the renderer. Plugin graphs are resolved at runner construction. These mechanisms avoid a new database/cache but still retain source strings/content and incur per-page rendering/extension costs; no measured speedup is claimed.
 
 The current route preflight scans existing route entries for ancestor conflicts, so route count can increase validation cost faster than a simple lookup. Asset traversal and synchronous copying add file-count/byte-volume cost; plugins can dominate runtime or perform external work. Do not claim a particular bottleneck, speed improvement, or supported maximum from inspection alone. A proposed ownership registry adds path/owner metadata, not a full rendered-site buffer.
 
@@ -235,28 +255,28 @@ Keeping .NET/Razor, current package direction, explicit plugin identity, and sta
 
 ## 4. Requirement coverage and verification strategy
 
-All mappings use TRD v0.2 against PRD v0.6. **Pending** means no execution is claimed. Read test source is evidence of an existing test's intent, not passing behavior.
+All mappings use TRD v0.3 against PRD v0.7. **Pending** means this document claims no completed verification for that area; it does not assert that no checks have ever run elsewhere. Read test source establishes intent, not a passing result or full-area completion.
 
 | TRD requirement | Design references | Mechanism / coverage | Verification and evidence state |
 | --- | --- | --- | --- |
 | TR-001 | DES-001/010 | Existing mode validation and generator invocation; truthful completion | V-004/V-007: argument/process behavior and sample; Pending |
-| TR-002 | DES-002 | Existing frontmatter/model loading, publication filtering, explicit errors | V-004/V-007: valid/invalid/missing inputs and both modes; Pending |
-| TR-003 | DES-002/004/007 | Route composition, original preflight, proposed final ownership claims | V-001/V-007: combined prefixes, page/asset conflicts, 404/tags; Pending; DQ-002/006 |
+| TR-002 | DES-002 | Frontmatter/model loading including navigation boolean, publication filtering, explicit errors | V-004/V-007: defaults/invalid booleans, missing inputs and both modes; Pending |
+| TR-003 | DES-002/004/007 | Directory-index inference, route composition/preflight, proposed final ownership | V-001/V-007: explicit slugs, inferred collisions, combined prefixes, page/assets, 404/tags; Pending; DQ-002/006 |
 | TR-004 | DES-003/004 | Sequential stage propagation, replacement documents, synthetic-page distinction | V-007: observable hook results and ordering; Pending; DQ-006 for cross-document route effects |
-| TR-005 | DES-005 | Scoped `HtmlRenderer`, layout/body/cascading values, UTF-8 write | V-003/V-007: rendered content and artifact serving; Pending |
-| TR-006 | DES-004 | Index/tag/404 selection, sorting, generated ownership | V-001/V-003/V-007: empty/custom-404/tag cases and real navigation; Pending |
+| TR-005 | DES-005 | Scoped renderer, layout-only navigation, flat-only adapter, cascades, UTF-8 | V-003/V-007: parameter filtering/explicit tree, rendered output and serving; Pending |
+| TR-006 | DES-002/004/005/009 | Index/tag/404 data, visibility-filtered hierarchy, immutable tree, pre-hook snapshot | V-001/V-003/V-007: hidden/missing ancestors, groups/order/locale, all layouts and plugin boundary; Pending; DQ-006 |
 | TR-007 | DES-001/006 | Existing discovery/overrides and manifest validation/fallback | V-007: complete/missing/ambiguous theme sets, malformed manifests; Pending |
 | TR-008 | DES-006/007 | Supported inventory and structure; proposed guarded copying | V-001/V-003/V-007: inventories, aliases, copies, asset requests; Pending; DQ-002 |
 | TR-009 | DES-003 | Validated ordinal IDs and manifest-based enablement | V-007: identities, disabled/unmatched plugins, component selectors; Pending |
 | TR-010 | DES-003 | Per-stage topological sorting with ordinal ready set | V-007: permutations, invalid declarations, disabled/missing dependencies, cycles; Pending |
-| TR-011 | DES-002/006/010 | Existing model snapshots, obsolete adapters, explicit migration | V-007: consumer compilation and legacy compatibility; Pending; DQ-002 for new integration |
+| TR-011 | DES-002/005/006/009/010 | Model snapshots, flat-navigation/helper compatibility, obsolete adapters, route/theme migration | V-007: snapshots, consumers, required roles, explicit slugs, legacy compatibility; Pending; DQ-002 |
 | TR-012 | DES-008 | Existing throttled, serialized callbacks and logging/disposal | V-004/V-007: real event bursts, overlap, failure/recovery, shutdown; Pending |
 | TR-013 | DES-007 | Proposed root/alias checks and pre-I/O claims; custom-service integration unresolved | V-001/V-004: link/ownership/failure cases; Pending; DQ-002 blocks comprehensive implementation readiness |
-| TR-014 | DES-005/009 | Preserve Razor encoding/raw boundaries; targeted validation awaits policy | V-002: sink-specific compatible/unsafe cases; Pending; DQ-001 |
+| TR-014 | DES-005/009 | Razor encoding/raw boundaries; shared formatting with limited checks, broader scheme policy pending | V-002: navigation labels and sink-specific compatible/unsafe cases; Pending; DQ-001 |
 | TR-015 | DES-001/003/007/010 | Installed-code trust boundary, bounded data access, contextual diagnostics | V-001/V-002/V-007: synthetic markers and explicit enablement; Pending |
 | TR-016 | DES-003/005/008/010 | Token forwarding, observed cancellation, legacy checks, honest completion | V-004/V-007: controlled cancellation at supported boundaries; Pending |
-| TR-017 | DES-008/009 | Base-relative URLs and confirmed preview prefix-mount design | V-003: actual root/prefix link/asset requests, including representative extensions; Pending; DQ-001/006 |
-| TR-018 | DES-009 | Existing native controls, labels/focus, theme preference, metadata fallbacks | V-005/V-007: agreed browsers, keyboard use and light/dark assessment; Pending; DQ-003 |
+| TR-017 | DES-004/008/009 | Shared base-relative formatting; confirmed but unimplemented preview mount | V-003/V-007: helper/view parity, encoded links/images, actual root/prefix requests; Pending; DQ-001/006 |
+| TR-018 | DES-009 | Native disclosures/no-JavaScript hierarchy, page tags, preference and metadata | V-005/V-007: agreed browsers, keyboard/touch/Escape/focus, labels and contrast; Pending; DQ-003 |
 | TR-019 | DES-011 | Resource model and reproducible actual-blog measurement boundaries | V-006: workload/environment/results record; Pending; DQ-004 |
 | TR-020 | DES-001/004/008/010 | Propagation/logging and documented partial/stale artifact lifecycle | V-004/V-007: success, invalid input, I/O/hooks/render/cancellation failures; Pending |
 
@@ -266,32 +286,34 @@ The TRD already maps all 20 PRD FR/NFR entries. Its retained product outcomes G-
 
 Reuse existing xUnit v3/Shouldly/NSubstitute/bUnit and IO test seams, with real temporary-filesystem cases where mocks cannot establish link behavior. Selected consulted starting points are [route tests](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorRouteTests.cs), [renderer/context tests](test\ScissorHands.Web.Tests\Renderers\ComponentRendererCascadingParametersTests.cs), [legacy adapters](test\ScissorHands.Core.Tests\Services\ThemeServiceCompatibilityTests.cs), and [watcher tests](test\ScissorHands.Web.Tests\Watchers\ContentWatcherTests.cs). The consulted watcher test only checks missing-directory creation; it is not evidence of concurrency/recovery coverage. The subpath renderer test checks markup strings, not served HTTP requests.
 
+Current regression sources add [directory-index cases](test\ScissorHands.Web.Tests\Loaders\ContentLoaderDirectoryIndexTests.cs), [all-surface navigation](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorNavigationTests.cs), [tree construction](test\ScissorHands.Web.Tests\Navigation\NavigationTreeBuilderTests.cs), [Core URL contracts](test\ScissorHands.Core.Tests\Urls\ContentUrlHelperTests.cs), [Theme wrapper parity](test\ScissorHands.Theme.Tests\UrlHelperTests.cs), and [default navigation markup](test\ScissorHands.Web.Tests\Themes\DefaultNavigationTests.cs). The all-surface cases inspect generated files and resolved URLs with mocked filesystem dependencies; they do not serve HTTP or establish JavaScript interaction. Retain V-003/V-005 and DQ-006 rather than inferring closure from these tests.
+
 **Design-critical evidence, not yet authorized:** establish link/alias handling and safe I/O behavior on supported operating systems, and prove a custom-theme-service integration can preserve public compatibility while enforcing ownership before writes. A mock-only success or post-copy inspection cannot settle DQ-002. Do not conduct those experiments as part of writing this document.
 
 **Later implementation/release evidence:** retain V-001 through V-007, the [sample](samples\ScissorHands.Sample\README.md), [repository test guidance](AGENTS.md), and the [CI platform matrix](.github\workflows\main.yaml). Start with affected test projects; shared contracts require broader compatibility coverage. Record code/configuration, platform/tool versions, cases, outcomes, and blocked/skipped coverage. No deadline or execution owner is assigned here.
 
 Migration is coordinated application/theme/plugin recompilation with explicit ID/configuration updates, not mixed-version compatibility or a data backfill. Proposed helpers must not remove public constructors/overloads or add mandatory interface members. If a new contract is genuinely necessary, seek TRD authorization and reconcile product compatibility before implementation.
 
-No persistent source schema changes or automated content rewrites are proposed. A rollback of engine packages requires the matching prior application, extension assemblies, and configuration; name-based and ID-based configurations are not interchangeable. The generator does not restore output. An owner may retain a previously deployed artifact through their chosen host, but host-specific deployment/rollback operations and release approval remain outside this design task.
+The implemented baseline adds optional `show_in_navigation` frontmatter and changes inferred nested page-index routes; this alignment proposes no further schema change or automated content rewrite. Opt pages in deliberately, preserve old routes with explicit slugs where required, and resolve collisions. Rollback requires matching prior packages, extension assemblies, configuration and compatible frontmatter; an older loader may reject the new field. The generator does not restore output. Host-specific deployed-artifact retention and rollback remain outside this task.
 
 ## 5. Risks, unresolved questions, and readiness
 
 | ID | Issue / state and source | Affected references | Impact and blocking distinction | Owner / next action |
 | --- | --- | --- | --- | --- |
-| DQ-001 | Unknown URL rules and complete sink inventory; inherited TRD TG-001 | DES-005/008/009; TR-014/017 | Blocks new URL-validation behavior and decisions about unsupported base-URL forms, not unaffected mechanisms | Unassigned; resolve in the TRD with permission before adopting rules; route product compatibility changes to PRD |
+| DQ-001 | Shared formatting now explicit; complete scheme rules and sink inventory remain unknown under TG-001 | DES-004/005/008/009; TR-014/017 | Blocks new scheme rules and unsupported base-URL decisions, not existing helper reuse; preview mount remains separately unimplemented | Unassigned; resolve remaining TRD rules before new validation; route product compatibility changes to PRD |
 | DQ-002 | Per-write ownership direction confirmed; platform-safe link/I/O details and compatible custom-theme-service integration remain unknown | DEC-001, DES-006/007; TR-011/013 | Blocks comprehensive containment/ownership implementation readiness; neither string checks nor built-in-only integration establish full coverage | Unassigned; resolve detailed mechanism and authorize bounded platform/API analysis separately; retain public contracts meanwhile |
 | DQ-003 | Unknown reproducible contrast acceptance method; inherited TG-002 | DES-009; TR-018 | Blocks contrast evidence sign-off, not implementation of existing keyboard/label/focus obligations | Unassigned; agree method before V-005 sign-off; new quality thresholds belong in TRD |
 | DQ-004 | Missing actual-blog snapshot/access, extensions, environment and executor; inherited TG-003 | DES-011; TR-019 | Blocks benchmark execution, not baseline engine design; no invented substitute dataset or results | Unassigned; owner selects inputs for next-phase V-006 |
-| DQ-005 | Full TDD approval confirmed on 2026-09-12; implementation/release ownership and timing remain unknown | Entire design; PRD Q-004, TRD TG-005 | Document sign-off is resolved. Remaining execution arrangements do not themselves block design readiness; technical gaps retain their separate impacts, and implementation/release still need authorization | Design approver is @justinyoo; resolve remaining technical gaps and assign execution roles separately |
-| DQ-006 | Current collection snapshots versus plugin-returned metadata/routes; combined route/404 planning cases | DES-002/004/009; TR-003/004/006/017; TG-004 | Route/selection corrections need regression evidence; route-changing plugins' collection-link semantics need clarification before a global pipeline redesign or compatibility guarantee | Unassigned; inspect representative consumers in the next phase, clarify any changed obligation in TRD, and preserve unaffected per-document propagation |
+| DQ-005 | Historical v0.3 approval confirmed on 2026-09-12; v0.4 is unsigned, and execution arrangements remain unknown | Entire design; PRD Q-004, TRD TG-005 | Revision review, technical blockers, and implementation/release authorization are separate | Historical approver is @justinyoo; obtain revised-text sign-off and resolve technical gaps/execution roles separately |
+| DQ-006 | Collections and immutable navigation built before hooks versus plugin-returned title/route/visibility; combined route/404 planning cases | DES-002/004/005/009; TR-003/004/006/017; TG-004 | Current snapshot timing is established, but post-plugin cross-page consistency is not guaranteed. New collection semantics or pipeline redesign still need clarification and regression evidence | Unassigned; preserve per-document propagation and the documented snapshot while evaluating representative route-changing consumers; changes to obligations belong in TRD |
 | DQ-007 | Pending verification and known non-atomic/stale preview behavior | DES-004/008/010/011; V-001 through V-007 | Missing release evidence is not automatic failure or a requirement waiver. Partial/stale output remains an accepted limitation, not a new promise to fix it | Unassigned; record/recheck next-phase results and publish only under separate release authority |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready, with full document approval recorded. The governing baselines, mechanisms, flows, alternatives, all 20 technical mappings, and verification approach are accepted with their documented gaps. Readiness is limited by unresolved technical details, not missing sign-off or merely unexecuted verification.
+- **Supported status:** Review-ready against PRD v0.7/TRD v0.3. The current-code mechanisms, flows and 20 mappings are coherent for review; v0.4 has no separate sign-off. Historical design approval does not remove unresolved technical details.
 - **Material blockers:** TG-001/DQ-001, containment/ownership integration and feasibility in DQ-002, and the metadata/collection interaction in DQ-006 remain explicit. These do not invalidate the local static-generation foundation but prevent an all-scope Implementation-ready claim.
-- **Confirmation:** PRD v0.6 and TRD v0.2 are approved. @justinyoo confirmed DEC-001 and DEC-002 and approved the full TDD on 2026-09-12. Approval includes the recorded gaps and deferrals; it does not resolve them, establish passing results, or authorize implementation/release.
-- **Reviewer pass:** Directly reviewed the saved TDD against both requirements baselines, consulted implementation evidence, user decisions, and the readiness checklist. Reconciled full document approval across Document control, decision records, DQ-005, and readiness. Preserved all technical mappings, cancellation limits, and explicit compatibility, URL-policy, and collection-mutation gaps instead of claiming complete coverage. No independent review is implied.
+- **Confirmation:** Historical PRD v0.6/TRD v0.2 and TDD v0.3 approvals stand, as do DEC-001/002 confirmations. The 2026-09-13 update request authorizes alignment with merged behavior, not retroactive approval of revised text, gap resolution, verification results, or implementation/release.
+- **Reviewer pass:** Directly reconciled the revised PRD/TRD, source-backed navigation/URL/route mechanisms, compatibility, and evidence mappings. Retained IDs, decision history, cancellation limits, and DQ-001/002/006 rather than treating shared helpers or snapshot construction as comprehensive fixes. No independent review is implied.
 - **Deferred work:** Contrast method, benchmark inputs, execution arrangements, and V-001 through V-007 remain visible with next actions. No verification was started or declared successful.
 - **Review limitations:** No external ADRs, complete rendering-sink inventory, owner-blog dataset, platform I/O feasibility experiment, or independently executed review/test results are available.
 
@@ -303,6 +325,7 @@ No persistent source schema changes or automated content rewrites are proposed. 
 | 2026-09-11 | Confirm the existing pipeline with per-write ownership checks | Explicit selection by @justinyoo | Accept DEC-001's direction; retain DQ-002's platform/API integration work and the documented partial-output model |
 | 2026-09-12 | Confirm DEC-002 Option A; issue TDD v0.2 | Explicit selection by @justinyoo | Adopt prefix-aware preview serving with one artifact layout; preserve root behavior, TG-001's unresolved URL details, and pending V-003 evidence |
 | 2026-09-12 | Record full TDD approval; issue signed TDD v0.3 | Explicit approval by @justinyoo | Resolve document sign-off without changing the governing PRD/TRD, resolving unspecified technical details, executing verification, or authorizing implementation/release |
+| 2026-09-13 | Align TDD v0.4 with PRD v0.7/TRD v0.3 at code `1f963ad` | User update request and merged #86/#87 source inspection | Record navigation construction/layout delivery, shared URL wrappers, directory indexes, client behavior and migration; retain old approvals/decisions and unimplemented hardening/mount gaps |
 
 ### Source map
 
@@ -311,6 +334,7 @@ No persistent source schema changes or automated content rewrites are proposed. 
 | Governing requirements and repository rules | [PRD](PRD.md), [TRD](TRD.md), [AGENTS](AGENTS.md), [SDK](global.json), [build settings](Directory.Build.props), [dependencies](Directory.Packages.props) |
 | Composition, roots, installed-code boundary | [Builder](src\ScissorHands.Web\ScissorHandsApplicationBuilder.cs), [application](src\ScissorHands.Web\ScissorHandsApplication.cs), [DI](src\ScissorHands.Web\Extensions\ServiceCollectionExtensions.cs), [paths](src\ScissorHands.Web\Infrastructure\CurrentDirectoryAppPaths.cs), [assembly catalog](src\ScissorHands.Web\Infrastructure\DefaultAssemblyCatalog.cs) |
 | Data and generation | [Loader](src\ScissorHands.Web\Loaders\ContentLoader.cs), [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs), [Markdown service](src\ScissorHands.Web\Services\MarkdownService.cs), [document](src\ScissorHands.Core\Models\ContentDocument.cs), [metadata](src\ScissorHands.Core\Models\ContentMetadata.cs) |
+| Navigation and shared URLs | [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs), [NavigationTreeBuilder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs), [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs), [website handoff](docs\website-documentation.md) |
 | Extension mechanisms | [Runner](src\ScissorHands.Web\Runners\PluginRunner.cs), [dependencies](src\ScissorHands.Web\Runners\PluginDependencyResolver.cs), [theme resolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs), [theme service](src\ScissorHands.Web\Services\ThemeService.cs), [legacy/current service contract](src\ScissorHands.Core\Services\IThemeService.cs) |
 | Manifests and guidance | [Site](src\ScissorHands.Core\Manifests\SiteManifest.cs), [theme](src\ScissorHands.Core\Manifests\ThemeManifest.cs), [plugin](src\ScissorHands.Core\Manifests\PluginManifest.cs), [Core guide](src\ScissorHands.Core\README.md), [Plugin guide](src\ScissorHands.Plugin\README.md), [Theme guide](src\ScissorHands.Theme\README.md), [Web guide](src\ScissorHands.Web\README.md) |
 | Rendering and preview | [Renderer](src\ScissorHands.Web\Renderers\ComponentRenderer.cs), [layout base](src\ScissorHands.Theme\MainLayoutBase.cs), [cascades](src\ScissorHands.Theme\CascadingMainLayoutBase.razor), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs) |
