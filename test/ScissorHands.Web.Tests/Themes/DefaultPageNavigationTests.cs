@@ -71,6 +71,7 @@ public class DefaultPageNavigationTests
         {
             var link = cut.Find("a.page-navigation-previous");
             link.GetAttribute("rel").ShouldBe("prev");
+            link.GetAttribute("tabindex").ShouldBe("0");
             link.GetAttribute("href").ShouldBe(previous.Url);
             link.QuerySelector(".page-navigation-direction")!.TextContent.ShouldBe("Previous");
             link.QuerySelector("span:last-child")!.TextContent.ShouldBe(previous.Title);
@@ -81,6 +82,7 @@ public class DefaultPageNavigationTests
         {
             var link = cut.Find("a.page-navigation-next");
             link.GetAttribute("rel").ShouldBe("next");
+            link.GetAttribute("tabindex").ShouldBe("0");
             link.GetAttribute("href").ShouldBe(next.Url);
             link.QuerySelector(".page-navigation-direction")!.TextContent.ShouldBe("Next");
             link.QuerySelector("span:last-child")!.TextContent.ShouldBe(next.Title);

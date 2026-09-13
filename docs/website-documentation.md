@@ -560,17 +560,19 @@ A custom page view can opt into the links without rebuilding navigation:
     <nav aria-label="Page navigation">
         @if (PageNavigation?.Previous is { } previous)
         {
-            <a href="@previous.Url" rel="prev">Previous: @previous.Title</a>
+            <a href="@previous.Url" rel="prev" tabindex="0">Previous: @previous.Title</a>
         }
         @if (PageNavigation?.Next is { } next)
         {
-            <a href="@next.Url" rel="next">Next: @next.Title</a>
+            <a href="@next.Url" rel="next" tabindex="0">Next: @next.Title</a>
         }
     </nav>
 }
 ```
 
 Use ordinary Razor text rendering for titles. Do not escape an already formatted target URL again or prepend `Site.BaseUrl`; the layout's base element resolves it. Existing themes that ignore this additive context continue to work, but must forward/render it to show adjacent links. The two full navigation collections remain layout-only and are not added to the cascade. Non-participating pages and collection/404/post views have no sequence links.
+
+The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](..\test\browser\README.md). Custom-theme authors remain responsible for their own complete accessibility.
 
 ### URL helpers
 

@@ -19,16 +19,17 @@
     @if (PageNavigation?.Previous is not null || PageNavigation?.Next is not null)
     {
         <nav class="page-navigation" aria-label="Page navigation">
+            @* Explicit tabindex preserves link tabbing across WebKit keyboard modes. *@
             @if (PageNavigation?.Previous is { } previous)
             {
-                <a class="page-navigation-previous" href="@previous.Url" rel="prev">
+                <a class="page-navigation-previous" href="@previous.Url" rel="prev" tabindex="0">
                     <span class="page-navigation-direction">Previous</span>
                     <span>@previous.Title</span>
                 </a>
             }
             @if (PageNavigation?.Next is { } next)
             {
-                <a class="page-navigation-next" href="@next.Url" rel="next">
+                <a class="page-navigation-next" href="@next.Url" rel="next" tabindex="0">
                     <span class="page-navigation-direction">Next</span>
                     <span>@next.Title</span>
                 </a>

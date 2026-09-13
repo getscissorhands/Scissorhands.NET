@@ -87,6 +87,7 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 - Isolate filesystem tests with the existing IO abstractions/testing helpers or scoped temporary directories. Restore process-wide state; use the existing `NonParallel` collection when changing shared state such as console output.
 - Test affected behavior: invalid input, cancellation, URL/subpath, plugin order, and preview/build; include navigation hierarchy/visibility, directory-index collisions, layout-only parameters, and helper parity when relevant.
 - Start with the smallest relevant test project; expand to the full suite for shared-contract or cross-project changes. Exercise the sample for generation, theme, or preview changes. Documentation-only edits do not require a .NET build.
+- For built-in page-navigation markup or style changes, also run the [browser acceptance suite](test/browser/README.md). Its Node/Playwright tooling is test-only; it checks Chromium, Firefox, and WebKit at desktop/mobile viewports, including the pager's contrast thresholds. It does not replace the .NET suite or broader real-device assessment.
 
 ## Change guardrails
 

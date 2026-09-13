@@ -4,24 +4,24 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.6 |
+| Document version | 0.7 |
 | Status | Review-ready |
-| Last updated | 2026-09-13 |
-| Baselines consulted | 2026-09-13 |
+| Last updated | 2026-09-14 |
+| Baselines consulted | 2026-09-14 |
 | Product owner | @justinyoo |
 | Design approver | @justinyoo |
 | Implementation owners | Not assigned |
-| Sign-off | v0.3 approved by @justinyoo on 2026-09-12; v0.5 received #81-only approval on 2026-09-13; v0.6 records implementation/evidence without new whole-document sign-off |
+| Sign-off | Historical v0.3 and v0.5 #81-only approvals retained; component acceptance standards confirmed on 2026-09-14, not whole-document sign-off |
 | Approval scope | Historical v0.3 approval is retained. New approval covers only #81's design and evidence strategy, not unrelated revised design, still-open shared gaps, passing verification, or implementation/release authorization |
 | #81 scoped approval | @justinyoo approved DES-012, DEC-003, the TG-006/DQ-008 policy and V-008 evidence strategy on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Decision confirmation | @justinyoo confirmed DEC-001 on 2026-09-11, DEC-002 on 2026-09-12, and DEC-003's source-order/automatic-adjacency direction on 2026-09-13 |
 | Intended audience | Engine, theme, and plugin contributors reviewing implementation mechanisms and compatibility |
-| Release scope | Retained vNext baseline plus implemented #81 code; other V-008 acceptance remains incomplete, with preview-prefix mounting independently tracked in #89 |
-| PRD baseline | [PRD.md](PRD.md) v0.9, Review-ready implementation/evidence alignment; historical v0.6 and v0.8 #81-only approvals retained |
-| TRD baseline | [TRD.md](TRD.md) v0.5, Review-ready implementation/evidence alignment; historical approvals retained, TG-006 implemented and shared gaps unresolved |
-| Implementation baseline | `843272ad60b1b78699e9dd7579953142d0bf1f26` plus current uncommitted #81 workspace changes; scoped Windows/HTTP/Chromium results recorded in PRD V-008 |
+| Release scope | Retained baseline plus implemented #81 code with complete scoped V-008 evidence; #89 and broad V-005 remain independent |
+| PRD baseline | [PRD.md](PRD.md) v0.10, Review-ready with approved #81 component criteria; historical approvals retained |
+| TRD baseline | [TRD.md](TRD.md) v0.6, Review-ready with explicit pager thresholds and three-engine evidence requirements |
+| Implementation baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the tested pager-acceptance follow-up in this revision |
 
-**Authority:** the PRD owns scope/acceptance and the TRD owns obligations. v0.5's scoped #81 approval and the subsequent implementation request are retained. The user then explicitly separated preview mounting into [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89), removing it from #81's gate while retaining locale-aware link checks. Other V-008 acceptance gaps remain. No whole-document/release sign-off or issue closure follows from this alignment.
+**Authority:** the PRD owns scope/acceptance and the TRD owns obligations. Scoped #81 approval, implementation authorization and component criteria are retained. V-008 now passes the approved scope; #89 and broader V-005 work remain separate. The PR may close #81 on merge, without implying whole-document approval, publication or deployment.
 
 ## 1. Design context and scope
 
@@ -141,11 +141,11 @@ Apply visibility using resolved route ancestors before partitioning/ranking; do 
 
 **Implemented theme integration:** Core supplies `PageNavigation`/`PageNavigationLink`; `MainLayoutBase.PageNavigation` and `CascadingMainLayoutBase.PageNavigation` default to empty records, and `PageViewBase.PageNavigation` is an optional typed cascading parameter. The built-in layout forwards it. The generator selects neighbors using the original document before hooks, then supplies them with the processed page. Existing renderer filtering recognizes the new cascading name without passing it as an ordinary view attribute. Full navigation stays layout-only; legacy layouts can ignore the additive context, and no eighth required role or frontmatter field is added.
 
-The built-in page view renders `nav.page-navigation` with `aria-label="Page navigation"` and ordinary anchors using `rel="prev"`/`rel="next"`. Titles use Razor encoding; missing targets and empty regions are omitted. Responsive/focus styles reuse the existing palette without JavaScript. Posts, collections, custom 404 and non-participating pages receive no sequence links. Existing tag rendering is unchanged.
+The built-in view renders `nav.page-navigation` with its accessible label and native `rel="prev"`/`rel="next"` links using explicit `tabindex="0"`. The explicit zero preserves sequential tabbing in WebKit's default keyboard mode without positive ordering. Titles remain encoded, and missing targets/regions are omitted. Pager text and focus outlines use the existing `--text` palette to meet the scoped ratios; other theme components and JavaScript behavior are unchanged.
 
 **Snapshot, preview, and compatibility:** prepare all ranks/link values before document hooks, matching the existing navigation snapshot. Do not refresh links with later plugin replacement metadata or run hooks twice; DQ-006 retains post-plugin cross-document consistency work. Recreate both tiers and adjacency on each regeneration after source/content/visibility changes, without promising removal of stale output files. The recursive watcher suffices. Preserve public builder signatures and the flat-only renderer adapter, retaining legacy source-less ordering and explicitly supplied trees. No new parameter becomes mandatory and no missing-path caller must fabricate filenames.
 
-**Compatibility delivery:** TG-006/DQ-008's [two-tier policy](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653457814) is implemented and documented. Windows runs cover both tiers, mixed adjacency, invalid paths, legacy/explicit-tree callers and document identity. Other browser/contrast acceptance remains incomplete; preview mounting is separately owned by #89 and does not block this feature.
+**Compatibility delivery:** The two-tier policy and legacy/context behavior are implemented and covered. The remaining component contrast and keyboard gaps are fixed and pass V-008's three-engine suite. Preview mounting remains separately owned by #89.
 
 **Sample implementation:** these source names are present in the updated sample. Explicit slugs preserve the renamed pages' old public routes; root-level About precedes this subtree. With only the shown subtree eligible:
 
@@ -231,7 +231,7 @@ The built-in layout recursively renders `NavigationTree`: page nodes are anchors
 
 Native button activation handles mouse/touch/Enter/Space. Toggle handlers close siblings and reset descendants when collapsing; Escape closes the applicable group and focuses its button. Focus leaving navigation, window blur, and outside clicks close menus. Retain CSS focus styling and responsive behavior. Post/page views render tag links through the shared tag helper. The independent theme-preference handler updates `data-theme`, accessible labels, and localStorage, following system preference when no stored choice exists. No Blazor client runtime is needed; source affordances are not proof of browser or accessibility coverage.
 
-For TG-002, the proposed evidence method is to record rendered foreground/background pairs, affected text/control states, actual browser conditions, and an owner/reviewer assessment for both themes; contrast ratios may inform that assessment. A new numerical pass threshold or conformance level would change acceptance and must go through the TRD, not appear as an automatic TDD decision. Preserve the agreed desktop/mobile matrix and document/site locale behavior.
+The broader TG-002 method remains separate. For #81 only, the user approved TR-022's 4.5:1 text / 3:1 focus ratios and three-engine desktop/mobile automation on 2026-09-14. Collect rendered color pairs and relevant states for both themes; this is a component benchmark, not whole-site conformance or real-device certification.
 
 Retain public interfaces, navigation/helper compatibility and model snapshots. Current vNext migration includes required plugin IDs/`PluginDependency.PluginId`, read-only manifest collections, all seven theme roles, and nested page directory-index routes. Supply missing tag components and rebuild; use explicit old slugs when preserving nested-index URLs. The sample requires an explicit mode. These are implemented changes recorded here, not additional changes proposed by the design. Arbitrary plugin option values are not deeply frozen; legacy theme-service adapters retain their cancellation check.
 
@@ -306,7 +306,7 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 ### DEC-003: Source-filename reading order instead of authored navigation metadata
 
 - **Context:** PRD FR-011/TR-021/022 require predictable page order and automatic adjacent-page links while preserving existing slug-based grouping and visibility.
-- **State / confirmation:** Confirmed and scoped-approved #81 design, implemented in DES-012. TG-006/DQ-008 are resolved and implemented. The user subsequently excluded #89's preview mount from #81's gate without changing locale-aware links; other V-008 acceptance remains incomplete.
+- **State / confirmation:** Approved #81 design and component criteria are implemented with passing V-008 evidence. TG-006/DQ-008 remain resolved; #89 and wider V-005 work remain outside this feature's gate.
 - **Chosen approach:** for file-backed pages, visit `index.md` first, order remaining files/directories together ordinally, and traverse each directory before the next sibling. Append source-less pages in ordinal title/route order. Derive previous/next from the combined eligible sequence across directories and tiers. Titles/slugs never determine file-backed reading order; they serve only the documented source-less fallback and display/URL/grouping roles.
 - **Alternatives considered:** retaining title-first ordering cannot express the requested filename convention; stopping adjacency at each directory isolates the sample's Visible Grandchild; `section`/`pages.json`/manual links add a second author-maintained navigation definition. The user explicitly chose cross-directory traversal and superseded those inputs.
 - **Compatibility rationale:** requiring a filename would break source-less callers, inventing one would misrepresent source order, and excluding otherwise eligible pages would create an unnecessary gap in adjacency. The chosen trailing compatibility tier preserves file-backed order and gives source-less pages deterministic positions without new configuration.
@@ -318,7 +318,7 @@ Keeping .NET/Razor, current package direction, explicit plugin identity, and sta
 
 ## 4. Requirement coverage and verification strategy
 
-All mappings use TRD v0.5 against PRD v0.9. **Pending** on a broad area means that area is not complete; it does not erase the scoped execution recorded under V-008. Source inspection, observed passing cases and full-area completion remain distinct.
+All mappings use TRD v0.6 against PRD v0.10. Earlier evidence remains valid for its actual scope; new acceptance decisions do not retroactively establish passing contrast or engine-matrix results.
 
 | TRD requirement | Design references | Mechanism / coverage | Verification and evidence state |
 | --- | --- | --- | --- |
@@ -339,11 +339,11 @@ All mappings use TRD v0.5 against PRD v0.9. **Pending** on a broad area means th
 | TR-015 | DES-001/003/007/010 | Installed-code trust boundary, bounded data access, contextual diagnostics | V-001/V-002/V-007: synthetic markers and explicit enablement; Pending |
 | TR-016 | DES-003/005/008/010 | Shared token forwarding, observed cancellation, legacy checks and honest completion | V-004/V-007: baseline controlled cancellation; Pending. New sequence-preparation evidence belongs to V-008 under TR-021 |
 | TR-017 | DES-004/008/009 | Shared formatting and #89's unimplemented preview mount; locale-aware new-link application owned by TR-022 | V-003/V-007 remain open. V-008 retains root preview/correctly mounted static-host checks; #89 does not block #81 |
-| TR-018 | DES-009 | Shared disclosures/no-JavaScript hierarchy, page tags, preference and metadata; new controls owned by TR-022 | V-005/V-007: full-theme browser/interaction/contrast scope; Pending; DQ-003. New anchor evidence belongs to V-008 |
+| TR-018 | DES-009 | Shared theme behavior; component-specific thresholds/evidence owned by TR-022 | V-005/V-007: broader real-browser/device and theme assessment remains open. DQ-003 is resolved only for the #81 component method |
 | TR-019 | DES-011 | Resource model and reproducible actual-blog measurement boundaries | V-006: workload/environment/results record; Pending; DQ-004 |
 | TR-020 | DES-001/004/008/010 | Propagation/logging and documented partial/stale artifact lifecycle | V-004/V-007: success, invalid input, I/O/hooks/render/cancellation failures; Pending |
 | TR-021 | DES-004/010/012; DEC-003 | Component-wise source ordering, trailing source-less tier, independent slug-tree ranks, generation-local sequence and migration guidance | Implemented; scoped Windows ordering/compatibility/input/cancellation/migration checks passed in V-008. DQ-008 implemented; broader programs remain open |
-| TR-022 | DES-005/009/012; DEC-003 | Immutable neighbors keyed by document identity, additive page context, built-in anchors, no metadata/JSON schema | Implemented; automated/root-preview/locale-aware controlled-host checks passed. Other browser/contrast acceptance remains; actual preview mounting is independently tracked in #89 |
+| TR-022 | DES-005/009/012; DEC-003 | Static pager with palette-based contrast fixes, zero tab indices and repeatable browser acceptance | V-008 passed: six engine/viewport projects, 42 cases and 168 color measurements. Other scopes remain independently open |
 
 The TRD maps all 21 PRD FR/NFR entries; this design covers all 22 technical requirements. Feature acceptance is owned by FR-011/TR-021/TR-022 and V-008, while shared constraints and their wider verification remain intact. Retained product outcomes G-001 through G-003 rely on static generation and theme/plugin separation, not new telemetry or numerical claims. PRD release criteria, optional further outcome evaluation, and separate release authority are unchanged.
 
@@ -357,13 +357,19 @@ Current regression sources add [directory-index cases](test\ScissorHands.Web.Tes
 
 [PRD V-008](PRD.md#v-008-81-feature-acceptance) owns the feature acceptance record; TR-021/TR-022 own its technical criteria. Extend existing loader/navigation/generator/bUnit seams rather than create a separate engine or duplicate the broader test programs. Cover source ordering and the trailing source-less tier with deliberately conflicting titles/slugs, reversed enumeration, nested file/directory prefixes, exclusions, multiple empty source paths with distinct document identities, sequence endpoints, invalid-path rejection and cancellation. Compare both generated adjacency and retained grouping/collection behavior, including regeneration and legacy/explicit-tree callers.
 
-Use the real page view/generator for context and anchors. Preserve title/route expectations only for source-less pages. Keep locale/base-relative URL assertions, actual root-preview navigation and correctly mounted static-host subpath requests in V-008. Actual built-in preview-prefix mounting belongs to #89/V-003. New-control accessibility requirements remain unchanged; no whole-site serving or full-theme claim is inferred.
+Use the real page view/generator and retain locale-aware/root-preview/correctly mounted host checks. For the new controls, apply the [approved component criteria](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5654089522): Chromium, Firefox and WebKit at desktop/mobile viewport sizes, both themes, keyboard navigation, no-JavaScript navigation, endpoints, labels/focus and layout. Representative planned sizes are 1280x800 and 375x812; record the actual sizes and versions used. Engine emulation is sufficient for #81 by explicit decision, not proof of the separate V-005 real-browser/device matrix.
 
-Record V-008 results and reuse exact cases in broader programs without closing them. V-006 benchmarking and #89's preview mount are not feature completion gates. If a remaining in-scope dependency, such as TG-002's assessment detail, prevents required acceptance, keep that blocker explicit. The mount's failed response remains real evidence under #89/V-003, not a passed V-008 request.
+For contrast, collect computed colors after applicable normal/hover/focus states settle, resolve transparency against the effective rendered background, and calculate `(lighter relative luminance + 0.05) / (darker relative luminance + 0.05)` from linearized sRGB. Require at least 4.5:1 for every pager text element and 3:1 for the focus indicator against its actual adjacent background. A token name or visible outline alone is not a numerical pass. Correct failing component styles using existing palette tokens and recheck; do not retheme unrelated components or infer whole-site WCAG conformance.
+
+The [browser suite](test\browser\README.md) implements these checks with pinned Playwright, six engine/viewport projects and per-state JSON attachments. A pretest script generates root and localized subpath artifacts, leaving normal sample `dist` output restored. Worker-scoped loopback servers validate paths and close after use. Independent Node tests cover contrast math, alpha composition and explicit rejection of unsupported measurements.
+
+The baseline failed light text at 4.41:1 and focus at 1.79:1. Component-only `color` and `outline-color` rules now use `var(--text)`. A subsequent WebKit failure showed implicit link tabbing being skipped; `tabindex="0"` fixed it, with bUnit/browser regressions. The final run passed all 42 browser cases and 4 math cases without retries/skips. CI adds a PR-only browser job and uploads its JSON evidence; release-job scope is unchanged.
+
+Observed minima across 168 pairs are 8.575:1 light text / 9.505:1 light focus and 10.217:1 dark text / 12.361:1 dark focus. Preserve earlier failures and final results in V-008; do not use this component pass to close V-005 or #89.
 
 **RD-005 mitigation:** the sample renames Child and Group sources while explicit slugs preserve their previous public routes, which returned 200 in the scoped HTTP checks. Package/sample/website guidance documents migration and source-less fallback. Mitigation is recorded, not elimination: inferred URLs still follow source names when no explicit slug is retained.
 
-**Recorded execution:** [PRD V-008](PRD.md#v-008-81-feature-acceptance) records zero-warning/error Release build, 493 passing Windows tests, root preview/regeneration, controlled `/docs/` static hosting with `ko-kr` neighbors, and Chromium checks. Actual prefix preview returned 404 at `/docs/ko-kr/...` while the unprefixed route returned 200; this observation is retained in #89, not a locale failure or a #81 blocker. Other browser/device and contrast acceptance remain outstanding.
+**Recorded execution:** PRD V-008 retains earlier .NET/root-preview/regeneration evidence and records Chromium 153.0.8010.12, Firefox 155.0 and WebKit 26.6 passing at 1280x800 and 375x812, including localized subpath requests, no-JavaScript/keyboard behavior and measured states. The full .NET suite still passes 493 cases. V-008 is complete under the approved scope; the preview-prefix defect and real-device assessment remain separate.
 
 ### Broader evidence and rollout
 
@@ -381,21 +387,21 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 | --- | --- | --- | --- | --- |
 | DQ-001 | Shared formatting now explicit; complete scheme rules and sink inventory remain unknown under TG-001 | DES-004/005/008/009; TR-014/017 | Blocks new scheme rules and unsupported base-URL decisions, not existing helper reuse; preview mount remains separately unimplemented | Unassigned; resolve remaining TRD rules before new validation; route product compatibility changes to PRD |
 | DQ-002 | Per-write ownership direction confirmed; platform-safe link/I/O details and compatible custom-theme-service integration remain unknown | DEC-001, DES-006/007; TR-011/013 | Blocks comprehensive containment/ownership implementation readiness; neither string checks nor built-in-only integration establish full coverage | Unassigned; resolve detailed mechanism and authorize bounded platform/API analysis separately; retain public contracts meanwhile |
-| DQ-003 | Unknown reproducible contrast acceptance method; inherited TG-002 | DES-009; TR-018 | Blocks contrast evidence sign-off, not implementation of existing keyboard/label/focus obligations | Unassigned; agree method before V-005 sign-off; new quality thresholds belong in TRD |
+| DQ-003 | #81 method resolved and component checks passed on 2026-09-14; broader methodology remains open | DES-009/012; TR-018 generally, TR-022 scoped criteria | No remaining #81 method/evidence gap; broad V-005 is not complete | Retain the repeatable suite and V-008 results; resolve wider methodology separately |
 | DQ-004 | Missing actual-blog snapshot/access, extensions, environment and executor; inherited TG-003 | DES-011; TR-019 | Blocks benchmark execution, not baseline engine design; no invented substitute dataset or results | Unassigned; owner selects inputs for next-phase V-006 |
-| DQ-005 | Historical v0.3 and v0.5 #81-only approvals retained; user subsequently requested #81 implementation; v0.6 aligns actual code/evidence | Entire design outside scoped #81 approval; PRD Q-004, TRD TG-005 | Feature implementation is authorized and present; whole-document/release sign-off and shared gaps remain separate | Approver is @justinyoo; remaining acceptance/release roles are unassigned |
+| DQ-005 | Historical approvals retained; v0.7 records approved #81 component-check standards alongside implementation evidence | Entire design outside scoped #81 approval; PRD Q-004, TRD TG-005 | Feature methods are settled; new check execution, whole-document/release sign-off and broader gaps remain separate | Approver is @justinyoo; remaining execution/release roles are unassigned |
 | DQ-006 | Collections and immutable navigation built before hooks versus plugin-returned title/route/visibility; planned adjacency shares that boundary; combined route/404 planning cases | DES-002/004/005/009/012; TR-003/004/006/017/021/022; TG-004 | Current snapshot timing is established, but post-plugin cross-page consistency is not guaranteed. New collection semantics or pipeline redesign still need clarification and regression evidence | Unassigned; preserve per-document propagation and the documented snapshot while evaluating representative route-changing consumers; changes to obligations belong in TRD |
 | DQ-007 | Pending verification and known non-atomic/stale preview behavior | DES-004/008/010/011; V-001 through V-007 | Missing release evidence is not automatic failure or a requirement waiver. Partial/stale output remains an accepted limitation, not a new promise to fix it | Unassigned; record/recheck next-phase results and publish only under separate release authority |
 | DQ-008 | Resolved and implemented: file-backed source order, trailing source-less title/route order, and combined adjacency keyed by original document reference | PRD FR-011; DES-005/010/012; TR-021/TR-022 under TR-005/011, TG-006; DEC-003 | No remaining source-less policy/integration blocker in this implementation; Windows compatibility cases passed. Other V-008 blockers do not reopen this decision | Retain the implementation and scoped evidence in V-008; no issue-closure or broader audit claim |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready against PRD v0.9/TRD v0.5. Scoped #81 design approval is retained and its code is implemented; v0.6 records evidence without new whole-document/release sign-off. V-008 remains incomplete.
-- **Material blockers:** Shared gaps remain open. DEC-002's reproduced preview-mount defect is owned by #89 and no longer blocks #81. V-008's other browser/contrast acceptance remains incomplete; DQ-008 is resolved and implemented.
+- **Supported status:** Review-ready overall against PRD v0.10/TRD v0.6, with complete #81-specific V-008 evidence.
+- **Material blockers:** No scoped V-008 gap remains after the contrast/WebKit fixes. #89 and broader gaps remain independent; no whole-product readiness claim is made.
 - **Confirmation:** Historical approvals and DEC-001/002 confirmations stand. @justinyoo approved #81's design and then requested implementation on 2026-09-13. Concrete model/context names and observed results are recorded in this alignment; shared gaps, whole-document approval and release authorization remain separate.
-- **Reviewer pass:** Reconciled the actual comparator/rank/snapshot/context implementation with PRD v0.9/TRD v0.5 and all 22 mappings. Scoped normal-build/test and browser/HTTP results are recorded without claiming whole-area completion or independent review.
-- **Deferred work:** Preview-prefix mounting, remaining browser/contrast acceptance, benchmark inputs and broader verification/release work remain separate. V-008 distinguishes observed passes from blockers and unexecuted coverage.
-- **Review limitations:** No complete rendering-sink inventory, owner-blog benchmark, platform I/O feasibility experiment, non-Windows CI run, or full browser/accessibility assessment is available.
+- **Reviewer pass:** Reconciled the runner, isolated server, state calculations, scoped style/markup fixes and final report with all 22 mappings.
+- **Deferred work:** Merge/release decisions and broader preview/device/theme/benchmark work remain separate; #81's approved component checks are complete.
+- **Review limitations:** Engine automation and scoped .NET evidence are not a real-device matrix, full audit, benchmark or whole-site conformance claim.
 
 ## 6. Material changes and references
 
@@ -413,6 +419,8 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 | 2026-09-13 | Approve TDD v0.5 only for #81 | Explicit scoped approval by @justinyoo; approval record linked in Document control | Approve DES-012/DEC-003, resolved compatibility policy and V-008 strategy; keep other design scope/gaps and actual implementation/evidence separate, with no issue closure or release authorization |
 | 2026-09-13 | Record implemented #81 design in TDD v0.6 | User requested implementation after scoped approval; actual code and V-008 execution | Record component-wise DFS-equivalent sorting, rank propagation, concrete Core/Theme context and sample migration; retain all IDs/approvals and the reproduced preview-prefix plus browser/contrast acceptance gaps |
 | 2026-09-13 | Remove preview mounting from #81's gate and track it in #89 | Explicit user confirmation; scope update linked in DEC-003 | Keep DEC-002/DES-008/TR-017/V-003 as the mount work's owners, preserve the 404 observation, and retain locale-aware link checks plus other V-008 acceptance in #81 |
+| 2026-09-14 | Define approved component-check method in TDD v0.7 | User selected TR-022 ratios and three-engine desktop/mobile automation | Resolve #81's method, specify rendered-color/luminance and engine evidence collection, keep broader V-005 separate, and retain pending execution without invented pass results |
+| 2026-09-14 | Complete repeatable V-008 acceptance | Further implementation request and observed matrix | Add pinned runner/PR CI, fix contrast/WebKit tabbing, record 42 browser/4 math/493 .NET passes, and preserve separate broader obligations |
 
 ### Source map
 

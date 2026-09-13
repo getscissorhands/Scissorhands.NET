@@ -57,17 +57,19 @@ To opt in, add `PageNavigation="@PageNavigation"` to your layout's existing `<Ca
     <nav class="page-navigation" aria-label="Page navigation">
         @if (PageNavigation?.Previous is { } previous)
         {
-            <a href="@previous.Url" rel="prev">Previous: @previous.Title</a>
+            <a href="@previous.Url" rel="prev" tabindex="0">Previous: @previous.Title</a>
         }
         @if (PageNavigation?.Next is { } next)
         {
-            <a href="@next.Url" rel="next">Next: @next.Title</a>
+            <a href="@next.Url" rel="next" tabindex="0">Next: @next.Title</a>
         }
     </nav>
 }
 ```
 
 Use the supplied URLs directly, without prefixing the site's base URL or escaping them again, and render titles through ordinary Razor expressions, never `MarkupString`. Omit missing endpoints and the entire region when both are absent. The built-in theme includes these links; custom themes that ignore the optional parameter keep their existing behavior. No new theme role is required, and `NavigationPages`/`NavigationTree` remain layout-only, not newly cascaded.
+
+Explicit `tabindex="0"` keeps native link tabbing consistent across WebKit keyboard modes without imposing positive tab order. The built-in pager has a [repeatable browser acceptance suite](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/test/browser/README.md) for its keyboard behavior and component contrast; this is not whole-theme accessibility certification.
 
 ## Learn more
 
