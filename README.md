@@ -66,6 +66,8 @@ Pages are hidden from navigation by default. Add `show_in_navigation: true` to a
 
 The built-in navigation preserves the hierarchy of page slugs, such as `docs/deployment/github-pages`. Missing parent pages appear as non-clickable groups only while they contain a visible descendant. Hiding an existing parent page hides its entire descendant branch, even when those pages opt in.
 
+The engine prepares the navigation tree for every theme. Themes control rendering and interaction, while navigation rules and URL handling stay in shared engine code.
+
 Nested page landing files can use `parent/index.md` without a slug; the inferred route is `parent`. Explicit slugs still override inferred routes. See the [page route guide](src/ScissorHands.Web/README.md#page-routes).
 
 See the [page navigation guide](src/ScissorHands.Web/README.md#page-navigation) for an example and custom-theme support.

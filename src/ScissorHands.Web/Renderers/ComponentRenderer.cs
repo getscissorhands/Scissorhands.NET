@@ -5,7 +5,10 @@ using Microsoft.AspNetCore.Components.Web;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
+using ScissorHands.Core.Manifests;
+using ScissorHands.Core.Models;
 using ScissorHands.Theme;
+using ScissorHands.Web.Navigation;
 
 namespace ScissorHands.Web.Renderers;
 
@@ -71,7 +74,8 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
                 foreach (var kvp in parameters)
                 {
-                    if (kvp.Key == nameof(MainLayoutBase.NavigationPages) || _cascadingParameterNames.Value.Contains(kvp.Key))
+                    if (kvp.Key is nameof(MainLayoutBase.NavigationPages) or nameof(MainLayoutBase.NavigationTree)
+                        || _cascadingParameterNames.Value.Contains(kvp.Key))
                     {
                         continue;
                     }
@@ -82,6 +86,15 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             })
         };
 #pragma warning restore ASP0006
+
+        if (typeof(MainLayoutBase).IsAssignableFrom(layoutType)
+            && !layoutParams.ContainsKey(nameof(MainLayoutBase.NavigationTree))
+            && layoutParams.TryGetValue(nameof(MainLayoutBase.NavigationPages), out var pagesValue)
+            && pagesValue is IReadOnlyList<ContentDocument> pages)
+        {
+            var site = layoutParams.TryGetValue(nameof(MainLayoutBase.Site), out var siteValue) ? siteValue as SiteManifest : null;
+            layoutParams[nameof(MainLayoutBase.NavigationTree)] = NavigationTreeBuilder.Build(pages, site, cancellationToken);
+        }
 
         var parameterView = ParameterView.FromDictionary(layoutParams);
         var html = await renderer.Dispatcher.InvokeAsync(async () =>

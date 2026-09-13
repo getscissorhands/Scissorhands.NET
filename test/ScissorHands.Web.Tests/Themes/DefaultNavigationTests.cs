@@ -3,11 +3,43 @@ using Microsoft.Extensions.DependencyInjection;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
+using ScissorHands.Web.Navigation;
 
 namespace ScissorHands.Web.Tests.Themes;
 
 public class DefaultNavigationTests
 {
+    [Fact]
+    public void Given_PreparedTree_When_Rendered_Then_It_Should_PreserveTheEngineStructureAndOrder()
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+        var tree = new[]
+        {
+            new NavigationNode
+            {
+                Title = "<img src=x>",
+                Path = "group",
+                Children =
+                [
+                    new() { Title = "Zebra", Path = "unrelated/z", Url = "unrelated/z" },
+                    new() { Title = "Alpha", Path = "another/a", Url = "another/a" },
+                ],
+            },
+        };
+
+        var cut = context.Render<MainLayout>(parameters => parameters
+            .Add(p => p.Site, new SiteManifest())
+            .Add(p => p.Theme, new ThemeManifest())
+            .Add(p => p.NavigationTree, tree));
+
+        cut.Find(".navigation-label").TextContent.ShouldBe("<img src=x>");
+        cut.FindAll("nav img").ShouldBeEmpty();
+        cut.FindAll(".navigation-children a").Select(link => link.TextContent).ShouldBe(["Zebra", "Alpha"]);
+        cut.FindAll(".navigation-children a").Select(link => link.GetAttribute("href")).ShouldBe(["unrelated/z", "another/a"]);
+        cut.Find(".navigation-children").Id.ShouldBe(cut.Find(".navigation-toggle").GetAttribute("aria-controls"));
+    }
+
     [Theory]
     [InlineData("docs", "docs/quickstart", true)]
     [InlineData("/docs/", "docs//deployment/github-pages", true)]
@@ -26,11 +58,13 @@ public class DefaultNavigationTests
         context.Services.AddSingleton(Substitute.For<IThemeService>());
         var childLocale = childSlug.StartsWith("ko-kr/", StringComparison.Ordinal) ? "ko-KR" : "en-US";
         var pages = new[] { Page("Parent", parentSlug, "en-US"), Page("Child", childSlug, childLocale) };
+        var site = new SiteManifest { BaseUrl = "/site/", UseLocaleInUrl = true };
 
         var cut = context.Render<MainLayout>(parameters => parameters
-            .Add(p => p.Site, new SiteManifest { BaseUrl = "/site/", UseLocaleInUrl = true })
+            .Add(p => p.Site, site)
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, pages));
+            .Add(p => p.NavigationPages, pages)
+            .Add(p => p.NavigationTree, BuildTree(pages, site)));
 
         var topLevelPages = cut.FindAll(".navigation-list > .navigation-item");
         topLevelPages.Count.ShouldBe(nested ? 1 : 2);
@@ -60,7 +94,8 @@ public class DefaultNavigationTests
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, new SiteManifest())
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, new[] { docs, github, netlify }));
+            .Add(p => p.NavigationPages, new[] { docs, github, netlify })
+            .Add(p => p.NavigationTree, BuildTree([docs, github, netlify])));
 
         var label = cut.Find(".navigation-label");
         label.TextContent.ShouldBe("Deployment");
@@ -71,23 +106,23 @@ public class DefaultNavigationTests
         cut.FindAll("nav a[href='docs/deployment']").ShouldBeEmpty();
         cut.Instance.NavigationPages.Count.ShouldBe(3);
 
-        cut.Render(parameters => parameters.Add(p => p.NavigationPages, new[] { docs, github }));
+        cut.Render(parameters => parameters.Add(p => p.NavigationTree, BuildTree([docs, github])));
 
         cut.Find(".navigation-label").TextContent.ShouldBe("Deployment");
-        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Tags", "Docs", "GitHub Pages"]);
+        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "GitHub Pages", "Tags"]);
 
-        cut.Render(parameters => parameters.Add(p => p.NavigationPages,
-            new[] { docs, Page("Deploy the site", "docs/deployment"), github }));
+        cut.Render(parameters => parameters.Add(p => p.NavigationTree,
+            BuildTree([docs, Page("Deploy the site", "docs/deployment"), github])));
 
         cut.FindAll(".navigation-label").ShouldBeEmpty();
         cut.Find("nav a[href='docs/deployment']").TextContent.ShouldBe("Deploy the site");
 
-        cut.Render(parameters => parameters.Add(p => p.NavigationPages, new[] { docs }));
+        cut.Render(parameters => parameters.Add(p => p.NavigationTree, BuildTree([docs])));
 
         cut.FindAll(".navigation-label").ShouldBeEmpty();
         cut.FindAll(".navigation-children").ShouldBeEmpty();
         cut.FindAll(".navigation-toggle").ShouldBeEmpty();
-        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Tags", "Docs"]);
+        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "Tags"]);
     }
 
     [Fact]
@@ -98,12 +133,12 @@ public class DefaultNavigationTests
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, new SiteManifest())
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, new[] { Page("GitHub Pages", "docs/deployment/github-pages") }));
+            .Add(p => p.NavigationTree, BuildTree([Page("GitHub Pages", "docs/deployment/github-pages")])));
 
         cut.FindAll(".navigation-label").Select(label => label.TextContent).ShouldBe(["Docs", "Deployment"]);
         cut.FindAll(".navigation-list > .navigation-item").ShouldHaveSingleItem();
         cut.FindAll("nav a").Select(link => link.GetAttribute("href"))
-            .ShouldBe([".", "tags", "docs/deployment/github-pages"]);
+            .ShouldBe([".", "docs/deployment/github-pages", "tags"]);
         cut.FindAll(".navigation-toggle").Count.ShouldBe(2);
     }
 
@@ -119,7 +154,7 @@ public class DefaultNavigationTests
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, new SiteManifest())
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, new[] { Page("Docs", "docs"), Page("Child", $"docs/{segment}/child") }));
+            .Add(p => p.NavigationTree, BuildTree([Page("Docs", "docs"), Page("Child", $"docs/{segment}/child")])));
 
         cut.Find(".navigation-label").TextContent.ShouldBe(expected);
         cut.FindAll("nav img").ShouldBeEmpty();
@@ -139,20 +174,21 @@ public class DefaultNavigationTests
             pages.Add(Page("English", "en-us", "en_US"));
         }
 
+        var site = new SiteManifest { UseLocaleInUrl = true };
         var cut = context.Render<MainLayout>(parameters => parameters
-            .Add(p => p.Site, new SiteManifest { UseLocaleInUrl = true })
+            .Add(p => p.Site, site)
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, pages));
+            .Add(p => p.NavigationTree, BuildTree(pages, site)));
 
         cut.FindAll(".navigation-label").Select(label => label.TextContent).ShouldBe(["Docs"]);
         cut.FindAll(".navigation-list > .navigation-item").ShouldHaveSingleItem();
         cut.FindAll("nav a").Select(link => link.TextContent)
-            .ShouldBe(localePage ? ["Home", "Tags", "English", "Quickstart"] : ["Home", "Tags", "Quickstart"]);
+            .ShouldBe(localePage ? ["Home", "English", "Quickstart", "Tags"] : ["Home", "Quickstart", "Tags"]);
         cut.Find("nav a[href='en-us/docs/quickstart']").ShouldNotBeNull();
     }
 
     [Fact]
-    public void Given_UpdatedNavigationPages_When_Rerendered_Then_It_Should_RebuildTheHierarchy()
+    public void Given_UpdatedPreparedTree_When_Rerendered_Then_It_Should_DisplayTheNewHierarchy()
     {
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
@@ -160,17 +196,20 @@ public class DefaultNavigationTests
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, new SiteManifest())
             .Add(p => p.Theme, new ThemeManifest())
-            .Add(p => p.NavigationPages, pages));
+            .Add(p => p.NavigationTree, BuildTree(pages)));
 
         cut.FindAll(".navigation-children").Count.ShouldBe(2);
         cut.FindAll(".navigation-toggle").Select(toggle => toggle.GetAttribute("aria-controls")).Distinct().Count().ShouldBe(2);
 
-        cut.Render(parameters => parameters.Add(p => p.NavigationPages, Array.Empty<ContentDocument>()));
+        cut.Render(parameters => parameters.Add(p => p.NavigationTree, Array.Empty<NavigationNode>()));
 
         cut.FindAll(".navigation-item").ShouldBeEmpty();
         cut.FindAll(".navigation-toggle").ShouldBeEmpty();
         cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Tags"]);
     }
+
+    private static IReadOnlyList<NavigationNode> BuildTree(IReadOnlyList<ContentDocument> pages, SiteManifest? site = null)
+        => NavigationTreeBuilder.Build(pages, site, Xunit.TestContext.Current.CancellationToken);
 
     private static ContentDocument Page(string title, string slug, string? locale = null) => new()
     {

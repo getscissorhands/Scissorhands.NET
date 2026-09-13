@@ -6,7 +6,7 @@
     <article class="prose">
         @if (!string.IsNullOrWhiteSpace(Document?.Metadata.HeroImage))
         {
-            <img class="hero-image" src="@ContentUrl(Document.Metadata.HeroImage)" alt="" />
+            <img class="hero-image" src="@GetImageUrl(Document.Metadata.HeroImage)" alt="" />
         }
 
         @if (Document?.Metadata.Published is not null)
@@ -25,13 +25,9 @@
             <ul class="tag-list" aria-label="Post tags">
                 @foreach (var tag in Document.Metadata.Tags)
                 {
-                    <li><a href="tags/@Uri.EscapeDataString(tag.ToLowerInvariant())">#@tag</a></li>
+                    <li><a href="@GetTagUrl(tag)">#@tag</a></li>
                 }
             </ul>
         }
     </article>
 </section>
-
-@code {
-    private static string ContentUrl(string path) => path.TrimStart('/');
-}

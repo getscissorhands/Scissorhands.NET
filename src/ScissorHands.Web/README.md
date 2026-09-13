@@ -168,7 +168,7 @@ show_in_navigation: true
 
 `show_in_navigation` accepts `true` or `false` and defaults to `false` when omitted. Hidden pages are still generated and can be reached by their URL; this setting only controls navigation links, not access to content.
 
-The built-in theme keeps Home and Tags, then adds opted-in pages using their titles and generated slugs. Page slugs determine the navigation hierarchy; no separate parent field is needed. Siblings are ordered by title, with slug as the tie-breaker, using ordinal comparisons. Posts, drafts, and the custom 404 page are never included. The same navigation appears on every generated surface in both preview and build modes, including sites hosted under a `BaseUrl` subpath.
+The engine prepares navigation from page titles and generated slugs; no separate parent field is needed. Siblings are ordered by title, with route as the tie-breaker, using ordinal comparisons. Posts, drafts, and the custom 404 page are never included. The built-in theme renders the prepared hierarchy alongside Home and Tags. The same navigation is supplied on every generated surface in both preview and build modes, including sites hosted under a `BaseUrl` subpath.
 
 For example, with all four pages opted in:
 
@@ -181,7 +181,7 @@ Docs                       (slug: docs)
 
 **A hidden parent hides its entire descendant branch.** If `docs/deployment` sets `show_in_navigation: false` or omits the field, GitHub Pages is also hidden, even when it sets the field to `true`. Hiding `docs` hides all four navigation links. These pages are still generated and accessible by URL.
 
-Ancestors are matched on complete slug path segments, so `docs` does not govern `docs-other`. A directory segment with no corresponding page is not a hidden parent: the built-in theme creates a non-clickable group for that missing level, but only when it contains at least one visible descendant. Empty groups disappear automatically.
+Ancestors are matched on complete slug path segments, so `docs` does not govern `docs-other`. A directory segment with no corresponding page is not a hidden parent: the engine creates a non-clickable group for that missing level, but only when it contains at least one visible descendant. Empty groups disappear automatically.
 
 For example, when `docs` is visible and `docs/deployment` has no page, a visible `docs/deployment/github-pages` creates a **Deployment** group under Docs. An invisible `docs/deployment/netlify` is omitted. If both children are invisible, Deployment is omitted too. A real Deployment page with navigation disabled still hides the branch; it is never replaced with a group.
 
@@ -189,7 +189,9 @@ Group labels come from the missing path segment, replacing hyphens and underscor
 
 Existing parent titles remain ordinary links to their pages; missing-parent labels are plain text. Adjacent buttons expand and collapse child lists with mouse, touch, Enter, or Space; Escape closes the current expanded group and returns focus to its button. Moving focus or clicking outside navigation closes the menus. Without JavaScript, the full nested list remains accessible.
 
-Custom themes can render the layout's `NavigationPages` collection; see the [theme guide](../ScissorHands.Theme/README.md#page-navigation).
+The engine builds the immutable `NavigationTree` once per generation, without depending on the selected theme's implementation. Custom themes receive the same prepared hierarchy as the built-in theme and only need to render its nodes. The flat `NavigationPages` collection remains supported for existing themes.
+
+Content, tag, image, and theme-asset URL conventions are shared through `ScissorHands.Core.Urls.ContentUrlHelper` and protected view helpers. Themes do not need to duplicate URL normalization or encode navigation URLs that the engine has already prepared. See the [theme guide](../ScissorHands.Theme/README.md#page-navigation).
 
 ## Preview and build
 

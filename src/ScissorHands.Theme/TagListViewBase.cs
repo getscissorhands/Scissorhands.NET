@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
 
 namespace ScissorHands.Theme;
 
@@ -35,4 +36,7 @@ public abstract class TagListViewBase : ComponentBase
     /// </summary>
     [CascadingParameter]
     public SiteManifest? Site { get; set; }
+
+    /// <inheritdoc cref="ContentUrlHelper.GetTagUrl(string)" />
+    protected string GetTagUrl(string tag) => ContentUrlHelper.GetTagUrl(tag);
 }

@@ -22,7 +22,7 @@
                         @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
                     </time>
                     <div>
-                        <a class="post-link" href="@post.Metadata.Slug">@post.Metadata.Title</a>
+                        <a class="post-link" href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a>
                         @if (!string.IsNullOrWhiteSpace(post.Metadata.Description))
                         {
                             <p>@post.Metadata.Description</p>

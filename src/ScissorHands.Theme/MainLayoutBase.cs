@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
+using ScissorHands.Core.Urls;
 
 namespace ScissorHands.Theme;
 
@@ -37,6 +38,12 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// </summary>
     [Parameter]
     public IReadOnlyList<ContentDocument> NavigationPages { get; set; } = Array.Empty<ContentDocument>();
+
+    /// <summary>
+    /// Gets or sets the engine-prepared navigation hierarchy, including non-clickable groups.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<NavigationNode> NavigationTree { get; set; } = Array.Empty<NavigationNode>();
 
     /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
@@ -119,7 +126,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
 
         var theme = Theme ?? throw new InvalidOperationException("A theme must be supplied before getting a theme URL.");
 
-        return $"{ThemeManifest.THEME_DIRECTORY}/{theme.Slug.Trim('/')}/{path.TrimStart('/')}";
+        return ContentUrlHelper.GetThemeUrl(theme.Slug, path);
     }
 
     /// <summary>
@@ -131,15 +138,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// <exception cref="ArgumentException"><paramref name="slug"/> contains a relative path segment.</exception>
     protected string GetContentUrl(string slug)
     {
-        ArgumentNullException.ThrowIfNull(slug);
-
-        var segments = slug.Trim().Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
-        if (segments.Any(segment => segment is "." or ".."))
-        {
-            throw new ArgumentException("Content slugs cannot contain relative path segments.", nameof(slug));
-        }
-
-        return segments.Length == 0 ? "." : string.Join('/', segments.Select(Uri.EscapeDataString));
+        return ContentUrlHelper.GetContentUrl(slug);
     }
 
     /// <summary>

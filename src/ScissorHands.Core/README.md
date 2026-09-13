@@ -41,6 +41,44 @@ var document = new ContentDocument
 
 `ContentMetadata.ShowInNavigation` defaults to `false`. Set it to `true` to opt a page into site navigation. An existing page ancestor with navigation disabled also hides its descendants, regardless of their own opt-in values. The engine excludes posts, drafts, and the custom 404 page from navigation.
 
+### Navigation data
+
+`NavigationNode` is the shared, immutable navigation model consumed by themes. The engine prepares the complete tree, including non-clickable groups for missing parent pages:
+
+```csharp
+var group = new NavigationNode
+{
+    Title = "Group",
+    Path = "parent/group",
+    Url = null,
+    Children =
+    [
+        new NavigationNode
+        {
+            Title = "Child",
+            Path = "parent/group/child",
+            Url = "parent/group/child",
+        },
+    ],
+};
+```
+
+`Path` identifies the node using its escaped, base-relative route. `Url` is null for a group without a page; themes must not turn such a node's `Path` into a link. `Children` is an ordered, read-only snapshot of the supplied collection. Nodes contain no HTML, CSS classes, or DOM identifiers.
+
+### Shared URL helpers
+
+`ScissorHands.Core.Urls.ContentUrlHelper` centralizes URL conventions for the engine and themes:
+
+| Method | Purpose |
+| --- | --- |
+| `GetContentUrl(slug)` | Escape individual content-route segments, preserving nested paths. Empty slugs become `.`; relative `.` and `..` segments are rejected. |
+| `GetThemeUrl(themeSlug, path)` | Resolve an asset below `themes/{themeSlug}/`, preserving the existing asset-path convention. |
+| `GetImageUrl(path)` | Remove leading slashes without slug-escaping image references. Absolute HTTP(S) URLs, queries, fragments, and existing percent encoding remain intact. |
+| `GetTagUrl(tag)` | Trim and lowercase a tag, then escape it as one segment below `tags/`. Empty tags and `.` or `..` are rejected. |
+| `GetLocaleSegment(locale)` | Normalize locale prefixes using the same rules as content loading; absent locales produce an empty segment. |
+
+Content, tag, and theme URLs are relative to the site's HTML base URL rather than prepended with `Site.BaseUrl`. Image handling preserves the existing behavior and is not a general URI sanitizer. See the [theme guide](../ScissorHands.Theme/README.md#assets-and-urls) for the protected helpers exposed by view base classes.
+
 ## Site manifest
 
 `SiteManifest` contains site-wide generation settings:

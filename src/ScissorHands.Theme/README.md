@@ -105,26 +105,52 @@ Inherit from `MainLayoutBase` and render the body through `CascadingMainLayoutBa
 
 ### Page navigation
 
-The engine supplies `MainLayoutBase.NavigationPages` on every generated surface: home, posts, pages, tag lists, individual tags, and 404. It is a read-only list of pages that opt in with `show_in_navigation: true` frontmatter. The default is off; posts, drafts, and the custom 404 page are excluded. Pages are ordered by title and then slug using ordinal comparisons.
+The engine supplies navigation data on every generated surface: home, posts, pages, tag lists, individual tags, and 404:
 
-An existing page ancestor with navigation disabled removes its entire descendant branch from this collection, regardless of descendant opt-in flags. Ancestors are matched on full slug path segments. Missing intermediate pages do not themselves hide a branch.
+- `MainLayoutBase.NavigationTree`: the complete, ordered hierarchy of immutable `NavigationNode` objects, including non-clickable groups for missing ancestors.
+- `MainLayoutBase.NavigationPages`: the existing flat, read-only collection of actual visible pages, retained for compatibility.
 
-The collection remains flat for custom-theme compatibility and contains only actual pages. The built-in theme preserves every ancestor level in nested disclosure menus. Existing parents retain their page links; missing parents become non-clickable labels only when they contain a visible descendant. These synthesized groups are not added to `NavigationPages` and do not create output pages. Group labels are derived from their slug segments; see the [navigation guide](../ScissorHands.Web/README.md#page-navigation).
+The engine handles opt-in flags, hidden-parent suppression, path matching, locale prefixes, missing ancestors, default group labels, and sibling ordering. It builds the tree once per generation and shares it with every layout. Theme packages do not need a reference to the Web package or their own hierarchy builder.
 
-A custom layout can choose the same hierarchy or render a flat list alongside its existing navigation:
+Each node exposes `Title`, `Path`, `Url`, and read-only `Children`. A null `Url` means the node is a group, not a page link. Themes own the HTML, CSS, disclosure controls, DOM IDs, and accessibility markup. For example, a layout can render the prepared tree as a plain nested list:
 
 ```razor
+@using ScissorHands.Core.Models
+
 <nav aria-label="Primary navigation">
-    <a href=".">Home</a>
-    <a href="tags">Tags</a>
-    @foreach (var pageDocument in NavigationPages)
-    {
-        <a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a>
-    }
+    <ul>
+        <li><a href=".">Home</a></li>
+        @RenderNodes(NavigationTree)
+        <li><a href="tags">Tags</a></li>
+    </ul>
 </nav>
+
+@code {
+    private RenderFragment RenderNodes(IReadOnlyList<NavigationNode> nodes) => @<text>
+        @foreach (var node in nodes)
+        {
+            <li>
+                @if (node.Url is not null)
+                {
+                    <a href="@node.Url">@node.Title</a>
+                }
+                else
+                {
+                    <span>@node.Title</span>
+                }
+                @if (node.Children.Count > 0)
+                {
+                    <ul>@RenderNodes(node.Children)</ul>
+                }
+            </li>
+        }
+    </text>;
+}
 ```
 
-`NavigationPages` defaults to an empty list when not supplied. It is a layout parameter, not a content-view parameter or cascading value. The existing `Documents` parameter remains the ordered post collection for the home view. Existing custom themes need to add navigation markup to display opted-in pages; the built-in theme already does so.
+Both collections default to empty lists and are layout-only parameters, not content-view attributes or automatic cascading values. The existing `Documents` parameter remains the ordered post collection for the home view. Existing themes can continue to use `NavigationPages`; synthesized groups are not added to that collection.
+
+Normal generation supplies both parameters automatically. For compatibility, the engine's `ComponentRenderer` also prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree` when displaying hierarchical navigation.
 
 ## Page views
 
@@ -158,7 +184,13 @@ Layouts derived from `MainLayoutBase` can use the protected `GetThemeUrl(string 
 
 The returned URL is relative to the `<base href="@Site!.BaseUrl" />` in the layout; it does not prepend `Site.BaseUrl`. Supply the `Theme` parameter before calling the helper. A missing theme throws `InvalidOperationException`, and a null path throws `ArgumentNullException`.
 
-For content links, use the protected `GetContentUrl(string slug)` helper. It escapes each path segment, preserves nested and locale-prefixed routes, and returns a base-relative URL (or `.` for an empty slug). For example, `guides/about & team` becomes `guides/about%20%26%20team`. Leading/trailing slashes are removed and backslashes are treated as path separators. A null slug throws `ArgumentNullException`; `.` or `..` path segments throw `ArgumentException`.
+For content links, use the protected `GetContentUrl(string slug)` helper on `MainLayoutBase`, `IndexViewBase`, or `TagViewBase`. It escapes each path segment, preserves nested and locale-prefixed routes, and returns a base-relative URL (or `.` for an empty slug). For example, `guides/about & team` becomes `guides/about%20%26%20team`. Leading/trailing slashes are removed and backslashes are treated as path separators. A null slug throws `ArgumentNullException`; `.` or `..` path segments throw `ArgumentException`.
+
+`PostViewBase.GetImageUrl(string path)` preserves the existing image convention: remove leading slashes, but retain absolute HTTP(S) URLs, query strings, fragments, and percent encoding. Do not use content-slug escaping for image URLs.
+
+`PostViewBase`, `PageViewBase`, and `TagListViewBase` expose `GetTagUrl(string tag)`. It returns a base-relative link below `tags/` using the trimmed, invariant-lowercase, escaped tag name. Empty tags and `.` or `..` are rejected rather than producing invalid links.
+
+These helpers delegate to `ScissorHands.Core.Urls.ContentUrlHelper`; URL rules are shared with the engine rather than implemented by individual themes. Existing layout helper signatures and exception behavior remain supported.
 
 ## Start from the template
 

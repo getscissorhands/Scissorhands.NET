@@ -10,7 +10,7 @@
             <ul class="tag-list" aria-label="Page tags">
                 @foreach (var tag in Document.Metadata.Tags)
                 {
-                    <li><a href="tags/@Uri.EscapeDataString(tag.Trim().ToLowerInvariant())">#@tag</a></li>
+                    <li><a href="@GetTagUrl(tag)">#@tag</a></li>
                 }
             </ul>
         }

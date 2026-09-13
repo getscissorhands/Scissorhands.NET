@@ -1,4 +1,4 @@
-@using System.Globalization
+@using ScissorHands.Core.Models
 @inherits ScissorHands.Theme.MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" Plugins="@Plugins" Theme="@Theme" Site="@Site">
@@ -34,7 +34,7 @@
             <nav aria-label="Primary navigation">
                 <ul class="navigation-list">
                     <li><a href=".">Home</a></li>
-                    @RenderNavigation(string.Empty)
+                    @RenderNavigation(NavigationTree)
                     <li><a href="tags">Tags</a></li>
                 </ul>
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
@@ -71,71 +71,11 @@
 </CascadingMainLayoutBase>
 
 @code {
-    private ILookup<string, NavigationItem> _navigation = Array.Empty<NavigationItem>().ToLookup(item => item.Path);
-
-    protected override void OnParametersSet()
-    {
-        base.OnParametersSet();
-
-        var items = new Dictionary<string, NavigationItem>(StringComparer.Ordinal);
-        foreach (var pageDocument in NavigationPages)
+    private RenderFragment RenderNavigation(IReadOnlyList<NavigationNode> nodes) => @<text>
+        @foreach (var item in nodes)
         {
-            var path = GetContentUrl(pageDocument.Metadata.Slug);
-            items.Add(path, new NavigationItem(pageDocument.Metadata.Title, path, path, string.Empty));
-        }
-
-        foreach (var path in items.Keys.ToArray())
-        {
-            var parentPath = GetParentPath(path);
-            while (parentPath.Length > 0)
-            {
-                var segment = Uri.UnescapeDataString(parentPath[(parentPath.LastIndexOf('/') + 1)..]);
-                var title = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(segment.Replace('-', ' ').Replace('_', ' '));
-                items.TryAdd(parentPath, new NavigationItem(title, parentPath, null, string.Empty));
-                parentPath = GetParentPath(parentPath);
-            }
-        }
-
-        // A locale routing prefix is not a content group unless it has its own visible page.
-        if (Site?.UseLocaleInUrl == true)
-        {
-            foreach (var pageDocument in NavigationPages)
-            {
-                var locale = string.IsNullOrWhiteSpace(pageDocument.Metadata.Locale) ? Site.Locale : pageDocument.Metadata.Locale;
-                if (string.IsNullOrWhiteSpace(locale))
-                {
-                    continue;
-                }
-
-                var localePath = GetContentUrl(locale.Trim().Replace('_', '-').Replace('/', '-').ToLowerInvariant());
-                if (items.TryGetValue(localePath, out var item) && item.Url is null)
-                {
-                    items.Remove(localePath);
-                }
-            }
-        }
-
-        _navigation = items.Values
-            .OrderBy(item => item.Title, StringComparer.Ordinal)
-            .ThenBy(item => item.Path, StringComparer.Ordinal)
-            .Select((item, index) => item with { SubmenuId = $"navigation-submenu-{index}" })
-            .ToLookup(item =>
-            {
-                var parentPath = GetParentPath(item.Path);
-                return items.ContainsKey(parentPath) ? parentPath : string.Empty;
-            }, StringComparer.Ordinal);
-    }
-
-    private static string GetParentPath(string path)
-    {
-        var separator = path.LastIndexOf('/');
-        return separator < 0 ? string.Empty : path[..separator];
-    }
-
-    private RenderFragment RenderNavigation(string parentUrl) => @<text>
-        @foreach (var item in _navigation[parentUrl])
-        {
-            var hasChildren = _navigation[item.Path].Any();
+            var hasChildren = item.Children.Count > 0;
+            var submenuId = $"navigation-submenu-{item.Path}";
             <li class="navigation-item">
                 <div class="navigation-link">
                     @if (item.Url is not null)
@@ -148,7 +88,7 @@
                     }
                     @if (hasChildren)
                     {
-                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@item.SubmenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
+                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@submenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
                             <svg viewBox="0 0 16 16" aria-hidden="true">
                                 <path d="m4 6 4 4 4-4"></path>
                             </svg>
@@ -157,13 +97,11 @@
                 </div>
                 @if (hasChildren)
                 {
-                    <ul class="navigation-children" id="@item.SubmenuId">
-                        @RenderNavigation(item.Path)
+                    <ul class="navigation-children" id="@submenuId">
+                        @RenderNavigation(item.Children)
                     </ul>
                 }
             </li>
         }
     </text>;
-
-    private sealed record NavigationItem(string Title, string Path, string? Url, string SubmenuId);
 }

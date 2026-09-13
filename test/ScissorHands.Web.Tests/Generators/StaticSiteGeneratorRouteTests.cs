@@ -97,14 +97,18 @@ public class StaticSiteGeneratorRouteTests
         exception.Message.ShouldContain("second.md");
     }
 
-    [Fact]
-    public async Task Given_ParentDirectoryTag_When_BuildInvoked_Then_It_Should_RejectTheGeneratedTagRoute()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(".")]
+    [InlineData("..")]
+    public async Task Given_InvalidTag_When_BuildInvoked_Then_It_Should_RejectTheGeneratedTagRoute(string tag)
     {
         var document = new ContentDocument
         {
             SourcePath = "tagged.md",
             Kind = ContentKind.Post,
-            Metadata = new ContentMetadata { Slug = "post", Tags = [".."] },
+            Metadata = new ContentMetadata { Slug = "post", Tags = [tag] },
         };
         var (generator, destination) = CreateGenerator([document]);
 

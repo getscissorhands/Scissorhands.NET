@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
 using ScissorHands.Web.Abstractions;
 
 using YamlDotNet.Core;
@@ -218,7 +219,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
 
         if (_options.UseLocaleInUrl)
         {
-            var localeSegment = ToLocaleSegment(effectiveLocale);
+            var localeSegment = ContentUrlHelper.GetLocaleSegment(effectiveLocale);
             if (!string.IsNullOrWhiteSpace(localeSegment))
             {
                 slug = slug.Trim('/');
@@ -233,19 +234,6 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         }
 
         return metadata with { Slug = slug, Locale = effectiveLocale };
-    }
-
-    private static string ToLocaleSegment(string? locale)
-    {
-        if (string.IsNullOrWhiteSpace(locale))
-        {
-            return string.Empty;
-        }
-
-        return locale.Trim()
-                     .Replace('_', '-')
-                     .Replace('/', '-')
-                     .ToLowerInvariant();
     }
 
     private static IEnumerable<string> ToTags(object value, string sourcePath)

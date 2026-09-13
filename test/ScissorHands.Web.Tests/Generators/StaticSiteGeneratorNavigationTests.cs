@@ -2,6 +2,7 @@ using System.IO.Abstractions.TestingHelpers;
 
 using AngleSharp.Html.Parser;
 
+using Microsoft.AspNetCore.Components;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
@@ -68,9 +69,9 @@ public class StaticSiteGeneratorNavigationTests
         services.AddLogging();
         services.AddSingleton(themeService);
         using var provider = services.BuildServiceProvider();
-        var renderer = new ComponentRenderer(
+        var renderer = new RecordingRenderer(new ComponentRenderer(
             provider.GetRequiredService<IServiceScopeFactory>(),
-            provider.GetRequiredService<ILoggerFactory>());
+            provider.GetRequiredService<ILoggerFactory>()));
         var markdownService = Substitute.For<IMarkdownService>();
         markdownService.ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>()).Returns("<p>Body</p>");
         var pluginRunner = Substitute.For<IPluginRunner>();
@@ -117,6 +118,8 @@ public class StaticSiteGeneratorNavigationTests
         {
             expectedPaths.Add("en-us/docs/deployment/index.html");
         }
+        renderer.Navigations.Count.ShouldBe(expectedPaths.Count);
+        renderer.Navigations[0].Pages.Count.ShouldBe(missingDeployment ? 6 : 7);
 
         var parser = new HtmlParser();
         foreach (var path in expectedPaths)
@@ -125,16 +128,16 @@ public class StaticSiteGeneratorNavigationTests
             fileSystem.File.Exists(outputPath).ShouldBeTrue(path);
             using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
             var links = html.QuerySelectorAll("nav a");
-            var expectedTitles = new List<string> { "Home", "Tags", "Docs", "GitHub Pages", "Quickstart", aboutTitle, "Side docs", "Zebra" };
+            var expectedTitles = new List<string> { "Home", "Docs", "GitHub Pages", "Quickstart", aboutTitle, "Side docs", "Zebra", "Tags" };
             var expectedUrls = new List<string>
             {
-                ".", "tags", "en-us/docs", "en-us/docs/deployment/github-pages", "en-us/docs/quickstart",
-                "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/zebra"
+                ".", "en-us/docs", "en-us/docs/deployment/github-pages", "en-us/docs/quickstart",
+                "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/zebra", "tags"
             };
             if (!missingDeployment)
             {
-                expectedTitles.Insert(3, "Deployment");
-                expectedUrls.Insert(3, "en-us/docs/deployment");
+                expectedTitles.Insert(2, "Deployment");
+                expectedUrls.Insert(2, "en-us/docs/deployment");
             }
             links.Select(link => link.TextContent).ShouldBe(expectedTitles);
             links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
@@ -167,7 +170,7 @@ public class StaticSiteGeneratorNavigationTests
             AddContent("pages", "github-pages.md", "title: GitHub Pages\nslug: docs/deployment/github-pages\nshow_in_navigation: false");
 
             await BuildAsync();
-            AssertNavigationTitles(["Home", "Tags", "Docs", "Quickstart", aboutTitle, "Side docs", "Zebra"]);
+            AssertNavigationTitles(["Home", "Docs", "Quickstart", aboutTitle, "Side docs", "Zebra", "Tags"]);
             foreach (var path in expectedPaths)
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
@@ -184,7 +187,7 @@ public class StaticSiteGeneratorNavigationTests
         AddContent("pages", "deployment.md", "title: Deployment\nslug: docs/deployment\nshow_in_navigation: false");
 
         await BuildAsync();
-        AssertNavigationTitles(["Home", "Tags", "Docs", "Quickstart", "Side docs"]);
+        AssertNavigationTitles(["Home", "Docs", "Quickstart", "Side docs", "Tags"]);
 
         AddContent("pages", "docs.md", "title: Docs");
         if (missingDeployment)
@@ -197,7 +200,7 @@ public class StaticSiteGeneratorNavigationTests
         }
 
         await BuildAsync();
-        AssertNavigationTitles(["Home", "Tags", "Side docs"]);
+        AssertNavigationTitles(["Home", "Side docs", "Tags"]);
 
         AddContent("pages", "docs-other.md", "title: Side docs\nshow_in_navigation: false");
 
@@ -224,7 +227,38 @@ public class StaticSiteGeneratorNavigationTests
             fileSystem.AddFile(path, new MockFileData($"---\n{frontMatter}\n---\n# Body"));
         }
 
-        Task BuildAsync() => generator.BuildAsync<MainLayout, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(
-            destination, preview, Xunit.TestContext.Current.CancellationToken);
+        async Task BuildAsync()
+        {
+            var before = renderer.Navigations.Count;
+            await generator.BuildAsync<MainLayout, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(
+                destination, preview, Xunit.TestContext.Current.CancellationToken);
+
+            var navigation = renderer.Navigations[before];
+            foreach (var rendered in renderer.Navigations.Skip(before))
+            {
+                rendered.Tree.ShouldBeSameAs(navigation.Tree);
+                rendered.Pages.ShouldBeSameAs(navigation.Pages);
+            }
+            if (before > 0)
+            {
+                navigation.Tree.ShouldNotBeSameAs(renderer.Navigations[before - 1].Tree);
+            }
+        }
+    }
+
+    private sealed class RecordingRenderer(IComponentRenderer inner) : IComponentRenderer
+    {
+        public List<(IReadOnlyList<ContentDocument> Pages, IReadOnlyList<NavigationNode> Tree)> Navigations { get; } = [];
+
+        public Task<string> RenderAsync<TComponent>(Type layoutType, IDictionary<string, object?> parameters, CancellationToken cancellationToken = default)
+            where TComponent : IComponent
+        {
+            var pages = parameters["NavigationPages"].ShouldBeAssignableTo<IReadOnlyList<ContentDocument>>();
+            var tree = parameters["NavigationTree"].ShouldBeAssignableTo<IReadOnlyList<NavigationNode>>();
+            pages.ShouldNotBeNull();
+            tree.ShouldNotBeNull();
+            Navigations.Add((pages, tree));
+            return inner.RenderAsync<TComponent>(layoutType, parameters, cancellationToken);
+        }
     }
 }
