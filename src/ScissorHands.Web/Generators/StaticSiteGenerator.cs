@@ -65,8 +65,13 @@ public sealed class StaticSiteGenerator(
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
         var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
         ValidateOutputRoutes(destination, documents);
+        var hiddenPageRoutes = documents
+            .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || d.Metadata.Draft || IsNotFoundPage(d)))
+            .Select(d => NormalizeRoute(d.Metadata.Slug))
+            .ToHashSet(StringComparer.Ordinal);
         var navigationPages = documents
             .Where(d => d.Kind == ContentKind.Page && d.Metadata.ShowInNavigation && !d.Metadata.Draft && !IsNotFoundPage(d))
+            .Where(d => !HasHiddenNavigationAncestor(d.Metadata.Slug, hiddenPageRoutes))
             .OrderBy(d => d.Metadata.Title, StringComparer.Ordinal)
             .ThenBy(d => d.Metadata.Slug, StringComparer.Ordinal)
             .ToList()
@@ -87,6 +92,24 @@ public sealed class StaticSiteGenerator(
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
+    }
+
+    private static bool HasHiddenNavigationAncestor(string slug, HashSet<string> hiddenPageRoutes)
+    {
+        var route = NormalizeRoute(slug);
+        var separator = route.LastIndexOf('/');
+        while (separator >= 0)
+        {
+            route = route[..separator];
+            if (hiddenPageRoutes.Contains(route))
+            {
+                return true;
+            }
+
+            separator = route.LastIndexOf('/');
+        }
+
+        return false;
     }
 
     private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IReadOnlyList<ContentDocument> navigationPages, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)

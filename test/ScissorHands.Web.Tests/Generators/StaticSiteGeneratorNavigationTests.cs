@@ -19,14 +19,19 @@ namespace ScissorHands.Web.Tests.Generators;
 public class StaticSiteGeneratorNavigationTests
 {
     [Theory]
-    [InlineData(false, "/", false)]
-    [InlineData(true, "/", true)]
-    [InlineData(false, "/docs/", true)]
-    [InlineData(true, "/docs/", false)]
+    [InlineData(false, "/", false, false)]
+    [InlineData(true, "/", true, false)]
+    [InlineData(false, "/docs/", true, false)]
+    [InlineData(true, "/docs/", false, false)]
+    [InlineData(false, "/", false, true)]
+    [InlineData(true, "/", true, true)]
+    [InlineData(false, "/docs/", true, true)]
+    [InlineData(true, "/docs/", false, true)]
     public async Task Given_OptedInPages_When_BuildInvoked_Then_It_Should_RenderNavigationOnEverySurface(
         bool preview,
         string baseUrl,
-        bool customNotFound)
+        bool customNotFound,
+        bool missingDeployment)
     {
         var fileSystem = new MockFileSystem();
         var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
@@ -39,6 +44,15 @@ public class StaticSiteGeneratorNavigationTests
         const string aboutTitle = "About <script>alert(1)</script> & team";
         AddContent("pages", "zebra.md", "title: Zebra\nshow_in_navigation: true");
         AddContent("pages", "about.md", $"title: '{aboutTitle}'\nslug: guides/about & team\nshow_in_navigation: true");
+        AddContent("pages", "docs.md", "title: Docs\nshow_in_navigation: true");
+        AddContent("pages", "quickstart.md", "title: Quickstart\nslug: docs/quickstart\nshow_in_navigation: true");
+        if (!missingDeployment)
+        {
+            AddContent("pages", "deployment.md", "title: Deployment\nslug: docs/deployment\nshow_in_navigation: true");
+        }
+        AddContent("pages", "github-pages.md", "title: GitHub Pages\nslug: docs/deployment/github-pages\nshow_in_navigation: true");
+        AddContent("pages", "netlify.md", "title: Netlify\nslug: docs/deployment/netlify\nshow_in_navigation: false");
+        AddContent("pages", "docs-other.md", "title: Side docs\nshow_in_navigation: true");
         AddContent("pages", "default.md", "title: Default");
         AddContent("pages", "hidden.md", "title: Hidden\nshow_in_navigation: false");
         AddContent("pages", "draft.md", "title: Draft\ndraft: true\nshow_in_navigation: true");
@@ -80,18 +94,30 @@ public class StaticSiteGeneratorNavigationTests
 
         await BuildAsync();
 
-        var expectedPaths = new[]
+        var expectedPaths = new List<string>
         {
             "index.html",
             "404.html",
             "en-us/guides/about & team/index.html",
             "en-us/zebra/index.html",
+            "en-us/docs/index.html",
+            "en-us/docs/quickstart/index.html",
+            "en-us/docs/deployment/github-pages/index.html",
+            "en-us/docs/deployment/netlify/index.html",
+            "en-us/docs-other/index.html",
             "en-us/default/index.html",
             "en-us/hidden/index.html",
             "en-us/post/index.html",
             "tags/index.html",
             "tags/sample/index.html",
         };
+        var deploymentPath = fileSystem.Path.Combine(destination, "en-us", "docs", "deployment", "index.html");
+        fileSystem.File.Exists(deploymentPath).ShouldBe(!missingDeployment);
+        if (!missingDeployment)
+        {
+            expectedPaths.Add("en-us/docs/deployment/index.html");
+        }
+
         var parser = new HtmlParser();
         foreach (var path in expectedPaths)
         {
@@ -99,12 +125,35 @@ public class StaticSiteGeneratorNavigationTests
             fileSystem.File.Exists(outputPath).ShouldBeTrue(path);
             using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
             var links = html.QuerySelectorAll("nav a");
-            links.Select(link => link.TextContent).ShouldBe(["Home", "Tags", aboutTitle, "Zebra"]);
-            links.Select(link => link.GetAttribute("href")).ShouldBe([".", "tags", "en-us/guides/about%20%26%20team", "en-us/zebra"]);
+            var expectedTitles = new List<string> { "Home", "Tags", "Docs", "GitHub Pages", "Quickstart", aboutTitle, "Side docs", "Zebra" };
+            var expectedUrls = new List<string>
+            {
+                ".", "tags", "en-us/docs", "en-us/docs/deployment/github-pages", "en-us/docs/quickstart",
+                "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/zebra"
+            };
+            if (!missingDeployment)
+            {
+                expectedTitles.Insert(3, "Deployment");
+                expectedUrls.Insert(3, "en-us/docs/deployment");
+            }
+            links.Select(link => link.TextContent).ShouldBe(expectedTitles);
+            links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
+            var docsItem = html.QuerySelector("nav a[href='en-us/docs']")!.Closest("li")!;
+            docsItem.QuerySelectorAll(":scope > ul > li > .navigation-link")
+                .Select(line => line.QuerySelector("a, .navigation-label")!.TextContent).ShouldBe(["Deployment", "Quickstart"]);
+            var deploymentLabel = missingDeployment
+                ? html.QuerySelectorAll("nav .navigation-label").Single(label => label.TextContent == "Deployment")
+                : html.QuerySelector("nav a[href='en-us/docs/deployment']")!;
+            var deploymentItem = deploymentLabel.Closest("li")!;
+            (deploymentItem.QuerySelector(":scope > .navigation-link > a") is null).ShouldBe(missingDeployment);
+            deploymentItem.QuerySelectorAll(":scope > ul > li > .navigation-link > a")
+                .Select(link => link.TextContent).ShouldBe(["GitHub Pages"]);
+            html.QuerySelectorAll("nav .navigation-label").Select(label => label.TextContent)
+                .ShouldBe(missingDeployment ? ["Deployment", "Guides"] : ["Guides"]);
             html.QuerySelectorAll("nav script").ShouldBeEmpty();
             html.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
             var siteBase = new Uri($"https://example.com{baseUrl}");
-            new Uri(siteBase, links[2].GetAttribute("href")!).AbsoluteUri.ShouldBe(
+            new Uri(siteBase, links.Single(link => link.TextContent == aboutTitle).GetAttribute("href")!).AbsoluteUri.ShouldBe(
                 $"https://example.com{baseUrl}en-us/guides/about%20%26%20team");
         }
 
@@ -113,16 +162,60 @@ public class StaticSiteGeneratorNavigationTests
         index.QuerySelectorAll(".post-list .post-link").Select(link => link.TextContent).ShouldBe(["Post"]);
         site.IsPreview.ShouldBe(preview);
 
+        if (missingDeployment)
+        {
+            AddContent("pages", "github-pages.md", "title: GitHub Pages\nslug: docs/deployment/github-pages\nshow_in_navigation: false");
+
+            await BuildAsync();
+            AssertNavigationTitles(["Home", "Tags", "Docs", "Quickstart", aboutTitle, "Side docs", "Zebra"]);
+            foreach (var path in expectedPaths)
+            {
+                var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
+                using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
+                html.QuerySelectorAll("nav .navigation-label").Select(label => label.TextContent).ShouldBe(["Guides"]);
+                html.QuerySelectorAll(".navigation-toggle[aria-label='Toggle Deployment pages']").ShouldBeEmpty();
+            }
+            fileSystem.File.Exists(deploymentPath).ShouldBeFalse();
+            AddContent("pages", "github-pages.md", "title: GitHub Pages\nslug: docs/deployment/github-pages\nshow_in_navigation: true");
+        }
+
         AddContent("pages", "zebra.md", "title: Zebra\nshow_in_navigation: false");
         AddContent("pages", "about.md", $"title: '{aboutTitle}'\nslug: guides/about & team");
+        AddContent("pages", "deployment.md", "title: Deployment\nslug: docs/deployment\nshow_in_navigation: false");
 
         await BuildAsync();
+        AssertNavigationTitles(["Home", "Tags", "Docs", "Quickstart", "Side docs"]);
 
-        foreach (var path in expectedPaths)
+        AddContent("pages", "docs.md", "title: Docs");
+        if (missingDeployment)
         {
-            var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
-            using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
-            html.QuerySelectorAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Tags"]);
+            fileSystem.File.Delete(fileSystem.Path.Combine(contentsRoot, "pages", "deployment.md"));
+        }
+        else
+        {
+            AddContent("pages", "deployment.md", "title: Deployment\nslug: docs/deployment\nshow_in_navigation: true");
+        }
+
+        await BuildAsync();
+        AssertNavigationTitles(["Home", "Tags", "Side docs"]);
+
+        AddContent("pages", "docs-other.md", "title: Side docs\nshow_in_navigation: false");
+
+        await BuildAsync();
+        AssertNavigationTitles(["Home", "Tags"]);
+
+        void AssertNavigationTitles(string[] expected)
+        {
+            foreach (var path in expectedPaths)
+            {
+                var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
+                using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
+                html.QuerySelectorAll("nav a").Select(link => link.TextContent).ShouldBe(expected);
+                if (expected.Length == 2)
+                {
+                    html.QuerySelectorAll(".navigation-item").ShouldBeEmpty();
+                }
+            }
         }
 
         void AddContent(string directory, string name, string frontMatter)

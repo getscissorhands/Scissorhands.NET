@@ -107,7 +107,11 @@ Inherit from `MainLayoutBase` and render the body through `CascadingMainLayoutBa
 
 The engine supplies `MainLayoutBase.NavigationPages` on every generated surface: home, posts, pages, tag lists, individual tags, and 404. It is a read-only list of pages that opt in with `show_in_navigation: true` frontmatter. The default is off; posts, drafts, and the custom 404 page are excluded. Pages are ordered by title and then slug using ordinal comparisons.
 
-Custom layouts can render these links alongside their existing navigation:
+An existing page ancestor with navigation disabled removes its entire descendant branch from this collection, regardless of descendant opt-in flags. Ancestors are matched on full slug path segments. Missing intermediate pages do not themselves hide a branch.
+
+The collection remains flat for custom-theme compatibility and contains only actual pages. The built-in theme preserves every ancestor level in nested disclosure menus. Existing parents retain their page links; missing parents become non-clickable labels only when they contain a visible descendant. These synthesized groups are not added to `NavigationPages` and do not create output pages. Group labels are derived from their slug segments; see the [navigation guide](../ScissorHands.Web/README.md#page-navigation).
+
+A custom layout can choose the same hierarchy or render a flat list alongside its existing navigation:
 
 ```razor
 <nav aria-label="Primary navigation">

@@ -64,6 +64,8 @@ A Blazor-based static site generator
 
 Pages are hidden from navigation by default. Add `show_in_navigation: true` to a page's YAML frontmatter to display a link in the built-in theme; use `false` or omit the field to hide the link without removing the generated page.
 
+The built-in navigation preserves the hierarchy of page slugs, such as `docs/deployment/github-pages`. Missing parent pages appear as non-clickable groups only while they contain a visible descendant. Hiding an existing parent page hides its entire descendant branch, even when those pages opt in.
+
 See the [page navigation guide](src/ScissorHands.Web/README.md#page-navigation) for an example and custom-theme support.
 
 ## Engine Preview

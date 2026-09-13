@@ -168,6 +168,7 @@ pre code {
 }
 
 .site-header nav {
+  position: relative;
   display: flex;
   flex-wrap: wrap;
   align-items: center;
@@ -178,6 +179,80 @@ pre code {
 
 .site-header nav a {
   color: var(--text);
+}
+
+.navigation-list {
+  display: flex;
+  flex: 1;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.navigation-link {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.navigation-toggle {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0.25rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: transparent;
+  color: var(--text);
+  cursor: pointer;
+}
+
+.navigation-toggle svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+}
+
+.navigation-toggle[aria-expanded="true"] svg {
+  transform: rotate(180deg);
+}
+
+.navigation-children {
+  margin: 0.5rem 0 0;
+  padding-left: 1rem;
+  border-left: 1px solid var(--border);
+  list-style: none;
+}
+
+.navigation-children > li + li {
+  margin-top: 0.5rem;
+}
+
+.navigation-toggle[hidden],
+.navigation-children[hidden] {
+  display: none;
+}
+
+nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-children {
+  position: absolute;
+  z-index: 10;
+  inset-inline: 0;
+  top: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin: 0;
+  padding: 1rem;
+  border: 1px solid var(--border);
+  border-radius: 0.25rem;
+  background: var(--background);
 }
 
 #theme-toggle {
@@ -336,6 +411,25 @@ pre code {
 @media (max-width: 560px) {
   body {
     padding: 1rem;
+  }
+
+  .site-header nav {
+    align-items: flex-start;
+  }
+
+  .navigation-list {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-children {
+    position: static;
+    max-height: none;
+    margin-top: 0.5rem;
+    padding: 0 0 0 1rem;
+    border: 0;
+    border-left: 1px solid var(--border);
+    border-radius: 0;
   }
 
   .post-list > li {

@@ -1,3 +1,4 @@
+@using System.Globalization
 @inherits ScissorHands.Theme.MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" Plugins="@Plugins" Theme="@Theme" Site="@Site">
@@ -31,12 +32,11 @@
         <header class="site-header">
             <a class="site-title" href=".">@Site.Title</a>
             <nav aria-label="Primary navigation">
-                <a href=".">Home</a>
-                <a href="tags">Tags</a>
-                @foreach (var pageDocument in NavigationPages)
-                {
-                    <a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a>
-                }
+                <ul class="navigation-list">
+                    <li><a href=".">Home</a></li>
+                    <li><a href="tags">Tags</a></li>
+                    @RenderNavigation(string.Empty)
+                </ul>
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
                     <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
@@ -69,3 +69,101 @@
     </body>
     </html>
 </CascadingMainLayoutBase>
+
+@code {
+    private ILookup<string, NavigationItem> _navigation = Array.Empty<NavigationItem>().ToLookup(item => item.Path);
+
+    protected override void OnParametersSet()
+    {
+        base.OnParametersSet();
+
+        var items = new Dictionary<string, NavigationItem>(StringComparer.Ordinal);
+        foreach (var pageDocument in NavigationPages)
+        {
+            var path = GetContentUrl(pageDocument.Metadata.Slug);
+            items.Add(path, new NavigationItem(pageDocument.Metadata.Title, path, path, string.Empty));
+        }
+
+        foreach (var path in items.Keys.ToArray())
+        {
+            var parentPath = GetParentPath(path);
+            while (parentPath.Length > 0)
+            {
+                var segment = Uri.UnescapeDataString(parentPath[(parentPath.LastIndexOf('/') + 1)..]);
+                var title = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(segment.Replace('-', ' ').Replace('_', ' '));
+                items.TryAdd(parentPath, new NavigationItem(title, parentPath, null, string.Empty));
+                parentPath = GetParentPath(parentPath);
+            }
+        }
+
+        // A locale routing prefix is not a content group unless it has its own visible page.
+        if (Site?.UseLocaleInUrl == true)
+        {
+            foreach (var pageDocument in NavigationPages)
+            {
+                var locale = string.IsNullOrWhiteSpace(pageDocument.Metadata.Locale) ? Site.Locale : pageDocument.Metadata.Locale;
+                if (string.IsNullOrWhiteSpace(locale))
+                {
+                    continue;
+                }
+
+                var localePath = GetContentUrl(locale.Trim().Replace('_', '-').Replace('/', '-').ToLowerInvariant());
+                if (items.TryGetValue(localePath, out var item) && item.Url is null)
+                {
+                    items.Remove(localePath);
+                }
+            }
+        }
+
+        _navigation = items.Values
+            .OrderBy(item => item.Title, StringComparer.Ordinal)
+            .ThenBy(item => item.Path, StringComparer.Ordinal)
+            .Select((item, index) => item with { SubmenuId = $"navigation-submenu-{index}" })
+            .ToLookup(item =>
+            {
+                var parentPath = GetParentPath(item.Path);
+                return items.ContainsKey(parentPath) ? parentPath : string.Empty;
+            }, StringComparer.Ordinal);
+    }
+
+    private static string GetParentPath(string path)
+    {
+        var separator = path.LastIndexOf('/');
+        return separator < 0 ? string.Empty : path[..separator];
+    }
+
+    private RenderFragment RenderNavigation(string parentUrl) => @<text>
+        @foreach (var item in _navigation[parentUrl])
+        {
+            var hasChildren = _navigation[item.Path].Any();
+            <li class="navigation-item">
+                <div class="navigation-link">
+                    @if (item.Url is not null)
+                    {
+                        <a href="@item.Url">@item.Title</a>
+                    }
+                    else
+                    {
+                        <span class="navigation-label">@item.Title</span>
+                    }
+                    @if (hasChildren)
+                    {
+                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@item.SubmenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
+                            <svg viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="m4 6 4 4 4-4"></path>
+                            </svg>
+                        </button>
+                    }
+                </div>
+                @if (hasChildren)
+                {
+                    <ul class="navigation-children" id="@item.SubmenuId">
+                        @RenderNavigation(item.Path)
+                    </ul>
+                }
+            </li>
+        }
+    </text>;
+
+    private sealed record NavigationItem(string Title, string Path, string? Url, string SubmenuId);
+}

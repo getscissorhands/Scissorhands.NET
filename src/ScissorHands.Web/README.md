@@ -135,7 +135,26 @@ show_in_navigation: true
 
 `show_in_navigation` accepts `true` or `false` and defaults to `false` when omitted. Hidden pages are still generated and can be reached by their URL; this setting only controls navigation links, not access to content.
 
-The built-in theme keeps Home and Tags, then adds opted-in pages using their titles and generated slugs. Links are ordered by title, with slug as the tie-breaker, using ordinal comparisons. Posts, drafts, and the custom 404 page are never included. The same navigation appears on every generated surface in both preview and build modes, including sites hosted under a `BaseUrl` subpath.
+The built-in theme keeps Home and Tags, then adds opted-in pages using their titles and generated slugs. Page slugs determine the navigation hierarchy; no separate parent field is needed. Siblings are ordered by title, with slug as the tie-breaker, using ordinal comparisons. Posts, drafts, and the custom 404 page are never included. The same navigation appears on every generated surface in both preview and build modes, including sites hosted under a `BaseUrl` subpath.
+
+For example, with all four pages opted in:
+
+```text
+Docs                       (slug: docs)
+  Deployment               (slug: docs/deployment)
+    GitHub Pages           (slug: docs/deployment/github-pages)
+  Quickstart               (slug: docs/quickstart)
+```
+
+**A hidden parent hides its entire descendant branch.** If `docs/deployment` sets `show_in_navigation: false` or omits the field, GitHub Pages is also hidden, even when it sets the field to `true`. Hiding `docs` hides all four navigation links. These pages are still generated and accessible by URL.
+
+Ancestors are matched on complete slug path segments, so `docs` does not govern `docs-other`. A directory segment with no corresponding page is not a hidden parent: the built-in theme creates a non-clickable group for that missing level, but only when it contains at least one visible descendant. Empty groups disappear automatically.
+
+For example, when `docs` is visible and `docs/deployment` has no page, a visible `docs/deployment/github-pages` creates a **Deployment** group under Docs. An invisible `docs/deployment/netlify` is omitted. If both children are invisible, Deployment is omitted too. A real Deployment page with navigation disabled still hides the branch; it is never replaced with a group.
+
+Group labels come from the missing path segment, replacing hyphens and underscores with spaces and applying invariant title casing (`deployment-tools` becomes `Deployment Tools`). Groups do not create pages, output files, or placeholder links. Locale routing prefixes are not synthesized as groups when `UseLocaleInUrl` is enabled, and locale-prefixed routes remain distinct.
+
+Existing parent titles remain ordinary links to their pages; missing-parent labels are plain text. Adjacent buttons expand and collapse child lists with mouse, touch, Enter, or Space; Escape closes the current expanded group and returns focus to its button. Moving focus or clicking outside navigation closes the menus. Without JavaScript, the full nested list remains accessible.
 
 Custom themes can render the layout's `NavigationPages` collection; see the [theme guide](../ScissorHands.Theme/README.md#page-navigation).
 
