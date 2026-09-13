@@ -6,7 +6,6 @@
       "dotnetRunMessages": true,
       "launchBrowser": true,
       "applicationUrl": "http://localhost:5000",
-      "commandLineArgs": "--preview",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
       }

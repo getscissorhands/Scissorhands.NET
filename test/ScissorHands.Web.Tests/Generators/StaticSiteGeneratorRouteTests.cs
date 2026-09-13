@@ -15,6 +15,37 @@ namespace ScissorHands.Web.Tests.Generators;
 
 public class StaticSiteGeneratorRouteTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Given_PageAndDirectoryIndex_When_BuildInvoked_Then_It_Should_ReportTheCollision(bool preview)
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var pagePath = fileSystem.Path.Combine(contentsRoot, "pages", "parent.md");
+        var indexPath = fileSystem.Path.Combine(contentsRoot, "pages", "parent", "index.md");
+        fileSystem.AddFile(pagePath, new MockFileData("# Parent"));
+        fileSystem.AddFile(indexPath, new MockFileData("# Parent index"));
+        var loader = new ContentLoader(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest(),
+            Substitute.For<ILogger<ContentLoader>>());
+        var documents = await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken);
+        var (generator, destination) = CreateGenerator(documents);
+
+        var exception = await Should.ThrowAsync<InvalidDataException>(() =>
+            generator.BuildAsync<TestMainLayout, TestIndexView, TestPostView, TestPageView, TestNotFoundView, TestTagListView, TestTagView>(
+                destination, preview, Xunit.TestContext.Current.CancellationToken));
+
+        exception.Message.ShouldContain("Output collision");
+        exception.Message.ShouldContain(pagePath);
+        exception.Message.ShouldContain(indexPath);
+    }
+
     [Fact]
     public async Task Given_TraversalSlug_When_BuildInvoked_Then_It_Should_RejectTheRoute()
     {
@@ -66,14 +97,18 @@ public class StaticSiteGeneratorRouteTests
         exception.Message.ShouldContain("second.md");
     }
 
-    [Fact]
-    public async Task Given_ParentDirectoryTag_When_BuildInvoked_Then_It_Should_RejectTheGeneratedTagRoute()
+    [Theory]
+    [InlineData("")]
+    [InlineData(" ")]
+    [InlineData(".")]
+    [InlineData("..")]
+    public async Task Given_InvalidTag_When_BuildInvoked_Then_It_Should_RejectTheGeneratedTagRoute(string tag)
     {
         var document = new ContentDocument
         {
             SourcePath = "tagged.md",
             Kind = ContentKind.Post,
-            Metadata = new ContentMetadata { Slug = "post", Tags = [".."] },
+            Metadata = new ContentMetadata { Slug = "post", Tags = [tag] },
         };
         var (generator, destination) = CreateGenerator([document]);
 

@@ -33,7 +33,7 @@ Run the sample from its own directory so configuration and content resolve there
 
 ```bash
 pushd ./samples/ScissorHands.Sample
-dotnet run --no-launch-profile -- --preview
+dotnet run -- --preview
 popd
 ```
 
@@ -41,11 +41,11 @@ Generate static output without starting the preview server:
 
 ```bash
 pushd ./samples/ScissorHands.Sample
-dotnet run --no-launch-profile -- --build
+dotnet run -- --build
 popd
 ```
 
-The sample launch profile injects `--preview`; use `--no-launch-profile` to select the mode explicitly. Generated output is in the sample's `preview` or `dist` directory. See the [sample guide](samples/ScissorHands.Sample/README.md).
+The sample launch profile does not select a mode; pass `--preview` or `--build` explicitly, including in IDE run arguments. Generated output is in the sample's `preview` or `dist` directory. See the [sample guide](samples/ScissorHands.Sample/README.md).
 
 ## Repository map
 
@@ -65,7 +65,7 @@ The sample launch profile injects `--preview`; use `--no-launch-profile` to sele
 - Put shared contracts in Core, extension contracts in Plugin or Theme, and engine implementations in the existing Web folders. Reuse abstractions and dependency injection registrations rather than creating parallel implementations.
 - Preserve the pipeline order: pre-Markdown plugins, Markdown conversion, post-Markdown plugins, Razor rendering, then post-HTML plugins. Honor optional stage-scoped `DependsOn` declarations: declared dependencies must be enabled and run before their dependents. Manifest and registration order do not control execution; use ordinal plugin ID ordering to break ties between ready plugins. Each plugin's output feeds the next.
 - Identify plugins by required lowercase ASCII kebab-case `Id` values in implementations, manifests, dependencies, and Razor component selection. `Name` is display-only. Reuse the shared ID validator; do not normalize IDs or fall back to names.
-- Preserve automatic theme discovery from `Site:Theme` and the normalized component namespace suffix, explicit `AddLayouts` overrides, and built-in tag-view fallbacks.
+- Preserve automatic theme discovery from `Site:Theme` and the normalized component namespace suffix and explicit `AddLayouts` overrides. Require all seven theme view roles, including `TagListViewBase` and `TagViewBase`; do not silently substitute built-in tag views for an incomplete custom theme.
 - Keep generated links and assets compatible with `SiteManifest.BaseUrl`, including subpath hosting. Maintain preview/build distinctions and cancellation propagation.
 - Treat manifest collections as immutable input. Preserve source and binary compatibility unless a breaking change is explicitly requested; do not remove obsolete overloads merely as cleanup.
 

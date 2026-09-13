@@ -1,3 +1,4 @@
+@using ScissorHands.Core.Models
 @inherits ScissorHands.Theme.MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" Plugins="@Plugins" Theme="@Theme" Site="@Site">
@@ -31,8 +32,11 @@
         <header class="site-header">
             <a class="site-title" href=".">@Site.Title</a>
             <nav aria-label="Primary navigation">
-                <a href=".">Home</a>
-                <a href="tags">Tags</a>
+                <ul class="navigation-list">
+                    <li><a href=".">Home</a></li>
+                    @RenderNavigation(NavigationTree)
+                    <li><a href="tags">Tags</a></li>
+                </ul>
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
                     <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
@@ -50,7 +54,7 @@
         </main>
 
         <footer class="site-footer">
-            <small>Powered by <a href="https://github.com/getscissorhands/ScissorHands.NET">ScissorHands.NET</a></small>
+            <small>Powered by <a href="https://getscissorhands.app">ScissorHands.NET</a></small>
             <small>Default theme adapted from <a href="https://github.com/ChurchTao/PlainPage">PlainPage</a>.</small>
             @if (!string.IsNullOrWhiteSpace(Site.Author))
             {
@@ -65,3 +69,39 @@
     </body>
     </html>
 </CascadingMainLayoutBase>
+
+@code {
+    private RenderFragment RenderNavigation(IReadOnlyList<NavigationNode> nodes) => @<text>
+        @foreach (var item in nodes)
+        {
+            var hasChildren = item.Children.Count > 0;
+            var submenuId = $"navigation-submenu-{item.Path}";
+            <li class="navigation-item">
+                <div class="navigation-link">
+                    @if (item.Url is not null)
+                    {
+                        <a href="@item.Url">@item.Title</a>
+                    }
+                    else
+                    {
+                        <span class="navigation-label">@item.Title</span>
+                    }
+                    @if (hasChildren)
+                    {
+                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@submenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
+                            <svg viewBox="0 0 16 16" aria-hidden="true">
+                                <path d="m4 6 4 4 4-4"></path>
+                            </svg>
+                        </button>
+                    }
+                </div>
+                @if (hasChildren)
+                {
+                    <ul class="navigation-children" id="@submenuId">
+                        @RenderNavigation(item.Children)
+                    </ul>
+                }
+            </li>
+        }
+    </text>;
+}

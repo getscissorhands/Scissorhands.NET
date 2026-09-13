@@ -14,7 +14,7 @@
             @foreach (var tagEntry in TaggedDocuments!.OrderBy(t => t.Key))
             {
                 var count = tagEntry.Value.Posts.Count() + tagEntry.Value.Pages.Count();
-                <a class="tag-card" href="tags/@Uri.EscapeDataString(tagEntry.Key.ToLowerInvariant())">
+                <a class="tag-card" href="@GetTagUrl(tagEntry.Key)">
                     <span>#@tagEntry.Key</span>
                     <small>@count @(count == 1 ? "item" : "items")</small>
                 </a>

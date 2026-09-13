@@ -60,4 +60,9 @@ public sealed record ContentMetadata
     /// Gets a value indicating whether the content is a draft or not.
     /// </summary>
     public bool Draft { get; init; }
+
+    /// <summary>
+    /// Gets a value indicating whether the page should appear in site navigation. Defaults to false.
+    /// </summary>
+    public bool ShowInNavigation { get; init; }
 }

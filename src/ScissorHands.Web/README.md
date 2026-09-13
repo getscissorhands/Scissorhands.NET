@@ -7,24 +7,14 @@
 
 ## Features
 
-- Markdown and YAML frontmatter processing
-- Razor-based layouts and page views
-- Automatic theme discovery from configuration
-- Pre-Markdown, post-Markdown, and post-HTML plugin stages
-- Posts, pages, tags, custom 404 pages, and content assets
-- Locale-aware and date-based URL options
-- Local preview server with automatic content regeneration
-- Responsive built-in theme with light and dark modes
-
-## Install
-
-```bash
-dotnet add package ScissorHands.Web --prerelease
-```
+- Markdown posts/pages with frontmatter, tags, and hierarchical navigation
+- Razor themes and optional content-processing plugins
+- Configurable routes and static output for subpath hosting
+- Local preview and a built-in light/dark theme
 
 ScissorHands.NET currently targets .NET 10.
 
-## Create an application
+## Quickstart
 
 Create an empty ASP.NET Core application:
 
@@ -45,55 +35,28 @@ await app.RunAsync();
 
 No theme component types need to be registered in `Program.cs`. The built-in theme is used when `Site:Theme` is `default`.
 
-## Configure the site
-
-Add the `Site` and `Plugins` sections to `appsettings.json`:
+Add these sections to `appsettings.json`:
 
 ```json
 {
   "Site": {
     "Title": "My site",
-    "Description": "Notes about .NET, software, and the web.",
-    "Locale": "en-US",
-    "Author": "Your name",
     "Theme": "default",
     "SiteUrl": "https://example.com",
-    "BaseUrl": "/",
-    "UseLocaleInUrl": false,
-    "UseDateInPostUrl": true,
-    "Debug": false
+    "BaseUrl": "/"
   },
   "Plugins": []
 }
 ```
 
-Use `BaseUrl` when publishing below a subpath, such as `/docs/`.
-
-## Add content
-
-ScissorHands reads Markdown from:
-
-```text
-contents/
-├── images/
-├── pages/
-└── posts/
-```
-
-Example post:
+Create `contents/posts/hello.md`:
 
 ```markdown
 ---
 title: Hello, ScissorHands
-description: My first generated post.
-slug: hello-scissorhands
 published: 2026-09-11
-author: Your name
-locale: en-US
 tags:
-  - dotnet
   - static-site
-draft: false
 ---
 
 # Hello, ScissorHands
@@ -101,26 +64,11 @@ draft: false
 Write the post in Markdown.
 ```
 
-Supported frontmatter fields are:
-
-- `title`
-- `slug`
-- `description`
-- `locale`
-- `author`
-- `twitter_handle`
-- `hero_image`
-- `published`
-- `tags`
-- `draft`
-
-Invalid frontmatter, unsafe routes, and duplicate output paths fail the build with the source file included in the error.
-
-To provide a custom not-found page, add a page with `slug: 404.html`.
+Place pages under `contents/pages/`. Page navigation is opt-in through `show_in_navigation: true`; hiding a navigation link is not access control.
 
 ## Preview and build
 
-Start the local preview server:
+Run from the application directory. Start the local preview server:
 
 ```bash
 dotnet run -- --preview
@@ -132,59 +80,14 @@ Generate the static site into `dist/`:
 dotnet run -- --build
 ```
 
-Preview mode regenerates the site after content or theme-file changes. Refresh the browser to display regenerated HTML. Razor or C# changes still require recompilation, typically with `dotnet watch`.
+Refresh the browser after preview regeneration. Razor/C# changes require recompilation. Use `BaseUrl` for subpath hosting.
 
-## Themes
-
-A custom theme provides concrete Razor components derived from:
-
-- `MainLayoutBase`
-- `IndexViewBase`
-- `PostViewBase`
-- `PageViewBase`
-- `NotFoundViewBase`
-
-`TagListViewBase` and `TagViewBase` are optional; the built-in tag views are used when they are omitted.
-
-Keep the components in one namespace whose normalized suffix matches the configured theme slug. For example:
-
-```text
-Site:Theme = minimal-blog
-Namespace  = ScissorHands.Theme.MinimalBlog
-```
-
-Theme assets and metadata live under `themes/{slug}/`, including a `theme.json` manifest.
-
-## Plugins
-
-Install plugin packages and configure each enabled plugin by its stable, unique kebab-case ID:
-
-```json
-{
-  "Plugins": [
-    {
-      "Id": "example-plugin",
-      "Name": "Example Plugin",
-      "Options": {
-        "Enabled": true
-      }
-    }
-  ]
-}
-```
-
-Plugins can transform a document before Markdown conversion, after Markdown conversion, or after the final Razor HTML render.
-
-At every stage, each plugin's output feeds the next. IDs must be lowercase ASCII kebab-case and are matched ordinally; installed plugins without a manifest remain disabled. Manifest `Name` values are optional display labels, not identifiers. Missing or invalid IDs, duplicate IDs, and unmatched manifests fail without name fallback or automatic normalization.
-
-Execution order is resolved from optional, stage-scoped `DependsOn` declarations provided by plugins, not the `Plugins` array position or registration order. Declared dependencies must be installed and enabled. Missing or disabled dependencies, invalid declarations, and cycles fail when the runner is constructed, before any plugin hooks execute. Dependencies are never automatically installed or enabled.
-
-Within each stage, the engine chooses among ready plugins by ordinal ID ordering for deterministic output. A plugin without dependency declarations must not rely on another plugin's execution order.
-
-**Migration:** plugin implementations must now expose `Id`, configured manifests must include it, dependency references must use IDs, and Razor plugin components must select with `Id` instead of `Name`. Rebuild existing plugin and consuming assemblies; name-only configuration is no longer accepted. Follow the [plugin ID migration guide](../ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
+vNext includes breaking plugin identity, theme-component, and page-route changes. Review the migration reference before upgrading.
 
 ## Learn more
 
+- [vNext guides and reference (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md)
+- [vNext migration reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext)
 - [Documentation](https://getscissorhands.app/docs/)
 - [Source code](https://github.com/getscissorhands/ScissorHands.NET)
 - [Theme template](https://github.com/getscissorhands/theme-template)
@@ -195,4 +98,4 @@ Within each stage, the engine chooses among ready plugins by ordinal ID ordering
 
 ScissorHands.NET is licensed under the [MIT License](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE).
 
-The built-in theme is adapted from [PlainPage](https://github.com/ChurchTao/PlainPage). Its attribution is included in [`THIRD-PARTY-NOTICES.md`](THIRD-PARTY-NOTICES.md).
+The built-in theme is adapted from [PlainPage](https://github.com/ChurchTao/PlainPage). See the [third-party notices](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/src/ScissorHands.Web/THIRD-PARTY-NOTICES.md).

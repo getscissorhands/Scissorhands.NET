@@ -83,7 +83,7 @@ The linked declarations are authoritative for signatures; these summaries descri
 | [Plugin contracts](src\ScissorHands.Plugin\README.md) | Hooks operate before Markdown, after Markdown, and after full HTML rendering. IDs identify configuration/components/dependencies; optional dependencies are stage-scoped |
 | [IComponentRenderer](src\ScissorHands.Web\Renderers\IComponentRenderer.cs) | `RenderAsync<TComponent>` takes layout type, parameter dictionary, and optional token, returning `Task<string>` HTML |
 | [IStaticSiteGenerator](src\ScissorHands.Web\Generators\IStaticSiteGenerator.cs) | `BuildAsync` accepts seven constrained theme component types, destination, preview flag, and cancellation token; successful completion represents completion of that generation call, not deployment |
-| [Theme contracts](src\ScissorHands.Theme\README.md) | Layout/view bases receive current content, collections, manifests, and site context. Optional tag-view fallbacks remain available; raw document HTML is an explicit rendering boundary |
+| [Theme contracts](src\ScissorHands.Theme\README.md) | All seven layout/view roles are required and receive current content, collections, manifests, and site context. Missing custom tag views are not filled implicitly; raw document HTML is an explicit rendering boundary |
 
 ### Coverage disposition
 
@@ -116,7 +116,7 @@ Each `TR-...` is a stable technical requirement. All are approved mandatory obli
 - **State / source:** Confirmed; PRD FR-001, NFR-007; CD-001/003 and application/builder contracts.
 - **Rationale / obligation:** To support local generation without a production server, the application must preserve explicit build, preview, and help entry points using the repository's .NET configuration.
 - **Acceptance:** Build produces output under `dist` and reports its location without starting the preview listener. Preview uses `preview` and starts serving. Help displays usage. An invocation with no recognized mode reports an error and sets exit code 1; preview wins if both build and preview are supplied.
-- **Boundaries:** The sample launch profile injects preview; explicit build uses `--no-launch-profile`. This does not introduce strict rejection of every unrecognized extra argument or a separate standalone CLI package.
+- **Boundaries:** The sample launch profile does not select a mode; callers supply it explicitly. This does not introduce strict rejection of every unrecognized extra argument or a separate standalone CLI package.
 - **Verification:** V-007 application/argument tests and sample process demonstrations; V-004 distinguishes failure from successful completion.
 
 ### TR-002: Parse content into the existing logical model
@@ -163,9 +163,9 @@ Each `TR-...` is a stable technical requirement. All are approved mandatory obli
 
 - **State / source:** Confirmed; PRD FR-005/006; Theme guide, resolver/service evidence, builder overrides.
 - **Rationale / obligation:** To make themes replaceable, the engine must resolve a compatible component set and manifest for the configured theme without rewriting content or requiring explicit registration in the conventional case.
-- **Acceptance:** Match the normalized namespace suffix to `Site:Theme`; require layout/index/post/page/not-found roles and retain built-in fallback tag views. Explicit `AddLayouts` overrides remain usable. Load `themes\<slug>\theme.json`; invalid/mismatched custom manifests or unresolved required custom components fail. Preserve the built-in default-theme fallback.
+- **Acceptance:** Match the normalized namespace suffix to `Site:Theme`; require exactly one concrete component for each layout/index/post/page/not-found/tag-list/tag role, with no implicit built-in tag-view substitution. Explicit seven-role `AddLayouts` overrides remain usable. Load `themes\<slug>\theme.json`; invalid/mismatched custom manifests or unresolved required custom components fail. Preserve built-in theme selection for empty/default theme settings.
 - **Boundaries:** Compiled Razor changes require compilation; theme selection changes require restart/rebuild. No install UI, arbitrary untrusted extension loader, or name-based plugin fallback is introduced.
-- **Verification:** V-007 conventional/override/custom/default theme cases, missing roles, optional tag fallback, invalid manifests, and configuration changes.
+- **Verification:** V-007 conventional/override/custom/default theme cases, missing or ambiguous required tag roles, invalid manifests, and configuration changes.
 
 ### TR-008: Copy only the supported asset surfaces
 

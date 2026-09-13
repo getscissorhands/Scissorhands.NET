@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
+using ScissorHands.Core.Urls;
 
 namespace ScissorHands.Theme;
 
@@ -31,6 +32,18 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// </summary>
     [Parameter]
     public IEnumerable<ContentDocument>? Documents { get; set; }
+
+    /// <summary>
+    /// Gets or sets the ordered, opted-in pages for site navigation on every generated view.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ContentDocument> NavigationPages { get; set; } = Array.Empty<ContentDocument>();
+
+    /// <summary>
+    /// Gets or sets the engine-prepared navigation hierarchy, including non-clickable groups.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<NavigationNode> NavigationTree { get; set; } = Array.Empty<NavigationNode>();
 
     /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
@@ -113,7 +126,19 @@ public abstract class MainLayoutBase : LayoutComponentBase
 
         var theme = Theme ?? throw new InvalidOperationException("A theme must be supplied before getting a theme URL.");
 
-        return $"{ThemeManifest.THEME_DIRECTORY}/{theme.Slug.Trim('/')}/{path.TrimStart('/')}";
+        return ContentUrlHelper.GetThemeUrl(theme.Slug, path);
+    }
+
+    /// <summary>
+    /// Gets a base-relative URL for a content slug, escaping each path segment.
+    /// </summary>
+    /// <param name="slug">The content slug.</param>
+    /// <returns>The URL relative to the site's base URL.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="slug"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="slug"/> contains a relative path segment.</exception>
+    protected string GetContentUrl(string slug)
+    {
+        return ContentUrlHelper.GetContentUrl(slug);
     }
 
     /// <summary>

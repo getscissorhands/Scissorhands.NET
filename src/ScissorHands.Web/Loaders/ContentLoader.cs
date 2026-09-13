@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
 using ScissorHands.Web.Abstractions;
 
 using YamlDotNet.Core;
@@ -34,6 +35,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         "twitter_handle",
         "hero_image",
         "draft",
+        "show_in_navigation",
         "tags",
         "published",
     };
@@ -138,12 +140,8 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
             var twitterHandle = map.TryGetValue("twitter_handle", out var twitterValue) ? Convert.ToString(twitterValue, CultureInfo.InvariantCulture) : default;
             var heroImage = map.TryGetValue("hero_image", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : default;
-            var draft = false;
-            if (map.TryGetValue("draft", out var draftValue)
-                && !bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out draft))
-            {
-                throw new InvalidDataException($"Frontmatter field 'draft' in '{sourcePath}' must be true or false.");
-            }
+            var draft = ReadBooleanMetadata(map, "draft", sourcePath);
+            var showInNavigation = ReadBooleanMetadata(map, "show_in_navigation", sourcePath);
 
             var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue, sourcePath) : [];
             DateTimeOffset? published = null;
@@ -175,6 +173,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                 Tags = tags,
                 Published = published,
                 Draft = draft,
+                ShowInNavigation = showInNavigation,
             }, markdownBody.Trim());
         }
         catch (YamlException ex)
@@ -183,10 +182,25 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         }
     }
 
+    private static bool ReadBooleanMetadata(IReadOnlyDictionary<string, object> map, string field, string sourcePath)
+    {
+        if (!map.TryGetValue(field, out var value))
+        {
+            return false;
+        }
+
+        if (!bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out var result))
+        {
+            throw new InvalidDataException($"Frontmatter field '{field}' in '{sourcePath}' must be true or false.");
+        }
+
+        return result;
+    }
+
     private ContentMetadata ApplySlug(ContentMetadata metadata, ContentKind kind, string file, string root)
     {
         var slug = string.IsNullOrWhiteSpace(metadata.Slug)
-            ? InferSlugFromFile(file, root)
+            ? InferSlugFromFile(kind, file, root)
             : metadata.Slug.Trim('/');
 
         var effectiveLocale = string.IsNullOrWhiteSpace(metadata.Locale) ? _options.Locale : metadata.Locale;
@@ -205,7 +219,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
 
         if (_options.UseLocaleInUrl)
         {
-            var localeSegment = ToLocaleSegment(effectiveLocale);
+            var localeSegment = ContentUrlHelper.GetLocaleSegment(effectiveLocale);
             if (!string.IsNullOrWhiteSpace(localeSegment))
             {
                 slug = slug.Trim('/');
@@ -222,19 +236,6 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         return metadata with { Slug = slug, Locale = effectiveLocale };
     }
 
-    private static string ToLocaleSegment(string? locale)
-    {
-        if (string.IsNullOrWhiteSpace(locale))
-        {
-            return string.Empty;
-        }
-
-        return locale.Trim()
-                     .Replace('_', '-')
-                     .Replace('/', '-')
-                     .ToLowerInvariant();
-    }
-
     private static IEnumerable<string> ToTags(object value, string sourcePath)
     {
         return value switch
@@ -246,10 +247,16 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         };
     }
 
-    private static string InferSlugFromFile(string path, string root)
+    private static string InferSlugFromFile(ContentKind kind, string path, string root)
     {
         var relative = Path.GetRelativePath(root, path);
-        var withoutExtension = Path.Combine(Path.GetDirectoryName(relative) ?? string.Empty, Path.GetFileNameWithoutExtension(relative));
+        var directory = Path.GetDirectoryName(relative) ?? string.Empty;
+        var name = Path.GetFileNameWithoutExtension(relative);
+        var withoutExtension = kind == ContentKind.Page
+                               && directory.Length > 0
+                               && name.Equals("index", StringComparison.OrdinalIgnoreCase)
+            ? directory
+            : Path.Combine(directory, name);
         return withoutExtension.Replace(Path.DirectorySeparatorChar, '/');
     }
 }

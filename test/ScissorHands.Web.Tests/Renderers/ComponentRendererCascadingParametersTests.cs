@@ -12,6 +12,43 @@ namespace ScissorHands.Web.Tests.Renderers;
 
 public class ComponentRendererCascadingParametersTests
 {
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Given_CustomLayout_When_RenderingNavigation_Then_It_Should_ConsumePreparedDataWithoutLeakingParameters(bool supplyTree)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<ScissorHands.Core.Services.IThemeService>());
+        using var provider = services.BuildServiceProvider();
+        var renderer = new ComponentRenderer(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILoggerFactory>());
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Site"] = new SiteManifest(),
+            ["NavigationPages"] = new[]
+            {
+                new ContentDocument
+                {
+                    Kind = ContentKind.Page,
+                    Metadata = new ContentMetadata { Title = "Legacy page", Slug = "parent/child", ShowInNavigation = true },
+                },
+            },
+        };
+        if (supplyTree)
+        {
+            parameters["NavigationTree"] = new[] { new NavigationNode { Title = "Prepared tree", Path = "prepared", Url = "prepared" } };
+        }
+
+        var html = await renderer.RenderAsync<TestNavigationContent>(typeof(TestNavigationLayout), parameters, Xunit.TestContext.Current.CancellationToken);
+
+        html.ShouldContain("Flat:Legacy page");
+        html.ShouldContain(supplyTree ? "Tree:Prepared tree" : "Tree:Parent|Legacy page");
+        html.ShouldContain("Content body");
+        parameters.ContainsKey("NavigationTree").ShouldBe(supplyTree);
+    }
+
     [Fact]
     public async Task Given_ComponentRenderer_When_RenderingWithLayout_Then_It_Should_PassCascadingValuesViaLayout_NotAsComponentAttributes()
     {
@@ -71,7 +108,7 @@ public class ComponentRendererCascadingParametersTests
         };
         var document = new ContentDocument
         {
-            Metadata = new ContentMetadata { Title = "About", Slug = "about", Locale = "ko-KR" },
+            Metadata = new ContentMetadata { Title = "About", Slug = "about", Locale = "ko-KR", Tags = ["C#", "  Mixed Case  "] },
             Html = "<p>About</p>",
         };
         var parameters = new Dictionary<string, object?>
@@ -89,6 +126,37 @@ public class ComponentRendererCascadingParametersTests
         html.ShouldContain("href=\"themes/minimal/assets/css/theme.css\"");
         html.ShouldContain("src=\"themes/minimal/assets/js/theme.js\"");
         html.ShouldNotContain("href=\"/themes/");
+        html.ShouldContain("aria-label=\"Page tags\"");
+        html.ShouldContain("href=\"tags/c%23\"");
+        html.ShouldContain("href=\"tags/mixed%20case\"");
+        html.ShouldNotContain("href=\"/tags/");
+    }
+
+    private sealed class TestNavigationLayout : MainLayoutBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.AddContent(0, $"Flat:{string.Join("|", NavigationPages.Select(page => page.Metadata.Title))}");
+            builder.AddContent(1, $"Tree:{string.Join("|", Titles(NavigationTree))}");
+            builder.AddContent(2, Body);
+        }
+
+        private static IEnumerable<string> Titles(IEnumerable<NavigationNode> nodes)
+        {
+            foreach (var node in nodes)
+            {
+                yield return node.Title;
+                foreach (var title in Titles(node.Children))
+                {
+                    yield return title;
+                }
+            }
+        }
+    }
+
+    private sealed class TestNavigationContent : ComponentBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder) => builder.AddContent(0, "Content body");
     }
 
     private sealed class TestCascadingLayout : LayoutComponentBase

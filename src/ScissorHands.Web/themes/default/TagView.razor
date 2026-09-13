@@ -20,7 +20,7 @@
                         <time datetime="@post.Metadata.Published?.ToString("O")">
                             @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
                         </time>
-                        <div><a class="post-link" href="@post.Metadata.Slug">@post.Metadata.Title</a></div>
+                        <div><a class="post-link" href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a></div>
                     </li>
                 }
             </ul>
@@ -31,7 +31,7 @@
             <ul class="page-list">
                 @foreach (var pageDocument in TaggedPages)
                 {
-                    <li><a href="@pageDocument.Metadata.Slug">@pageDocument.Metadata.Title</a></li>
+                    <li><a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a></li>
                 }
             </ul>
         }

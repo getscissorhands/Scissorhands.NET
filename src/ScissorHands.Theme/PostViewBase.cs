@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
 
 namespace ScissorHands.Theme;
 
@@ -33,4 +34,10 @@ public abstract class PostViewBase : ComponentBase
     /// </summary>
     [CascadingParameter]
     public SiteManifest? Site { get; set; }
+
+    /// <inheritdoc cref="ContentUrlHelper.GetTagUrl(string)" />
+    protected string GetTagUrl(string tag) => ContentUrlHelper.GetTagUrl(tag);
+
+    /// <inheritdoc cref="ContentUrlHelper.GetImageUrl(string)" />
+    protected string GetImageUrl(string path) => ContentUrlHelper.GetImageUrl(path);
 }

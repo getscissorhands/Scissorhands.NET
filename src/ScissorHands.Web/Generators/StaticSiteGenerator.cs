@@ -6,8 +6,10 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
+using ScissorHands.Core.Urls;
 using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Loaders;
+using ScissorHands.Web.Navigation;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 
@@ -65,25 +67,55 @@ public sealed class StaticSiteGenerator(
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
         var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
         ValidateOutputRoutes(destination, documents);
+        var hiddenPageRoutes = documents
+            .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || d.Metadata.Draft || IsNotFoundPage(d)))
+            .Select(d => NormalizeRoute(d.Metadata.Slug))
+            .ToHashSet(StringComparer.Ordinal);
+        var navigationPages = documents
+            .Where(d => d.Kind == ContentKind.Page && d.Metadata.ShowInNavigation && !d.Metadata.Draft && !IsNotFoundPage(d))
+            .Where(d => !HasHiddenNavigationAncestor(d.Metadata.Slug, hiddenPageRoutes))
+            .OrderBy(d => d.Metadata.Title, StringComparer.Ordinal)
+            .ThenBy(d => d.Metadata.Slug, StringComparer.Ordinal)
+            .ToList()
+            .AsReadOnly();
+        var navigation = new NavigationContext(navigationPages, NavigationTreeBuilder.Build(navigationPages, _options, cancellationToken));
 
         var layoutType = typeof(TMainLayout);
-        await RenderIndexAsync<TIndexView>(documents, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderIndexAsync<TIndexView>(documents, navigation, plugins, theme, destination, layoutType, cancellationToken);
 
         var notFoundDocument = documents.SingleOrDefault(d => d.Kind == ContentKind.Page && string.Equals(d.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase));
-        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, navigation, plugins, theme, destination, layoutType, cancellationToken);
 
         foreach (var document in documents.Where(d => IsNotFoundPage(d) == false))
         {
-            await RenderDocumentAsync<TPostView, TPageView>(document, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderDocumentAsync<TPostView, TPageView>(document, navigation, plugins, theme, destination, layoutType, cancellationToken);
         }
 
-        await RenderTagPagesAsync<TTagListView, TTagView>(documents, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderTagPagesAsync<TTagListView, TTagView>(documents, navigation, plugins, theme, destination, layoutType, cancellationToken);
 
         CopyContentAssets(destination);
         await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
     }
 
-    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private static bool HasHiddenNavigationAncestor(string slug, HashSet<string> hiddenPageRoutes)
+    {
+        var route = NormalizeRoute(slug);
+        var separator = route.LastIndexOf('/');
+        while (separator >= 0)
+        {
+            route = route[..separator];
+            if (hiddenPageRoutes.Contains(route))
+            {
+                return true;
+            }
+
+            separator = route.LastIndexOf('/');
+        }
+
+        return false;
+    }
+
+    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TIndexView : ScissorHands.Theme.IndexViewBase
     {
         var posts = documents
@@ -91,7 +123,7 @@ public sealed class StaticSiteGenerator(
             .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
             .ToList();
 
-        var parameters = CreateBaseParameters(plugins, theme);
+        var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["Documents"] = posts;
 
         var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
@@ -107,7 +139,7 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, cancellationToken);
     }
 
-    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
     {
         ContentDocument documentToRender;
@@ -138,7 +170,7 @@ public sealed class StaticSiteGenerator(
             }
         }
 
-        var parameters = CreateBaseParameters(plugins, theme);
+        var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["Document"] = documentToRender;
 
         var rendered = await _renderer.RenderAsync<TNotFoundView>(layoutType, parameters, cancellationToken);
@@ -147,7 +179,7 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, documentToRender, cancellationToken);
     }
 
-    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
     {
@@ -155,7 +187,7 @@ public sealed class StaticSiteGenerator(
 
         var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
 
-        var parameters = CreateBaseParameters(plugins, theme);
+        var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["Document"] = postMarkdown;
 
         var rendered = postMarkdown.Kind switch
@@ -168,7 +200,7 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, cancellationToken);
     }
 
-    private async Task RenderTagPagesAsync<TTagListView, TTagView>(IEnumerable<ContentDocument> documents, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPagesAsync<TTagListView, TTagView>(IEnumerable<ContentDocument> documents, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
         where TTagView : ScissorHands.Theme.TagViewBase
     {
@@ -205,19 +237,19 @@ public sealed class StaticSiteGenerator(
         }
 
         // Render the tag list page at /tags
-        await RenderTagListPageAsync<TTagListView>(taggedDocuments, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderTagListPageAsync<TTagListView>(taggedDocuments, navigation, plugins, theme, destination, layoutType, cancellationToken);
 
         // Render individual tag pages at /tags/{tag}
         foreach (var tagEntry in taggedDocuments)
         {
-            await RenderTagPageAsync<TTagView>(tagEntry.Key, tagEntry.Value.Posts, tagEntry.Value.Pages, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderTagPageAsync<TTagView>(tagEntry.Key, tagEntry.Value.Posts, tagEntry.Value.Pages, navigation, plugins, theme, destination, layoutType, cancellationToken);
         }
     }
 
-    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
     {
-        var parameters = CreateBaseParameters(plugins, theme);
+        var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["TaggedDocuments"] = taggedDocuments;
 
         var rendered = await _renderer.RenderAsync<TTagListView>(layoutType, parameters, cancellationToken);
@@ -232,35 +264,40 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, cancellationToken);
     }
 
-    private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagView : ScissorHands.Theme.TagViewBase
     {
-        var parameters = CreateBaseParameters(plugins, theme);
+        var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["Tag"] = tag;
         parameters["TaggedPosts"] = posts;
         parameters["TaggedPages"] = pages;
 
         var rendered = await _renderer.RenderAsync<TTagView>(layoutType, parameters, cancellationToken);
+        var tagRoute = GetTagRoute(tag);
         var tagDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = $"tags/{ToTagSlug(tag)}" },
+            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = tagRoute },
             Markdown = string.Empty,
             Html = rendered
         };
-        var outputPath = ResolveOutputPath(destination, $"tags/{ToTagSlug(tag)}");
+        var outputPath = ResolveOutputPath(destination, tagRoute);
         await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, cancellationToken);
     }
 
-    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme)
+    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, NavigationContext navigation)
     {
         return new Dictionary<string, object?>
         {
             ["Plugins"] = plugins,
             ["Theme"] = theme,
-            ["Site"] = _options
+            ["Site"] = _options,
+            ["NavigationPages"] = navigation.Pages,
+            ["NavigationTree"] = navigation.Tree
         };
     }
+
+    private sealed record NavigationContext(IReadOnlyList<ContentDocument> Pages, IReadOnlyList<NavigationNode> Tree);
 
     private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, CancellationToken cancellationToken)
     {
@@ -364,7 +401,7 @@ public sealed class StaticSiteGenerator(
             AddRoute("tags", "tag index");
             foreach (var tag in tags)
             {
-                AddRoute($"tags/{ToTagSlug(tag)}", $"tag '{tag}'");
+                AddRoute(GetTagRoute(tag), $"tag '{tag}'");
             }
         }
 
@@ -411,13 +448,20 @@ public sealed class StaticSiteGenerator(
         return string.Join('/', segments);
     }
 
-    private static string ToTagSlug(string tag)
+    private static string GetTagRoute(string tag)
     {
         if (string.IsNullOrWhiteSpace(tag))
         {
             throw new InvalidDataException("Tags cannot be empty.");
         }
 
-        return Uri.EscapeDataString(tag.Trim().ToLowerInvariant());
+        try
+        {
+            return ContentUrlHelper.GetTagUrl(tag);
+        }
+        catch (ArgumentException exception)
+        {
+            throw new InvalidDataException($"Invalid tag route for '{tag}'.", exception);
+        }
     }
 }

@@ -12,6 +12,7 @@ namespace ScissorHands.Web.Services;
 public sealed class ThemeComponentResolver(IAssemblyCatalog assemblyCatalog) : IThemeComponentResolver
 {
     private const string DEFAULT_THEME_SLUG = "default";
+    private const string REQUIRED_COMPONENTS = "MainLayout, IndexView, PostView, PageView, NotFoundView, TagListView, and TagView";
 
     private readonly IAssemblyCatalog _assemblyCatalog = assemblyCatalog ?? throw new ArgumentNullException(nameof(assemblyCatalog));
 
@@ -22,7 +23,7 @@ public sealed class ThemeComponentResolver(IAssemblyCatalog assemblyCatalog) : I
         if (candidates.Count == 0)
         {
             throw new InvalidOperationException(
-                "No complete ScissorHands theme was found. A theme must provide MainLayout, IndexView, PostView, PageView, and NotFoundView components.");
+                $"No complete ScissorHands theme was found for '{themeSlug}'. A theme must provide exactly one concrete component for each role: {REQUIRED_COMPONENTS}.");
         }
 
         var normalizedSlug = Normalize(themeSlug);
@@ -66,14 +67,15 @@ public sealed class ThemeComponentResolver(IAssemblyCatalog assemblyCatalog) : I
         var postView = FindSingle<PostViewBase>(group);
         var pageView = FindSingle<PageViewBase>(group);
         var notFoundView = FindSingle<NotFoundViewBase>(group);
+        var tagListView = FindSingle<TagListViewBase>(group);
+        var tagView = FindSingle<TagViewBase>(group);
 
-        if (mainLayout is null || indexView is null || postView is null || pageView is null || notFoundView is null)
+        if (mainLayout is null || indexView is null || postView is null || pageView is null || notFoundView is null
+            || tagListView is null || tagView is null)
         {
             return null;
         }
 
-        var tagListView = FindSingle<TagListViewBase>(group) ?? typeof(ScissorHands.Web.TagListView);
-        var tagView = FindSingle<TagViewBase>(group) ?? typeof(ScissorHands.Web.TagView);
         var components = new ThemeComponentSet(mainLayout, indexView, postView, pageView, notFoundView, tagListView, tagView);
 
         return new ThemeCandidate(
@@ -116,6 +118,7 @@ public sealed class ThemeComponentResolver(IAssemblyCatalog assemblyCatalog) : I
         var namespaces = string.Join(", ", candidates.Select(candidate => candidate.Namespace).OrderBy(value => value, StringComparer.Ordinal));
         return new InvalidOperationException(
             $"Unable to resolve the configured theme '{themeSlug}'. Discovered theme namespaces: {namespaces}. " +
+            $"A theme must provide exactly one concrete component for each role: {REQUIRED_COMPONENTS}. " +
             "Use a namespace ending with the normalized theme slug, or configure layouts explicitly with AddLayouts(...).");
     }
 
