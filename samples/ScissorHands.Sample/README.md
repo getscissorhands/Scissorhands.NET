@@ -18,6 +18,8 @@ dotnet run --no-launch-profile -- --build
 
 Generated preview and build outputs are written to `preview/` and `dist/` respectively.
 
+The [Hello, ScissorHands post](contents/posts/hello-scissorhands.md) is a Markdown rendering showcase with heading hierarchy, paragraphs, emphasis, links, nested lists, a blockquote, C# and JSON code blocks, a table, a horizontal rule, and a bundled image. Use it to compare typography and spacing across light/dark themes and desktop/mobile layouts.
+
 The About page opts into the built-in navigation with `show_in_navigation: true` in `contents/pages/about.md`. Pages are hidden from navigation by default; set the field to `false` or remove it to hide the link while keeping the page accessible at its URL. Preview regeneration updates the navigation across the site.
 
 The hierarchy sample uses generic parent, child, and grandchild pages. Their slugs are inferred from their paths; `contents/pages/parent/index.md` is the landing page at `parent`, not `parent/index`:
