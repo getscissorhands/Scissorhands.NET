@@ -4,24 +4,24 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.6 |
-| Status | Implementation-ready |
-| Last updated | 2026-09-11 |
+| Document version | 0.7 |
+| Status | Review-ready |
+| Last updated | 2026-09-13 |
 | Scope | Current vNext product baseline; unimplemented discussion ideas are deferred |
-| Code baseline | `43a4c3bd7bfa025e625fc7084be5b7251e450578` |
+| Code baseline | `1f963adfd5a1e807f9adca901043d9c72c17d951` |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
-| Sign-off | Approved by @justinyoo on 2026-09-11 |
-| Approval scope | Product requirements, release criteria, documented limitations, and next-phase verification placement; not passing verification or authorization to publish/deploy |
+| Sign-off | v0.6 approved by @justinyoo on 2026-09-11; v0.7 alignment revision not separately signed off |
+| Approval scope | Historical approval covers the v0.6 requirements, release criteria, limitations, and verification placement; the requested update does not imply approval of this revised text or authorization to release |
 
-**Readiness:** the product scope, essential requirements, quality baseline, and release criteria are approved. The PRD is implementation-ready as a product baseline; this does not establish that every technical detail in the companion TRD is resolved. V-001 through V-007 remain pending next-phase work, and operational release arrangements remain Q-004. Approval does not waive requirements, establish passing results, or authorize a release.
+**Readiness:** v0.7 is a review-ready alignment of the previously approved product baseline with the merged theme URL and navigation changes in #86/#87. The user requested this update on 2026-09-13; historical v0.6 approval is retained rather than applied retroactively to new text. The quality baseline and release criteria are unchanged. V-001 through V-007 remain open verification areas; this revision records no completed verification, and operational release arrangements remain Q-004.
 
 ## 1. Overview and evidence
 
 ScissorHands.NET enables a developer to maintain a personal blog as local Markdown files, generate posts and independent pages through reusable Razor themes, and publish static HTML and assets without operating a Blazor application server for readers. Optional plugins transform content or the final document. A separate local preview mode supports the authoring loop.
 
-The product direction comes from the user's requests in [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md): a Blazor-based static site generator, personal blog posts with frontmatter, independent pages such as About and Contact, interchangeable themes, and pre/post-conversion extensions. The current codebase implements this foundation and adds tags, a 404 page, URL options, and preview regeneration.
+The product direction comes from the user's requests in [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md): a Blazor-based static site generator, personal blog posts with frontmatter, independent pages such as About and Contact, interchangeable themes, and pre/post-conversion extensions. The current codebase implements this foundation and adds tags, a 404 page, opt-in hierarchical page navigation, directory-index page routes, shared URL handling, and preview regeneration.
 
 The product addresses the owner's need for a reusable .NET-based publishing workflow. In feedback on 2026-09-11, the owner confirmed that the workflow already saves time, makes customization substantially easier, and meets their expectations. These are user-reported outcomes supported by direct experience, not merely hypothetical benefits.
 
@@ -40,6 +40,7 @@ This is qualitative evidence: the amount of time saved and degree of improvement
 | User's acceptance of quality recommendations on 2026-09-11 | Basic built-in-theme accessibility, desktop/mobile browser coverage, and benchmarking the actual blog without a formal SLA or maximum supported site size | Confirms expectations, not successful implementation checks, WCAG conformance, or release approval |
 | User's next-phase decision on 2026-09-11 | The seven implementation-verification areas are deferred to the next phase | Confirms the verification work's placement, not its execution, results, deadline, or release approval |
 | User's approval of both documents on 2026-09-11 | Approval of the PRD and TRD requirements and their documented limitations/deferrals | Does not resolve unspecified technical details, supply verification results, assign execution owners, or authorize publication/deployment |
+| Merged [theme URL helper change](https://github.com/getscissorhands/Scissorhands.NET/pull/86), [navigation change](https://github.com/getscissorhands/Scissorhands.NET/pull/87), and user update request on 2026-09-13 | Current implementation baseline and authorization to align these documents; detailed behavior is in the [website documentation handoff](docs\website-documentation.md) | Source-backed behavior and existing regression cases are not new document sign-off, completed release verification, or evidence that the website handoff has been published |
 
 **Terminology:** *Confirmed* means supported by a user decision or identified source, with the basis stated. *Proposed* means not yet agreed. *Unknown* means unresolved. *Not applicable* means deliberately outside this scope with a reason. Code-backed baseline behavior is distinguished from new proposals throughout.
 
@@ -49,11 +50,11 @@ The primary user is a personal-blog owner comfortable creating and running a .NE
 
 | Journey | Trigger and successful outcome | Important alternate or failure path |
 | --- | --- | --- |
-| J-001: Publish content | Owner edits a post or page, runs build, and obtains HTML plus supported assets for a static host | Invalid metadata or route collisions fail generation; the owner corrects the reported input and rebuilds |
+| J-001: Publish content | Owner edits a post or page, opts selected pages into navigation, runs build, and obtains HTML plus supported assets for a static host | Invalid metadata or route collisions fail generation; hiding a navigation item does not withhold its page |
 | J-002: Preview an edit | Owner runs preview, changes content or theme files, then refreshes the browser after regeneration | Drafts are omitted; recompilation is required for Razor/C# changes; regeneration errors are logged |
 | J-003: Change appearance | Owner installs/provides a compatible theme, changes `Site:Theme`, then restarts/rebuilds without rewriting Markdown | Missing or unmatched custom theme configuration fails; all seven view roles, including both tag views, are required |
 | J-004: Extend generation | Extension author supplies a plugin; owner explicitly configures its ID and dependencies | Invalid identity/dependency configuration fails before hooks run; dependencies are not installed or enabled automatically |
-| J-005: Read the site | Visitor browses the post index, post/page URLs, and available tag pages using ordinary HTTP navigation | `404.html` is generated; the deployment host must configure its own not-found behavior |
+| J-005: Read the site | Visitor browses the post index, hierarchical page navigation, post/page URLs, and available tag pages using ordinary HTTP navigation | Missing navigation ancestors are non-clickable groups, not pages; `404.html` is generated, but the host configures not-found behavior |
 
 ## 3. Goals and outcome measurement
 
@@ -73,7 +74,7 @@ All functional requirements below belong to the **retained baseline**, not an im
 
 ### In scope
 
-Local .NET application setup; explicit build/preview/help modes; Markdown and supported YAML frontmatter; posts and independent pages; date/locale URL options; index, tags, and 404 generation; Razor rendering; configured themes and supported assets; opt-in plugin stages and dependencies; local regeneration; current compatibility obligations.
+Local .NET application setup; explicit build/preview/help modes; Markdown and supported YAML frontmatter; posts and independent pages; nested page directory indexes; date/locale URL options; index, tags, and 404 generation; opt-in hierarchical page navigation; Razor rendering; configured themes and supported assets; opt-in plugin stages and dependencies; local regeneration; current compatibility obligations.
 
 ### Non-goals
 
@@ -107,8 +108,8 @@ No new automatic browser reload, draft-preview mode, publication scheduler, atom
 
 - **Basis / scope:** Confirmed discussion intent and [content loader](src\ScissorHands.Web\Loaders\ContentLoader.cs); Core.
 - **Actor / rationale:** Owner stores `.md` files recursively under `contents\posts` and `contents\pages` to keep content independent of presentation (J-001, G-002).
-- **Behavior:** Parse optional YAML frontmatter and convert Markdown. Supported fields are `title`, `slug`, `description`, `locale`, `author`, `twitter_handle`, `hero_image`, `published`, `tags`, and `draft`. Tags accept a YAML list or comma-separated text.
-- **Acceptance:** Without frontmatter, the title defaults to the filename and the slug derives from the relative path. Malformed YAML, an unclosed frontmatter block, unsupported fields, or invalid date/draft/tag values produce an error identifying the source and, where applicable, field. Missing content directories log a warning and supply an empty collection.
+- **Behavior:** Parse optional YAML frontmatter and convert Markdown. Supported fields are `title`, `slug`, `description`, `locale`, `author`, `twitter_handle`, `hero_image`, `published`, `tags`, `draft`, and `show_in_navigation`. Tags accept a YAML list or comma-separated text. Both boolean fields default to `false`; navigation opt-in applies to pages under FR-010.
+- **Acceptance:** Without frontmatter, the title defaults to the filename and the slug derives from the relative path under FR-003. Malformed YAML, an unclosed frontmatter block, unsupported fields, or invalid date/boolean/tag values produce an error identifying the source and, where applicable, field. `show_in_navigation` must parse as true or false; a value such as `sometimes` fails rather than silently hiding the page. Missing content directories log a warning and supply an empty collection.
 - **Publication boundary:** `draft: true` is excluded from both build and preview, including collection pages. `published` supplies ordering/date metadata; a future date does not schedule or withhold publication. This preserves the current baseline rather than introducing draft preview or scheduling.
 
 ### FR-003: Generate predictable content URLs and reject conflicting routes
@@ -116,6 +117,7 @@ No new automatic browser reload, draft-preview mode, publication scheduler, atom
 - **Basis / scope:** Confirmed [loader](src\ScissorHands.Web\Loaders\ContentLoader.cs), [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs), and [route regression cases](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorRouteTests.cs); Core.
 - **Actor / rationale:** Owner supplies slugs and URL settings so visitors can address content predictably (J-001, J-005).
 - **Behavior:** Ordinary content routes write `<route>\index.html`. `UseDateInPostUrl` prefixes dated posts, not pages, with `yyyy/MM/dd`; a missing date logs a warning and leaves the route undated. `UseLocaleInUrl` adds the normalized effective document/site locale without duplicating an existing locale prefix. `404.html` is not locale-prefixed.
+- **Directory indexes:** With an omitted or blank slug, a nested page `parent\index.md` infers `parent`; the filename comparison is case-insensitive. A non-blank explicit slug wins. Root-level page `index.md` still infers `index`, not the generated homepage, and post inference is unchanged. Locale handling follows inference. Keeping both `parent.md` and `parent\index.md` with inferred slugs fails as a collision; use explicit `slug: parent/index` to retain that older nested-page URL.
 - **Acceptance:** A `hello` post dated 2026-09-11 with effective locale `ko-KR` becomes URL path `ko-kr/2026/09/11/hello` when both options are enabled. A page does not acquire the post-date prefix. Literal `.`/`..` route segments and case-insensitive output collisions, including a file used as a parent directory, fail validation.
 - **Boundary:** Planned content and generated routes are checked before page writes, but after the application may have removed the previous output. This is not proof of complete asset-collision or symlink protection (NFR-002).
 
@@ -169,10 +171,12 @@ No new automatic browser reload, draft-preview mode, publication scheduler, atom
 
 ### FR-010: Provide a readable static default presentation
 
-- **Basis / scope:** Confirmed [Web guide](src\ScissorHands.Web\README.md), [Theme guide](src\ScissorHands.Theme\README.md), and built-in [layout](src\ScissorHands.Web\themes\default\MainLayout.razor); Supporting.
+- **Basis / scope:** Source-backed current behavior in the [Web guide](src\ScissorHands.Web\README.md), [navigation reference](docs\website-documentation.md#page-routes-and-navigation), [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs), and built-in [layout](src\ScissorHands.Web\themes\default\MainLayout.razor); Supporting.
 - **Actor / rationale:** Visitors need ordinary page navigation and owners need a usable starting theme (J-005).
-- **Behavior:** Render page/site title, description, and locale through theme metadata; include theme styles/scripts and base-relative internal navigation. The default theme supplies responsive styling and a labelled light/dark control.
-- **Acceptance:** The default layout derives page title, description, and locale from the current document with site-level fallbacks. With JavaScript enabled and browser storage available, the default theme toggle persists a light/dark preference. Reading generated content does not require a Blazor circuit or client runtime.
+- **Behavior:** Render page/site title, description, and locale through theme metadata; include theme styles/scripts and base-relative internal navigation. The default theme supplies responsive styling, a labelled light/dark control, hierarchical page navigation alongside Home/Tags, and tag links on posts and pages.
+- **Navigation membership:** Only non-draft pages with `show_in_navigation: true` participate; posts and custom 404 content do not. Hierarchy follows resolved slugs, not a separate parent field. An existing non-draft page with navigation disabled suppresses its descendant branch, matching whole route segments (`parent` does not hide `parent-other`). Hidden non-draft pages remain generated and eligible for tag listings; this is not access control.
+- **Hierarchy acceptance:** Missing ancestors become non-clickable groups only while they contain visible descendants; they create no output files. A hidden existing parent is not replaced by a group. Group labels derive from path segments; siblings sort ordinally by title and then route. Locale prefixes alone do not create groups when locale routing is enabled, but a visible page at that prefix remains a real navigation item. Every generated layout, including index, posts, pages, tags, and 404, receives the same generation's navigation.
+- **Client acceptance:** With JavaScript enabled, adjacent buttons expand/collapse child lists using mouse, touch, Enter, or Space; Escape closes the applicable group and returns focus to its button. Leaving navigation or clicking outside closes menus. Without JavaScript, the eligible hierarchy remains visible with working links. Metadata retains document/site fallbacks; the light/dark preference persists when JavaScript and browser storage are available. Reading requires no Blazor circuit or client runtime.
 - **Boundary:** Optional theme/plugin JavaScript can still run in the browser. Browser coverage and basic accessibility expectations follow NFR-008; their implementation is not established by the presence of a toggle or responsive CSS. Formal WCAG conformance is not claimed. Storage-disabled preference persistence remains unestablished; no new storage fallback is promised.
 
 ## 6. Quality requirements and constraints
@@ -187,7 +191,7 @@ The user confirmed the following quality baseline on 2026-09-11. Agreed requirem
 | NFR-004 | Diagnostic and artifact integrity | Invalid input and generation failures must not be presented as successful builds. Missing optional content/assets can warn as specified above. No atomic publication or last-good-output guarantee | Confirmed baseline and policy; FR-001, FR-002, FR-006, FR-009 |
 | NFR-005 | Subpath hosting | Generated internal links and theme/plugin asset URLs must respect `SiteManifest.BaseUrl`, including `/docs/`. Assess by serving an artifact at its intended prefix; a `<base>` tag alone does not prove deployment/preview correctness | Confirmed documented contract; host/path behavior must be evaluated, Q-002 |
 | NFR-006 | Cancellation | Preserve cancellation-aware service contracts and propagation where tokens are supplied. Cancellation must surface instead of yielding a completed artifact | Confirmed policy and service contracts. Production CLI currently calls generation with `CancellationToken.None`; no graceful CLI cancellation-time bound is claimed |
-| NFR-007 | Compatibility and distribution | Keep .NET 10 package boundaries and documented migration behavior. Existing legacy theme-service overloads remain obsolete but available; read-only `ThemeManifest.Stylesheets`/`Scripts` and `PluginManifest.Options`, required plugin IDs, and `PluginDependency.PluginId` are intentional vNext breaking changes | Confirmed [global.json](global.json), [build settings](Directory.Build.props), root/package guides; existing consumers must update configuration and rebuild |
+| NFR-007 | Compatibility and distribution | Keep .NET 10 package boundaries and documented migration behavior. Legacy theme-service overloads remain obsolete but available. Read-only manifest collections, required plugin IDs/`PluginDependency.PluginId`, all seven required theme roles, and nested page directory-index inference are intentional vNext compatibility changes. Retain flat navigation and existing protected URL helpers | Source-backed [migration reference](docs\website-documentation.md#upgrading-to-vnext); update/rebuild consuming extensions, supply missing tag views, and set explicit slugs where older URLs must remain |
 | NFR-008 | Accessibility and browser coverage | The built-in theme must support keyboard navigation, visible focus, meaningful labels, and readable contrast in light/dark modes across the browser coverage below. Custom-theme authors own their themes' accessibility. No formal WCAG conformance claim or comprehensive assistive-technology certification is made for this baseline | Confirmed by the user on 2026-09-11; Q-003 resolved. Implementation coverage remains to be evaluated |
 | NFR-009 | Performance and scale | Use the owner's actual blog, including its assets and enabled themes/plugins, as the representative workload on a documented development environment. Record build duration, preview-update delay, and memory usage. This baseline sets no formal performance SLA, numerical pass/fail thresholds, or maximum supported site size; measurements inform any later targets | Confirmed by the user on 2026-09-11; Q-003 resolved. Benchmark execution and results remain pending; absence of a declared size limit is not an unlimited-scale guarantee |
 | NFR-010 | Privacy and external requests | Do not expose local secrets in generated HTML, logs, or fixtures. No built-in analytics implementation is established; optional plugins/themes may introduce external requests and obligations | Confirmed policy; the [site manifest](src\ScissorHands.Core\Manifests\SiteManifest.cs) includes a remote default hero-image URL, so zero-network/offline behavior is not promised |
@@ -202,17 +206,17 @@ The user confirmed the following quality baseline on 2026-09-11. Agreed requirem
 
 ### Next phase: implementation verification
 
-The user agreed on 2026-09-11 to treat the following as next-phase items. All are pending; execution owners and dates are unassigned. This PRD update records the work without starting it. Existing requirements and exclusions remain unchanged.
+The user agreed on 2026-09-11 to treat the following as next-phase items. They remain open verification areas, with execution owners and dates unassigned. The 2026-09-13 alignment adds navigation, directory-index, and shared-URL cases to their scope without executing them or inferring completion from merged code or test source.
 
 | ID | Area / requirements | Verification scope and expected evidence |
 | --- | --- | --- |
 | V-001 | Filesystem safety / NFR-002 | Exercise content reads, generated-page writes, and asset copying against traversal, symbolic-link escapes, and output collisions. Record containment and overwrite-protection results, including gaps beyond existing route tests |
 | V-002 | Rendering and privacy / NFR-003/010 | Check metadata encoding, unsafe URL schemes at relevant boundaries, and accidental secret exposure in generated output/logs using synthetic fixtures, not real credentials. Preserve supported raw Markdown/plugin HTML as an explicit trust boundary; record results and any unsafe paths |
-| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and a prefix such as `/docs/`, including navigation, posts/pages/tags, images, styles, scripts, and representative theme/plugin URLs. Record serving configuration and link/asset results |
+| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and a prefix such as `/docs/`, including hierarchical/encoded navigation, directory-index pages, posts/tags, images, styles, scripts, and representative theme/plugin URLs. Record serving configuration and actual request results; URL-helper or markup tests alone do not establish prefix serving |
 | V-004 | Failures and cancellation / NFR-004/006 | Exercise invalid input, generation failures, and cancellation-aware APIs. Confirm actionable errors and no misleading success; record partial-output behavior against documented limitations, without introducing atomic-output or bounded CLI-shutdown guarantees |
-| V-005 | Accessibility and browsers / NFR-008, FR-010 | Evaluate generated-site reading/navigation and built-in-theme controls, keyboard access, focus, labels, and light/dark contrast across the agreed desktop/mobile browsers. Record actual browser/OS/device coverage and findings; no formal WCAG certification is required |
+| V-005 | Accessibility and browsers / NFR-008, FR-010 | Evaluate reading/navigation, nested disclosure buttons, keyboard/touch use, Escape/focus return, outside dismissal, no-JavaScript links, labels, and light/dark contrast across the agreed desktop/mobile browsers. Record actual browser/OS/device coverage and findings; no formal WCAG certification is required |
 | V-006 | Performance baseline / NFR-009 | Benchmark the owner's actual blog with its assets and enabled extensions. Record the workload/environment details, build duration, preview-update delay, memory usage, and measurement method. Completion establishes measurements, not compliance with an unagreed numerical target |
-| V-007 | Functional regression and compatibility / FR-001 through FR-010, NFR-007 | Run the existing suite and sample build/preview; cover posts/pages, draft exclusion, tags/404, complete theme discovery/default selection, plugin ordering/errors, and documented API/configuration compatibility. Record results and review Windows/macOS/Linux CI evidence without assuming untested platforms passed |
+| V-007 | Functional regression and compatibility / FR-001 through FR-010, NFR-007 | Run existing suites and sample build/preview; cover metadata defaults/errors, directory-index overrides/collisions, navigation visibility/groups/order on every layout, shared URL semantics, tags/404, seven-role theme discovery, plugin ordering, and migration compatibility. Record results and review Windows/macOS/Linux CI evidence without assuming untested platforms passed |
 
 For each item, record what was exercised, the environment, results, and reproducible gaps. Failed, blocked, or skipped checks remain explicit; an attempted check is not a passing result. Track necessary corrections against the existing requirements, then recheck affected behavior. The benchmark needs reproducible measurements, not an invented speed threshold. These records are next-phase deliverables, not prerequisites for finishing the requirements document.
 
@@ -224,7 +228,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 2. Demonstrate the essential journeys and acceptance cases, including malformed metadata, collisions, missing dependencies, empty content, draft exclusion, and theme fallback.
 3. Pass the relevant repository checks and exercise sample build/preview; evaluate generated links/assets under both root and subpath deployment. The existing CI configuration targets Windows, macOS, and Linux; it is not evidence of a currently passing run.
 4. Reconcile NFR-002/NFR-003 containment and rendering coverage, evaluate the agreed NFR-008 accessibility/browser expectations, and record NFR-009 benchmark results. Do not introduce an unagreed numerical performance gate or claim formal WCAG conformance.
-5. Ship consistent package/sample guidance and migration notes. The existing ID/immutable-collection breaking changes must not be presented as transparent upgrades.
+5. Ship consistent package/sample guidance and migration notes. ID/immutable-collection, mandatory-tag-view, and directory-index route changes must not be presented as transparent upgrades.
 
 **Rollout and recovery:** package publication, host selection, release timing, and deployment automation are not authorized here. The documented operational practice is to publish only a successful artifact and retain a previous deployed artifact through the chosen host; the engine does not implement deployment rollback. Recovery of local generated output is correction plus a fresh build or preview restart.
 
@@ -239,7 +243,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | RD-001 | Theme/plugin assemblies execute code; generated raw HTML and scripts cross trust boundaries | Building untrusted extensions or publishing unsafe markup can affect author/visitor environments. Retain the owner-controlled boundary; assess guardrail coverage in V-001/V-002 without a sandbox assurance | Unassigned |
 | RD-002 | Non-atomic output and stale preview files | Failed builds can lose previous output; renamed/deleted content may remain in preview. Retain the limitation and evaluate failure/output behavior in V-004 | Unassigned |
 | RD-003 | Static-host behavior varies | Directory indexes, subpaths, 404 handling, and external assets can differ from local preview. Record and evaluate serving assumptions in V-003; no particular host is required | Unassigned |
-| RD-004 | Third-party extensions and existing consumers may lag vNext contracts | Old name-based configuration and mutable-collection consumers can break. Verify the documented migration and compatibility in V-007 | Unassigned |
+| RD-004 | Third-party extensions and existing content may lag vNext contracts | Name-based configuration, mutable-collection consumers, and themes relying on tag-view fallback can break; inferred nested-index URLs can move or collide. Verify the documented migration, explicit slug overrides, and compatibility in V-007 | Unassigned |
 
 ### Decision and evidence gaps
 
@@ -248,9 +252,9 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | Q-001 / Confirmed | Owner-controlled local authoring with deliberately trusted executable themes/plugins; no untrusted upload service or extension sandbox | Users, FR-005, FR-008, NFR-001/003/010 | Resolved by the user on 2026-09-11; retain validation and visitor-safety obligations |
 | Q-002 / Confirmed (next-phase scope) | Defer containment, rendering/privacy, and subpath verification to V-001 through V-003; results remain unknown | FR-003/006/009, NFR-002/003/005/010 | Placement resolved by the user on 2026-09-11. Evidence and necessary corrections remain next-phase work before claiming compliance or release readiness, not PRD-definition blockers |
 | Q-003 / Confirmed | Built-in-theme accessibility and the NFR-008 desktop/mobile browser coverage; custom-theme authors own accessibility. Benchmark the actual blog on a documented environment, with no formal SLA, numerical performance gate, maximum supported site size, or WCAG conformance claim | FR-010, NFR-008/009 | Quality choices resolved by the user on 2026-09-11; verification is assigned to next-phase V-005/V-006, with execution owners and dates still unassigned |
-| Q-004 / Unknown (release arrangements) | Who owns operational release acceptance and any further outcome evaluation, and when will they occur? | Goals and release criteria | Document approval is complete. Execution ownership, timing, and authorization for an actual release remain to be confirmed; these do not block implementation of the approved product requirements |
+| Q-004 / Unknown (release arrangements) | Who owns operational release acceptance and any further outcome evaluation, and when will they occur? | Goals and release criteria | Historical v0.6 approval is recorded; v0.7 review is separate. Execution ownership, timing, and authorization for an actual release remain to be confirmed; these are not new product behavior decisions |
 
-The product requirements and documented release criteria are approved. Optional outcome measurement and unassigned release/rollout arrangements remain separate from document approval. No authorization for an actual release is inferred.
+The v0.6 product requirements and release criteria have historical approval; v0.7 records current behavior for review without changing those quality/release criteria. Optional outcome measurement and unassigned release/rollout arrangements remain separate from document sign-off. No release authorization is inferred.
 
 ### Decisions and material changes
 
@@ -263,23 +267,25 @@ The product requirements and documented release criteria are approved. Optional 
 | 2026-09-11 | Defer the seven implementation-verification areas to the next phase | Explicit user decision | Record V-001 through V-007 with expected evidence; resolve Q-002's placement while preserving unknown results, all requirements, and release safeguards |
 | 2026-09-11 | Separate original intent, current code behavior, and proposed quality/release criteria | Document synthesis; not a new product approval | Prevent historical suggestions and incomplete guardrails from being represented as delivered requirements |
 | 2026-09-11 | Record approval of both documents; issue PRD v0.6 as the signed product baseline | Explicit approval by @justinyoo | Approve product requirements and release criteria without changing requirement IDs, resolving unspecified TRD details, executing verification, or authorizing release |
+| 2026-09-13 | Align v0.7 with merged #86/#87 at `1f963ad` | User requested updates to all four documents; source and website handoff inspected | Retain IDs; add navigation, directory-index, shared-URL and migration coverage; preserve seven-role/explicit-mode corrections, historical approval, and open verification |
 
 ### Readiness assessment
 
-- **Supported status:** Implementation-ready as a product requirements baseline. @justinyoo explicitly approved the essential requirements, quality choices, documented limitations, and release criteria. Product-scope questions are resolved or explicitly deferred; this status does not override technical blockers recorded in the TRD.
+- **Supported status:** Review-ready for the current-code alignment. The prior v0.6 baseline was Implementation-ready and approved; v0.7 adds source-backed behavior with explicit acceptance and compatibility boundaries, but has no separate sign-off.
 - **Remaining decisions versus execution:** Q-002's next-phase placement and Q-003's quality choices are settled. V-001 through V-007 remain pending. Q-004 concerns operational release arrangements and optional further evaluation, not outstanding document approval.
-- **Approval:** Approved by @justinyoo on 2026-09-11. Approval includes the recorded next-phase deferrals but does not imply passing verification, resolution of unspecified technical details, or authorization to publish/deploy.
-- **Reviewer pass:** Reconciled the saved document with explicit approval and the companion TRD. Preserved all FR/NFR/V IDs, requirements, exclusions, and pending evidence; separated approved release criteria from authorization for an actual release.
+- **Approval:** Historical v0.6 approval by @justinyoo on 2026-09-11 remains intact. The 2026-09-13 edit request authorizes alignment, not new sign-off, resolution of technical gaps, or publication/deployment.
+- **Reviewer pass:** Reconciled current navigation, routing, URL, theme and sample behavior with TRD v0.3 and TDD v0.4. Preserved all FR/NFR/V IDs, exclusions, quality choices, and evidence gaps; source inspection is not passing verification.
 - **Review limitations:** Evidence includes repository documentation, source inspection, selected regression cases, and the owner's qualitative experience. No agent-executed product validation or quantitative benefit measurement was performed. No external research, external theme/plugin inventory, accessibility audit, or security certification was performed. No .NET build is required for this documentation-only change.
 
 ## 9. Reference map
 
-Use the linked source files in each requirement for behavior. The package guides remain authoritative for detailed API/configuration usage; this document does not replace a technical design.
+Use linked source files and the [website documentation handoff](docs\website-documentation.md) for detailed behavior and migration; package guides provide entry points. This document does not replace [technical requirements](TRD.md) or [design](TDD.md), and the handoff is not evidence of published website updates.
 
 | Topic | References |
 | --- | --- |
 | Original discussion and product setup | [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md), [README.md](README.md), [sample](samples\ScissorHands.Sample\README.md) |
 | Shared contracts and extension guidance | [Core](src\ScissorHands.Core\README.md), [Plugin](src\ScissorHands.Plugin\README.md), [Theme](src\ScissorHands.Theme\README.md), [Web](src\ScissorHands.Web\README.md) |
 | Content/route regression evidence | [Loader tests](test\ScissorHands.Web.Tests\Loaders\ContentLoaderTests.cs), [generator tests](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorTests.cs), [route tests](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorRouteTests.cs) |
+| Navigation and current route behavior | [Navigation reference](docs\website-documentation.md#page-routes-and-navigation), [navigation generation cases](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorNavigationTests.cs), [directory-index cases](test\ScissorHands.Web.Tests\Loaders\ContentLoaderDirectoryIndexTests.cs), [shared URL cases](test\ScissorHands.Core.Tests\Urls\ContentUrlHelperTests.cs) |
 | Extension regression evidence | [Plugin runner tests](test\ScissorHands.Web.Tests\Runners\PluginRunnerTests.cs), [dependency tests](test\ScissorHands.Web.Tests\Runners\PluginDependencyTests.cs), [theme resolver tests](test\ScissorHands.Web.Tests\Services\ThemeComponentResolverTests.cs), [theme service tests](test\ScissorHands.Web.Tests\Services\ThemeServiceTests.cs) |
 | Constraints and release practices | [AGENTS.md](AGENTS.md), [SDK selection](global.json), [build configuration](Directory.Build.props), [CI](.github\workflows\main.yaml) |

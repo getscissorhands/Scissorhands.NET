@@ -51,7 +51,7 @@ The sample launch profile does not select a mode; pass `--preview` or `--build` 
 
 | Location                      | Responsibility                                                                                    |
 | ----------------------------- | ------------------------------------------------------------------------------------------------- |
-| `src/ScissorHands.Core`       | Shared contracts, manifests, content models, and command options.                                 |
+| `src/ScissorHands.Core`       | Shared contracts, manifests, content/navigation models, URL helpers, and command options.         |
 | `src/ScissorHands.Plugin`     | Plugin contracts, pipeline hooks, and Razor plugin base components.                               |
 | `src/ScissorHands.Theme`      | Razor layout and view base types for theme authors.                                               |
 | `src/ScissorHands.Web`        | Application composition, content loading, generation, rendering, preview, and the built-in theme. |
@@ -66,7 +66,9 @@ The sample launch profile does not select a mode; pass `--preview` or `--build` 
 - Preserve the pipeline order: pre-Markdown plugins, Markdown conversion, post-Markdown plugins, Razor rendering, then post-HTML plugins. Honor optional stage-scoped `DependsOn` declarations: declared dependencies must be enabled and run before their dependents. Manifest and registration order do not control execution; use ordinal plugin ID ordering to break ties between ready plugins. Each plugin's output feeds the next.
 - Identify plugins by required lowercase ASCII kebab-case `Id` values in implementations, manifests, dependencies, and Razor component selection. `Name` is display-only. Reuse the shared ID validator; do not normalize IDs or fall back to names.
 - Preserve automatic theme discovery from `Site:Theme` and the normalized component namespace suffix and explicit `AddLayouts` overrides. Require all seven theme view roles, including `TagListViewBase` and `TagViewBase`; do not silently substitute built-in tag views for an incomplete custom theme.
-- Keep generated links and assets compatible with `SiteManifest.BaseUrl`, including subpath hosting. Maintain preview/build distinctions and cancellation propagation.
+- The engine prepares navigation once per generation before document hooks; themes render it. Preserve layout-only `NavigationTree`/`NavigationPages` and the flat-list compatibility path.
+- Preserve opt-in navigation, hidden-parent suppression, missing-parent groups, and nested page `index.md` inference. Navigation visibility is not publication control or authorization; see the [behavior reference](docs/website-documentation.md#page-routes-and-navigation).
+- Reuse `ContentUrlHelper` and Theme wrappers; preserve distinct content, theme, image, and tag semantics. Helpers are not general URL sanitizers or proof of subpath serving. Honor `SiteManifest.BaseUrl`, preview/build distinctions, and cancellation.
 - Treat manifest collections as immutable input. Preserve source and binary compatibility unless a breaking change is explicitly requested; do not remove obsolete overloads merely as cleanup.
 
 Read the relevant package guide before changing its contracts or behavior: [Core](src/ScissorHands.Core/README.md), [Plugin](src/ScissorHands.Plugin/README.md), [Theme](src/ScissorHands.Theme/README.md), and [Web](src/ScissorHands.Web/README.md).
@@ -83,7 +85,7 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 - Add regression tests in the matching test project and mirror its folder layout. Follow existing `Given_..._When_..._Then_...` names and arrange/act/assert patterns.
 - Use xUnit v3, Shouldly assertions, NSubstitute test doubles, and bUnit for Razor components. Reuse existing fixtures and test helpers before adding new ones.
 - Isolate filesystem tests with the existing IO abstractions/testing helpers or scoped temporary directories. Restore process-wide state; use the existing `NonParallel` collection when changing shared state such as console output.
-- Test affected behavior, not only implementation details: include relevant invalid input, cancellation, URL/subpath, plugin-order, and preview/build cases.
+- Test affected behavior: invalid input, cancellation, URL/subpath, plugin order, and preview/build; include navigation hierarchy/visibility, directory-index collisions, layout-only parameters, and helper parity when relevant.
 - Start with the smallest relevant test project; expand to the full suite for shared-contract or cross-project changes. Exercise the sample for generation, theme, or preview changes. Documentation-only edits do not require a .NET build.
 
 ## Change guardrails
@@ -107,6 +109,6 @@ These rules guide new and modified behavior; they do not certify existing covera
 ## Documentation and completion
 
 - Update the affected package README when its public behavior or configuration changes; package READMEs are shipped in NuGet packages.
-- Keep sample usage and the [root README](README.md) consistent with engine changes. Document intentional compatibility changes and migration steps.
+- Keep sample/root guides and the [website handoff](docs/website-documentation.md) consistent; document compatibility changes and migration. Review [PRD](PRD.md), [TRD](TRD.md), and [TDD](TDD.md) when scope, contracts, or architecture changes; preserve IDs, approval history, and explicit gaps.
 - Before handing off, review the diff for scope and generated files. Summarize meaningful behavior changes and disclose any verification that was blocked or skipped. Follow the [PR template](.github/PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Keep this guide durable: link to authoritative configuration and detailed docs; do not add temporary plans, task status, or historical session notes.
