@@ -30,6 +30,7 @@ A Blazor-based static site generator
 
     var app = new ScissorHandsApplicationBuilder(args)
                   .Build();
+
     await app.RunAsync();
     ```
 
@@ -55,13 +56,13 @@ A Blazor-based static site generator
 
 > **NOTE**: For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart/) page.
 
-## Sample Application
+## Engine Preview
 
-The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. It can be used to preview local engine changes without publishing packages:
+The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. Use this preview app to check how the engine works, without building a new app.
 
 ```bash
 cd samples/ScissorHands.Sample
-dotnet run
+dotnet run -- --preview
 ```
 
 ## vNext Compatibility
