@@ -12,7 +12,8 @@ namespace ScissorHands.Web.Navigation;
 public static class NavigationTreeBuilder
 {
     /// <summary>
-    /// Builds an ordered, read-only hierarchy with non-clickable nodes for missing ancestors.
+    /// Builds a source-ordered, read-only hierarchy with non-clickable nodes for missing ancestors.
+    /// Pages without source paths follow file-backed pages in ordinal title and slug order.
     /// </summary>
     /// <param name="navigationPages">The visible pages with their resolved slugs.</param>
     /// <param name="site">Site settings used to distinguish locale prefixes from page groups.</param>
@@ -24,14 +25,23 @@ public static class NavigationTreeBuilder
         CancellationToken cancellationToken = default)
     {
         ArgumentNullException.ThrowIfNull(navigationPages);
+        return BuildOrdered(PageReadingOrder.Order(navigationPages, cancellationToken: cancellationToken), site, cancellationToken);
+    }
+
+    internal static IReadOnlyList<NavigationNode> BuildOrdered(
+        IReadOnlyList<ContentDocument> navigationPages,
+        SiteManifest? site,
+        CancellationToken cancellationToken)
+    {
         cancellationToken.ThrowIfCancellationRequested();
 
-        var items = new Dictionary<string, (string Title, string? Url)>(StringComparer.Ordinal);
-        foreach (var document in navigationPages)
+        var items = new Dictionary<string, (string Title, string? Url, int Rank)>(StringComparer.Ordinal);
+        for (var rank = 0; rank < navigationPages.Count; rank++)
         {
             cancellationToken.ThrowIfCancellationRequested();
+            var document = navigationPages[rank];
             var path = ContentUrlHelper.GetContentUrl(document.Metadata.Slug);
-            items.Add(path, (document.Metadata.Title, path));
+            items.Add(path, (document.Metadata.Title, path, rank));
         }
 
         foreach (var path in items.Keys.ToArray())
@@ -42,7 +52,15 @@ public static class NavigationTreeBuilder
                 cancellationToken.ThrowIfCancellationRequested();
                 var segment = Uri.UnescapeDataString(parentPath[(parentPath.LastIndexOf('/') + 1)..]);
                 var title = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(segment.Replace('-', ' ').Replace('_', ' '));
-                items.TryAdd(parentPath, (title, null));
+                var rank = items[path].Rank;
+                if (items.TryGetValue(parentPath, out var parent))
+                {
+                    items[parentPath] = (parent.Title, parent.Url, Math.Min(parent.Rank, rank));
+                }
+                else
+                {
+                    items.Add(parentPath, (title, null, rank));
+                }
                 parentPath = GetParentPath(parentPath);
             }
         }
@@ -79,7 +97,7 @@ public static class NavigationTreeBuilder
         {
             cancellationToken.ThrowIfCancellationRequested();
             return children[parentPath]
-                .OrderBy(path => items[path].Title, StringComparer.Ordinal)
+                .OrderBy(path => items[path].Rank)
                 .ThenBy(path => path, StringComparer.Ordinal)
                 .Select(path => new NavigationNode
                 {

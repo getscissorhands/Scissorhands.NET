@@ -269,7 +269,7 @@ show_in_navigation: true
 
 The field accepts `true` or `false`, and defaults to `false`. Posts, drafts, and the custom 404 page never enter page navigation.
 
-The engine derives the hierarchy from resolved slugs. No separate parent field is needed. Siblings use ordinal title ordering, with their route as the tie-breaker.
+The engine derives the hierarchy from resolved slugs. No separate parent or section field is needed. Reading order comes from source filenames, independently of display titles and URLs.
 
 ```text
 Parent
@@ -277,6 +277,31 @@ Parent
   Group
     Visible Grandchild
 ```
+
+### Reading order and previous/next links
+
+Within each source directory under `contents\pages`, `index.md` comes first (case-insensitive filename recognition). Other files and directories share ordinal filename ordering, and a directory's eligible descendants are visited before its next sibling. Numeric prefixes are sorted as text, not as numbers: use consistent padding such as `01-`, `02-`, and `03-`.
+
+For example, with these eligible sources:
+
+| Source | Title | Previous | Next |
+| --- | --- | --- | --- |
+| `parent\index.md` | Parent | None | Child |
+| `parent\01-child.md` | Child | Parent | Visible Grandchild |
+| `parent\02-group\visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
+| `parent\03-child-2.md` | Child 2 | Visible Grandchild | None |
+
+The sequence continues across source directories and outside this example subtree when other eligible pages exist. The built-in page view displays the previous/next anchors automatically. The first page has no previous link, the last has no next link, and a zero- or one-page sequence has neither. Posts, drafts, hidden/suppressed pages, 404 content, and non-clickable groups are not targets. Group descendants can still participate.
+
+A file named `01-abc.md` with `slug: zulu` precedes `02-pqr.md` with `slug: alpha`, regardless of their titles. Explicit slugs preserve public URLs when source names change; prefixes are not automatically stripped from inferred URLs. Root-level `index.md` still generates its ordinary `index` route, not the site homepage.
+
+The navigation tree continues to group by resolved slugs. Each sibling subtree is ordered by the earliest reading position of a real page in that subtree. When explicit slugs differ from source hierarchy, flattening the displayed tree can differ from reading order; previous/next always uses the independent flat reading sequence.
+
+Custom loaders can supply pages without a recorded `ContentDocument.SourcePath`. Eligible source-less pages follow all file-backed pages, sorted by ordinal title then resolved slug. They join the same previous/next sequence, including the boundary between tiers. With only source-less pages, title/slug ordering applies throughout. The standard Markdown loader records every page's source path.
+
+Supplied source paths must identify files without literal `.`/`..` segments or invalid filenames; engine generation also requires them to remain within the configured pages root. Relative custom-loader paths are interpreted below that root. Invalid supplied paths fail with context instead of becoming source-less fallback entries. Ordering uses source identities without opening additional files; this is not a claim of comprehensive filesystem-link protection in the content loader.
+
+The engine rebuilds the sequence and immutable target title/URL snapshots on every generation, before document plugin hooks. Later plugin replacement metadata does not refresh already prepared navigation or previous/next links. No `section`, `pages.json`, ordering field, or authored `prev`/`next` frontmatter is supported or required.
 
 ### Existing hidden parents
 
@@ -450,6 +475,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
     TaggedPosts="@TaggedPosts"
     TaggedPages="@TaggedPages"
     Document="@Document"
+    PageNavigation="@PageNavigation"
     Plugins="@Plugins"
     Theme="@Theme"
     Site="@Site">
@@ -475,7 +501,7 @@ Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `Mar
 The engine supplies two layout parameters:
 
 - `NavigationTree`: the complete, ordered hierarchy of immutable `NavigationNode` objects, including missing-parent groups.
-- `NavigationPages`: the existing flat, read-only collection of actual visible pages, retained for compatibility.
+- `NavigationPages`: the flat, read-only reading sequence of actual visible pages, retained for compatibility.
 
 Each node exposes `Title`, `Path`, `Url`, and read-only `Children`. A null `Url` denotes a non-clickable group. Do not turn its `Path` into a link.
 
@@ -518,6 +544,35 @@ The following rendering fragment can be used inside a layout derived from `MainL
 Both collections default to empty lists. They are layout-only parameters, not content-view attributes or automatic cascading values. `Documents` remains the ordered post collection for the home view. Implicit groups are not added to `NavigationPages`.
 
 Normal generation supplies both navigation parameters automatically. For compatibility, `ComponentRenderer` prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree`.
+
+### Adjacent-page context
+
+`MainLayoutBase.PageNavigation` is optional generated data with nullable `Previous` and `Next` links. Each immutable `PageNavigationLink` contains the target's text `Title` and already formatted, base-relative `Url`. Forward `PageNavigation` through `CascadingMainLayoutBase` as in the example above; `PageViewBase.PageNavigation` receives it as a cascading value.
+
+A custom page view can opt into the links without rebuilding navigation:
+
+```razor
+@inherits ScissorHands.Theme.PageViewBase
+
+<article>@((MarkupString)Document?.Html!)</article>
+@if (PageNavigation?.Previous is not null || PageNavigation?.Next is not null)
+{
+    <nav aria-label="Page navigation">
+        @if (PageNavigation?.Previous is { } previous)
+        {
+            <a href="@previous.Url" rel="prev" tabindex="0">Previous: @previous.Title</a>
+        }
+        @if (PageNavigation?.Next is { } next)
+        {
+            <a href="@next.Url" rel="next" tabindex="0">Next: @next.Title</a>
+        }
+    </nav>
+}
+```
+
+Use ordinary Razor text rendering for titles. Do not escape an already formatted target URL again or prepend `Site.BaseUrl`; the layout's base element resolves it. Existing themes that ignore this additive context continue to work, but must forward/render it to show adjacent links. The two full navigation collections remain layout-only and are not added to the cascade. Non-participating pages and collection/404/post views have no sequence links.
+
+The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](..\test\browser\README.md). Custom-theme authors remain responsible for their own complete accessibility.
 
 ### URL helpers
 
@@ -745,6 +800,12 @@ var group = new NavigationNode
 
 The Web engine's `NavigationTreeBuilder` builds the hierarchy from visibility-filtered pages. The generator performs that work once per generation and supplies it to all layouts.
 
+### PageNavigation and PageNavigationLink
+
+`PageNavigation` contains optional immutable `Previous` and `Next` values of type `PageNavigationLink`. A link contains the target's `Title` and formatted `Url`, both defaulting to empty strings; a new `PageNavigation` has no neighbors. These are generated render models, not fields in `ContentMetadata` and not a new frontmatter schema.
+
+The generator identifies pages by their original document instance when associating adjacency, not by source path alone: several source-less pages can legitimately have an empty path. Links snapshot the target metadata before plugins and are not references to mutable document HTML.
+
 ### Manifests
 
 `SiteManifest` holds site-wide generation settings:
@@ -889,6 +950,10 @@ Set `slug: parent/index` to retain the old URL. Post routes and root-level page 
 `NavigationPages` remains a supported flat collection of actual visible pages. New themes can use the prepared `NavigationTree` to render hierarchy without rebuilding it.
 
 Both parameters are layout-only. Normal generation supplies both. `ComponentRenderer` supports older callers that provide only `NavigationPages`, while direct rendering of a hierarchical layout should supply `NavigationTree`.
+
+Navigation now uses filename-based order for file-backed pages, with index-first depth-first traversal and a trailing title/slug-ordered source-less tier. This intentionally replaces title-first engine navigation ordering. Public builder/renderer signatures and explicitly supplied trees remain supported. Use numeric source prefixes to control order and explicit slugs to retain URLs; no automatic source rename or URL-prefix stripping is performed.
+
+`PageNavigation` is additive, optional layout/cascading context. Existing custom themes need no new required view role; they opt in by forwarding it through their cascading layout and rendering links in the page view. The built-in theme does this automatically. Post ordering and title ordering in tag collections are unchanged.
 
 Existing public URL-helper signatures remain supported. Shared helpers also make post/tag-list whitespace normalization and content-link escaping consistent with engine route conventions.
 

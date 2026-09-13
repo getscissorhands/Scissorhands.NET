@@ -45,6 +45,12 @@ The engine prepares routes and `NavigationTree`; themes control markup, styling,
 
 Use the inherited URL helpers instead of duplicating URL rules in theme files. Render metadata through ordinary Razor expressions to retain encoding. Plugin components select manifests by `Id`, not display `Name`.
 
+## Optional previous/next page links
+
+The engine supplies optional `PageNavigation` data for previous/next links. To opt in, forward it through `CascadingMainLayoutBase` and render the available links in your page view. Existing themes can ignore this data; no new view role is required, and `NavigationPages`/`NavigationTree` remain layout-only.
+
+See the [adjacent-page context guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for cascading setup, rendering examples, URL handling, and keyboard guidance.
+
 ## Learn more
 
 - [vNext theme guide (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)

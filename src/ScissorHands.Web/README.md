@@ -8,6 +8,7 @@
 ## Features
 
 - Markdown posts/pages with frontmatter, tags, and hierarchical navigation
+- Filename-based page reading order and automatic previous/next links
 - Razor themes and optional content-processing plugins
 - Configurable routes and static output for subpath hosting
 - Local preview and a built-in light/dark theme
@@ -65,6 +66,12 @@ Write the post in Markdown.
 ```
 
 Place pages under `contents/pages/`. Page navigation is opt-in through `show_in_navigation: true`; hiding a navigation link is not access control.
+
+## Page reading order
+
+File-backed pages use filename order, with `index.md` first in each directory. The built-in theme renders automatic previous/next links for eligible pages; navigation grouping still follows slugs.
+
+Renaming sources can change inferred URLs, so use explicit slugs to preserve existing addresses. See the [reading order and navigation guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#reading-order-and-previousnext-links) for traversal, eligibility, custom-loader behavior, and plugin snapshots.
 
 ## Preview and build
 

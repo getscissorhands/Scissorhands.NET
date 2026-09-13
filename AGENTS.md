@@ -87,6 +87,7 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 - Isolate filesystem tests with the existing IO abstractions/testing helpers or scoped temporary directories. Restore process-wide state; use the existing `NonParallel` collection when changing shared state such as console output.
 - Test affected behavior: invalid input, cancellation, URL/subpath, plugin order, and preview/build; include navigation hierarchy/visibility, directory-index collisions, layout-only parameters, and helper parity when relevant.
 - Start with the smallest relevant test project; expand to the full suite for shared-contract or cross-project changes. Exercise the sample for generation, theme, or preview changes. Documentation-only edits do not require a .NET build.
+- For built-in page-navigation markup or style changes, also run the [browser acceptance suite](test/browser/README.md). Its Node/Playwright tooling is test-only; it checks Chromium, Firefox, and WebKit at desktop/mobile viewports, including the pager's contrast thresholds. It does not replace the .NET suite or broader real-device assessment.
 
 ## Change guardrails
 
@@ -94,6 +95,15 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 - Use Conventional Commits: `type(scope): description`, with an optional scope (for example, `docs: add agent guide` or `fix(web): preserve relative URLs`). Mark breaking changes with `!` after the type/scope or a `BREAKING CHANGE:` footer.
 - Do not hand-edit or commit generated `bin`, `obj`, `preview`, `dist`, test-result, or package outputs. Never add credentials, tokens, or local secrets.
 - Do not publish packages or trigger release workflows unless explicitly requested.
+
+### Atomic commits
+
+- Make each commit one complete logical change that can be reviewed and reverted as a unit. Use a Conventional Commit message that describes that single intent.
+- Commit each completed logical change after performing the relevant validation, without waiting for a separate commit request, unless the user explicitly asks to leave it uncommitted. If the current branch has an open pull request, also push the commit to that PR's head branch without waiting for a separate push request, unless the user explicitly asks not to push.
+- Keep tightly coupled implementation, regression tests, and documentation together. Do not split them solely by file type or leave a commit dependent on a later fix to build or work correctly.
+- Separate independently reviewable changes; do not mix unrelated features, refactors, formatting, or dependency updates into the same commit.
+- Stage only the intended files or hunks, preserve unrelated work, and run the relevant validation for each code commit. Disclose blocked checks rather than claiming they passed; documentation-only commits follow the testing guidance above.
+- Apply this convention to new commits. Do not amend, rebase, squash, or otherwise rewrite existing history merely to enforce it unless explicitly requested.
 
 ## Security guardrails
 

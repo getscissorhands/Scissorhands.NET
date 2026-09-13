@@ -21,10 +21,13 @@ Generated preview and build outputs are written to `preview/` and `dist/` respec
 ## What to explore
 
 - [Hello, ScissorHands](contents/posts/hello-scissorhands.md): rich Markdown formatting for desktop/mobile and light/dark comparisons.
-- [Parent](contents/pages/parent/index.md): a directory landing page with a child and a non-clickable Group containing a visible grandchild.
-- [Hidden Grandchild](contents/pages/parent/group/hidden-grandchild.md): a generated, tagged page omitted from navigation.
+- [Parent](contents/pages/parent/index.md): an index-first landing page whose numbered files and directories control reading order.
+- [Child](contents/pages/parent/01-child.md), [Visible Grandchild](contents/pages/parent/02-group/visible-grandchild.md), and [Child 2](contents/pages/parent/03-child-2.md): cross-directory previous/next links with explicit slugs preserving unprefixed URLs.
+- [Hidden Grandchild](contents/pages/parent/02-group/hidden-grandchild.md): a generated, tagged page omitted from navigation and the reading sequence.
 - [Not found](contents/pages/not-found.md): custom content for `404.html`.
 
 Disable the visible grandchild to remove the empty Group, or disable Parent to hide the entire branch. Plugins are disabled by default through the empty `Plugins` array.
 
-See the [vNext website documentation handoff](../../docs/website-documentation.md) for route, navigation, plugin, and migration details, and the [documentation website](https://getscissorhands.app/docs/) for published guides.
+The expected sequence is **About, Parent, Child, Visible Grandchild, Child 2**. The endpoints omit unavailable links. The numbered sample sources and explicit slugs demonstrate ordering while retaining their public URLs.
+
+See the [navigation guide](../../docs/website-documentation.md#reading-order-and-previousnext-links) for the general rules, the [vNext website handoff](../../docs/website-documentation.md) for other reference material, and the [documentation website](https://getscissorhands.app/docs/) for published guides.

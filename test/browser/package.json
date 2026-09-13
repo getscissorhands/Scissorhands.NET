@@ -1,0 +1,13 @@
+{
+  "name": "scissorhands-browser-acceptance",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:sample": "node build-sample.mjs",
+    "test": "node --test contrast.test.mjs && playwright test",
+    "pretest": "npm run build:sample"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0"
+  }
+}

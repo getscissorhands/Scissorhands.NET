@@ -18,6 +18,12 @@ public abstract class PageViewBase : ComponentBase
     public ContentDocument? Document { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional engine-prepared previous and next links for the current page.
+    /// </summary>
+    [CascadingParameter]
+    public PageNavigation? PageNavigation { get; set; }
+
+    /// <summary>
     /// Gets or sets the list of <see cref="PluginManifest"/> instances.
     /// </summary>
     [CascadingParameter]

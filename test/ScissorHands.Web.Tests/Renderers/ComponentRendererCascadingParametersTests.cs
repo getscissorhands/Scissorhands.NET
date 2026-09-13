@@ -15,6 +15,43 @@ public class ComponentRendererCascadingParametersTests
     [Theory]
     [InlineData(false)]
     [InlineData(true)]
+    public async Task Given_ReadingOrderAndOptionalPageContext_When_Rendered_Then_It_Should_PreserveExplicitTreesAndLegacyViews(bool supplyTree)
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<ScissorHands.Core.Services.IThemeService>());
+        using var provider = services.BuildServiceProvider();
+        var renderer = new ComponentRenderer(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILoggerFactory>());
+        var pages = new[]
+        {
+            new ContentDocument { Kind = ContentKind.Page, Metadata = new() { Title = "A Source-less", Slug = "loose" } },
+            new ContentDocument { Kind = ContentKind.Page, SourcePath = "02-second.md", Metadata = new() { Title = "B Second", Slug = "alpha" } },
+            new ContentDocument { Kind = ContentKind.Page, SourcePath = "01-first.md", Metadata = new() { Title = "Z First", Slug = "zulu" } },
+        };
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Site"] = new SiteManifest(),
+            ["NavigationPages"] = pages,
+            ["PageNavigation"] = new PageNavigation { Next = new PageNavigationLink { Title = "Next", Url = "next" } },
+        };
+        if (supplyTree)
+        {
+            parameters["NavigationTree"] = new[] { new NavigationNode { Title = "Explicit", Path = "explicit", Url = "explicit" } };
+        }
+
+        var html = await renderer.RenderAsync<TestNavigationContent>(typeof(TestNavigationLayout), parameters, Xunit.TestContext.Current.CancellationToken);
+
+        html.ShouldContain(supplyTree ? "Tree:Explicit" : "Tree:Z First|B Second|A Source-less");
+        html.ShouldContain("Content body");
+        parameters.ContainsKey("NavigationTree").ShouldBe(supplyTree);
+        parameters["NavigationPages"].ShouldBeSameAs(pages);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
     public async Task Given_CustomLayout_When_RenderingNavigation_Then_It_Should_ConsumePreparedDataWithoutLeakingParameters(bool supplyTree)
     {
         var services = new ServiceCollection();

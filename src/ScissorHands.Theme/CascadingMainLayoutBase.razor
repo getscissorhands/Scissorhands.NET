@@ -7,7 +7,9 @@
                         <CascadingValue Name="Tag" Value="Tag">
                             <CascadingValue Name="TaggedPosts" Value="TaggedPosts">
                                 <CascadingValue Name="TaggedPages" Value="TaggedPages">
-                                    @ChildContent
+                                    <CascadingValue TValue="PageNavigation" Value="PageNavigation">
+                                        @ChildContent
+                                    </CascadingValue>
                                 </CascadingValue>
                             </CascadingValue>
                         </CascadingValue>
@@ -64,6 +66,12 @@
     /// </summary>
     [Parameter]
     public ContentDocument? Document { get; set; }
+
+    /// <summary>
+    /// Gets or sets the engine-prepared previous and next links for the current page.
+    /// </summary>
+    [Parameter]
+    public PageNavigation PageNavigation { get; set; } = new();
 
     /// <summary>
     /// Gets or sets the collection of <see cref="PluginManifest"/> instances.

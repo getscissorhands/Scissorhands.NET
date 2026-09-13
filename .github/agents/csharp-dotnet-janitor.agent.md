@@ -2,6 +2,7 @@
 description: 'Perform janitorial tasks on C#/.NET code including cleanup, modernization, and tech debt remediation.'
 tools: ["agent", "edit", "execute", "read", "search", "todo", "vscode", "web", "microsoft-docs/*", "github/*"]
 ---
+
 # C#/.NET Janitor
 
 Perform janitorial tasks on C#/.NET codebases. Focus on code cleanup, modernization, and technical debt remediation.

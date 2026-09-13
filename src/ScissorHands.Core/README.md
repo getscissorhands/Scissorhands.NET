@@ -41,6 +41,12 @@ The package also provides site/theme/plugin manifests, immutable `NavigationNode
 
 vNext changes several collection APIs and requires plugin IDs. Legacy non-cancellable `IThemeService` overloads are obsolete; review the migration reference before upgrading.
 
+## Generated page navigation
+
+`PageNavigation` and `PageNavigationLink` provide optional, immutable previous/next page data for themes. They are generated models, not frontmatter.
+
+See the [page navigation API reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#pagenavigation-and-pagenavigationlink) and [theme integration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for their contracts and usage.
+
 ## Learn more
 
 - [ScissorHands.Web package](https://www.nuget.org/packages/ScissorHands.Web)
