@@ -69,13 +69,9 @@ Place pages under `contents/pages/`. Page navigation is opt-in through `show_in_
 
 ## Page reading order
 
-The engine visits `index.md` first within each source directory, then orders the remaining files and directories together by ordinal filename. It visits a directory's eligible pages before continuing to its next sibling. For example, `01-child.md`, `02-group/guide.md`, and `03-child-2.md` form one reading sequence across directories.
+File-backed pages use filename order, with `index.md` first in each directory. The built-in theme renders automatic previous/next links for eligible pages; navigation grouping still follows slugs.
 
-Titles label links and slugs determine URLs and navigation grouping; neither changes a file-backed page's reading position. Use explicit slugs to retain URLs when adding numeric prefixes to filenames or directories. Prefixes are not stripped from inferred URLs.
-
-The built-in page view renders automatic previous/next links for eligible pages. Hidden/suppressed pages, drafts, posts, 404 content, and non-clickable groups are not targets. Custom-loader pages without source paths follow file-backed pages in title/slug order. Invalid supplied paths fail rather than silently use that fallback.
-
-No `section`, `pages.json`, or authored `prev`/`next` fields are needed. Existing custom themes remain compatible and can opt into the generated `PageNavigation` context. The engine snapshots reading order and link labels/URLs before document plugins, just like the navigation tree; later plugin changes do not refresh the snapshot.
+Renaming sources can change inferred URLs, so use explicit slugs to preserve existing addresses. See the [reading order and navigation guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#reading-order-and-previousnext-links) for traversal, eligibility, custom-loader behavior, and plugin snapshots.
 
 ## Preview and build
 

@@ -43,11 +43,9 @@ vNext changes several collection APIs and requires plugin IDs. Legacy non-cancel
 
 ## Generated page navigation
 
-`PageNavigation` is an immutable, per-page snapshot with nullable `Previous` and `Next` links. Each `PageNavigationLink` contains a text `Title` and an engine-formatted, base-relative `Url`; both strings default to empty. A new `PageNavigation` has no neighbors.
+`PageNavigation` and `PageNavigationLink` provide optional, immutable previous/next page data for themes. They are generated models, not frontmatter.
 
-The engine prepares this data before document hooks. Eligible file-backed pages follow a filename-based depth-first reading order; pages without source paths follow afterward in title/slug order. This reading sequence is separate from the slug-based grouping in `NavigationTree`. These models are generated data, not frontmatter or new `ContentMetadata` fields.
-
-Themes may opt into the per-page links without receiving the full navigation collections. The existing layout-only `NavigationPages` and `NavigationTree` contracts remain available.
+See the [page navigation API reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#pagenavigation-and-pagenavigationlink) and [theme integration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for their contracts and usage.
 
 ## Learn more
 

@@ -28,8 +28,6 @@ Generated preview and build outputs are written to `preview/` and `dist/` respec
 
 Disable the visible grandchild to remove the empty Group, or disable Parent to hide the entire branch. Plugins are disabled by default through the empty `Plugins` array.
 
-The eligible sequence is **About, Parent, Child, Visible Grandchild, Child 2**. The first page has no previous link and the last has no next link. Files and directories share ordinal filename ordering, with `index.md` first in each directory. Renaming a source changes its reading position; an explicit slug preserves its URL. The navigation hierarchy still follows slugs rather than source directories.
+The expected sequence is **About, Parent, Child, Visible Grandchild, Child 2**. The endpoints omit unavailable links. The numbered sample sources and explicit slugs demonstrate ordering while retaining their public URLs.
 
-Custom loaders may supply pages without a source path. Those pages follow file-backed pages in ordinal title/slug order and participate in the same previous/next sequence. The standard Markdown loader always supplies source paths.
-
-See the [vNext website documentation handoff](../../docs/website-documentation.md) for route, navigation, plugin, and migration details, and the [documentation website](https://getscissorhands.app/docs/) for published guides.
+See the [navigation guide](../../docs/website-documentation.md#reading-order-and-previousnext-links) for the general rules, the [vNext website handoff](../../docs/website-documentation.md) for other reference material, and the [documentation website](https://getscissorhands.app/docs/) for published guides.

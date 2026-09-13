@@ -47,29 +47,9 @@ Use the inherited URL helpers instead of duplicating URL rules in theme files. R
 
 ## Optional previous/next page links
 
-`MainLayoutBase.PageNavigation` is an optional engine-supplied `PageNavigation` parameter, defaulting to an empty instance. It contains nullable `Previous` and `Next` links with immutable text `Title` and preformatted, base-relative `Url` values. The engine snapshots these values before document hooks: eligible file-backed pages use filename-based depth-first reading order, followed by source-less pages in title/slug order. This is independent of the slug grouping used by `NavigationTree`, and is generated data rather than frontmatter.
+The engine supplies optional `PageNavigation` data for previous/next links. To opt in, forward it through `CascadingMainLayoutBase` and render the available links in your page view. Existing themes can ignore this data; no new view role is required, and `NavigationPages`/`NavigationTree` remain layout-only.
 
-To opt in, add `PageNavigation="@PageNavigation"` to your layout's existing `<CascadingMainLayoutBase>` element, retaining its other parameters and child content. It provides a typed cascade consumed by the nullable `PageViewBase.PageNavigation` property. Render available links below your page content, for example:
-
-```razor
-@if (PageNavigation?.Previous is not null || PageNavigation?.Next is not null)
-{
-    <nav class="page-navigation" aria-label="Page navigation">
-        @if (PageNavigation?.Previous is { } previous)
-        {
-            <a href="@previous.Url" rel="prev" tabindex="0">Previous: @previous.Title</a>
-        }
-        @if (PageNavigation?.Next is { } next)
-        {
-            <a href="@next.Url" rel="next" tabindex="0">Next: @next.Title</a>
-        }
-    </nav>
-}
-```
-
-Use the supplied URLs directly, without prefixing the site's base URL or escaping them again, and render titles through ordinary Razor expressions, never `MarkupString`. Omit missing endpoints and the entire region when both are absent. The built-in theme includes these links; custom themes that ignore the optional parameter keep their existing behavior. No new theme role is required, and `NavigationPages`/`NavigationTree` remain layout-only, not newly cascaded.
-
-Explicit `tabindex="0"` keeps native link tabbing consistent across WebKit keyboard modes without imposing positive tab order. The built-in pager has a [repeatable browser acceptance suite](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/test/browser/README.md) for its keyboard behavior and component contrast; this is not whole-theme accessibility certification.
+See the [adjacent-page context guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for cascading setup, rendering examples, URL handling, and keyboard guidance.
 
 ## Learn more
 

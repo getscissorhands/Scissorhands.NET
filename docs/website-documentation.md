@@ -802,7 +802,7 @@ The Web engine's `NavigationTreeBuilder` builds the hierarchy from visibility-fi
 
 ### PageNavigation and PageNavigationLink
 
-`PageNavigation` contains optional immutable `Previous` and `Next` values of type `PageNavigationLink`. A link contains the target's `Title` and formatted `Url`; empty navigation is the default. These are generated render models, not fields in `ContentMetadata` and not a new frontmatter schema.
+`PageNavigation` contains optional immutable `Previous` and `Next` values of type `PageNavigationLink`. A link contains the target's `Title` and formatted `Url`, both defaulting to empty strings; a new `PageNavigation` has no neighbors. These are generated render models, not fields in `ContentMetadata` and not a new frontmatter schema.
 
 The generator identifies pages by their original document instance when associating adjacency, not by source path alone: several source-less pages can legitimately have an empty path. Links snapshot the target metadata before plugins and are not references to mutable document HTML.
 
