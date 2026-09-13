@@ -96,6 +96,14 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 - Do not hand-edit or commit generated `bin`, `obj`, `preview`, `dist`, test-result, or package outputs. Never add credentials, tokens, or local secrets.
 - Do not publish packages or trigger release workflows unless explicitly requested.
 
+### Atomic commits
+
+- Make each commit one complete logical change that can be reviewed and reverted as a unit. Use a Conventional Commit message that describes that single intent.
+- Keep tightly coupled implementation, regression tests, and documentation together. Do not split them solely by file type or leave a commit dependent on a later fix to build or work correctly.
+- Separate independently reviewable changes; do not mix unrelated features, refactors, formatting, or dependency updates into the same commit.
+- Stage only the intended files or hunks, preserve unrelated work, and run the relevant validation for each code commit. Disclose blocked checks rather than claiming they passed; documentation-only commits follow the testing guidance above.
+- Apply this convention to new commits. Do not amend, rebase, squash, or otherwise rewrite existing history merely to enforce it unless explicitly requested.
+
 ## Security guardrails
 
 These rules guide new and modified behavior; they do not certify existing coverage. Enforce relevant protections in implementation and regression tests.
