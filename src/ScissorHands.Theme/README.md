@@ -103,6 +103,29 @@ Inherit from `MainLayoutBase` and render the body through `CascadingMainLayoutBa
 
 `MainLayoutBase` calculates page title, description, and locale from the site and current document. Override the calculation methods to customize those values.
 
+### Page navigation
+
+The engine supplies `MainLayoutBase.NavigationPages` on every generated surface: home, posts, pages, tag lists, individual tags, and 404. It is a read-only list of pages that opt in with `show_in_navigation: true` frontmatter. The default is off; posts, drafts, and the custom 404 page are excluded. Pages are ordered by title and then slug using ordinal comparisons.
+
+An existing page ancestor with navigation disabled removes its entire descendant branch from this collection, regardless of descendant opt-in flags. Ancestors are matched on full slug path segments. Missing intermediate pages do not themselves hide a branch.
+
+The collection remains flat for custom-theme compatibility and contains only actual pages. The built-in theme preserves every ancestor level in nested disclosure menus. Existing parents retain their page links; missing parents become non-clickable labels only when they contain a visible descendant. These synthesized groups are not added to `NavigationPages` and do not create output pages. Group labels are derived from their slug segments; see the [navigation guide](../ScissorHands.Web/README.md#page-navigation).
+
+A custom layout can choose the same hierarchy or render a flat list alongside its existing navigation:
+
+```razor
+<nav aria-label="Primary navigation">
+    <a href=".">Home</a>
+    <a href="tags">Tags</a>
+    @foreach (var pageDocument in NavigationPages)
+    {
+        <a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a>
+    }
+</nav>
+```
+
+`NavigationPages` defaults to an empty list when not supplied. It is a layout parameter, not a content-view parameter or cascading value. The existing `Documents` parameter remains the ordered post collection for the home view. Existing custom themes need to add navigation markup to display opted-in pages; the built-in theme already does so.
+
 ## Page views
 
 Page view base types expose the data needed for each generated surface:
@@ -134,6 +157,8 @@ Internal links and asset URLs should be base-relative, without a leading `/`, so
 Layouts derived from `MainLayoutBase` can use the protected `GetThemeUrl(string path)` helper for theme assets. With a theme slug of `minimal-blog`, the example returns `themes/minimal-blog/assets/theme.css`. The helper trims leading and trailing `/` characters from the slug and leading `/` characters from the path.
 
 The returned URL is relative to the `<base href="@Site!.BaseUrl" />` in the layout; it does not prepend `Site.BaseUrl`. Supply the `Theme` parameter before calling the helper. A missing theme throws `InvalidOperationException`, and a null path throws `ArgumentNullException`.
+
+For content links, use the protected `GetContentUrl(string slug)` helper. It escapes each path segment, preserves nested and locale-prefixed routes, and returns a base-relative URL (or `.` for an empty slug). For example, `guides/about & team` becomes `guides/about%20%26%20team`. Leading/trailing slashes are removed and backslashes are treated as path separators. A null slug throws `ArgumentNullException`; `.` or `..` path segments throw `ArgumentException`.
 
 ## Start from the template
 

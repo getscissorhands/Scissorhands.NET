@@ -33,6 +33,12 @@ public abstract class MainLayoutBase : LayoutComponentBase
     public IEnumerable<ContentDocument>? Documents { get; set; }
 
     /// <summary>
+    /// Gets or sets the ordered, opted-in pages for site navigation on every generated view.
+    /// </summary>
+    [Parameter]
+    public IReadOnlyList<ContentDocument> NavigationPages { get; set; } = Array.Empty<ContentDocument>();
+
+    /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
     /// Used for tag list view.
     /// </summary>
@@ -114,6 +120,26 @@ public abstract class MainLayoutBase : LayoutComponentBase
         var theme = Theme ?? throw new InvalidOperationException("A theme must be supplied before getting a theme URL.");
 
         return $"{ThemeManifest.THEME_DIRECTORY}/{theme.Slug.Trim('/')}/{path.TrimStart('/')}";
+    }
+
+    /// <summary>
+    /// Gets a base-relative URL for a content slug, escaping each path segment.
+    /// </summary>
+    /// <param name="slug">The content slug.</param>
+    /// <returns>The URL relative to the site's base URL.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="slug"/> is null.</exception>
+    /// <exception cref="ArgumentException"><paramref name="slug"/> contains a relative path segment.</exception>
+    protected string GetContentUrl(string slug)
+    {
+        ArgumentNullException.ThrowIfNull(slug);
+
+        var segments = slug.Trim().Split(['/', '\\'], StringSplitOptions.RemoveEmptyEntries);
+        if (segments.Any(segment => segment is "." or ".."))
+        {
+            throw new ArgumentException("Content slugs cannot contain relative path segments.", nameof(slug));
+        }
+
+        return segments.Length == 0 ? "." : string.Join('/', segments.Select(Uri.EscapeDataString));
     }
 
     /// <summary>

@@ -23,6 +23,7 @@ public class ContentDocumentTests
         document.Metadata.Slug.ShouldNotBeNull();
         document.Metadata.Tags.ShouldNotBeNull();
         document.Metadata.Tags.ShouldBeEmpty();
+        document.Metadata.ShowInNavigation.ShouldBeFalse();
     }
 
     [Theory]

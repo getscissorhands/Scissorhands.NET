@@ -71,7 +71,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
                 foreach (var kvp in parameters)
                 {
-                    if (_cascadingParameterNames.Value.Contains(kvp.Key))
+                    if (kvp.Key == nameof(MainLayoutBase.NavigationPages) || _cascadingParameterNames.Value.Contains(kvp.Key))
                     {
                         continue;
                     }
