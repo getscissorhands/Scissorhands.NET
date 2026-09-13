@@ -169,6 +169,7 @@ pre code {
 
 .site-header nav {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   border-bottom: 1px dashed var(--border);
@@ -180,6 +181,7 @@ pre code {
 }
 
 #theme-toggle {
+  flex-shrink: 0;
   width: 2rem;
   height: 2rem;
   margin-left: auto;

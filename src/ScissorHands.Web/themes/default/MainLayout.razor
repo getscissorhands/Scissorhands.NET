@@ -33,6 +33,10 @@
             <nav aria-label="Primary navigation">
                 <a href=".">Home</a>
                 <a href="tags">Tags</a>
+                @foreach (var pageDocument in NavigationPages)
+                {
+                    <a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a>
+                }
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
                     <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
                         <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>

@@ -113,10 +113,31 @@ Supported frontmatter fields are:
 - `published`
 - `tags`
 - `draft`
+- `show_in_navigation`
 
 Invalid frontmatter, unsafe routes, and duplicate output paths fail the build with the source file included in the error.
 
 To provide a custom not-found page, add a page with `slug: 404.html`.
+
+### Page navigation
+
+Opt a page under `contents/pages/` into the built-in navigation:
+
+```markdown
+---
+title: About
+slug: about
+show_in_navigation: true
+---
+
+# About
+```
+
+`show_in_navigation` accepts `true` or `false` and defaults to `false` when omitted. Hidden pages are still generated and can be reached by their URL; this setting only controls navigation links, not access to content.
+
+The built-in theme keeps Home and Tags, then adds opted-in pages using their titles and generated slugs. Links are ordered by title, with slug as the tie-breaker, using ordinal comparisons. Posts, drafts, and the custom 404 page are never included. The same navigation appears on every generated surface in both preview and build modes, including sites hosted under a `BaseUrl` subpath.
+
+Custom themes can render the layout's `NavigationPages` collection; see the [theme guide](../ScissorHands.Theme/README.md#page-navigation).
 
 ## Preview and build
 

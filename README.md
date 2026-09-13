@@ -60,6 +60,12 @@ A Blazor-based static site generator
 > [!NOTE]
 > For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart) page.
 
+## Page Navigation
+
+Pages are hidden from navigation by default. Add `show_in_navigation: true` to a page's YAML frontmatter to display a link in the built-in theme; use `false` or omit the field to hide the link without removing the generated page.
+
+See the [page navigation guide](src/ScissorHands.Web/README.md#page-navigation) for an example and custom-theme support.
+
 ## Engine Preview
 
 The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. Use this preview app to check how the engine works, without building a new app.

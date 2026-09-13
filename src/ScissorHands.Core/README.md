@@ -39,6 +39,8 @@ var document = new ContentDocument
 
 `ContentMetadata.Tags` snapshots the supplied collection during initialization.
 
+`ContentMetadata.ShowInNavigation` defaults to `false`. Set it to `true` to opt a page into site navigation. The engine excludes posts, drafts, and the custom 404 page from navigation, regardless of this value.
+
 ## Site manifest
 
 `SiteManifest` contains site-wide generation settings:

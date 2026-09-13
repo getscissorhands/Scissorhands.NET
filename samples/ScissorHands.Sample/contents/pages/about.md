@@ -2,6 +2,7 @@
 title: About the sample
 description: Learn what the sample application validates.
 slug: about
+show_in_navigation: true
 tags:
   - sample
 ---

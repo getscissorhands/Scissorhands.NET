@@ -34,6 +34,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         "twitter_handle",
         "hero_image",
         "draft",
+        "show_in_navigation",
         "tags",
         "published",
     };
@@ -138,12 +139,8 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             var author = map.TryGetValue("author", out var authorValue) ? Convert.ToString(authorValue, CultureInfo.InvariantCulture) : default;
             var twitterHandle = map.TryGetValue("twitter_handle", out var twitterValue) ? Convert.ToString(twitterValue, CultureInfo.InvariantCulture) : default;
             var heroImage = map.TryGetValue("hero_image", out var heroImageValue) ? Convert.ToString(heroImageValue, CultureInfo.InvariantCulture) : default;
-            var draft = false;
-            if (map.TryGetValue("draft", out var draftValue)
-                && !bool.TryParse(Convert.ToString(draftValue, CultureInfo.InvariantCulture), out draft))
-            {
-                throw new InvalidDataException($"Frontmatter field 'draft' in '{sourcePath}' must be true or false.");
-            }
+            var draft = ReadBooleanMetadata(map, "draft", sourcePath);
+            var showInNavigation = ReadBooleanMetadata(map, "show_in_navigation", sourcePath);
 
             var tags = map.TryGetValue("tags", out var tagsValue) ? ToTags(tagsValue, sourcePath) : [];
             DateTimeOffset? published = null;
@@ -175,12 +172,28 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                 Tags = tags,
                 Published = published,
                 Draft = draft,
+                ShowInNavigation = showInNavigation,
             }, markdownBody.Trim());
         }
         catch (YamlException ex)
         {
             throw new InvalidDataException($"Failed to parse frontmatter in '{sourcePath}'.", ex);
         }
+    }
+
+    private static bool ReadBooleanMetadata(IReadOnlyDictionary<string, object> map, string field, string sourcePath)
+    {
+        if (!map.TryGetValue(field, out var value))
+        {
+            return false;
+        }
+
+        if (!bool.TryParse(Convert.ToString(value, CultureInfo.InvariantCulture), out var result))
+        {
+            throw new InvalidDataException($"Frontmatter field '{field}' in '{sourcePath}' must be true or false.");
+        }
+
+        return result;
     }
 
     private ContentMetadata ApplySlug(ContentMetadata metadata, ContentKind kind, string file, string root)

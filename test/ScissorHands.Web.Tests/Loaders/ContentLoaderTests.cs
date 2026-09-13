@@ -447,6 +447,37 @@ public class ContentLoaderTests
         docs.ShouldBeEmpty();
     }
 
+    [Theory]
+    [InlineData(null, false)]
+    [InlineData("", false)]
+    [InlineData("show_in_navigation: false", false)]
+    [InlineData("show_in_navigation: true", true)]
+    public async Task Given_NavigationFrontMatter_When_LoadAsyncInvoked_Then_It_Should_UseAnOptInDefault(
+        string? frontMatter,
+        bool expected)
+    {
+        var fileSystem = new MockFileSystem();
+        var root = fileSystem.Path.GetPathRoot(Environment.CurrentDirectory) ?? fileSystem.Path.DirectorySeparatorChar.ToString();
+        var baseRoot = fileSystem.Path.Combine(root, "base");
+        var contentsRoot = fileSystem.Path.Combine(baseRoot, "contents");
+        var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
+        var pagePath = fileSystem.Path.Combine(contentsRoot, "pages", "about.md");
+        var markdown = frontMatter is null ? "# About" : $"---\n{frontMatter}\n---\n# About";
+        fileSystem.AddFile(pagePath, new MockFileData(markdown));
+
+        var loader = new ContentLoader(
+            new TestAppPaths(baseRoot, contentsRoot, themesRoot),
+            fileSystem,
+            new SiteManifest { UseLocaleInUrl = true },
+            Substitute.For<ILogger<ContentLoader>>());
+
+        var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
+
+        document.Metadata.ShowInNavigation.ShouldBe(expected);
+        document.Metadata.Slug.ShouldBe("en-us/about");
+        document.Markdown.ShouldBe("# About");
+    }
+
     [Fact]
     public async Task Given_UnterminatedFrontMatter_When_LoadAsyncInvoked_Then_It_Should_ReportTheSourcePath()
     {
@@ -496,6 +527,12 @@ public class ContentLoaderTests
     [Theory]
     [InlineData("unknown: value", "Unsupported frontmatter field")]
     [InlineData("draft: sometimes", "must be true or false")]
+    [InlineData("show_in_navigation: sometimes", "must be true or false")]
+    [InlineData("show_in_navigation: 1", "must be true or false")]
+    [InlineData("show_in_navigation: null", "must be true or false")]
+    [InlineData("show_in_navigation:", "must be true or false")]
+    [InlineData("show_in_navigation: [true]", "must be true or false")]
+    [InlineData("show_in_navigation: { enabled: true }", "must be true or false")]
     [InlineData("published: not-a-date", "must be a valid date and time")]
     [InlineData("tags: { key: value }", "must be a YAML list or comma-separated string")]
     public async Task Given_InvalidFrontMatterValue_When_LoadAsyncInvoked_Then_It_Should_ReportTheField(

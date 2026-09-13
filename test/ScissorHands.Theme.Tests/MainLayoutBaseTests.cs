@@ -10,6 +10,56 @@ namespace ScissorHands.Theme.Tests;
 public class MainLayoutBaseTests
 {
     [Theory]
+    [InlineData("about", "about")]
+    [InlineData("/en-us/about/", "en-us/about")]
+    [InlineData(" en-us\\about ", "en-us/about")]
+    [InlineData("guides/about & team", "guides/about%20%26%20team")]
+    [InlineData("about#team?details=1", "about%23team%3Fdetails%3D1")]
+    [InlineData("about%2Fteam", "about%252Fteam")]
+    [InlineData("javascript:alert(1)", "javascript%3Aalert%281%29")]
+    [InlineData("//example.com/about", "example.com/about")]
+    [InlineData("", ".")]
+    public void Given_ContentSlug_When_GetContentUrlInvoked_Then_It_Should_ReturnAnEscapedBaseRelativeUrl(string slug, string expected)
+    {
+        var component = new TestMainLayout();
+
+        var result = component.InvokeGetContentUrl(slug);
+
+        result.ShouldBe(expected);
+        new Uri(new Uri("https://example.com/docs/"), result).AbsoluteUri.ShouldBe($"https://example.com/docs/{(expected == "." ? "" : expected)}");
+    }
+
+    [Theory]
+    [InlineData("../outside")]
+    [InlineData("pages/../outside")]
+    [InlineData("pages/./about")]
+    [InlineData("..\\outside")]
+    public void Given_RelativePathSegment_When_GetContentUrlInvoked_Then_It_Should_RejectTheSlug(string slug)
+    {
+        var component = new TestMainLayout();
+
+        var exception = Should.Throw<ArgumentException>(() => component.InvokeGetContentUrl(slug));
+
+        exception.ParamName.ShouldBe("slug");
+    }
+
+    [Fact]
+    public void Given_NullSlug_When_GetContentUrlInvoked_Then_It_Should_ThrowArgumentNullException()
+    {
+        var component = new TestMainLayout();
+
+        var exception = Should.Throw<ArgumentNullException>(() => component.InvokeGetContentUrl(null!));
+
+        exception.ParamName.ShouldBe("slug");
+    }
+
+    [Fact]
+    public void Given_DefaultLayout_When_Constructed_Then_It_Should_HaveNoNavigationPages()
+    {
+        new TestMainLayout().NavigationPages.ShouldBeEmpty();
+    }
+
+    [Theory]
     [InlineData("minimal", "assets/theme.css", "themes/minimal/assets/theme.css")]
     [InlineData("minimal", "/assets/theme.css", "themes/minimal/assets/theme.css")]
     [InlineData("/minimal/", "assets/theme.css", "themes/minimal/assets/theme.css")]
@@ -250,6 +300,8 @@ internal class TestMainLayout : MainLayoutBase
     public string? ExposedPageLocale => PageLocale;
 
     public string InvokeGetThemeUrl(string path) => GetThemeUrl(path);
+
+    public string InvokeGetContentUrl(string slug) => GetContentUrl(slug);
 
     public string InvokeCalculatePageTitle() => CalculatePageTitle();
 
