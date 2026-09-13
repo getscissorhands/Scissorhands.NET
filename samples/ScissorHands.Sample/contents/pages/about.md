@@ -1,10 +1,11 @@
 ---
-title: About the sample
+title: About
 description: Learn what the sample application validates.
 slug: about
 show_in_navigation: true
 tags:
   - sample
+  - static-site
 ---
 
 # About the sample

@@ -199,7 +199,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
     private ContentMetadata ApplySlug(ContentMetadata metadata, ContentKind kind, string file, string root)
     {
         var slug = string.IsNullOrWhiteSpace(metadata.Slug)
-            ? InferSlugFromFile(file, root)
+            ? InferSlugFromFile(kind, file, root)
             : metadata.Slug.Trim('/');
 
         var effectiveLocale = string.IsNullOrWhiteSpace(metadata.Locale) ? _options.Locale : metadata.Locale;
@@ -259,10 +259,16 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         };
     }
 
-    private static string InferSlugFromFile(string path, string root)
+    private static string InferSlugFromFile(ContentKind kind, string path, string root)
     {
         var relative = Path.GetRelativePath(root, path);
-        var withoutExtension = Path.Combine(Path.GetDirectoryName(relative) ?? string.Empty, Path.GetFileNameWithoutExtension(relative));
+        var directory = Path.GetDirectoryName(relative) ?? string.Empty;
+        var name = Path.GetFileNameWithoutExtension(relative);
+        var withoutExtension = kind == ContentKind.Page
+                               && directory.Length > 0
+                               && name.Equals("index", StringComparison.OrdinalIgnoreCase)
+            ? directory
+            : Path.Combine(directory, name);
         return withoutExtension.Replace(Path.DirectorySeparatorChar, '/');
     }
 }

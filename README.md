@@ -66,6 +66,8 @@ Pages are hidden from navigation by default. Add `show_in_navigation: true` to a
 
 The built-in navigation preserves the hierarchy of page slugs, such as `docs/deployment/github-pages`. Missing parent pages appear as non-clickable groups only while they contain a visible descendant. Hiding an existing parent page hides its entire descendant branch, even when those pages opt in.
 
+Nested page landing files can use `parent/index.md` without a slug; the inferred route is `parent`. Explicit slugs still override inferred routes. See the [page route guide](src/ScissorHands.Web/README.md#page-routes).
+
 See the [page navigation guide](src/ScissorHands.Web/README.md#page-navigation) for an example and custom-theme support.
 
 ## Engine Preview
@@ -94,6 +96,8 @@ The existing one-argument `IThemeService` methods remain temporarily supported b
 Plugin identity is now a required, stable lowercase kebab-case ID such as `heading-ids`. Add `Id` to every configured plugin manifest, reference IDs in dependency declarations, and select Razor plugin components with their `Id` parameter. `Name` is display-only and need not be unique. Missing or invalid IDs are rejected without name fallback or automatic normalization. Rebuild plugin assemblies and deploy them with the updated configuration and themes. See the [plugin ID migration guide](src/ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
 
 Plugin hooks honor optional, stage-scoped `DependsOn` declarations rather than assembly discovery, registration, or manifest order. Plugins that relied on an incidental execution order must declare their dependencies. Ready plugins are selected by ordinal ID ordering for deterministic output. See the [plugin dependency guide](src/ScissorHands.Plugin/README.md#plugin-dependencies).
+
+Nested page `index.md` files without a slug now resolve to their containing directory's route. To preserve an existing `parent/index` URL, set `slug: parent/index` explicitly. Post URLs and root-level page `index.md` behavior are unchanged. See the [page route migration guidance](src/ScissorHands.Web/README.md#page-routes).
 
 ## Issues?
 

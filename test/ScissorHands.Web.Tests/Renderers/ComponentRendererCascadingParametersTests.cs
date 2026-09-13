@@ -71,7 +71,7 @@ public class ComponentRendererCascadingParametersTests
         };
         var document = new ContentDocument
         {
-            Metadata = new ContentMetadata { Title = "About", Slug = "about", Locale = "ko-KR" },
+            Metadata = new ContentMetadata { Title = "About", Slug = "about", Locale = "ko-KR", Tags = ["C#", "  Mixed Case  "] },
             Html = "<p>About</p>",
         };
         var parameters = new Dictionary<string, object?>
@@ -89,6 +89,10 @@ public class ComponentRendererCascadingParametersTests
         html.ShouldContain("href=\"themes/minimal/assets/css/theme.css\"");
         html.ShouldContain("src=\"themes/minimal/assets/js/theme.js\"");
         html.ShouldNotContain("href=\"/themes/");
+        html.ShouldContain("aria-label=\"Page tags\"");
+        html.ShouldContain("href=\"tags/c%23\"");
+        html.ShouldContain("href=\"tags/mixed%20case\"");
+        html.ShouldNotContain("href=\"/tags/");
     }
 
     private sealed class TestCascadingLayout : LayoutComponentBase

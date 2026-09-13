@@ -117,7 +117,40 @@ Supported frontmatter fields are:
 
 Invalid frontmatter, unsafe routes, and duplicate output paths fail the build with the source file included in the error.
 
+The built-in theme displays tags as links below the content on both posts and pages. Each link opens the corresponding tag page. Content without tags has no tag list.
+
 To provide a custom not-found page, add a page with `slug: 404.html`.
+
+### Page routes
+
+`slug` is optional. When omitted or blank, it is inferred from the Markdown file's path relative to its content directory. Nested page files named `index.md` use their containing directory as the route:
+
+| File under `contents/pages/` | Inferred slug |
+| --- | --- |
+| `parent.md` | `parent` |
+| `parent/index.md` | `parent` |
+| `parent/child.md` | `parent/child` |
+| `parent/group/index.md` | `parent/group` |
+| `index.md` | `index` |
+
+For example, `parent/index.md` needs no slug in its frontmatter:
+
+```markdown
+---
+title: Parent
+show_in_navigation: true
+---
+
+# Parent
+```
+
+It generates `parent/index.html` in the output directory and links to `parent`, relative to `Site.BaseUrl`. Locale URL prefixes are applied after inference as usual.
+
+A non-blank explicit slug always overrides file-based inference. The `index` filename comparison is case-insensitive, but only nested **pages** use this convention. Post routes are unchanged, and root-level `contents/pages/index.md` retains the `index` route rather than replacing the generated home page.
+
+Do not keep both `parent.md` and `parent/index.md` with their default slugs: they resolve to the same output and fail the build with an output-collision error.
+
+**Migration:** nested page `index.md` files without a slug previously included `/index` in their routes. For example, `parent/index.md` now resolves to `parent` instead of `parent/index`. To retain the old URL, explicitly set `slug: parent/index`.
 
 ### Page navigation
 
