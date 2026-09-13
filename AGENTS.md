@@ -99,6 +99,7 @@ Read the relevant package guide before changing its contracts or behavior: [Core
 ### Atomic commits
 
 - Make each commit one complete logical change that can be reviewed and reverted as a unit. Use a Conventional Commit message that describes that single intent.
+- Commit each completed logical change after performing the relevant validation, without waiting for a separate commit request, unless the user explicitly asks to leave it uncommitted.
 - Keep tightly coupled implementation, regression tests, and documentation together. Do not split them solely by file type or leave a commit dependent on a later fix to build or work correctly.
 - Separate independently reviewable changes; do not mix unrelated features, refactors, formatting, or dependency updates into the same commit.
 - Stage only the intended files or hunks, preserve unrelated work, and run the relevant validation for each code commit. Disclose blocked checks rather than claiming they passed; documentation-only commits follow the testing guidance above.
