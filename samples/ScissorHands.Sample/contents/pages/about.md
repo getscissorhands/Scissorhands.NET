@@ -10,5 +10,4 @@ tags:
 
 # About the sample
 
-This project references the engine projects directly, so local changes can be
-previewed before publishing new NuGet packages.
+This project references the engine projects directly, so local changes can be previewed before publishing new NuGet packages.

@@ -10,6 +10,4 @@ tags:
 
 # Child
 
-This page appears directly below [Parent](parent) because its file path gives it
-the inferred slug `parent/child`.
-Its navigation link is visible only when both this page and Parent opt in.
+This page appears directly below [Parent](parent) because its file path gives it the inferred slug `parent/child`. Its navigation link is visible only when both this page and Parent opt in.
