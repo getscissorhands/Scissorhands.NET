@@ -10,7 +10,7 @@
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="generator" content="@Site.Generator" />
         <meta name="theme-color" content="#fffcf5" />
-        <link rel="icon" type="image/x-icon" href="@ThemeUrl("favicon.ico")" />
+        <link rel="icon" type="image/x-icon" href="@GetThemeUrl("favicon.ico")" />
 
         <title>@PageTitle</title>
         <meta name="title" content="@PageTitle" />
@@ -24,7 +24,7 @@
         </script>
         @foreach (var css in Theme!.Stylesheets)
         {
-            <link rel="stylesheet" href="@ThemeUrl(css)" />
+            <link rel="stylesheet" href="@GetThemeUrl(css)" />
         }
     </head>
     <body>
@@ -60,13 +60,8 @@
 
         @foreach (var script in Theme.Scripts)
         {
-            <script src="@ThemeUrl(script)"></script>
+            <script src="@GetThemeUrl(script)"></script>
         }
     </body>
     </html>
 </CascadingMainLayoutBase>
-
-@code {
-    private string ThemeUrl(string path)
-        => $"themes/{Theme!.Slug.TrimEnd('/')}/{path.TrimStart('/')}";
-}

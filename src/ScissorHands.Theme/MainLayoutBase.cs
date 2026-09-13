@@ -101,6 +101,22 @@ public abstract class MainLayoutBase : LayoutComponentBase
     }
 
     /// <summary>
+    /// Gets a base-relative URL for a path within the current theme.
+    /// </summary>
+    /// <param name="path">The theme-relative path, optionally prefixed with slashes.</param>
+    /// <returns>The URL relative to the site's base URL.</returns>
+    /// <exception cref="ArgumentNullException"><paramref name="path"/> is null.</exception>
+    /// <exception cref="InvalidOperationException"><see cref="Theme"/> has not been supplied.</exception>
+    protected string GetThemeUrl(string path)
+    {
+        ArgumentNullException.ThrowIfNull(path);
+
+        var theme = Theme ?? throw new InvalidOperationException("A theme must be supplied before getting a theme URL.");
+
+        return $"{ThemeManifest.THEME_DIRECTORY}/{theme.Slug.Trim('/')}/{path.TrimStart('/')}";
+    }
+
+    /// <summary>
     /// Calculates the page title based on the site and document title.
     /// </summary>
     /// <returns>Returns the page title calculated.</returns>

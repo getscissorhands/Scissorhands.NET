@@ -9,6 +9,83 @@ namespace ScissorHands.Theme.Tests;
 
 public class MainLayoutBaseTests
 {
+    [Theory]
+    [InlineData("minimal", "assets/theme.css", "themes/minimal/assets/theme.css")]
+    [InlineData("minimal", "/assets/theme.css", "themes/minimal/assets/theme.css")]
+    [InlineData("/minimal/", "assets/theme.css", "themes/minimal/assets/theme.css")]
+    [InlineData("///minimal///", "///assets/theme.css", "themes/minimal/assets/theme.css")]
+    [InlineData("minimal", "", "themes/minimal/")]
+    [InlineData("minimal", "/", "themes/minimal/")]
+    [InlineData("minimal", "/assets/theme.css?v=1#theme", "themes/minimal/assets/theme.css?v=1#theme")]
+    public void Given_ThemeAndPath_When_GetThemeUrl_Invoked_Then_It_Should_ReturnBaseRelativeUrl(string slug, string path, string expected)
+    {
+        // Arrange
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+
+        var cut = context.Renderer.Render<TestMainLayout>(parameters => parameters
+            .Add(p => p.Theme, new ThemeManifest { Slug = slug }));
+
+        // Act
+        var result = cut.Instance.InvokeGetThemeUrl(path);
+
+        // Assert
+        result.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("/", "https://example.com/themes/minimal/assets/theme.css")]
+    [InlineData("/docs/", "https://example.com/docs/themes/minimal/assets/theme.css")]
+    public void Given_SiteBaseUrl_When_GetThemeUrl_Invoked_Then_It_Should_ResolveUnderSiteBaseUrl(string baseUrl, string expected)
+    {
+        // Arrange
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+
+        var site = new SiteManifest { BaseUrl = baseUrl };
+        var cut = context.Renderer.Render<TestMainLayout>(parameters => parameters
+            .Add(p => p.Site, site)
+            .Add(p => p.Theme, new ThemeManifest { Slug = "minimal" }));
+
+        // Act
+        var result = cut.Instance.InvokeGetThemeUrl("/assets/theme.css");
+        var resolved = new Uri(new Uri($"https://example.com{site.BaseUrl}"), result);
+
+        // Assert
+        result.ShouldBe("themes/minimal/assets/theme.css");
+        resolved.AbsoluteUri.ShouldBe(expected);
+    }
+
+    [Fact]
+    public void Given_NullPath_When_GetThemeUrl_Invoked_Then_It_Should_ThrowArgumentNullException()
+    {
+        // Arrange
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+
+        var cut = context.Renderer.Render<TestMainLayout>(parameters => parameters
+            .Add(p => p.Theme, new ThemeManifest { Slug = "minimal" }));
+
+        // Act
+        var exception = Should.Throw<ArgumentNullException>(() => cut.Instance.InvokeGetThemeUrl(null!));
+
+        // Assert
+        exception.ParamName.ShouldBe("path");
+    }
+
+    [Fact]
+    public void Given_MissingTheme_When_GetThemeUrl_Invoked_Then_It_Should_ThrowInvalidOperationException()
+    {
+        // Arrange
+        var component = new TestMainLayout();
+
+        // Act
+        var exception = Should.Throw<InvalidOperationException>(() => component.InvokeGetThemeUrl("assets/theme.css"));
+
+        // Assert
+        exception.Message.ShouldBe("A theme must be supplied before getting a theme URL.");
+    }
+
     [Fact]
     public void Given_SiteAndTheme_When_Rendered_Then_It_Should_SetPageMetadata_And_UseProvidedTheme()
     {
@@ -171,6 +248,8 @@ internal class TestMainLayout : MainLayoutBase
     public string? ExposedPageTitle => PageTitle;
     public string? ExposedPageDescription => PageDescription;
     public string? ExposedPageLocale => PageLocale;
+
+    public string InvokeGetThemeUrl(string path) => GetThemeUrl(path);
 
     public string InvokeCalculatePageTitle() => CalculatePageTitle();
 

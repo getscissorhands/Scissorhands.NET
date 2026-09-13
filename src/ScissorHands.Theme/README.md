@@ -127,9 +127,13 @@ Store theme assets below `themes/{slug}/assets/` and list them in `theme.json`.
 Internal links and asset URLs should be base-relative, without a leading `/`, so sites published below a path such as `/docs/` continue to work:
 
 ```razor
-<link rel="stylesheet" href="themes/minimal-blog/assets/theme.css" />
+<link rel="stylesheet" href="@GetThemeUrl("/assets/theme.css")" />
 <a href="tags">Tags</a>
 ```
+
+Layouts derived from `MainLayoutBase` can use the protected `GetThemeUrl(string path)` helper for theme assets. With a theme slug of `minimal-blog`, the example returns `themes/minimal-blog/assets/theme.css`. The helper trims leading and trailing `/` characters from the slug and leading `/` characters from the path.
+
+The returned URL is relative to the `<base href="@Site!.BaseUrl" />` in the layout; it does not prepend `Site.BaseUrl`. Supply the `Theme` parameter before calling the helper. A missing theme throws `InvalidOperationException`, and a null path throws `ArgumentNullException`.
 
 ## Start from the template
 

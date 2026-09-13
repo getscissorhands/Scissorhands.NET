@@ -2,6 +2,11 @@
 
 A Blazor-based static site generator
 
+[![ScissorHands.Core NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Core.svg?label=ScissorHands.Core)](https://www.nuget.org/packages/ScissorHands.Core)
+[![ScissorHands.Plugin NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Plugin.svg?label=ScissorHands.Plugin)](https://www.nuget.org/packages/ScissorHands.Plugin)
+[![ScissorHands.Theme NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Theme.svg?label=ScissorHands.Theme)](https://www.nuget.org/packages/ScissorHands.Theme)
+[![ScissorHands.Web NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Web.svg?label=ScissorHands.Web)](https://www.nuget.org/packages/ScissorHands.Web)
+
 ## Prerequisites
 
 - [.NET 10+ SDK](https://dotnet.microsoft.com/download/dotnet/10.0)
@@ -15,25 +20,22 @@ A Blazor-based static site generator
     dotnet new web -n MyScissorHandsApp
     ```
 
-1. Add the NuGet package.
+1. Add the NuGet package. Make sure to add the `--prerelease` option because it's currently in public preview.
 
     ```bash
     dotnet add ./MyScissorHandsApp package ScissorHands.Web --prerelease
     ```
 
-   > Currently, ScissorHands is public preview. Therefore, add the `--prerelease` option.
-
-1. Open `Program.cs` and add the following codes.
+1. Open `Program.cs` and replace the existing codes with the following:
 
     ```csharp
     using ScissorHands.Web;
 
     var app = new ScissorHandsApplicationBuilder(args)
                   .Build();
+
     await app.RunAsync();
     ```
-
-   The theme is discovered automatically from the `Site:Theme` slug in `appsettings.json`. Theme Razor components should share a namespace whose normalized suffix matches the theme slug, such as `ScissorHands.Theme.MinimalBlog` for `minimal-blog`.
 
 1. Build the app.
 
@@ -53,15 +55,18 @@ A Blazor-based static site generator
     dotnet run -- --build
     ```
 
-> **NOTE**: For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart/) page.
+1. Add a GitHub Actions workflow to publish the app to [GitHub Pages](https://docs.github.com/pages/quickstart) or any static page hosting services.
 
-## Sample Application
+> [!NOTE]
+> For more details to run a ScissorHands.NET app, visit the [Quickstart](https://getscissorhands.app/docs/quickstart) page.
 
-The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. It can be used to preview local engine changes without publishing packages:
+## Engine Preview
+
+The [`samples/ScissorHands.Sample`](./samples/ScissorHands.Sample) project references the engine projects directly and uses the built-in default theme. Use this preview app to check how the engine works, without building a new app.
 
 ```bash
 cd samples/ScissorHands.Sample
-dotnet run
+dotnet run -- --preview
 ```
 
 ## vNext Compatibility
