@@ -2,39 +2,29 @@
 
 This project provides an end-to-end preview of the engine using the built-in `default` theme and local project references.
 
-Run from this directory. The launch profile enables preview mode:
+Run from this directory and select the mode explicitly:
 
 ```bash
 dotnet run -- --preview
 ```
 
-The launch profile also starts preview mode automatically when run from an IDE.
+For IDE runs, supply `--preview` or `--build` as application arguments; the launch profile does not select a mode.
 
 Generate static files without starting the preview server:
 
 ```bash
-dotnet run --no-launch-profile -- --build
+dotnet run -- --build
 ```
 
 Generated preview and build outputs are written to `preview/` and `dist/` respectively.
 
-The [Hello, ScissorHands post](contents/posts/hello-scissorhands.md) is a Markdown rendering showcase with heading hierarchy, paragraphs, emphasis, links, nested lists, a blockquote, C# and JSON code blocks, a table, a horizontal rule, and a bundled image. Use it to compare typography and spacing across light/dark themes and desktop/mobile layouts.
+## What to explore
 
-The About page opts into the built-in navigation with `show_in_navigation: true` in `contents/pages/about.md`. Pages are hidden from navigation by default; set the field to `false` or remove it to hide the link while keeping the page accessible at its URL. Preview regeneration updates the navigation across the site.
+- [Hello, ScissorHands](contents/posts/hello-scissorhands.md): rich Markdown formatting for desktop/mobile and light/dark comparisons.
+- [Parent](contents/pages/parent/index.md): a directory landing page with a child and a non-clickable Group containing a visible grandchild.
+- [Hidden Grandchild](contents/pages/parent/group/hidden-grandchild.md): a generated, tagged page omitted from navigation.
+- [Not found](contents/pages/not-found.md): custom content for `404.html`.
 
-The hierarchy sample uses generic parent, child, and grandchild pages. Their slugs are inferred from their paths; `contents/pages/parent/index.md` is the landing page at `parent`, not `parent/index`:
+Disable the visible grandchild to remove the empty Group, or disable Parent to hide the entire branch. Plugins are disabled by default through the empty `Plugins` array.
 
-```text
-Parent                  (parent)
-  Child                 (parent/child)
-  Group                 (parent/group; no page, non-clickable)
-    Visible Grandchild  (parent/group/visible-grandchild)
-```
-
-`parent/group/hidden-grandchild` is generated but omitted from navigation. There is no `parent/group` page, so the built-in menu creates Group as a non-clickable label. Disable Visible Grandchild as well and the empty Group disappears. Both grandchild pages are still generated.
-
-Use the buttons beside Parent and Group to expand their children; Parent itself remains a page link. Disable navigation in `contents/pages/parent/index.md` to hide the entire branch. Child opt-in flags cannot override a hidden existing parent.
-
-To give Group a clickable landing page, add `contents/pages/parent/group/index.md` with a title and `show_in_navigation: true`; no slug is required. Explicit slugs remain available to override inferred routes.
-
-The sample starts with an empty `Plugins` array in `appsettings.json`. To enable an installed plugin, add an entry such as `{ "Id": "reading-time" }` using its exact lowercase kebab-case ID; `Name` is an optional display label. Array position does not control execution order. When enabling a plugin with `DependsOn` declarations, also enable its required plugin IDs; the engine resolves their order per stage in both preview and build modes. See the [plugin guide](../../src/ScissorHands.Plugin/README.md#plugin-dependencies) and [migration steps](../../src/ScissorHands.Plugin/README.md#migrating-from-name-based-identity).
+See the [vNext website documentation handoff](../../docs/website-documentation.md) for route, navigation, plugin, and migration details, and the [documentation website](https://getscissorhands.app/docs/) for published guides.

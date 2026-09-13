@@ -57,9 +57,9 @@ The command-line argument selects the operating mode. Theme selection and other 
 | Preview | `preview/` | Review local edits |
 | Build | `dist/` | Prepare published files |
 
-Run `dotnet run --no-launch-profile -- --preview` while editing. Content changes regenerate the preview output; refresh the browser to see the result. Razor and C# changes still require recompilation.
+Run `dotnet run -- --preview` while editing. Content changes regenerate the preview output; refresh the browser to see the result. Razor and C# changes still require recompilation.
 
-When the site is ready to publish, use `dotnet run --no-launch-profile -- --build`. This generates static output without starting the preview server.
+When the site is ready to publish, use `dotnet run -- --build`. This generates static output without starting the preview server.
 
 ## Configure routes deliberately
 

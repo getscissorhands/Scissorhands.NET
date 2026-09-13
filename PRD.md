@@ -51,7 +51,7 @@ The primary user is a personal-blog owner comfortable creating and running a .NE
 | --- | --- | --- |
 | J-001: Publish content | Owner edits a post or page, runs build, and obtains HTML plus supported assets for a static host | Invalid metadata or route collisions fail generation; the owner corrects the reported input and rebuilds |
 | J-002: Preview an edit | Owner runs preview, changes content or theme files, then refreshes the browser after regeneration | Drafts are omitted; recompilation is required for Razor/C# changes; regeneration errors are logged |
-| J-003: Change appearance | Owner installs/provides a compatible theme, changes `Site:Theme`, then restarts/rebuilds without rewriting Markdown | Missing or unmatched custom theme configuration fails; optional tag views can use built-in fallbacks |
+| J-003: Change appearance | Owner installs/provides a compatible theme, changes `Site:Theme`, then restarts/rebuilds without rewriting Markdown | Missing or unmatched custom theme configuration fails; all seven view roles, including both tag views, are required |
 | J-004: Extend generation | Extension author supplies a plugin; owner explicitly configures its ID and dependencies | Invalid identity/dependency configuration fails before hooks run; dependencies are not installed or enabled automatically |
 | J-005: Read the site | Visitor browses the post index, post/page URLs, and available tag pages using ordinary HTTP navigation | `404.html` is generated; the deployment host must configure its own not-found behavior |
 
@@ -101,7 +101,7 @@ No new automatic browser reload, draft-preview mode, publication scheduler, atom
 - **Actor / rationale:** Owner runs the application from the site directory to obtain a deployable static artifact (J-001, G-001).
 - **Behavior:** `--build` generates into `dist`; `--preview` generates into `preview` and starts a local server; `--help` displays usage. Recognized modes are explicit, not inferred from content.
 - **Acceptance:** A successful build writes the generated HTML and supported assets and reports the output location without starting the preview listener. HTML rendering uses compiled Razor components through `HtmlRenderer`; serving the resulting site does not require the generation application.
-- **Boundaries:** An invocation with no recognized mode reports an error and exit code 1. Preview takes precedence if both build and preview are supplied. The sample's launch profile injects preview, so explicit build usage requires `--no-launch-profile`. Build replaces existing `dist`; it does not preserve a last-good artifact (FR-009).
+- **Boundaries:** An invocation with no recognized mode reports an error and exit code 1. Preview takes precedence if both build and preview are supplied. The sample's launch profile does not select a mode; callers supply it explicitly. Build replaces existing `dist`; it does not preserve a last-good artifact (FR-009).
 
 ### FR-002: Load posts and independent pages with explicit publication rules
 
@@ -131,7 +131,7 @@ No new automatic browser reload, draft-preview mode, publication scheduler, atom
 
 - **Basis / scope:** Confirmed original intent, [Theme guide](src\ScissorHands.Theme\README.md), and [theme resolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs); Core.
 - **Actor / rationale:** Owner selects a theme; theme author provides compatible components and metadata (J-003, G-003).
-- **Behavior:** Resolve the configured `Site:Theme` against the normalized component namespace suffix. A custom theme provides layout, index, post, page, and not-found views; tag views are optional and fall back to built-ins. Explicit `AddLayouts` registration remains available.
+- **Behavior:** Resolve the configured `Site:Theme` against the normalized component namespace suffix. A custom theme provides all seven roles: layout, index, post, page, not-found, tag-list, and tag views. Missing or ambiguous required roles fail resolution without implicit built-in tag-view substitution. Explicit seven-role `AddLayouts` registration remains available.
 - **Acceptance:** An installed `minimal-blog` theme with a compatible namespace can be selected through configuration without listing its component types in application setup. Missing required components or an unmatched custom theme fail instead of silently selecting another custom theme.
 - **Boundary:** Theme component changes need compilation; changing configured theme requires restarting/rebuilding. This is author-side theme replacement, distinct from the default theme's visitor-facing light/dark toggle. No theme marketplace, sandbox, or install UI is promised.
 
@@ -212,7 +212,7 @@ The user agreed on 2026-09-11 to treat the following as next-phase items. All ar
 | V-004 | Failures and cancellation / NFR-004/006 | Exercise invalid input, generation failures, and cancellation-aware APIs. Confirm actionable errors and no misleading success; record partial-output behavior against documented limitations, without introducing atomic-output or bounded CLI-shutdown guarantees |
 | V-005 | Accessibility and browsers / NFR-008, FR-010 | Evaluate generated-site reading/navigation and built-in-theme controls, keyboard access, focus, labels, and light/dark contrast across the agreed desktop/mobile browsers. Record actual browser/OS/device coverage and findings; no formal WCAG certification is required |
 | V-006 | Performance baseline / NFR-009 | Benchmark the owner's actual blog with its assets and enabled extensions. Record the workload/environment details, build duration, preview-update delay, memory usage, and measurement method. Completion establishes measurements, not compliance with an unagreed numerical target |
-| V-007 | Functional regression and compatibility / FR-001 through FR-010, NFR-007 | Run the existing suite and sample build/preview; cover posts/pages, draft exclusion, tags/404, theme discovery/fallbacks, plugin ordering/errors, and documented API/configuration compatibility. Record results and review Windows/macOS/Linux CI evidence without assuming untested platforms passed |
+| V-007 | Functional regression and compatibility / FR-001 through FR-010, NFR-007 | Run the existing suite and sample build/preview; cover posts/pages, draft exclusion, tags/404, complete theme discovery/default selection, plugin ordering/errors, and documented API/configuration compatibility. Record results and review Windows/macOS/Linux CI evidence without assuming untested platforms passed |
 
 For each item, record what was exercised, the environment, results, and reproducible gaps. Failed, blocked, or skipped checks remain explicit; an attempted check is not a passing result. Track necessary corrections against the existing requirements, then recheck affected behavior. The benchmark needs reproducible measurements, not an invented speed threshold. These records are next-phase deliverables, not prerequisites for finishing the requirements document.
 

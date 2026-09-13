@@ -130,7 +130,7 @@ The following is a **partial source inventory**, not TG-001's completed scheme p
 
 ### DES-006 / DES-007: Theme assets, containment, and ownership
 
-[ThemeComponentResolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs) groups concrete components by namespace, finds complete required-role sets, and selects a unique normalized suffix match. Optional tag roles fall back to built-ins. Keep explicit overrides and the default-theme path; an unmatched custom theme remains an error.
+[ThemeComponentResolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs) groups concrete components by namespace, requires exactly one component for each of the seven roles including both tag views, and selects a unique normalized suffix match. Missing or ambiguous roles fail without implicit built-in tag-view substitution. Keep explicit seven-role overrides and the default-theme path; an unmatched custom theme remains an error.
 
 [ThemeService](src\ScissorHands.Web\Services\ThemeService.cs) prefers the configured local theme directory, otherwise an application-output theme directory. It deserializes case-insensitive JSON, validates non-empty name/slug and configured-slug agreement, then copies `assets` recursively plus the currently supported image extensions and `manifest.json` under `themes\<slug>`. The generator separately copies `contents\images`. Preserve the declared supported surfaces rather than exporting arbitrary `wwwroot` or plugin files.
 

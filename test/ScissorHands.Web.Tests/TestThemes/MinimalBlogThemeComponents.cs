@@ -19,3 +19,11 @@ internal sealed class PageView : PageViewBase
 internal sealed class NotFoundView : NotFoundViewBase
 {
 }
+
+internal sealed class TagListView : TagListViewBase
+{
+}
+
+internal sealed class TagView : TagViewBase
+{
+}
