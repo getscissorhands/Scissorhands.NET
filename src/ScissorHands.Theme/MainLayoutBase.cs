@@ -46,6 +46,12 @@ public abstract class MainLayoutBase : LayoutComponentBase
     public IReadOnlyList<NavigationNode> NavigationTree { get; set; } = Array.Empty<NavigationNode>();
 
     /// <summary>
+    /// Gets or sets the engine-prepared previous and next links for the current page.
+    /// </summary>
+    [Parameter]
+    public PageNavigation PageNavigation { get; set; } = new();
+
+    /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
     /// Used for tag list view.
     /// </summary>

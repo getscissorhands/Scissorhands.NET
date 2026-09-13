@@ -45,6 +45,30 @@ The engine prepares routes and `NavigationTree`; themes control markup, styling,
 
 Use the inherited URL helpers instead of duplicating URL rules in theme files. Render metadata through ordinary Razor expressions to retain encoding. Plugin components select manifests by `Id`, not display `Name`.
 
+## Optional previous/next page links
+
+`MainLayoutBase.PageNavigation` is an optional engine-supplied `PageNavigation` parameter, defaulting to an empty instance. It contains nullable `Previous` and `Next` links with immutable text `Title` and preformatted, base-relative `Url` values. The engine snapshots these values before document hooks: eligible file-backed pages use filename-based depth-first reading order, followed by source-less pages in title/slug order. This is independent of the slug grouping used by `NavigationTree`, and is generated data rather than frontmatter.
+
+To opt in, add `PageNavigation="@PageNavigation"` to your layout's existing `<CascadingMainLayoutBase>` element, retaining its other parameters and child content. It provides a typed cascade consumed by the nullable `PageViewBase.PageNavigation` property. Render available links below your page content, for example:
+
+```razor
+@if (PageNavigation?.Previous is not null || PageNavigation?.Next is not null)
+{
+    <nav class="page-navigation" aria-label="Page navigation">
+        @if (PageNavigation?.Previous is { } previous)
+        {
+            <a href="@previous.Url" rel="prev">Previous: @previous.Title</a>
+        }
+        @if (PageNavigation?.Next is { } next)
+        {
+            <a href="@next.Url" rel="next">Next: @next.Title</a>
+        }
+    </nav>
+}
+```
+
+Use the supplied URLs directly, without prefixing the site's base URL or escaping them again, and render titles through ordinary Razor expressions, never `MarkupString`. Omit missing endpoints and the entire region when both are absent. The built-in theme includes these links; custom themes that ignore the optional parameter keep their existing behavior. No new theme role is required, and `NavigationPages`/`NavigationTree` remain layout-only, not newly cascaded.
+
 ## Learn more
 
 - [vNext theme guide (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)

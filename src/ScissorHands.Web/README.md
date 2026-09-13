@@ -8,6 +8,7 @@
 ## Features
 
 - Markdown posts/pages with frontmatter, tags, and hierarchical navigation
+- Filename-based page reading order and automatic previous/next links
 - Razor themes and optional content-processing plugins
 - Configurable routes and static output for subpath hosting
 - Local preview and a built-in light/dark theme
@@ -65,6 +66,16 @@ Write the post in Markdown.
 ```
 
 Place pages under `contents/pages/`. Page navigation is opt-in through `show_in_navigation: true`; hiding a navigation link is not access control.
+
+## Page reading order
+
+The engine visits `index.md` first within each source directory, then orders the remaining files and directories together by ordinal filename. It visits a directory's eligible pages before continuing to its next sibling. For example, `01-child.md`, `02-group/guide.md`, and `03-child-2.md` form one reading sequence across directories.
+
+Titles label links and slugs determine URLs and navigation grouping; neither changes a file-backed page's reading position. Use explicit slugs to retain URLs when adding numeric prefixes to filenames or directories. Prefixes are not stripped from inferred URLs.
+
+The built-in page view renders automatic previous/next links for eligible pages. Hidden/suppressed pages, drafts, posts, 404 content, and non-clickable groups are not targets. Custom-loader pages without source paths follow file-backed pages in title/slug order. Invalid supplied paths fail rather than silently use that fallback.
+
+No `section`, `pages.json`, or authored `prev`/`next` fields are needed. Existing custom themes remain compatible and can opt into the generated `PageNavigation` context. The engine snapshots reading order and link labels/URLs before document plugins, just like the navigation tree; later plugin changes do not refresh the snapshot.
 
 ## Preview and build
 

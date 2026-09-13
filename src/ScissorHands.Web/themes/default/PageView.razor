@@ -15,4 +15,24 @@
             </ul>
         }
     </article>
+
+    @if (PageNavigation?.Previous is not null || PageNavigation?.Next is not null)
+    {
+        <nav class="page-navigation" aria-label="Page navigation">
+            @if (PageNavigation?.Previous is { } previous)
+            {
+                <a class="page-navigation-previous" href="@previous.Url" rel="prev">
+                    <span class="page-navigation-direction">Previous</span>
+                    <span>@previous.Title</span>
+                </a>
+            }
+            @if (PageNavigation?.Next is { } next)
+            {
+                <a class="page-navigation-next" href="@next.Url" rel="next">
+                    <span class="page-navigation-direction">Next</span>
+                    <span>@next.Title</span>
+                </a>
+            }
+        </nav>
+    }
 </section>

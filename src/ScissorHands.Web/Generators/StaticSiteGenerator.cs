@@ -71,14 +71,16 @@ public sealed class StaticSiteGenerator(
             .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || d.Metadata.Draft || IsNotFoundPage(d)))
             .Select(d => NormalizeRoute(d.Metadata.Slug))
             .ToHashSet(StringComparer.Ordinal);
-        var navigationPages = documents
+        var visiblePages = documents
             .Where(d => d.Kind == ContentKind.Page && d.Metadata.ShowInNavigation && !d.Metadata.Draft && !IsNotFoundPage(d))
             .Where(d => !HasHiddenNavigationAncestor(d.Metadata.Slug, hiddenPageRoutes))
-            .OrderBy(d => d.Metadata.Title, StringComparer.Ordinal)
-            .ThenBy(d => d.Metadata.Slug, StringComparer.Ordinal)
-            .ToList()
-            .AsReadOnly();
-        var navigation = new NavigationContext(navigationPages, NavigationTreeBuilder.Build(navigationPages, _options, cancellationToken));
+            .ToList();
+        var navigationPages = PageReadingOrder.Order(
+            visiblePages, _fileSystem.Path.Combine(_paths.GetContentsRoot(), "pages"), cancellationToken);
+        var navigation = new NavigationContext(
+            navigationPages,
+            NavigationTreeBuilder.BuildOrdered(navigationPages, _options, cancellationToken),
+            CreatePageNavigation(navigationPages, cancellationToken));
 
         var layoutType = typeof(TMainLayout);
         await RenderIndexAsync<TIndexView>(documents, navigation, plugins, theme, destination, layoutType, cancellationToken);
@@ -184,11 +186,16 @@ public sealed class StaticSiteGenerator(
         where TPageView : ScissorHands.Theme.PageViewBase
     {
         cancellationToken.ThrowIfCancellationRequested();
+        navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
 
         var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
 
         var parameters = CreateBaseParameters(plugins, theme, navigation);
         parameters["Document"] = postMarkdown;
+        if (postMarkdown.Kind == ContentKind.Page && pageNavigation is not null)
+        {
+            parameters["PageNavigation"] = pageNavigation;
+        }
 
         var rendered = postMarkdown.Kind switch
         {
@@ -293,11 +300,44 @@ public sealed class StaticSiteGenerator(
             ["Theme"] = theme,
             ["Site"] = _options,
             ["NavigationPages"] = navigation.Pages,
-            ["NavigationTree"] = navigation.Tree
+            ["NavigationTree"] = navigation.Tree,
+            ["PageNavigation"] = new PageNavigation(),
         };
     }
 
-    private sealed record NavigationContext(IReadOnlyList<ContentDocument> Pages, IReadOnlyList<NavigationNode> Tree);
+    private static IReadOnlyDictionary<ContentDocument, PageNavigation> CreatePageNavigation(
+        IReadOnlyList<ContentDocument> pages,
+        CancellationToken cancellationToken)
+    {
+        var links = new List<PageNavigationLink>(pages.Count);
+        foreach (var page in pages)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            links.Add(new PageNavigationLink
+            {
+                Title = page.Metadata.Title,
+                Url = ContentUrlHelper.GetContentUrl(page.Metadata.Slug),
+            });
+        }
+
+        var result = new Dictionary<ContentDocument, PageNavigation>(ReferenceEqualityComparer.Instance);
+        for (var index = 0; index < pages.Count; index++)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            result.Add(pages[index], new PageNavigation
+            {
+                Previous = index == 0 ? null : links[index - 1],
+                Next = index + 1 == links.Count ? null : links[index + 1],
+            });
+        }
+
+        return result;
+    }
+
+    private sealed record NavigationContext(
+        IReadOnlyList<ContentDocument> Pages,
+        IReadOnlyList<NavigationNode> Tree,
+        IReadOnlyDictionary<ContentDocument, PageNavigation> AdjacentPages);
 
     private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, CancellationToken cancellationToken)
     {

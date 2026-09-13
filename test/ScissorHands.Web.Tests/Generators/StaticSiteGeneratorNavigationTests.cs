@@ -127,17 +127,20 @@ public class StaticSiteGeneratorNavigationTests
             var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
             fileSystem.File.Exists(outputPath).ShouldBeTrue(path);
             using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
-            var links = html.QuerySelectorAll("nav a");
-            var expectedTitles = new List<string> { "Home", "Docs", "GitHub Pages", "Quickstart", aboutTitle, "Side docs", "Zebra", "Tags" };
+            var links = html.QuerySelectorAll(".site-header nav a");
+            var expectedTitles = new List<string> { "Home", aboutTitle, "Side docs", "Docs", "GitHub Pages", "Quickstart", "Zebra", "Tags" };
             var expectedUrls = new List<string>
             {
-                ".", "en-us/docs", "en-us/docs/deployment/github-pages", "en-us/docs/quickstart",
-                "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/zebra", "tags"
+                ".", "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/docs",
+                "en-us/docs/deployment/github-pages", "en-us/docs/quickstart", "en-us/zebra", "tags"
             };
             if (!missingDeployment)
             {
-                expectedTitles.Insert(2, "Deployment");
-                expectedUrls.Insert(2, "en-us/docs/deployment");
+                expectedTitles = ["Home", aboutTitle, "Docs", "Deployment", "GitHub Pages", "Quickstart", "Side docs", "Zebra", "Tags"];
+                expectedUrls = [
+                    ".", "en-us/guides/about%20%26%20team", "en-us/docs", "en-us/docs/deployment",
+                    "en-us/docs/deployment/github-pages", "en-us/docs/quickstart", "en-us/docs-other", "en-us/zebra", "tags",
+                ];
             }
             links.Select(link => link.TextContent).ShouldBe(expectedTitles);
             links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
@@ -152,7 +155,7 @@ public class StaticSiteGeneratorNavigationTests
             deploymentItem.QuerySelectorAll(":scope > ul > li > .navigation-link > a")
                 .Select(link => link.TextContent).ShouldBe(["GitHub Pages"]);
             html.QuerySelectorAll("nav .navigation-label").Select(label => label.TextContent)
-                .ShouldBe(missingDeployment ? ["Deployment", "Guides"] : ["Guides"]);
+                .ShouldBe(missingDeployment ? ["Guides", "Deployment"] : ["Guides"]);
             html.QuerySelectorAll("nav script").ShouldBeEmpty();
             html.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
             var siteBase = new Uri($"https://example.com{baseUrl}");
@@ -170,7 +173,7 @@ public class StaticSiteGeneratorNavigationTests
             AddContent("pages", "github-pages.md", "title: GitHub Pages\nslug: docs/deployment/github-pages\nshow_in_navigation: false");
 
             await BuildAsync();
-            AssertNavigationTitles(["Home", "Docs", "Quickstart", aboutTitle, "Side docs", "Zebra", "Tags"]);
+            AssertNavigationTitles(["Home", aboutTitle, "Side docs", "Docs", "Quickstart", "Zebra", "Tags"]);
             foreach (var path in expectedPaths)
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
@@ -187,7 +190,7 @@ public class StaticSiteGeneratorNavigationTests
         AddContent("pages", "deployment.md", "title: Deployment\nslug: docs/deployment\nshow_in_navigation: false");
 
         await BuildAsync();
-        AssertNavigationTitles(["Home", "Docs", "Quickstart", "Side docs", "Tags"]);
+        AssertNavigationTitles(["Home", "Side docs", "Docs", "Quickstart", "Tags"]);
 
         AddContent("pages", "docs.md", "title: Docs");
         if (missingDeployment)
@@ -213,7 +216,7 @@ public class StaticSiteGeneratorNavigationTests
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
                 using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
-                html.QuerySelectorAll("nav a").Select(link => link.TextContent).ShouldBe(expected);
+                html.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent).ShouldBe(expected);
                 if (expected.Length == 2)
                 {
                     html.QuerySelectorAll(".navigation-item").ShouldBeEmpty();

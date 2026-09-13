@@ -305,6 +305,34 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   text-decoration-style: dashed;
 }
 
+.page-navigation {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin-top: 2rem;
+  padding-top: 1rem;
+  border-top: 1px dashed var(--border);
+}
+
+.page-navigation a {
+  display: grid;
+  gap: 0.15rem;
+  padding: 0.8rem;
+  border: 1px solid var(--border);
+  border-radius: 0.4rem;
+  background: var(--surface);
+}
+
+.page-navigation-next {
+  grid-column: 2;
+  text-align: right;
+}
+
+.page-navigation-direction {
+  color: var(--text);
+  font-size: 0.92rem;
+}
+
 .site-introduction {
   margin-bottom: 2rem;
   font-size: 1.05rem;
@@ -435,5 +463,13 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   .post-list > li {
     grid-template-columns: 1fr;
     gap: 0.15rem;
+  }
+
+  .page-navigation {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .page-navigation-next {
+    grid-column: 1;
   }
 }
