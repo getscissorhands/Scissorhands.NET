@@ -1,0 +1,45 @@
+# Auto-detect text files and normalize line endings
+* text=auto
+
+# Source code
+*.c text
+*.h text
+*.md text
+*.json text
+*.yaml text
+*.yml text
+*.xml text
+*.toml text
+
+# Force LF for shell scripts
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Force CRLF for Windows-specific files
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+*.sln text eol=crlf
+
+# Binary files
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+*.svg text
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.eot binary
+
+# Linguist overrides
+*.min.js linguist-generated
+*.min.css linguist-generated
+pnpm-lock.yaml linguist-generated
+package-lock.json linguist-generated
+yarn.lock linguist-generated
