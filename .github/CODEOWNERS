@@ -1,0 +1,5 @@
+# CODEOWNERS
+# Automatically request reviews from these owners when files change.
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+*  @justinyoo
