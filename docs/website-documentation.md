@@ -738,7 +738,7 @@ A valid component ID without a configured manifest leaves `Plugin` null, allowin
 
 ### Generated tag route context
 
-Before rendering the tag index or an individual tag page, the engine supplies the layout's `Document` with a synthetic `ContentKind.Page` whose `Metadata.Slug` is the resolved route (`tags` or the escaped `tags/{tag}` route). Layouts must forward `Document` through `CascadingMainLayoutBase`, as the built-in layout does, for `PluginComponentBase.Document` to receive it.
+The engine owns generated tag routes and resolves them before Razor rendering. For the tag index and individual tag pages, it supplies the layout's `Document` with a synthetic `ContentKind.Page` whose `Metadata.Slug` is the resolved route (`tags` or the escaped `tags/{tag}` route). Layouts must forward `Document` through `CascadingMainLayoutBase`, as the built-in layout does, for `PluginComponentBase.Document` to receive it.
 
 This rendering document is route-only: its title, Markdown, HTML, and source path are empty, and it has no document-specific description, locale, author, Twitter handle, image, or publication date. Existing site-level layout metadata and tag-view headings remain unchanged. A non-null `Document` does not imply a post; components should use `Kind` and the available metadata. Tag collections, layout-only navigation, and empty tag-page adjacency are unchanged.
 
