@@ -45,6 +45,8 @@ The engine prepares routes and `NavigationTree`; themes control markup, styling,
 
 Use the inherited URL helpers instead of duplicating URL rules in theme files. Render metadata through ordinary Razor expressions to retain encoding. Plugin components select manifests by `Id`, not display `Name`.
 
+Tag layouts also receive a route-only page `Document`. Forward `Document` through `CascadingMainLayoutBase` to expose its resolved slug to plugin components. It has no title or content override; see the [tag route context reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#generated-tag-route-context).
+
 ## Optional previous/next page links
 
 The engine supplies optional `PageNavigation` data for previous/next links. To opt in, forward it through `CascadingMainLayoutBase` and render the available links in your page view. Existing themes can ignore this data; no new view role is required, and `NavigationPages`/`NavigationTree` remain layout-only.

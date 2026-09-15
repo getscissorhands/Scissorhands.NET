@@ -49,6 +49,10 @@ The ID must match the installed plugin exactly. Installed plugins without a mani
 
 vNext does not support name-only plugin configuration or Razor selection. Review the migration reference before upgrading older plugins.
 
+## Generated tag route context
+
+On generated tag pages, `PluginComponentBase.Document` provides a route-only `ContentKind.Page` document when the layout forwards the document cascade. Its `Metadata.Slug` is the engine-resolved, already escaped tag route, shared with post-HTML hooks. Do not infer routes from tag labels or treat a non-null document as proof of a post. See the [context and metadata reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#generated-tag-route-context).
+
 ## Learn more
 
 - [vNext plugin guide (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#plugin-authoring)

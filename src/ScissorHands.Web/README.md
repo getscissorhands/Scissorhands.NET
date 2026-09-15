@@ -13,6 +13,8 @@
 - Configurable routes and static output for subpath hosting
 - Local preview and a built-in light/dark theme
 
+Generated tag layouts receive a route-only page `Document` before Razor rendering, so plugin components can use the same resolved slug as post-HTML hooks. Existing titles, tag collections, and navigation remain unchanged. See the [tag route context reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#generated-tag-route-context).
+
 ScissorHands.NET currently targets .NET 10.
 
 ## Quickstart
