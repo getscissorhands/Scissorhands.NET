@@ -736,6 +736,14 @@ The base type provides the document, document collection, plugin manifests, them
 
 A valid component ID without a configured manifest leaves `Plugin` null, allowing disabled output to be omitted.
 
+### Generated tag route context
+
+The engine owns generated tag routes and resolves them before Razor rendering. For the tag index and individual tag pages, it supplies the layout's `Document` with a synthetic `ContentKind.Page` whose `Metadata.Slug` is the resolved route (`tags` or the escaped `tags/{tag}` route). Layouts must forward `Document` through `CascadingMainLayoutBase`, as the built-in layout does, for `PluginComponentBase.Document` to receive it.
+
+This rendering document is route-only: its title, Markdown, HTML, and source path are empty, and it has no document-specific description, locale, author, Twitter handle, image, or publication date. Existing site-level layout metadata and tag-view headings remain unchanged. A non-null `Document` does not imply a post; components should use `Kind` and the available metadata. Tag collections, layout-only navigation, and empty tag-page adjacency are unchanged.
+
+Post-HTML hooks retain their existing synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug supplied during Razor rendering. These synthetic pages still bypass the Markdown hooks. When composing publication URLs, respect `Site.SiteUrl` and `Site.BaseUrl`, and use the supplied tag slug without reconstructing it from labels, adding a locale prefix, or escaping it again. For example, tag `C#` has slug `tags/c%23`; with site URL `https://example.com` and base URL `/blog/`, its publication URL is `https://example.com/blog/tags/c%23` in both rendering and post-HTML processing.
+
 ### Preview and generated URLs
 
 `SiteManifest.IsPreview` is set before hooks and rendering. Use it when production-only side effects should be suppressed during preview.
