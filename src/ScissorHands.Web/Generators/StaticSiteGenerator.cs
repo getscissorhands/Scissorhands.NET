@@ -256,35 +256,48 @@ public sealed class StaticSiteGenerator(
     private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
     {
+        // Route-only metadata preserves the layout's site-level title and description.
+        var routeDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Slug = "tags" },
+        };
         var parameters = CreateBaseParameters(plugins, theme, navigation);
+        parameters["Document"] = routeDocument;
         parameters["TaggedDocuments"] = taggedDocuments;
 
         var rendered = await _renderer.RenderAsync<TTagListView>(layoutType, parameters, cancellationToken);
         var tagListDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = "Tags", Slug = "tags" },
+            Metadata = routeDocument.Metadata with { Title = "Tags" },
             Markdown = string.Empty,
             Html = rendered
         };
-        var outputPath = ResolveOutputPath(destination, "tags");
+        var outputPath = ResolveOutputPath(destination, routeDocument.Metadata.Slug);
         await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, cancellationToken);
     }
 
     private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagView : ScissorHands.Theme.TagViewBase
     {
+        var tagRoute = GetTagRoute(tag);
+        var routeDocument = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = new ContentMetadata { Slug = tagRoute },
+        };
         var parameters = CreateBaseParameters(plugins, theme, navigation);
+        parameters["Document"] = routeDocument;
         parameters["Tag"] = tag;
         parameters["TaggedPosts"] = posts;
         parameters["TaggedPages"] = pages;
 
         var rendered = await _renderer.RenderAsync<TTagView>(layoutType, parameters, cancellationToken);
-        var tagRoute = GetTagRoute(tag);
         var tagDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = $"Tag: {tag}", Slug = tagRoute },
+            Metadata = routeDocument.Metadata with { Title = $"Tag: {tag}" },
             Markdown = string.Empty,
             Html = rendered
         };
