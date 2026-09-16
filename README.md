@@ -34,13 +34,15 @@ The [sample guide](samples/ScissorHands.Sample/README.md) explains its content a
 
 The engine handles routes and navigation rules; themes render the prepared content. Publish the generated `dist` directory to a static host.
 
+Enable `Site.UseLocaleInUrl` for locale-specific homepages, tag listings and page navigation. The generated root redirects to `Site.Locale`; translations remain separate authored documents. See the [locale guide](docs/website-documentation.md#locale-specific-sites) for source organization and migration.
+
 ## Documentation and compatibility
 
 - [Documentation website](https://getscissorhands.app/docs/)
 - [vNext documentation handoff](docs/website-documentation.md), including configuration, authoring guides, and API details awaiting website publication
 - [Upgrading to vNext](docs/website-documentation.md#upgrading-to-vnext)
 
-vNext includes breaking plugin identity, collection API, theme-component, and directory-index route changes. Review the migration guidance before upgrading older applications or extensions.
+vNext includes breaking plugin identity, collection API, theme-component, directory-index and locale-enabled collection-route changes. Review the migration guidance before upgrading older applications or extensions.
 
 ## Support and license
 

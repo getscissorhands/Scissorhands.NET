@@ -4,7 +4,7 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.8 |
+| Document version | 0.9 |
 | Status | Review-ready |
 | Last updated | 2026-09-16 |
 | Baselines consulted | 2026-09-16 |
@@ -12,25 +12,26 @@
 | Design approver | @justinyoo |
 | Implementation owners | Not assigned |
 | Sign-off | @justinyoo approved v0.8 for the locale scope only on 2026-09-16; historical v0.3/v0.5 approvals and component criteria retained |
-| Approval scope | DES-013, DEC-004 and the V-009 design/evidence strategy under FR-012/TR-023, including applicable shared constraints and documented limits. DQ-009 integration checks remain; no approval of unrelated revisions, implementation authorization or release sign-off |
+| Approval scope | DES-013, DEC-004 and the V-009 design/evidence strategy under FR-012/TR-023, including applicable shared constraints and documented limits. DQ-009 checks were not waived by sign-off; subsequent implementation evidence is recorded separately. No approval of unrelated revisions or release |
 | #81 scoped approval | @justinyoo approved DES-012, DEC-003, the TG-006/DQ-008 policy and V-008 evidence strategy on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Decision confirmation | @justinyoo confirmed DEC-001 on 2026-09-11, DEC-002 on 2026-09-12, and DEC-003's source-order/automatic-adjacency direction on 2026-09-13 |
 | Intended audience | Engine, theme, and plugin contributors reviewing implementation mechanisms and compatibility |
-| Release scope | Retained baseline/completed #81 acceptance plus the unimplemented DES-013 locale extension; #89 and broader verification remain independent |
-| PRD baseline | [PRD.md](PRD.md) v0.11, Review-ready overall with locale-only approval on 2026-09-16; historical approvals retained |
-| TRD baseline | [TRD.md](TRD.md) v0.7, Review-ready overall with locale-only TR-023 approval, resolved TG-007 product dependencies and retained integration/evidence gaps |
-| Implementation baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the tested pager-acceptance follow-up in this revision |
+| Release scope | Retained baseline/#81 plus implemented DES-013; V-009 actual prefix-preview acceptance remains blocked by #89 |
+| PRD baseline | [PRD.md](PRD.md) v0.12, Review-ready with implemented locale scope and a remaining #89 acceptance blocker; prior approvals retained |
+| TRD baseline | [TRD.md](TRD.md) v0.8, Review-ready with implemented TR-023, resolved scoped TG-007/DQ-009 integration and retained wider gaps |
+| Implementation baseline | `03af844` plus the locale implementation in this revision; historical V-008 baselines retained |
 | Locale scoped approval | Explicit user approval of PRD/TRD/TDD only for this scope on 2026-09-16; reviewed document revision `94fc60b`. This entry records approval without changing the design or document versions |
+| Implementation authorization | @justinyoo separately requested implementation within the agreed scope on 2026-09-16; no broader implementation or release authority is inferred |
 
 **Authority:** the PRD owns scope/acceptance and the TRD owns obligations. Scoped #81 approval, implementation authorization and component criteria are retained. V-008 now passes the approved scope; #89 and broader V-005 work remain separate. The PR may close #81 on merge, without implying whole-document approval, publication or deployment.
 
-**Locale revision:** On 2026-09-16, @justinyoo confirmed Q-006 through Q-012 and subsequently approved PRD/TRD/TDD only for this scope. DES-013/DEC-004 and the V-009 strategy are now approved, not implemented. DQ-009's compatibility/input/snapshot integration checks remain; sign-off is not feasibility evidence or permission to execute. Older mechanisms still describe the inspected implementation and disabled-mode compatibility.
+**Locale revision:** On 2026-09-16, @justinyoo confirmed and approved the scope, then separately requested implementation. DES-013/DEC-004 are implemented with DQ-009's scoped context/helper/snapshot integration verified. PRD V-009 records passing .NET/browser/root-preview evidence and #89's actual prefix failure. Older shared-generation descriptions below apply to disabled mode unless explicitly qualified; historical approvals are not broadened.
 
 ## 1. Design context and scope
 
 Retain the four-package, local .NET application: Core defines shared models/contracts; Plugin and Theme extend Core; Web composes loading, transformations, rendering, filesystem output, and preview. Visitors receive static files, not a server-interactive Blazor application. Existing interfaces and the owner-controlled executable-extension boundary are the starting point, not a reason to replace the engine.
 
-The target retains the architecture and implemented FR-011 addition, extending generation with unimplemented FR-012. Current mechanisms, confirmed product choices, proposed design/hardening/mount work and evidence limits remain distinct. Two-tier ordering and adjacency are implemented; locale-scoped generation and separately owned preview-prefix mounting are not.
+The implementation retains the architecture and FR-011 ordering while adding FR-012 locale-scoped generation. Proposed broader hardening/mount work and evidence limits remain distinct: #89's actual preview-prefix mounting is not implemented here.
 
 | Driver / constraint | Source and status | Design consequence |
 | --- | --- | --- |
@@ -67,7 +68,7 @@ Design IDs identify mechanisms, not new public APIs. Existing `ContentUrlHelper`
 | DES-010 | Compatibility and failure boundaries | Preserve existing public contracts and distinguish failures/cancellation from completion without exposing sensitive payloads | Core interfaces/models, application, runner, renderer, logging | TR-011/015/016/020; Confirmed obligations, proposed focused corrections |
 | DES-011 | Resource model and verification instrumentation | Explain cost/latency drivers and collect later evidence without production telemetry | Existing logs, tests/sample, external measurement tools when authorized | TR-019 and V-001 through V-007; Proposed measurement approach, no executed results |
 | DES-012 | Reading order and adjacent-page context | Prepare combined sequence ranks, project order onto slug-grouped navigation, and snapshot neighbors per eligible page for one generation | `PageReadingOrder`, Core `PageNavigation`/`PageNavigationLink`, generator, Theme context | TR-021/TR-022 implemented under approved #81 scope; V-008 has scoped passing evidence and remaining dependencies |
-| DES-013 | Locale generation scopes and root entry point | Prepare the confirmed locale inventory, scoped collections/navigation, redirect routes and render contexts | Existing loader/generator/navigation, Core helpers and additive Theme context; exact signatures need implementation review | FR-012/TR-023; locale-only design approval on 2026-09-16, with DEC-004 approved and DQ-009 integration checks retained |
+| DES-013 | Locale generation scopes and root entry point | Prepare locale inventory, scoped collections/navigation, generated/redirect route owners and immutable render contexts | Generator-local `GenerationScope`/`OutputRoutes`, Core `LocaleContext`, Theme/Plugin cascades and existing helpers | Implemented FR-012/TR-023; DQ-009 scoped integration covered, V-009 blocked on #89's actual prefix requests |
 
 ### DES-001 / DES-004: Startup and generation flow
 
@@ -78,9 +79,9 @@ Design IDs identify mechanisms, not new public APIs. Existing `ContentUrlHelper`
 The [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs) currently runs this sequence:
 
 1. Create the destination, set `IsPreview`, convert site description Markdown, load the theme manifest, and load the document list.
-2. Preflight original routes; select eligible pages, prepare the two-tier reading sequence, build the rank-ordered slug hierarchy, and snapshot per-page adjacency before document hooks.
-3. Render/write the index, then the source-backed or synthetic 404.
-4. Process/render/write ordinary documents sequentially, then render/write tag surfaces.
+2. Prepare the shared scope or locale scopes, including eligible page sequences/hierarchies/adjacency and tag groups; preflight all source/generated/redirect destinations before rendering.
+3. Render/write the shared or per-locale indexes, then the source-backed or synthetic root 404 using default-locale context when enabled.
+4. Process/render/write ordinary documents sequentially, then scoped tags and enabled-mode root/legacy redirects.
 5. Copy content images and supported theme assets. Return only after the invocation's work completes.
 
 **Implemented #81 integration:** DES-012 extends navigation preparation only; later hook/render/write stages remain in their existing order. No second plugin pass or full-site HTML buffering was introduced.
@@ -113,7 +114,7 @@ Retain ordinary `<route>\index.html`, root index, and fixed `404.html` destinati
 
 **Locale target qualification:** DES-013 changes the enabled-mode root into a generated redirect and adds per-locale collection destinations. The preceding flow and shared collection/navigation descriptions are the current implementation, not the FR-012 target. Source-backed index inference cannot silently override a generated locale homepage.
 
-**Proposed route composition:** when locale prefixing is enabled, identify an existing matching leading locale in the original slug before composing the post-date prefix; form a single effective locale prefix around the remaining route. Preserve the 404 exception, page-versus-post distinction, and missing-date warning. The current loader adds date first, then checks for a locale prefix, so combined date/locale/already-prefixed inputs need particular attention. Record exact compatibility cases in V-007 before a correction; no runtime result is asserted here.
+**Implemented route composition:** the loader recognizes a matching leading normalized locale before composing the post date, then adds the effective locale once. It preserves the root-404 exception, page/post distinction and missing-date warning. Folder names do not infer locale or get stripped merely as organizational prefixes. Loader regressions cover already-prefixed/uppercase slugs, inferred locale folders and explicit overrides.
 
 Index posts remain newest-first, undated last. Tag data groups lowercased names with encoded tag-route text, ordering posts by date and pages by title. Reuse the same eligible-content selection for tag planning and rendering: current preflight considers tags on the custom 404 while actual tag rendering excludes it. That source difference is a focused V-001/V-007 reconciliation case, not justification to change the 404 contract.
 
@@ -292,7 +293,7 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 
 ### DES-013: Locale generation and root redirect
 
-**Authority / status:** @justinyoo approved DES-013/DEC-004 and the V-009 strategy on 2026-09-16 only for the FR-012/TR-023 locale scope. The approach is approved but unimplemented; exact API signatures and DQ-009 integration checks remain. Sign-off neither supplies missing evidence nor authorizes implementation.
+**Authority / status:** @justinyoo approved FR-012/Q-006 through Q-012 and the corresponding locale design, then separately requested implementation on 2026-09-16. DES-013/DEC-004 are implemented; the following concrete mechanisms and regressions resolve scoped DQ-009 integration. PRD V-009 records results, not complete acceptance: #89 still blocks actual prefix preview.
 
 **Generation scope:** Keep one build, theme discovery, loaded document set and shared asset copy. Disabled routing retains the existing path. When enabled, seed the inventory with normalized `Site.Locale`, then group published non-404 posts/pages by their effective locale through the same shared normalization; equivalent spellings coalesce. Include published navigation-hidden pages, not drafts or folder names. Prepare collections, routes and navigation/adjacency before hooks. Always render the default homepage, even empty; render other discovered homepages even for page-only locales. No configured locale list or application instance per language is needed.
 
@@ -300,7 +301,7 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 
 **Collections and route planning:** Reuse the index/tag roles per locale and retain ordering. Emit tag collections only for locales with eligible tagged documents; carry absent tag-index availability explicitly so the layout omits its Tags link. Resolve routes before rendering and include root redirect, locale collections and conditional legacy redirects in preflight. Preserve ownership/cancellation; do not duplicate source documents or shared assets. Paths remain artifact-relative: `/blog/ko-kr/` maps to `ko-kr\index.html`, not `blog\ko-kr\index.html`.
 
-**Render context:** Use the approved additive immutable context approach carrying active locale, resolved home/current route and optional tag-index target. Absence preserves legacy/direct-renderer behavior; exact names/signatures are implementation-review details, not new product questions. Keep `Site.Locale` immutable configuration during generation. Populate synthetic index/tag documents with resolved route/locale while preserving site title/description defaults and tag-title distinctions, and supply the same route/locale to post-HTML hooks. Retain legacy static helper overload semantics; add locale-aware composition and context-aware Theme wrappers. Do not escape encoded tag routes twice. Full navigation stays layout-only; the optional adjacency cascade is unchanged.
+**Render context:** Core `LocaleContext` is a sealed record with init-only `Locale`, `Route`, `HomeUrl`, nullable `TagIndexUrl`, and `GetTagUrl(string)` using the existing static tag formatter. Optional `LocaleContext` parameters/cascades on layouts, all view bases and plugin components preserve legacy/direct-renderer behavior when absent. Keep `Site.Locale` immutable configuration during generation. Populate synthetic index/tag documents with resolved route/locale while preserving site title/description defaults and tag-title distinctions, and supply the same route/locale to post-HTML hooks. Retain legacy static helper overload semantics; add locale-aware composition and context-aware Theme wrappers. Do not escape encoded tag routes twice. Full navigation stays layout-only; the optional adjacency cascade is unchanged.
 
 **Navigation:** Under confirmed Q-009, partition pages by loaded effective locale before selecting eligible pages and applying existing two-tier source ordering. Prepare trees/adjacency once per locale per generation, before hooks; retain hidden-parent/group rules and do not synthesize an authored navigation page for a generated homepage. Home/site-title/tag links use active context, not legacy redirects; empty/single scopes and the last file-backed/first source-less links obey their own locale boundaries. The shared 404 uses default-locale navigation; the minimal root redirect has a fallback link, not mixed navigation. Author-written links are not rewritten. Loaded locale membership/context is a pre-hook snapshot; do not add a second plugin pass to refresh it. DQ-006 retains the wider plugin-replacement consistency question.
 
@@ -312,7 +313,11 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 
 **Presentation and migration:** Q-011 excludes translated theme/site text, switchers and localized 404 variants. Shared assets and text defaults remain, with active-locale metadata for generated collections and default context for root 404. Document custom-theme adoption of context-aware Home/Tags helpers; preserved signatures do not fix hard-coded links. Source/generated locale-home conflicts require explicit distinct slugs. Initial clean build/preview follows existing cleanup; in-place preview may retain removed locales or redirects under TR-020. A restart/fresh build is required to assess absent-route behavior reliably; this feature does not promise stale-output cleanup.
 
-**Verification:** V-009 uses mixed-language fixtures with matching slugs/tags, normalized-equivalent and empty/default/page-only/draft-only scopes, source-less pages, organizational folders/dates, generated/source/redirect collisions, 404-locale mismatch and disabled-mode cases. Check renderer/plugin snapshots, optional context/legacy helper parity, encoding, failures and cancellation. Exercise redirects without required JavaScript, scoped navigation, absent tags, default-missing legacy tags and shared assets at root and mounted `/blog/`, in build and preview. Reuse existing .NET/sample/browser tooling after implementation authorization. #89 owns actual preview mounting; a controlled host cannot replace a failed preview check. No new runtime evidence is asserted.
+**Implemented boundaries:** the existing renderer discovers the new cascade through its reflection-based filter, so it is not passed as a view attribute. Layout helpers and all built-in Home/Tags/back links consume the context. Core/Theme/Plugin/renderer regressions cover absence, typed cascade delivery, encoded tags, fallback/error behavior and stable site settings; generator tests cover loaded-scope metadata replacement without a second hook pass.
+
+**Output ownership:** generator-local `OutputRoutes` reserves planned source/generated/redirect destinations and checks each actual rendered destination using original owner identity before post-HTML/write. This rejects plugin-transformed overwrites of a locale homepage. Locale-enabled content-image copying also claims destinations; destination reparse checks run at preflight and again before writes. This is scoped page/content-image protection, not complete DES-007: theme-service copy ownership, all input-link handling and race-free filesystem I/O remain broader DQ-002 work.
+
+**Verification:** PRD V-009 records 620 passing .NET tests, the final 60-case three-engine/two-viewport matrix plus 4 math cases, and actual root-preview/regeneration observations. Coverage includes normalized/empty/page-only/draft-only scopes, source-less tiers, authoring/date rules, redirects, 404 mismatch, collisions, snapshots and legacy contracts. Tests build an isolated multi-locale sample copy rather than change the normal sample's content. Actual `/docs/` preview routes still return 404 under #89; controlled-host passes cannot replace that failure. No full security/device/benchmark claim is made.
 
 ## 3. Alternatives and decisions
 
@@ -352,14 +357,14 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 - **Confirmed product choice:** @justinyoo selected root redirect to the homepage for `Site.Locale` on 2026-09-16. The alternatives were a generated language-selection page or a mixed-language root homepage; neither was selected.
 - **Approved mechanism:** @justinyoo's locale-only TDD approval on 2026-09-16 accepts DES-013's portable HTML redirect plus fallback anchor, keeping host-specific HTTP redirects optional. A JavaScript-only redirect would break the no-JavaScript path; a mandatory host rule would not make the generated artifact portable.
 - **Consequences:** Enabled sites gain locale-home/tag destinations and need migration; the default locale must always have a generated homepage. The disabled path remains unchanged. Shared assets are not nested under the deployment prefix. Root and per-locale source collisions must fail explicitly.
-- **Scoped approval / remaining work:** Q-006 through Q-012 and DES-013/DEC-004 are covered by the locale-only document approval. DQ-009 retains implementation-detail validation of compatibility/input/snapshot interactions, not an unresolved approval decision. No implementation or release is authorized; DEC-001/002/003 and historical #81 evidence remain intact.
+- **Scoped approval / implementation:** The approved scope was subsequently authorized for implementation. DQ-009's context/helper/snapshot cases are implemented and covered; broader DQ-002/DQ-006 work and #89 remain. No release is authorized; DEC-001/002/003 and historical #81 evidence remain intact.
 - **ADR relationship:** No separate ADR is created; keep the decision here while the additive public rendering-context contract is reviewed. Authoring behavior is settled by Q-008.
 
 Keeping .NET/Razor, current package direction, explicit plugin identity, and stage order is required by the retained baseline, not a set of speculative alternatives. URL scheme rules remain an upstream technical decision; DEC-003/004 do not settle the broader policy.
 
 ## 4. Requirement coverage and verification strategy
 
-All mappings use TRD v0.7 against PRD v0.11. Earlier evidence remains valid for its actual scope; confirmed locale requirements do not establish implementation or passing acceptance.
+All mappings use TRD v0.8 against PRD v0.12. Earlier evidence remains valid for its actual scope; confirmed locale requirements do not establish implementation or passing acceptance.
 
 | TRD requirement | Design references | Mechanism / coverage | Verification and evidence state |
 | --- | --- | --- | --- |
@@ -385,9 +390,9 @@ All mappings use TRD v0.7 against PRD v0.11. Earlier evidence remains valid for 
 | TR-020 | DES-001/004/008/010 | Propagation/logging and documented partial/stale artifact lifecycle | V-004/V-007: success, invalid input, I/O/hooks/render/cancellation failures; Pending |
 | TR-021 | DES-004/010/012; DEC-003 | Component-wise source ordering, trailing source-less tier, independent slug-tree ranks, generation-local sequence and migration guidance | Implemented; scoped Windows ordering/compatibility/input/cancellation/migration checks passed in V-008. DQ-008 implemented; broader programs remain open |
 | TR-022 | DES-005/009/012; DEC-003 | Static pager with palette-based contrast fixes, zero tab indices and repeatable browser acceptance | V-008 passed: six engine/viewport projects, 42 cases and 168 color measurements. Other scopes remain independently open |
-| TR-023 | DES-002/004/005/009/012/013; DEC-004 | Approved locale-scope design for inventory/collections/context, root/legacy redirects, shared-404 validation and migration | V-009 pending; DQ-009 retains integration checks, not unresolved product scope or sign-off. #89 is required for actual preview-prefix acceptance |
+| TR-023 | DES-002/004/005/009/012/013; DEC-004 | Implemented locale inventory/collections/context, root/legacy redirects, shared-404 validation and migration | Scoped integration and .NET/browser/root-preview checks pass; V-009 still blocked on #89 actual prefix-preview requests |
 
-The TRD maps all 22 PRD FR/NFR entries; this design maps all 23 technical requirements, including the approved DES-013 approach and retained DQ-009 integration boundary. FR-011/TR-021/TR-022/V-008 retain #81 acceptance; FR-012/TR-023/V-009 own new work without completing broader programs. Retained product outcomes G-001 through G-003 rely on static generation and theme/plugin separation, not new telemetry or numerical claims. PRD release criteria, optional further outcome evaluation and separate release authority remain unchanged.
+The TRD maps all 22 PRD FR/NFR entries; this design maps all 23 technical requirements, including implemented DES-013 and resolved scoped DQ-009 integration. FR-011/TR-021/TR-022/V-008 retain #81 acceptance; FR-012/TR-023/V-009 own new work without completing broader programs. Retained product outcomes G-001 through G-003 rely on static generation and theme/plugin separation, not new telemetry or numerical claims. PRD release criteria, optional further outcome evaluation and separate release authority remain unchanged.
 
 ### Evidence and rollout boundaries
 
@@ -435,16 +440,16 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 | DQ-006 | Collections and immutable navigation built before hooks versus plugin-returned title/route/visibility; planned adjacency shares that boundary; combined route/404 planning cases | DES-002/004/005/009/012; TR-003/004/006/017/021/022; TG-004 | Current snapshot timing is established, but post-plugin cross-page consistency is not guaranteed. New collection semantics or pipeline redesign still need clarification and regression evidence | Unassigned; preserve per-document propagation and the documented snapshot while evaluating representative route-changing consumers; changes to obligations belong in TRD |
 | DQ-007 | Pending verification and known non-atomic/stale preview behavior | DES-004/008/010/011; V-001 through V-007 | Missing release evidence is not automatic failure or a requirement waiver. Partial/stale output remains an accepted limitation, not a new promise to fix it | Unassigned; record/recheck next-phase results and publish only under separate release authority |
 | DQ-008 | Resolved and implemented: file-backed source order, trailing source-less title/route order, and combined adjacency keyed by original document reference | PRD FR-011; DES-005/010/012; TR-021/TR-022 under TR-005/011, TG-006; DEC-003 | No remaining source-less policy/integration blocker in this implementation; Windows compatibility cases passed. Other V-008 blockers do not reopen this decision | Retain the implementation and scoped evidence in V-008; no issue-closure or broader audit claim |
-| DQ-009 | Product and locale-only design approval resolved on 2026-09-16; compatibility/input/snapshot integration checks remain | FR-012/TR-023; DES-013/DEC-004; V-009 | Approval accepts the approach, not evidence of API compatibility or resolution of DQ-006. Retain the required integration checks before an implementation-ready claim; no runtime feasibility or acceptance results asserted | Validate the approved DES-013 approach against existing Core/Theme/Plugin contracts before implementation; exact additive signatures are engineering details. Execution requires separate authorization; implementation owners remain unassigned |
+| DQ-009 | Resolved scoped implementation integration after approval and separate authorization on 2026-09-16 | FR-012/TR-023; DES-013/DEC-004; V-009 | Optional `LocaleContext`, helper/cascade compatibility, rooted redirect validation and loaded-scope snapshots are implemented and regression-covered. This is not general resolution of DQ-002/DQ-006 or #89 | Preserve regression coverage and recheck blocked actual preview-prefix acceptance after #89; broader audits/ownership remain separately tracked |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall against PRD v0.11/TRD v0.7 with explicit locale-only approval of DES-013/DEC-004 and the V-009 strategy. This is not an implementation-ready or whole-document approval claim.
-- **Material blockers:** DQ-009 retains compatibility/input/snapshot integration checks; no locale product/design approval decision remains. #89 blocks actual preview-prefix acceptance until fixed. Broader gaps and historical #81/V-008 acceptance remain independent.
-- **Confirmation:** @justinyoo approved the locale scope across PRD/TRD/TDD on 2026-09-16, reviewing `94fc60b`. Historical approvals and #81's separately authorized implementation stand. The new sign-off does not authorize implementation, experiments, publication or deployment, or resolve existing technical gaps.
-- **Reviewer pass:** Reconciled 23 mappings with the confirmed PRD/TRD choices, source/generated-route conflicts, empty/legacy/404 exceptions, metadata context and snapshot boundaries. Prior runtime evidence remains historical; no new code or experiments were executed.
+- **Supported status:** Review-ready overall against PRD v0.12/TRD v0.8, retaining locale-only approval and the subsequent implementation authorization. DES-013 is implemented; blocked acceptance is distinct from code delivery or release approval.
+- **Material blockers:** DQ-009's feature integration is covered. #89 still blocks actual preview-prefix acceptance; broader DQ-002/DQ-006 and historical #81/V-008 boundaries remain independent.
+- **Confirmation:** @justinyoo approved the locale documents then explicitly requested scoped implementation on 2026-09-16. Recorded code/verification is authorized, not unrelated work, publication, deployment or closure of broader gaps.
+- **Reviewer pass:** Reconciled all 23 mappings with actual implementation, optional APIs, migration/404 exceptions, page/content-image ownership and scoped test/HTTP evidence. Historical results and failed attempts remain traceable.
 - **Deferred work:** Merge/release decisions and broader preview/device/theme/benchmark work remain separate; #81's approved component checks are complete.
-- **Review limitations:** Historical #81 engine/.NET evidence does not cover DES-013/V-009. No new experiments, real-device matrix, audit, benchmark or whole-site conformance claim is made.
+- **Review limitations:** V-009 is blocked on actual prefix preview. Mock reparse tests and page ownership do not prove complete link-safe copying; no real-device matrix, full audit, benchmark or whole-site conformance claim is made.
 
 ## 6. Material changes and references
 
@@ -467,6 +472,7 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 | 2026-09-16 | Draft DES-013/DEC-004 in TDD v0.8 against PRD v0.11/TRD v0.7 | Requested document revision and explicit root redirect choice | Add scoped-generation/context and portable redirect proposals with DQ-009/V-009 gaps; retain prior IDs, decisions/evidence and #89's independent mounting boundary. No implementation |
 | 2026-09-16 | Reconcile confirmed locale choices into a Review-ready design | Explicit @justinyoo selections in PRD Q-007 through Q-012 | Define inventory/organizational-source scoping, conditional legacy routes and shared-404 validation; retain proposed context/redirect mechanics, DQ-009 technical review and no implementation authorization |
 | 2026-09-16 | Approve TDD v0.8 only for the locale scope | Explicit @justinyoo approval of PRD/TRD/TDD only for this scope, reviewing `94fc60b` | Accept DES-013/DEC-004 and the V-009 strategy; retain DQ-009 integration checks, broader gaps, #89 separation and historical approvals. No implementation, experiments, passing evidence or release authorization |
+| 2026-09-16 | Implement DES-013 and record scoped evidence in v0.9 | User separately requested implementation; PRD V-009 records results | Add concrete locale context/scopes, route ownership and redirects; resolve scoped DQ-009 integration and retain #89's actual preview-prefix failure plus broader DQ-002/DQ-006 gaps |
 
 ### Source map
 

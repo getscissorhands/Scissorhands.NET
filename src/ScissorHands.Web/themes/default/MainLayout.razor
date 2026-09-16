@@ -1,7 +1,7 @@
 @using ScissorHands.Core.Models
 @inherits ScissorHands.Theme.MainLayoutBase
 
-<CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" Plugins="@Plugins" Theme="@Theme" Site="@Site">
+<CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" Site="@Site">
     <!DOCTYPE html>
     <html lang="@PageLocale">
     <head>
@@ -30,12 +30,15 @@
     </head>
     <body>
         <header class="site-header">
-            <a class="site-title" href=".">@Site.Title</a>
+            <a class="site-title" href="@GetHomeUrl()">@Site.Title</a>
             <nav aria-label="Primary navigation">
                 <ul class="navigation-list">
-                    <li><a href=".">Home</a></li>
+                    <li><a href="@GetHomeUrl()">Home</a></li>
                     @RenderNavigation(NavigationTree)
-                    <li><a href="tags">Tags</a></li>
+                    @if (GetTagIndexUrl() is { } tagIndexUrl)
+                    {
+                        <li><a href="@tagIndexUrl">Tags</a></li>
+                    }
                 </ul>
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
                     <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">

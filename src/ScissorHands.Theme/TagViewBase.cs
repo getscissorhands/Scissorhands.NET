@@ -13,6 +13,12 @@ namespace ScissorHands.Theme;
 public abstract class TagViewBase : ComponentBase
 {
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the tag name.
     /// </summary>
     [CascadingParameter(Name = "Tag")]

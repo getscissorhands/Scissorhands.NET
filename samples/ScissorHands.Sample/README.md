@@ -30,4 +30,12 @@ Disable the visible grandchild to remove the empty Group, or disable Parent to h
 
 The expected sequence is **About, Parent, Child, Visible Grandchild, Child 2**. The endpoints omit unavailable links. The numbered sample sources and explicit slugs demonstrate ordering while retaining their public URLs.
 
+## Try locale routing
+
+The sample leaves locale routing disabled by default. Set `"UseLocaleInUrl": true` in its `Site` settings and run `--build` to generate `dist\en-us\index.html`, locale-specific tags/navigation, and a root redirect to `en-us/`. Keep `BaseUrl: "/"` when exercising the built-in preview; prefix mounting is separately tracked in #89.
+
+To author another language, add Markdown under `contents\posts\ko-kr` or `contents\pages\ko-kr` with explicit `locale: ko-KR` and a locale-free `slug`. Folders do not infer locale. Do not create source pages at generated locale-home routes; `pages\ko-kr\index.md` needs a distinct explicit slug to avoid claiming `/ko-kr/`.
+
+The existing custom 404 omits `locale` and therefore follows `Site.Locale`. With locale routing enabled, an explicit conflicting locale is rejected. Shared images/theme assets and authored Markdown links are not rewritten or translated. The [browser suite](../../test/browser/README.md) creates an isolated multi-locale copy of this sample without changing its normal contents.
+
 See the [navigation guide](../../docs/website-documentation.md#reading-order-and-previousnext-links) for the general rules, the [vNext website handoff](../../docs/website-documentation.md) for other reference material, and the [documentation website](https://getscissorhands.app/docs/) for published guides.

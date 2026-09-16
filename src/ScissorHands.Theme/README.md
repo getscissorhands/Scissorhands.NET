@@ -51,6 +51,14 @@ The engine supplies optional `PageNavigation` data for previous/next links. To o
 
 See the [adjacent-page context guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for cascading setup, rendering examples, URL handling, and keyboard guidance.
 
+## Locale-aware layouts
+
+Forward the optional `LocaleContext` parameter through `CascadingMainLayoutBase`. All view bases can consume that typed cascade. With context, the layout's language metadata uses the active locale and existing post/page/tag-list `GetTagUrl` wrappers generate locale-specific links.
+
+Use `GetHomeUrl()` for the site title/Home links and `GetTagIndexUrl()` for Tags; omit Tags when the latter returns null. Without context they retain `.` and `tags`. Full `NavigationPages`/`NavigationTree` remain layout-only and describe the active locale; no eighth theme role is required. Existing themes compile unchanged but must replace hard-coded Home/Tags routes to adopt locale-aware browsing.
+
+This feature does not translate theme labels or site text. See the [locale context and migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context).
+
 ## Learn more
 
 - [vNext theme guide (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)

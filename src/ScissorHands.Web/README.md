@@ -73,6 +73,14 @@ File-backed pages use filename order, with `index.md` first in each directory. T
 
 Renaming sources can change inferred URLs, so use explicit slugs to preserve existing addresses. See the [reading order and navigation guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#reading-order-and-previousnext-links) for traversal, eligibility, custom-loader behavior, and plugin snapshots.
 
+## Locale-specific generation
+
+Set `Site.UseLocaleInUrl` to `true` to generate a homepage and eligible tag listings for each published content locale, plus `Site.Locale` even when empty. The root redirects to the default locale. Home/Tags links, page navigation and previous/next stay within the active locale; there is no automatic translation or language fallback.
+
+Locale folders under `contents\posts` and `contents\pages` are organizational only. Frontmatter `locale` overrides `Site.Locale`; explicit locale-free slugs keep URLs independent of source folders. Keep the single root `404.html` in the site-default locale: a conflicting custom-404 locale fails generation.
+
+Unprefixed tag URLs redirect only when the matching default-locale destination exists. Existing locale-enabled sites and custom themes must follow the [locale migration guidance](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-routing-migration). Disabled-mode routes remain unchanged. Locale redirects require a rooted `BaseUrl` ending in `/`, such as `/blog/`; generation does not fix the separately tracked preview-prefix mount in #89.
+
 ## Preview and build
 
 Run from the application directory. Start the local preview server:

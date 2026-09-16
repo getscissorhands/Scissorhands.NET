@@ -52,6 +52,12 @@ public abstract class MainLayoutBase : LayoutComponentBase
     public PageNavigation PageNavigation { get; set; } = new();
 
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [Parameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
     /// Used for tag list view.
     /// </summary>
@@ -148,6 +154,16 @@ public abstract class MainLayoutBase : LayoutComponentBase
     }
 
     /// <summary>
+    /// Gets the base-relative locale home URL, or the legacy home URL when no context is supplied.
+    /// </summary>
+    protected string GetHomeUrl() => LocaleContext?.HomeUrl ?? ".";
+
+    /// <summary>
+    /// Gets the base-relative tag index URL, or null when the supplied locale context has no tags.
+    /// </summary>
+    protected string? GetTagIndexUrl() => LocaleContext is null ? "tags" : LocaleContext.TagIndexUrl;
+
+    /// <summary>
     /// Calculates the page title based on the site and document title.
     /// </summary>
     /// <returns>Returns the page title calculated.</returns>
@@ -179,11 +195,16 @@ public abstract class MainLayoutBase : LayoutComponentBase
     }
 
     /// <summary>
-    /// Calculates the page locale based on the site and document locale.
+    /// Calculates the page locale from the render context, falling back to the site and document locale.
     /// </summary>
     /// <returns>Returns the page locale calculated.</returns>
     protected virtual string CalculatePageLocale()
     {
+        if (LocaleContext is not null)
+        {
+            return LocaleContext.Locale;
+        }
+
         var locale = Site?.Locale ?? string.Empty;
 
         if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Locale) == false)

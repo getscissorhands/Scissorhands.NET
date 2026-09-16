@@ -4,12 +4,12 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.7 |
+| Document version | 0.8 |
 | Status | Review-ready |
 | Last updated / PRD consulted | 2026-09-16 |
-| PRD baseline | [PRD.md](PRD.md) v0.11, Review-ready overall with locale-only approval on 2026-09-16; historical approvals retained |
-| Release scope | Retained baseline and completed #81 acceptance plus unimplemented TR-023 locale generation; #89 and broader verification remain independent |
-| Code baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the pager acceptance follow-up recorded in this revision |
+| PRD baseline | [PRD.md](PRD.md) v0.12, Review-ready with authorized locale implementation and blocked V-009 prefix acceptance; prior approvals retained |
+| Release scope | Retained baseline/#81 plus implemented TR-023; V-009 actual preview-prefix acceptance remains blocked by #89 |
+| Code baseline | `03af844` plus the locale implementation in this revision; historical V-008 baselines retained |
 | Product owner | @justinyoo, as recorded in the PRD |
 | Execution owners | Not assigned |
 | Intended audience | Engine, theme, and plugin contributors translating the PRD into implementation and verification obligations |
@@ -18,18 +18,19 @@
 | #81 scoped approval | @justinyoo approved TR-021/TR-022, including the confirmed TG-006 compatibility policy and V-008 evidence requirements, on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Feature decision | @justinyoo confirmed #81's replacement scope and two-tier compatibility policy on 2026-09-13; TR-021/022 elaborate those decisions without claiming delivered behavior |
 | Locale scoped approval | Explicit user approval of PRD/TRD/TDD only for this scope on 2026-09-16; reviewed document revision `94fc60b`. This entry records approval without changing requirements or document versions |
+| Implementation authorization | @justinyoo separately requested implementation within the agreed scope on 2026-09-16; recorded code/verification does not authorize broader work or release |
 
 **Baseline rule:** the PRD owns product scope and acceptance. This TRD elaborates technical obligations without modifying the PRD. V-001 through V-007 remain open broad programs; V-008 records scoped execution and remaining #81 acceptance. Only the explicitly recorded runs establish evidence, not document generation or approval.
 
-**Readiness:** v0.7 remains Review-ready overall against PRD v0.11, with explicit locale-only approval of TR-023 and its shared-contract/V-009 obligations. TG-007's product choices are resolved; DQ-009 integration checks and other recorded gaps remain. TR-023 is unimplemented, and sign-off is not execution evidence or implementation/release authorization.
+**Readiness:** v0.8 remains Review-ready overall against PRD v0.12, retaining v0.7's locale-only approval. TR-023 is implemented and DQ-009's scoped integration is covered. V-009 records passing .NET/browser/root-preview evidence but remains incomplete because #89 still fails actual prefix requests. Other gaps and release boundaries remain intact.
 
 ## 1. Purpose and source relationship
 
-The system converts local Markdown and configuration into static site artifacts using compiled Razor themes and optional plugins. This TRD supports PRD FR-001 through FR-012 and NFR-001 through NFR-010. TR-023 qualifies retained root/tag/navigation contracts only for the new locale-enabled behavior; current behavior and disabled-mode compatibility remain distinguishable from the unimplemented target.
+The system converts local Markdown and configuration into static site artifacts using compiled Razor themes and optional plugins. This TRD supports PRD FR-001 through FR-012 and NFR-001 through NFR-010. TR-023 qualifies retained root/tag/navigation contracts only for the new locale-enabled behavior; disabled-mode compatibility and the implemented locale behavior remain distinct from outstanding acceptance evidence.
 
 [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md) establishes historical intent. Its assistant-proposed renderer snippets, route crawling, general asset copying, feeds, search, and example plugins are not additional requirements. The current PRD governs those scope distinctions.
 
-Source code and guides describe the implementation; [TDD.md](TDD.md) v0.8 adds the approved, unimplemented locale design while retaining earlier design/evidence. PRD V-008 owns #81 results; V-009 is the pending locale-extension record. No wider conformance claim is inferred.
+Source and guides describe the implementation; [TDD.md](TDD.md) v0.9 records its mechanisms and limitations. PRD V-008 owns historical #81 results; V-009 owns locale evidence and the remaining #89 blocker. No wider conformance claim is inferred.
 
 ## 2. Technical scope and boundaries
 
@@ -58,7 +59,7 @@ FR-012 adds generated locale collections and the default-locale root redirect un
 | Route integrity | Generator preflights planned page routes and rejects relative path segments and collisions | Establish containment across filesystem links, asset ownership, and any plugin-transformed output routes in V-001; preflight alone is not complete evidence |
 | Navigation and URLs | Engine supplies a per-generation navigation hierarchy; shared helpers format content/theme/image/tag/locale references; nested page indexes infer directory routes | Include hidden/missing ancestors, layout delivery, encoded links, route migration, and client interaction in V-003/V-005/V-007; neither formatting nor markup tests establish scheme safety or preview prefix mounting |
 | #81 reading sequence | Implemented two-tier order, retained slug grouping and immutable page context | Scoped V-008 acceptance passed, including ratios and three-engine checks. Preview mounting remains #89/V-003 work |
-| Locale collections | Current generator uses a root homepage and shared tag/navigation data | TR-023 requires per-locale generation and root/legacy redirects under the confirmed FR-012 choices; V-009 remains unexecuted |
+| Locale collections | TR-023 implements per-locale generation/context, scoped navigation and root/conditional legacy redirects; disabled mode remains shared | V-009 records 620 .NET and 60 final browser passes plus root-preview regeneration; actual preview-prefix requests remain blocked by #89 |
 | Output lifecycle | Application clears initial output; generator writes files directly; preview rebuilds reuse the output directory | Verify reported failures and documented partial/stale output behavior, not an unpromised atomicity guarantee |
 | Cancellation | Services expose tokens; renderer checks before rendering; production CLI supplies `CancellationToken.None` | Preserve contract-level cancellation without asserting interruptibility or a CLI cancellation deadline |
 | Theme/client quality | Default theme has responsive styling, labelled controls, and a persisted light/dark preference | Evaluate the agreed accessibility/browser matrix in V-005 rather than infer conformance from source affordances |
@@ -121,7 +122,7 @@ Applicability is separate from whether implementation evidence exists.
 
 ## 4. Technical requirements
 
-Each `TR-...` is stable; **must** expresses obligation, not complete verification. v0.7 retains TR-001 through TR-022 and adds unimplemented TR-023 against PRD v0.11. Historical approvals, feature evidence ownership and broader programs remain intact.
+Each `TR-...` is stable; **must** expresses obligation, not complete verification. v0.8 retains all 23 requirement IDs and records TR-023 implementation against PRD v0.12. Historical approvals, feature evidence ownership and broader programs remain intact.
 
 ### TR-001: Execute the selected application mode
 
@@ -277,7 +278,7 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 
 ### TR-018: Deliver the agreed built-in-theme client behavior
 
-- **State / source:** Confirmed shared requirement; PRD v0.11 FR-010 and NFR-008, retaining the user's broader quality decision.
+- **State / source:** Confirmed shared requirement; PRD v0.12 FR-010 and NFR-008, retaining the user's broader quality decision.
 - **Rationale / obligation:** To make generated pages usable, the built-in theme must support the agreed browser matrix, keyboard navigation, visible focus, meaningful control labels, and readable light/dark contrast.
 - **Acceptance:** Evaluate ordinary reading/navigation and the theme control on current stable desktop Edge/Chrome/Firefox/Safari, Android Chrome, and iOS Safari; record actual versions/platforms/devices. With JavaScript and storage available, the light/dark selection persists. Page title/description/locale follow the document/site fallback contract.
 - **Navigation / tags:** Render page nodes as anchors and null-URL groups as text, with separate labelled disclosure buttons and accurate expanded state. JavaScript enables mouse/touch/Enter/Space toggling, closes the applicable group on Escape and restores button focus, and dismisses menus outside navigation. Without JavaScript, eligible child links remain visible. Render normalized tag links on both posts and pages.
@@ -327,7 +328,7 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 
 ### TR-023: Generate and link locale-scoped collection pages
 
-- **State / source:** Approved by @justinyoo on 2026-09-16 within the locale-only sign-off, including its shared-contract and V-009 obligations under FR-012. TG-007 records resolved product dependencies; DQ-009 integration checks remain. Mandatory wording describes the target, not implementation or whole-document approval.
+- **State / source:** Locale-only approval followed by a separate implementation request from @justinyoo on 2026-09-16. Implemented, including optional context/helper integration and scoped snapshot regressions; TG-007/DQ-009 record the decision/integration disposition. V-009 remains incomplete under #89, not an implementation or whole-document approval claim based only on sign-off.
 - **Rationale / enablement:** With `UseLocaleInUrl: true`, the engine must compose home/tag routes and content from one consistently resolved locale scope. False must retain existing root/shared-collection behavior, source rules and 404 behavior. No new enablement flag or supported-locale list is introduced.
 - **Locale identity / inventory:** Use `ContentUrlHelper.GetLocaleSegment` consistently to key `Site.Locale` and effective document locales; equivalent normalized spellings share a scope. Inventory is the default plus locales of loaded, published non-404 posts/pages, including navigation-hidden pages; exclude drafts and do not infer membership from slugs/folders. Retain frontmatter-over-site fallback and FR-002 future-date behavior. With routing enabled, an empty/unsafe default or effective locale cannot produce an invalid root target or unsafe path; fail contextually. This is not a new culture-name whitelist or broader URL-scheme policy.
 - **Collection acceptance:** Generate one homepage at `<locale>/` per participating locale, even with no posts. Its tag index and individual tag routes are under `<locale>/tags`, generated only when that locale has eligible tagged content. No tags means no built-in Tags link. Include only that locale's loaded eligible documents, retaining custom-404 exclusion and existing post/tagged-page ordering; do not invent another locale's content for empty collections.
@@ -344,7 +345,7 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 
 ### Product-to-technical coverage
 
-All active references below use PRD v0.11. V-008 retains historical #81 results; V-009 holds pending locale-extension evidence. Neither a mapping nor a decision establishes passing implementation.
+All active references below use PRD v0.12. V-008 retains historical #81 results; V-009 records locale execution and the remaining prefix failure. Neither a mapping nor a decision substitutes for those results.
 
 | PRD ID | TRD coverage | Disposition |
 | --- | --- | --- |
@@ -359,7 +360,7 @@ All active references below use PRD v0.11. V-008 retains historical #81 results;
 | FR-009 | TR-012/016/020 | Watcher serialization, failures, output lifecycle |
 | FR-010 | TR-005/006/011/017/018 | Layout-only hierarchy, compatibility, shared URLs, client behavior and tag links; TG-002 retains contrast-method detail |
 | FR-011 | TR-021/TR-022 | Feature-owned ordering, compatibility, adjacency and rendering criteria, verified by V-008; inherit TR-005/006/011/013/014/015/016/017/018 as applicable shared constraints, not completion claims; TG-006 policy resolved |
-| FR-012 | TR-023; TR-002/003/005/006/011/017/018/021/022 as qualified | Confirmed locale behavior and technical acceptance; TG-007 product choices resolved, V-009 has no execution evidence |
+| FR-012 | TR-023; TR-002/003/005/006/011/017/018/021/022 as qualified | Implemented locale behavior and migration; product/integration choices resolved within scope, V-009 has passing evidence and a reproduced #89 blocker |
 | NFR-001 | TR-007/009/015; Section 2 | Local/executable trust boundary; no added identity service |
 | NFR-002 | TR-003/008/013 | Required root/ownership invariants; implementation evidence pending |
 | NFR-003 | TR-014 | Encoding/raw/URL boundary; TG-001 records the unspecified scheme-context policy |
@@ -402,7 +403,7 @@ The original V-001 through V-007 programs retain their broad scope. V-008 separa
 | V-006 | TR-019 | Actual-blog measurements with workload/environment/method; TG-003 supplies execution inputs | Pending; no measurements or numerical performance target |
 | V-007 | TR-001 through TR-012, TR-015 through TR-018, TR-020 | Baseline unit/component suites, sample build/preview, navigation/route/helper regressions, migration, and recorded CI results | Open; may cite V-008 for feature-specific regression evidence, not full-area completion |
 | V-008 | TR-021/TR-022; scoped shared constraints | Existing feature checks plus approved ratios and three-engine desktop/mobile automation | Passed locally: 42 browser and 4 math cases, 168 measurements, minima 8.58:1 text / 9.51:1 focus; 493 .NET cases pass. Full record in PRD V-008; broader scopes remain open |
-| V-009 | TR-023 and affected shared contracts | Mixed-locale generation, root/conditional legacy redirects, empty/tagless scopes, 404 mismatch, root/subpath HTTP, disabled mode, authoring, collisions, context/navigation and invalid inputs | Product choices settled; implementation/execution pending. #89 remains an actual-preview dependency for prefix requests |
+| V-009 | TR-023 and affected shared contracts | Mixed-locale generation/context, root/legacy redirects, empty/tagless scopes, 404, HTTP, disabled mode, authoring, ownership and invalid inputs | 620 .NET tests, final 60 browser cases and root-preview/regeneration pass. Actual `/docs/` preview routes still return 404 under #89; no complete feature-acceptance claim |
 
 ### Technical acceptance and release relationship
 
@@ -426,7 +427,7 @@ Document approval records acceptance of the technical obligations; it does not s
 | TG-004 | Confirmed limitation: source inspection and selected test references do not establish complete route-composition, containment, final-route, asset, cancellation, or browser coverage | TR-003/008/012 through TR-018/020, V-001 through V-005 and V-007 | Verification/fix work remains pending. Do not reinterpret missing evidence as either a passed guarantee or automatic failure | Unassigned; execute the already deferred PRD verification, include combined date/locale/existing-prefix cases, and track reproducible gaps |
 | TG-005 | Historical approvals and the 2026-09-16 locale-only approval retained; no whole-document approval of other revisions | TRD revisions outside the #81 and locale approval scopes; PRD Q-004 | Scoped sign-offs do not supply execution results, resolve shared gaps or settle release arrangements | Approver is @justinyoo; remaining execution/release roles are unassigned |
 | TG-006 | Resolved and implemented: file-backed source order first, then source-less ordinal title/route order, with one combined adjacency sequence | PRD FR-011; TR-021/TR-022 under TR-005/011; TDD DQ-008 | No remaining source-less policy/integration gap in this implementation; Windows regressions cover all-file/all-source-less/mixed/direct/explicit-tree cases. Overall V-008 blockers are separate | Retain decision and implementation evidence under V-008; no broad acceptance or release claim |
-| TG-007 | Resolved product dependency and locale-only TR-023 approval by @justinyoo on 2026-09-16 | FR-012/TR-023, affected TR-002/003/005/006/011/017/018/021/022; V-009 | No unanswered locale product choice or scoped document-approval decision remains. DQ-009 integration checks, implementation and migration/HTTP evidence remain; TG-001 and DQ-006 are not resolved by approval | Implement only after authorization; use approved DES-013 and retained DQ-009 checks, with V-009 for evidence |
+| TG-007 | Resolved choices/approval, followed by authorized TR-023 implementation on 2026-09-16 | FR-012/TR-023 and affected shared contracts; V-009 | Scoped context/helper/snapshot integration is implemented and tested. Actual prefix preview remains blocked by #89; wider TG-001/DQ-006 obligations are not closed | Retain approved DES-013 and V-009 results; recheck actual prefix requests after #89, without waiving other shared obligations |
 
 Within-process watcher serialization is defined; cross-process coordination, transactional rebuilds, plugin side-effect idempotency, and guaranteed source snapshots are not added. A future requirement for those behaviors must go through the PRD rather than appearing as an implicit locking/retry design here.
 
@@ -451,14 +452,15 @@ Within-process watcher serialization is defined; cross-process coordination, tra
 | 2026-09-16 | Draft TR-023 against PRD v0.11 | Requested locale-document revision and explicit default-locale root redirect selection | Add V-009/TG-007 traceability, qualify retained routing/navigation contracts and keep implementation/presentation/migration decisions explicit; no runtime or prior-approval changes |
 | 2026-09-16 | Reconcile confirmed locale choices | @justinyoo selected PRD Q-007 through Q-012 | Resolve TG-007's product decisions, define inventory/authoring/scoping/redirect/404 acceptance and retain shared gaps and unimplemented status; no whole-document sign-off |
 | 2026-09-16 | Approve TRD v0.7 only for the locale scope | Explicit @justinyoo approval of PRD/TRD/TDD only for this scope, reviewing `94fc60b` | Approve TR-023 and feature application of shared/V-009 obligations; retain DQ-009 integration checks, broader gaps, #89 and historical approvals. No implementation, evidence or release claim |
+| 2026-09-16 | Record authorized TR-023 implementation in v0.8 | User requested implementation within approved scope; PRD V-009 records execution | Implement context, scoped generation/navigation, redirects, validation and migration without public API removal; preserve #89's failed prefix acceptance and wider gaps |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall against PRD v0.11 with locale-only approval of TR-023 and its applicable shared/V-009 obligations. No whole-document/release sign-off is inferred.
-- **Material limitations:** The design approach is approved, but DQ-009 integration checks remain and implementation/V-009 execution have not begun. #89, wider TG-001/DQ-006 interactions, broad TG-002/V-005 work and other shared gaps remain explicit. No V-008 acceptance is reopened.
-- **Approval:** @justinyoo approved this locale scope on 2026-09-16. Historical sign-offs and #81's separately authorized implementation remain intact. The new sign-off does not authorize locale implementation or release, approve unrelated revisions or resolve existing gaps.
-- **Reviewer pass:** Reconciled all 23 IDs with PRD v0.11/TDD v0.8, including scope qualifications, locale identity, empty/legacy/404 cases and evidence ownership. Prior runtime results remain historical; no locale checks were executed.
-- **Review limitations:** Historical #81 engine-based acceptance does not cover TR-023/V-009. No locale execution, new real-device matrix, full audit, benchmark or release is claimed.
+- **Supported status:** Review-ready overall against PRD v0.12, retaining locale-only approval and the subsequent implementation authorization. No whole-document/release sign-off is inferred.
+- **Material limitations:** V-009 records scoped passing results, with actual prefix preview still blocked by #89. DQ-009 integration is covered, not wider TG-001/DQ-006 or full asset/link safety. Other broad programs remain open; no V-008 acceptance is reopened.
+- **Approval:** @justinyoo approved this scope then separately requested implementation on 2026-09-16. The request authorized recorded code/verification, not unrelated revisions, closure of broader gaps or release. Historical sign-offs remain intact.
+- **Reviewer pass:** Reconciled all 23 IDs with PRD v0.12/TDD v0.9, actual APIs/behavior, empty/legacy/404 cases and scoped evidence. Historical results and earlier failures are preserved.
+- **Review limitations:** No passing actual preview-prefix acceptance, real-device matrix, full audit, benchmark or release is claimed.
 
 ## 7. Reference map
 
@@ -468,7 +470,7 @@ Within-process watcher serialization is defined; cross-process coordination, tra
 | Public usage and migration | [Root guide](README.md), [Core](src\ScissorHands.Core\README.md), [Plugin](src\ScissorHands.Plugin\README.md), [Theme](src\ScissorHands.Theme\README.md), [Web](src\ScissorHands.Web\README.md) |
 | Runtime and content | [Application](src\ScissorHands.Web\ScissorHandsApplication.cs), [loader](src\ScissorHands.Web\Loaders\ContentLoader.cs), [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs), [renderer](src\ScissorHands.Web\Renderers\ComponentRenderer.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs) |
 | Model and configuration contracts | [ContentDocument](src\ScissorHands.Core\Models\ContentDocument.cs), [ContentMetadata](src\ScissorHands.Core\Models\ContentMetadata.cs), [SiteManifest](src\ScissorHands.Core\Manifests\SiteManifest.cs), [ThemeManifest](src\ScissorHands.Core\Manifests\ThemeManifest.cs), [PluginManifest](src\ScissorHands.Core\Manifests\PluginManifest.cs) |
-| Navigation, URLs, and design | [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs), [builder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs), [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs), [website handoff](docs\website-documentation.md), [TDD v0.8](TDD.md) |
+| Navigation, URLs, and design | [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs), [builder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs), [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs), [website handoff](docs\website-documentation.md), [TDD v0.9](TDD.md) |
 | Implemented reading order and adjacency | [Reading order](src\ScissorHands.Web\Navigation\PageReadingOrder.cs), [PageNavigation](src\ScissorHands.Core\Models\PageNavigation.cs), PRD FR-011/V-008, TR-021/TR-022 |
 | Extension implementation evidence | [Plugin runner](src\ScissorHands.Web\Runners\PluginRunner.cs), [dependency resolver](src\ScissorHands.Web\Runners\PluginDependencyResolver.cs), [theme resolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs), [theme service](src\ScissorHands.Web\Services\ThemeService.cs) |
 | Standards and verification conventions | [AGENTS.md](AGENTS.md), [SDK configuration](global.json), [build settings](Directory.Build.props), [CI](.github\workflows\main.yaml), [sample guide](samples\ScissorHands.Sample\README.md) |

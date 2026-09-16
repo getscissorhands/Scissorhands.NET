@@ -11,6 +11,12 @@ namespace ScissorHands.Theme;
 public abstract class NotFoundViewBase : ComponentBase
 {
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="ContentDocument"/> instance.
     /// If a page document with the slug <c>404.html</c> exists, it will be provided here.
     /// </summary>

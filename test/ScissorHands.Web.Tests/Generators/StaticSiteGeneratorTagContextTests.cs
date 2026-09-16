@@ -22,12 +22,14 @@ namespace ScissorHands.Web.Tests.Generators;
 public class StaticSiteGeneratorTagContextTests
 {
     [Theory]
-    [InlineData(false, "/", false)]
-    [InlineData(true, "/", true)]
-    [InlineData(false, "/blog/", true)]
-    [InlineData(true, "/blog/", false)]
+    [InlineData(false, "/", false, true)]
+    [InlineData(true, "/", true, true)]
+    [InlineData(false, "/blog/", true, true)]
+    [InlineData(true, "/blog/", false, true)]
+    [InlineData(false, "/", false, false)]
+    [InlineData(true, "/blog/", true, false)]
     public async Task Given_TaggedContent_When_BuildInvoked_Then_It_Should_ExposeResolvedRoutesWithoutChangingMetadata(
-        bool preview, string baseUrl, bool customNotFound)
+        bool preview, string baseUrl, bool customNotFound, bool useLocale)
     {
         // Arrange
         var fileSystem = new MockFileSystem();
@@ -42,8 +44,9 @@ public class StaticSiteGeneratorTagContextTests
             Locale = "ko-KR",
             SiteUrl = "https://example.com",
             BaseUrl = baseUrl,
-            UseLocaleInUrl = true,
+            UseLocaleInUrl = useLocale,
         };
+        var prefix = useLocale ? "ko-kr/" : string.Empty;
         var post = new ContentDocument
         {
             Kind = ContentKind.Post,
@@ -106,7 +109,7 @@ public class StaticSiteGeneratorTagContextTests
                 var html = call.ArgAt<string>(0);
                 var document = call.ArgAt<ContentDocument>(1);
                 hookDocuments.Add(document.Metadata.Slug, document);
-                if (document.Metadata.Slug.StartsWith("tags", StringComparison.Ordinal))
+                if (document.Metadata.Slug.StartsWith(prefix + "tags", StringComparison.Ordinal))
                 {
                     document.Html.ShouldBe(html);
                     observations.Documents.ContainsKey(document.Metadata.Slug).ShouldBeTrue();
@@ -125,9 +128,9 @@ public class StaticSiteGeneratorTagContextTests
         var parser = new HtmlParser();
         var expectedTags = new Dictionary<string, string>
         {
-            ["tags"] = "Tags",
-            ["tags/plugins"] = "Tag: plugins",
-            ["tags/c%23%20%2F%20%3Ctools%3E"] = "Tag:   c# / <tools>  ",
+            [prefix + "tags"] = "Tags",
+            [prefix + "tags/plugins"] = "Tag: plugins",
+            [prefix + "tags/c%23%20%2F%20%3Ctools%3E"] = "Tag:   c# / <tools>  ",
         };
         observations.Documents.Keys.ShouldBe(expectedTags.Keys, ignoreOrder: true);
         foreach (var (route, hookTitle) in expectedTags)
@@ -139,7 +142,7 @@ public class StaticSiteGeneratorTagContextTests
             document.Html.ShouldBeEmpty();
             document.Metadata.Title.ShouldBeEmpty();
             document.Metadata.Description.ShouldBeNull();
-            document.Metadata.Locale.ShouldBeNull();
+            document.Metadata.Locale.ShouldBe(useLocale ? "ko-kr" : null);
             document.Metadata.Author.ShouldBeNull();
             document.Metadata.TwitterHandle.ShouldBeNull();
             document.Metadata.HeroImage.ShouldBeNull();
@@ -159,14 +162,14 @@ public class StaticSiteGeneratorTagContextTests
             html.QuerySelector("meta[name='route-preview']")!.GetAttribute("content").ShouldBe(preview.ToString());
             html.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent).ShouldBe(["Home", "Page title", "Tags"]);
             html.QuerySelectorAll(".page-navigation").ShouldBeEmpty();
-            html.QuerySelector("h1")!.TextContent.ShouldBe(route == "tags" ? "Tags" : $"#{hookTitle["Tag: ".Length..]}");
+            html.QuerySelector("h1")!.TextContent.ShouldBe(route == prefix + "tags" ? "Tags" : $"#{hookTitle["Tag: ".Length..]}");
             html.QuerySelectorAll("tools").ShouldBeEmpty();
         }
 
-        using var tagHtml = parser.ParseDocument(ReadOutput("tags/plugins/index.html"));
+        using var tagHtml = parser.ParseDocument(ReadOutput(prefix + "tags/plugins/index.html"));
         tagHtml.QuerySelectorAll("main a").Select(link => link.TextContent.Trim()).ShouldContain("Post title");
         tagHtml.QuerySelectorAll("main a").Select(link => link.TextContent.Trim()).ShouldContain("Page title");
-        using var indexHtml = parser.ParseDocument(ReadOutput("index.html"));
+        using var indexHtml = parser.ParseDocument(ReadOutput(prefix + "index.html"));
         indexHtml.Title.ShouldBe(site.Title);
         using var postHtml = parser.ParseDocument(ReadOutput("ko-kr/post/index.html"));
         postHtml.Title.ShouldBe("Post title | Site title");

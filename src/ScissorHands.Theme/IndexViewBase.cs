@@ -12,6 +12,12 @@ namespace ScissorHands.Theme;
 public abstract class IndexViewBase : ComponentBase
 {
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the list of <see cref="ContentDocument"/> instances.
     /// </summary>
     [CascadingParameter]

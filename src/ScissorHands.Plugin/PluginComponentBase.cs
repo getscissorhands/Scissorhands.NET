@@ -41,6 +41,12 @@ public class PluginComponentBase : ComponentBase
     protected ContentDocument? Document { get; set; }
 
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    protected LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the cascaded list of <see cref="PluginManifest"/> instances.
     /// </summary>
     [CascadingParameter]

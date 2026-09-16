@@ -134,7 +134,7 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | `Theme` | Theme slug; use `default` for the built-in theme |
 | `SiteUrl` | Public site URL |
 | `BaseUrl` | Site base path, such as `/` or `/project/` |
-| `UseLocaleInUrl` | Include a normalized locale prefix in content routes |
+| `UseLocaleInUrl` | Generate locale-prefixed content, home/tag collections and locale-scoped navigation |
 | `UseDateInPostUrl` | Include the publication date in post routes |
 | `Debug` | Site debug setting |
 
@@ -159,6 +159,46 @@ The `Plugins` array selects installed plugins by ID:
 ```
 
 `Name` is optional display metadata. Options are plugin-specific; validate and interpret them in the plugin rather than assuming every plugin supports the same keys. Installed plugins without a matching manifest remain disabled.
+
+### Locale-specific sites
+
+With `Site.UseLocaleInUrl: true`, the engine generates `Site.Locale` plus the effective locales of published non-404 posts and pages. Frontmatter `locale` takes precedence over the site default. Locale keys are trimmed, lowercased, and normalize underscores/forward slashes to hyphens; equivalent spellings such as `ko-KR` and `ko_KR` share one scope. Draft-only locales are excluded; future dates and hidden-navigation pages retain their normal publication rules.
+
+For `Site.Locale: "en-US"` and `BaseUrl: "/blog/"`:
+
+| Surface | URL / behavior |
+| --- | --- |
+| Root | `/blog/` redirects to `/blog/en-us/` |
+| Locale homepages | `/blog/en-us/`, `/blog/ko-kr/`, each listing only its own posts |
+| Locale tag index | `/blog/ko-kr/tags`, only if Korean content has tags |
+| Locale tag view | `/blog/ko-kr/tags/dotnet`, containing only Korean tagged content |
+| Legacy tag URL | `/blog/tags/dotnet` redirects only if `/blog/en-us/tags/dotnet` exists |
+| Shared not-found page | `/blog/404.html`, using the site-default locale |
+
+Every discovered locale has a generated homepage, including page-only locales. The default homepage is always generated, even when empty. A locale without eligible tags has no tag pages or built-in Tags link. Home/site-title links, tag links, navigation and previous/next stay within the active locale; there is no automatic cross-language fallback or language switcher.
+
+The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. Locale redirects require a rooted `BaseUrl` ending in `/`; external URLs, traversal, encoded separators and malformed percent escapes fail validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the static host's normal 404 behavior. Initial builds are clean, but an in-place preview can retain old locale/redirect files until restarted.
+
+Keep `contents\posts` and `contents\pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
+
+```text
+contents\
+  posts\
+    en-us\hello.md
+    ko-kr\hello.md
+  pages\
+    en-us\about.md
+    ko-kr\about.md
+    not-found.md
+```
+
+Use `locale: ko-KR` with `slug: about` in the Korean page to obtain `/blog/ko-kr/about`. Explicit locale-free slugs avoid coupling URLs to source folders; when omitted, existing directory-based inference still applies. A matching leading locale is recognized before post-date composition to avoid duplicating it. Folders with a different name are not stripped, and `contents\<locale>\posts` is not a discovery root.
+
+Home/tag pages are generated, not additional Markdown sources. A page at a generated locale-home or tag/redirect destination fails as an output collision; for example, a Korean `pages\ko-kr\index.md` needs a distinct explicit slug rather than claiming `/ko-kr/`. Empty/unsafe locale segments are rejected; locale-enabled generated-page and content-image destinations reject linked ancestors. This is not a comprehensive audit of input links or theme-service copying.
+
+Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. `Site.Locale` is never mutated between renders. With locale routing disabled, the existing root homepage, shared tag pages and unprefixed navigation behavior remain unchanged.
+
+**Serving boundary:** generating locale directories does not mount `Site.BaseUrl` in preview. [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) remains the separate prefix-mount defect; root preview and correctly mounted static hosts can exercise locale output independently.
 
 ## Content and frontmatter
 
@@ -207,9 +247,9 @@ The built-in theme displays tags as links below page and post content. Each link
 
 Tags on content remain optional. A page or post without tags is generated normally, is omitted from tag listings, and retains its independently configured navigation visibility. Requiring tag-view components in a theme does not require authors to assign tags.
 
-If there is no eligible tagged content anywhere in the site, the engine skips generating the tag index and individual tag pages. The theme must still provide both tag-view components as part of its rendering contract, even though those views are not invoked for that build.
+If there is no eligible tagged content, the engine skips the tag index and individual tag pages. With locale routing enabled this rule applies independently to each locale. The theme must still provide both tag-view components even when those views are not invoked.
 
-**Current limitation:** the built-in layout always includes a Tags navigation link. On an entirely untagged site, that link can point to a missing tag index. This is existing behavior, not a requirement that pages or posts have tags.
+**Disabled-mode limitation:** without locale context, the built-in layout retains its existing Tags link even on an untagged site. Locale-enabled rendering omits that link when the active locale has no tags. Neither mode requires every post or page to have tags.
 
 Use one H1 in the body when using the built-in views, then H2/H3 for sections. Other themes can choose a different heading layout. Do not assume the engine itself inserts an H1 from frontmatter.
 
@@ -332,7 +372,7 @@ Groups do not create pages, output files, or placeholder links. Locale routing p
 
 ### Rendering and interaction
 
-The engine builds an immutable `NavigationTree` once per generation and supplies it to every layout: home, posts, pages, tag lists, individual tags, and 404.
+The engine builds immutable navigation once per generation, or once per active locale when locale routing is enabled. Home, posts, pages and tag views receive their locale's tree and reading sequence; the shared 404 receives the default locale's navigation. Previous/next never cross locale boundaries, including the file-backed/source-less boundary.
 
 The built-in theme renders page nodes as links and missing-parent nodes as plain text. Adjacent buttons expand and collapse child lists. Mouse, touch, Enter, Space, and Escape are supported. Escape closes the current group and restores focus to its button; moving focus or clicking outside navigation closes the menus.
 
@@ -355,6 +395,8 @@ Return to the [home page](.).
 ```
 
 The engine renders it through the theme's not-found view and writes `404.html` at the output root, without a locale prefix. It is not written as `404.html/index.html` and is excluded from navigation and tag listings.
+
+With locale routing enabled, the shared 404 must use `Site.Locale`. Omit its locale or supply a normalized-equivalent spelling; an explicit mismatch fails generation with source/field context. It does not create a locale or get translated automatically. Disabled-mode metadata behavior remains unchanged.
 
 If no custom document exists, the engine still generates the not-found page; the built-in theme supplies a default message. Hosting configuration determines when missing requests use the generated file. The current preview server serves `/404.html` directly but does not automatically rewrite unknown URLs to its contents.
 
@@ -476,6 +518,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
     TaggedPages="@TaggedPages"
     Document="@Document"
     PageNavigation="@PageNavigation"
+    LocaleContext="@LocaleContext"
     Plugins="@Plugins"
     Theme="@Theme"
     Site="@Site">
@@ -492,7 +535,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
 </CascadingMainLayoutBase>
 ```
 
-`MainLayoutBase` calculates page title, description, and locale from the site and current document. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
+`MainLayoutBase` calculates page title and description from the site/document. Locale uses the active `LocaleContext` when supplied, otherwise the existing document/site fallback. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
 
 Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `MarkupString` is an explicit raw-HTML trust boundary; render metadata through ordinary Razor expressions so it remains encoded.
 
@@ -512,9 +555,12 @@ The following rendering fragment can be used inside a layout derived from `MainL
 
 <nav aria-label="Primary navigation">
     <ul>
-        <li><a href=".">Home</a></li>
+        <li><a href="@GetHomeUrl()">Home</a></li>
         @RenderNodes(NavigationTree)
-        <li><a href="tags">Tags</a></li>
+        @if (GetTagIndexUrl() is { } tagIndexUrl)
+        {
+            <li><a href="@tagIndexUrl">Tags</a></li>
+        }
     </ul>
 </nav>
 
@@ -542,6 +588,24 @@ The following rendering fragment can be used inside a layout derived from `MainL
 ```
 
 Both collections default to empty lists. They are layout-only parameters, not content-view attributes or automatic cascading values. `Documents` remains the ordered post collection for the home view. Implicit groups are not added to `NavigationPages`.
+
+### Locale render context
+
+`ScissorHands.Core.Models.LocaleContext` is an optional immutable engine snapshot:
+
+| Member | Meaning |
+| --- | --- |
+| `Locale` | Normalized active locale, independent of the unchanged `Site.Locale` default |
+| `Route` | Resolved current route; source documents retain the loaded pre-hook route snapshot |
+| `HomeUrl` | Already escaped, base-relative home URL, such as `ko-kr/` |
+| `TagIndexUrl` | Already escaped, base-relative tag-index URL, or null if the locale has no tags |
+| `GetTagUrl(tag)` | Compose a raw tag with the prepared home URL using shared tag escaping |
+
+Forward `LocaleContext` through `CascadingMainLayoutBase` for view and plugin components. The renderer keeps it out of ordinary view attributes. Full navigation remains layout-only and the seven required theme roles are unchanged.
+
+Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags`; without context they retain those original values. Existing post/page/tag-list `GetTagUrl` wrappers become locale-aware when context exists. Core static helpers keep their context-free contracts. Context values are prepared rendering data, not a general URL sanitizer.
+
+Locale inventory, collections and navigation are prepared from loaded documents before hooks. They are not recomputed when plugins return replacement locale/slug/title metadata; per-document hook propagation is retained without promising cross-collection refresh or a second plugin pass.
 
 Normal generation supplies both navigation parameters automatically. For compatibility, `ComponentRenderer` prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree`.
 
@@ -738,11 +802,11 @@ A valid component ID without a configured manifest leaves `Plugin` null, allowin
 
 ### Generated tag route context
 
-The engine owns generated tag routes and resolves them before Razor rendering. For the tag index and individual tag pages, it supplies the layout's `Document` with a synthetic `ContentKind.Page` whose `Metadata.Slug` is the resolved route (`tags` or the escaped `tags/{tag}` route). Layouts must forward `Document` through `CascadingMainLayoutBase`, as the built-in layout does, for `PluginComponentBase.Document` to receive it.
+The engine resolves tag routes before Razor rendering and supplies a synthetic page `Document` with the final slug (`tags` or `tags/{tag}` when disabled; `<locale>/tags` or `<locale>/tags/{tag}` when enabled). Locale-enabled homepages also receive a route-only rendering document. Layouts must forward `Document` and `LocaleContext` through `CascadingMainLayoutBase` for plugin components to receive them.
 
-This rendering document is route-only: its title, Markdown, HTML, and source path are empty, and it has no document-specific description, locale, author, Twitter handle, image, or publication date. Existing site-level layout metadata and tag-view headings remain unchanged. A non-null `Document` does not imply a post; components should use `Kind` and the available metadata. Tag collections, layout-only navigation, and empty tag-page adjacency are unchanged.
+The rendering document's title, Markdown, HTML and source path are empty, with no document-specific description, author, Twitter handle, image or publication date. `Metadata.Locale` is the active normalized locale when enabled and remains null on disabled-mode tag documents. Site title/description defaults and tag-view headings remain unchanged. A non-null `Document` does not imply a post. Collections/navigation are locale-scoped when enabled; tag-page adjacency remains empty.
 
-Post-HTML hooks retain their existing synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug supplied during Razor rendering. These synthetic pages still bypass the Markdown hooks. When composing publication URLs, respect `Site.SiteUrl` and `Site.BaseUrl`, and use the supplied tag slug without reconstructing it from labels, adding a locale prefix, or escaping it again. For example, tag `C#` has slug `tags/c%23`; with site URL `https://example.com` and base URL `/blog/`, its publication URL is `https://example.com/blog/tags/c%23` in both rendering and post-HTML processing.
+Post-HTML hooks retain synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug/locale supplied during rendering. Synthetic pages, including root/legacy redirects, bypass Markdown hooks and receive post-HTML processing. Compose publication URLs using `Site.SiteUrl`, `Site.BaseUrl` and the supplied slug, without rebuilding or escaping it again. For tag `C#` in `ko-KR` with locale routing enabled, the slug is `ko-kr/tags/c%23`; with site URL `https://example.com` and base `/blog/`, the publication URL is `https://example.com/blog/ko-kr/tags/c%23`.
 
 ### Preview and generated URLs
 
@@ -964,6 +1028,16 @@ Navigation now uses filename-based order for file-backed pages, with index-first
 `PageNavigation` is additive, optional layout/cascading context. Existing custom themes need no new required view role; they opt in by forwarding it through their cascading layout and rendering links in the page view. The built-in theme does this automatically. Post ordering and title ordering in tag collections are unchanged.
 
 Existing public URL-helper signatures remain supported. Shared helpers also make post/tag-list whitespace normalization and content-link escaping consistent with engine route conventions.
+
+### Locale routing migration
+
+Enabling `UseLocaleInUrl` now changes generated collection URLs and navigation scope, not just source-document prefixes. The root becomes a default-locale HTML redirect; home/tag collections and navigation move inside each locale. Unprefixed tag redirects are generated only for existing default-locale destinations. A tag present only in another locale has no legacy redirect, and an empty default locale still has a homepage but no tag index.
+
+Retain frontmatter/site locale fallback and optional organizational folders. Use explicit locale-free slugs to preserve source-independent URLs and resolve any collision with a generated locale homepage/tag/redirect. Existing already-prefixed dated posts now get the effective locale once before the date, rather than duplicating it around the date.
+
+Custom themes should forward `LocaleContext` and adopt the Home/Tags helpers above. Existing public signatures and direct rendering without context remain supported, but hard-coded links are not automatically rewritten. Plugins must consume synthetic route/locale metadata rather than prepend another locale. A custom root 404 with a different explicit locale must be corrected or omit its locale.
+
+Use a rooted `BaseUrl` ending in `/` for locale redirects. No deployment-prefix directories are added to the artifact. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. This change does not implement #89, translate site/theme text or add a language switcher.
 
 ## Source coverage
 

@@ -72,6 +72,63 @@ test("locale-aware links resolve on correctly mounted subpath output", async ({ 
   }
 });
 
+test("locale collections and navigation do not cross language boundaries", async ({ page, localeSite }) => {
+  await page.goto(`${localeSite}/en-us/`);
+  await expect(page.locator(".post-link")).toHaveText(["English post"]);
+  await expect(page.locator(".site-title")).toHaveAttribute("href", "en-us/");
+  await expect(page.locator(".site-header nav a")).toHaveText(["Home", "English about", "English next", "Tags"]);
+  await page.getByRole("link", { name: "Tags", exact: true }).click();
+  await expect(page).toHaveURL(`${localeSite}/en-us/tags/`);
+  await page.locator("main a[href='en-us/tags/dotnet']").click();
+  await expect(page).toHaveURL(`${localeSite}/en-us/tags/dotnet/`);
+  await expect(page.locator("main")).toContainText("English post");
+  await expect(page.locator("main")).not.toContainText("Hello, ScissorHands");
+
+  await page.goto(`${localeSite}/en-us/about/`);
+  await expect(page.locator(".page-navigation-previous")).toHaveCount(0);
+  await page.locator(".page-navigation-next").click();
+  await expect(page).toHaveURL(`${localeSite}/en-us/next/`);
+  await expect(page.locator(".page-navigation-next")).toHaveCount(0);
+  await page.getByRole("link", { name: "Home", exact: true }).click();
+  await expect(page).toHaveURL(`${localeSite}/en-us/`);
+
+  await page.goto(`${localeSite}/ko-kr/`);
+  await expect(page.locator(".post-link")).toHaveText(["Hello, ScissorHands"]);
+  await expect(page.locator(".site-header nav")).not.toContainText("English about");
+});
+
+test("root and legacy redirects work without JavaScript and preserve the base path", async ({ browser, localeSite }, testInfo) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: testInfo.project.use.viewport });
+  try {
+    const page = await context.newPage();
+    for (const [route, target] of [["", "ko-kr/"], ["tags/", "ko-kr/tags/"], ["tags/dotnet/", "ko-kr/tags/dotnet/"]]) {
+      const response = await page.request.get(`${localeSite}/${route}`);
+      expect(response.status()).toBe(200);
+      const html = await response.text();
+      expect(html).toContain(`href="/docs/${target}"`);
+      expect(html).not.toContain("<script");
+      await page.goto(`${localeSite}/${route}`);
+      await expect(page).toHaveURL(`${localeSite}/${target}`);
+      await expect(page.locator("html")).toHaveAttribute("lang", "ko-kr");
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test("tagless and draft-only locales do not create dangling generated links", async ({ page, localeSite }) => {
+  await page.goto(`${localeSite}/ja-jp/`);
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja-jp");
+  await expect(page.locator(".post-link")).toHaveCount(0);
+  await expect(page.locator(".site-header nav a")).toHaveText(["Home"]);
+  for (const route of ["ja-jp/tags/", "de-de/", "tags/english-only/"]) {
+    expect((await page.request.get(`${localeSite}/${route}`)).status()).toBe(404);
+  }
+  for (const route of ["en-us/tags/english-only/", "images/sample.svg", "themes/default/assets/theme.css"]) {
+    expect((await page.request.get(`${localeSite}/${route}`)).status()).toBe(200);
+  }
+});
+
 test("keyboard users can move between the links and follow Next", async ({ page, site }) => {
   await page.goto(`${site}/parent/group/visible-grandchild/`);
   await page.locator(".page-navigation-previous").focus();

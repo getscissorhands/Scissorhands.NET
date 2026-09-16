@@ -47,6 +47,12 @@ vNext changes several collection APIs and requires plugin IDs. Legacy non-cancel
 
 See the [page navigation API reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#pagenavigation-and-pagenavigationlink) and [theme integration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#adjacent-page-context) for their contracts and usage.
 
+## Locale render context
+
+`LocaleContext` is an optional immutable render snapshot with normalized `Locale`, resolved `Route`, base-relative `HomeUrl` and nullable `TagIndexUrl`. A null tag-index target means that locale has no tagged content. `GetTagUrl(tag)` composes a raw tag with the prepared home URL, reusing shared tag escaping without escaping the route twice.
+
+The engine supplies this context only when `Site.UseLocaleInUrl` is enabled. Existing static `ContentUrlHelper` methods retain their context-free behavior; neither the context nor those formatters is a general URL sanitizer. See the [locale context guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context).
+
 ## Learn more
 
 - [ScissorHands.Web package](https://www.nuget.org/packages/ScissorHands.Web)

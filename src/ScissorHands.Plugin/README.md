@@ -49,6 +49,12 @@ The ID must match the installed plugin exactly. Installed plugins without a mani
 
 vNext does not support name-only plugin configuration or Razor selection. Review the migration reference before upgrading older plugins.
 
+## Locale-aware generated pages
+
+When locale routing is enabled, generated home/tag documents carry the resolved route and normalized locale during rendering and post-HTML processing. `PluginComponentBase` also exposes optional cascaded `LocaleContext` when the layout forwards it. Use the supplied route instead of rebuilding it, prepending another locale, or escaping an already escaped tag slug.
+
+The root and supported legacy tag URLs are generated HTML redirects and also receive post-HTML hooks. Synthetic pages do not receive Markdown hooks. `Site.Locale` stays the configured default; it is not changed for each rendered language. Collection membership, navigation and active locale are loaded-document snapshots, not recomputed after metadata-changing hooks. See the [generated route context guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#generated-tag-route-context).
+
 ## Learn more
 
 - [vNext plugin guide (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#plugin-authoring)
