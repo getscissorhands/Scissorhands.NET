@@ -17,7 +17,7 @@ export async function startSampleServer({ prefix = "" } = {}) {
   const directory = path.dirname(fileURLToPath(import.meta.url));
   const root = await realpath(prefix
     ? path.join(directory, "artifacts", "prefix")
-    : path.resolve(directory, "..", "..", "samples", "ScissorHands.Sample", "dist"));
+    : path.resolve(directory, "..", "..", "sample", "dist"));
   const isWithinRoot = candidate => {
     const relative = path.relative(root, candidate);
     return relative !== ".." && !relative.startsWith(`..${path.sep}`) && !path.isAbsolute(relative);

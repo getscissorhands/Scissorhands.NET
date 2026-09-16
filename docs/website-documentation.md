@@ -118,7 +118,7 @@ Generate deployable static files without starting a preview server:
 dotnet run -- --build
 ```
 
-The repository's `samples/ScissorHands.Sample` application demonstrates these features using local project references. Its README retains the sample-specific run instructions.
+The repository's `sample` application demonstrates these features using local project references. Its README retains the sample-specific run instructions.
 
 ## Site configuration
 
@@ -432,16 +432,16 @@ The engine sets `SiteManifest.IsPreview` before plugin hooks and rendering. Plug
 
 ### Sample walkthrough
 
-The [repository sample](../samples/ScissorHands.Sample/README.md) uses local project references and the built-in `default` theme. Its README contains the run commands; the following sources demonstrate the engine's behavior:
+The [repository sample](../sample/README.md) uses local project references and the built-in `default` theme. Run it from the repository-root `sample/` directory, which contains `sample.csproj`. The project inherits the root build settings, is not packable, and retains `ScissorHands.Sample` as its assembly name and root namespace. Its README contains the run commands; the following sources demonstrate the engine's behavior:
 
 | Source | What to explore |
 | --- | --- |
-| [Hello, ScissorHands](../samples/ScissorHands.Sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
-| [About](../samples/ScissorHands.Sample/contents/pages/about.md) | The first page in the sample reading sequence |
-| [Parent](../samples/ScissorHands.Sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
-| [Child](../samples/ScissorHands.Sample/contents/pages/parent/01-child.md), [Visible Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../samples/ScissorHands.Sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
-| [Hidden Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
-| [Not found](../samples/ScissorHands.Sample/contents/pages/not-found.md) | Custom root `404.html` content with locale inherited from the site |
+| [Hello, ScissorHands](../sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
+| [About](../sample/contents/pages/about.md) | The first page in the sample reading sequence |
+| [Parent](../sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
+| [Child](../sample/contents/pages/parent/01-child.md), [Visible Grandchild](../sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
+| [Hidden Grandchild](../sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
+| [Not found](../sample/contents/pages/not-found.md) | Custom root `404.html` content with locale inherited from the site |
 
 The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
 

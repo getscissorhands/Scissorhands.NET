@@ -1,6 +1,6 @@
 # ScissorHands.NET Sample
 
-A runnable sample using the built-in `default` theme and local project references. Requires the [repository SDK](../../global.json).
+A runnable sample using the built-in `default` theme and local project references. Requires the [repository SDK](../global.json).
 
 Run from this directory and select the mode explicitly:
 
@@ -24,4 +24,4 @@ Open the logged preview URL, refresh after edits, and stop with Ctrl+C.
 
 Start with the [post](contents/posts/hello-scissorhands.md), [page tree](contents/pages/parent/index.md), and [custom 404](contents/pages/not-found.md).
 
-See the [sample walkthrough](../../docs/website-documentation.md#sample-walkthrough) for navigation experiments and locale/subpath settings, and the [vNext reference](../../docs/website-documentation.md) for the full guides.
+See the [sample walkthrough](../docs/website-documentation.md#sample-walkthrough) for navigation experiments and locale/subpath settings, and the [vNext reference](../docs/website-documentation.md) for the full guides.

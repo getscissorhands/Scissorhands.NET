@@ -39,7 +39,7 @@ The repository uses Microsoft.Testing.Platform, not VSTest. Use the explicit `--
 
 Add regression tests in the matching test project. Follow nearby `Given_..._When_..._Then_...` tests using xUnit v3, Shouldly, NSubstitute, and bUnit where appropriate. Reuse existing fixtures and isolate filesystem or process-wide state.
 
-For generation, theme, or preview changes, also exercise the [sample](samples/ScissorHands.Sample/README.md). Run it from its own directory with an explicit `--preview` or `--build` argument; stop preview with Ctrl+C. For built-in page-navigation markup or style changes, follow the
+For generation, theme, or preview changes, also exercise the [sample](sample/README.md). Run it from its own directory with an explicit `--preview` or `--build` argument; stop preview with Ctrl+C. For built-in page-navigation markup or style changes, follow the
 [browser acceptance guide](test/browser/README.md) for Chromium, Firefox, and WebKit checks. Documentation-only changes do not require a .NET build.
 
 ## Coding and Documentation

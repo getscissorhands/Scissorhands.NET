@@ -105,7 +105,7 @@ jobs:
         cache-dependency-path: test/browser/package-lock.json
 
     - name: Restore sample dependencies
-      run: dotnet restore ./samples/ScissorHands.Sample/ScissorHands.Sample.csproj
+      run: dotnet restore ./sample/sample.csproj
 
     - name: Install browser test dependencies
       working-directory: test/browser

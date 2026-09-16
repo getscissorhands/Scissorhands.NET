@@ -4,7 +4,7 @@
 
 Start with the [README](README.md) and [documentation website](https://getscissorhands.app/docs/). For the current development line, use the [vNext documentation handoff](docs/website-documentation.md) and [migration guide](docs/website-documentation.md#upgrading-to-vnext). The website may not yet include all vNext behavior.
 
-The [sample guide](samples/ScissorHands.Sample/README.md) covers local preview and static builds. The [Web package guide](src/ScissorHands.Web/README.md) covers application setup and links to the Core, Theme, and Plugin guides.
+The [sample guide](sample/README.md) covers local preview and static builds. The [Web package guide](src/ScissorHands.Web/README.md) covers application setup and links to the Core, Theme, and Plugin guides.
 
 ## Bugs and Feature Requests
 

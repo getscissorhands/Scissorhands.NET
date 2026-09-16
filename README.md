@@ -9,13 +9,13 @@ A .NET 10 static site generator that turns Markdown into HTML using Razor themes
 
 ## Try the sample
 
-Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone this repository, and run from `samples/ScissorHands.Sample`:
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone this repository, and run from `sample`:
 
 ```bash
 dotnet run -- --preview
 ```
 
-Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](samples/ScissorHands.Sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
+Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
 
 ## Packages
 
