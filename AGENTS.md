@@ -10,20 +10,45 @@ Use the SDK selected by [global.json](global.json): .NET 10.0.100 with `latestFe
 
 Restore dependencies and build the solution:
 
+Bash:
+
 ```bash
+dotnet restore ./ScissorHands.slnx
+dotnet build ./ScissorHands.slnx -c Release --no-restore
+```
+
+PowerShell:
+
+```powershell
 dotnet restore ./ScissorHands.slnx
 dotnet build ./ScissorHands.slnx -c Release --no-restore
 ```
 
 Run the tests for the affected project, replacing `Web` as appropriate:
 
+Bash:
+
 ```bash
+dotnet test --project ./test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj -c Release
+```
+
+PowerShell:
+
+```powershell
 dotnet test --project ./test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj -c Release
 ```
 
 Run the full suite after a successful Release build:
 
+Bash:
+
 ```bash
+dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal
+```
+
+PowerShell:
+
+```powershell
 dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal
 ```
 
@@ -31,18 +56,38 @@ dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity nor
 
 Run the sample from its own directory so configuration and content resolve there. For preview, stop the server with Ctrl+C before returning to the root:
 
+Bash:
+
 ```bash
 pushd ./samples/ScissorHands.Sample
 dotnet run -- --preview
 popd
 ```
 
+PowerShell:
+
+```powershell
+Push-Location ./samples/ScissorHands.Sample
+dotnet run -- --preview
+Pop-Location
+```
+
 Generate static output without starting the preview server:
+
+Bash:
 
 ```bash
 pushd ./samples/ScissorHands.Sample
 dotnet run -- --build
 popd
+```
+
+PowerShell:
+
+```powershell
+Push-Location ./samples/ScissorHands.Sample
+dotnet run -- --build
+Pop-Location
 ```
 
 The sample launch profile does not select a mode; pass `--preview` or `--build` explicitly, including in IDE run arguments. Generated output is in the sample's `preview` or `dist` directory. See the [sample guide](samples/ScissorHands.Sample/README.md).
@@ -77,6 +122,7 @@ Read the relevant package README and its linked sections in the [detailed refere
 
 - Follow [.editorconfig](.editorconfig) and nearby code instead of reformatting unrelated files. The configuration specifies CRLF, four-space C# indentation, file-scoped namespaces, and two-space indentation for JSON, XML, and YAML.
 - Use `/` for directory separators in Markdown prose, links, and command/code examples. Preserve non-path escapes such as regex anchors.
+- Provide Bash and PowerShell variants for shell command and script examples in Markdown. Keep the variants equivalent and use shell-native syntax where it differs.
 - Nullable reference types, implicit usings, and warnings-as-errors are enabled in [Directory.Build.props](Directory.Build.props). Do not weaken them to hide errors.
 - Manage dependency versions in [Directory.Packages.props](Directory.Packages.props); add versionless `PackageReference` entries to the appropriate project.
 - Reuse existing validation, path handling, and service abstractions. Surface errors with actionable context; do not swallow exceptions or substitute success-shaped results for invalid configuration or failed generation.

@@ -9,7 +9,15 @@ Install it for custom integrations. Applications normally use [`ScissorHands.Web
 
 ## Install
 
+Bash:
+
 ```bash
+dotnet add package ScissorHands.Core --prerelease
+```
+
+PowerShell:
+
+```powershell
 dotnet add package ScissorHands.Core --prerelease
 ```
 

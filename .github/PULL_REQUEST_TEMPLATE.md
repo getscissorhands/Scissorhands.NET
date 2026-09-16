@@ -34,14 +34,24 @@ The top-level readme for this repo contains a link to each sample in the repo. I
 ## How to Test
 *  Get the code
 
-```
+Bash:
+
+```bash
 git clone [repo-address]
 cd [repo-name]
 git checkout [branch-name]
 ```
 
+PowerShell:
+
+```powershell
+git clone [repo-address]
+Set-Location [repo-name]
+git checkout [branch-name]
+```
+
 * Test the code
-<!-- Add steps to run the tests suite and/or manually test -->
+<!-- Add steps to run the tests suite and/or manually test. Provide Bash and PowerShell variants for shell commands. -->
 ```
 ```
 

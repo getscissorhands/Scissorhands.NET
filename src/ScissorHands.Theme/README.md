@@ -9,7 +9,15 @@ Install this package when authoring a theme. Applications that only consume a th
 
 ## Install
 
+Bash:
+
 ```bash
+dotnet add package ScissorHands.Theme --prerelease
+```
+
+PowerShell:
+
+```powershell
 dotnet add package ScissorHands.Theme --prerelease
 ```
 
