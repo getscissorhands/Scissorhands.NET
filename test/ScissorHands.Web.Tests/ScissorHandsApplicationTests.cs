@@ -18,13 +18,17 @@ namespace ScissorHands.Web.Tests;
 public class ScissorHandsApplicationTests
 {
     [Theory]
-    [InlineData("/", false)]
-    [InlineData("/", true)]
-    [InlineData("/docs/", false)]
-    [InlineData("/docs/", true)]
-    [InlineData("/manual/docs/", false)]
-    [InlineData("/manual/docs/", true)]
-    public async Task Given_BasePathAndLocale_When_PreviewRuns_Then_It_Should_ServePagesAssetsAndDirectoryRedirects(string baseUrl, bool useLocale)
+    [InlineData("/", "/", false)]
+    [InlineData("/", "/", true)]
+    [InlineData("/docs", "/docs/", false)]
+    [InlineData("/docs", "/docs/", true)]
+    [InlineData("/docs/", "/docs/", false)]
+    [InlineData("/docs/", "/docs/", true)]
+    [InlineData("/manual/docs", "/manual/docs/", false)]
+    [InlineData("/manual/docs", "/manual/docs/", true)]
+    [InlineData("/manual/docs/", "/manual/docs/", false)]
+    [InlineData("/manual/docs/", "/manual/docs/", true)]
+    public async Task Given_BasePathAndLocale_When_PreviewRuns_Then_It_Should_ServePagesAssetsAndDirectoryRedirects(string configuredBaseUrl, string baseUrl, bool useLocale)
     {
         var cancellationToken = Xunit.TestContext.Current.CancellationToken;
         var originalDirectory = Directory.GetCurrentDirectory();
@@ -32,7 +36,8 @@ public class ScissorHandsApplicationTests
         try
         {
             Directory.SetCurrentDirectory(temporaryDirectory.FullName);
-            var site = new SiteManifest { BaseUrl = baseUrl, Locale = "ko-KR", UseLocaleInUrl = useLocale };
+            var site = new SiteManifest { BaseUrl = configuredBaseUrl, Locale = "ko-KR", UseLocaleInUrl = useLocale };
+            site.BaseUrl.ShouldBe(baseUrl);
             var route = useLocale ? "ko-kr/parent/child" : "parent/child";
             var postRoute = useLocale ? "ko-kr/2026/09/11/post" : "2026/09/11/post";
             var files = new Dictionary<string, string>

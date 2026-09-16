@@ -125,8 +125,18 @@ public class ComponentRendererCascadingParametersTests
         html.ShouldContain("Hello");
     }
 
-    [Fact]
-    public async Task Given_DefaultThemeAndBaseUrl_When_Rendered_Then_LinksShouldResolveBelowBaseUrl()
+    [Theory]
+    [InlineData("/", "/", false)]
+    [InlineData("/", "/", true)]
+    [InlineData("/docs", "/docs/", false)]
+    [InlineData("/docs", "/docs/", true)]
+    [InlineData("/docs/", "/docs/", false)]
+    [InlineData("/docs/", "/docs/", true)]
+    [InlineData("/manual/docs", "/manual/docs/", false)]
+    [InlineData("/manual/docs", "/manual/docs/", true)]
+    [InlineData("/manual/docs/", "/manual/docs/", false)]
+    [InlineData("/manual/docs/", "/manual/docs/", true)]
+    public async Task Given_DefaultThemeAndBaseUrl_When_Rendered_Then_LinksShouldResolveBelowBaseUrl(string baseUrl, string expected, bool preview)
     {
         var services = new ServiceCollection();
         services.AddLogging();
@@ -135,7 +145,7 @@ public class ComponentRendererCascadingParametersTests
         var renderer = new ComponentRenderer(
             provider.GetRequiredService<IServiceScopeFactory>(),
             provider.GetRequiredService<ILoggerFactory>());
-        var site = new SiteManifest { BaseUrl = "/docs/", Locale = "ko-KR" };
+        var site = new SiteManifest { BaseUrl = baseUrl, Locale = "ko-KR", IsPreview = preview };
         var theme = new ThemeManifest
         {
             Name = "Minimal",
@@ -159,7 +169,7 @@ public class ComponentRendererCascadingParametersTests
         var html = await renderer.RenderAsync<ScissorHands.Web.PageView>(typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
 
         html.ShouldContain("<html lang=\"ko-kr\">");
-        html.ShouldContain("<base href=\"/docs/\"");
+        html.ShouldContain($"<base href=\"{expected}\"");
         html.ShouldContain("href=\"themes/minimal/assets/css/theme.css\"");
         html.ShouldContain("src=\"themes/minimal/assets/js/theme.js\"");
         html.ShouldNotContain("href=\"/themes/");
