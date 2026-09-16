@@ -12,14 +12,15 @@
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
-| Sign-off | Historical v0.6 and v0.8 #81-only approvals retained; the user confirmed v0.10's component criteria on 2026-09-14, not whole-document or release sign-off |
-| Approval scope | Historical v0.6 approval and later #81-only approvals are retained. The 2026-09-16 confirmations cover Q-006 through Q-012, not whole-document sign-off, resolution of unrelated gaps or implementation/release authorization |
+| Sign-off | @justinyoo approved v0.11 for the locale scope only on 2026-09-16; historical v0.6/v0.8 approvals and v0.10 component criteria retained |
+| Approval scope | FR-012, Q-006 through Q-012, V-009 acceptance and RD-006 migration/risk obligations, including their application of shared requirements. No approval of unrelated revisions, waiver of existing gaps, implementation authorization or release sign-off |
 | #81 scoped approval | @justinyoo approved FR-011, V-008's acceptance structure and RD-005's feature mitigation/residual-risk requirements on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Feature decision | @justinyoo confirmed #81's replacement scope and two-tier source-less compatibility policy on 2026-09-13; this is behavior confirmation, not whole-document sign-off or delivered code |
 | Component acceptance | @justinyoo confirmed #81-only contrast thresholds and three-engine desktop/mobile automation on 2026-09-14; [decision record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5654089522) |
 | Locale revision | @justinyoo requested this revision and confirmed Q-006 through Q-012 on 2026-09-16; individual feature decisions are not whole-document sign-off or implementation authorization |
+| Locale scoped approval | Explicit user approval of PRD/TRD/TDD only for this scope on 2026-09-16; reviewed document revision `94fc60b`. This entry records approval without changing requirements or document versions |
 
-**Readiness:** v0.11 is Review-ready with FR-012's product choices confirmed in Q-006 through Q-012. The feature is not implemented; V-009 has no execution evidence. Historical approvals and #81's completed V-008 evidence remain intact, without whole-document approval or implementation/release authorization for the new work.
+**Readiness:** v0.11 remains Review-ready overall with explicit locale-only approval of FR-012, Q-006 through Q-012, V-009 acceptance and RD-006 obligations. The feature is not implemented; V-009 has no execution evidence. Historical approvals and #81's completed evidence remain intact. Scoped sign-off does not resolve technical integration gaps or authorize implementation/release.
 
 **Current versus target behavior:** FR-001 through FR-011 describe the retained implementation unless explicitly qualified. FR-012 owns the confirmed, unimplemented changes to locale-enabled root/index/tag/navigation contracts. `UseLocaleInUrl: false` retains existing behavior. Do not interpret the target as already shipped.
 
@@ -217,7 +218,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 
 ### FR-012: Browse generated collections within a locale
 
-- **State / source:** Confirmed product choices by @justinyoo on 2026-09-16, recorded in Q-006 through Q-012. This is unimplemented feature scope, not authorization to implement or release it.
+- **State / source:** Approved locale scope by @justinyoo on 2026-09-16, including Q-006 through Q-012 and V-009/RD-006 obligations; see Document control. This is unimplemented scope, not authorization to implement or release it.
 - **Actor / rationale:** Visitors reading one language need matching entry and discovery pages instead of returning from localized content to mixed-language listings (J-005). Owners continue authoring Markdown and using Razor themes rather than maintaining collection-page Markdown.
 - **Enablement / compatibility:** Apply the new behavior under `Site.UseLocaleInUrl: true`; preserve current unprefixed generation when false. Existing sites already using true need a documented route migration, not a claim of transparent compatibility.
 - **Locale inventory (Q-007):** Always include `Site.Locale`, plus effective locales of published, non-404 posts/pages. Group normalized equivalents such as `en-US` and `en_US` as one locale. No supported-locale list or inference from directory names is added. Draft-only locales do not participate; publication retains FR-002's rules, including future-dated content. A navigation-hidden but published page still contributes its locale.
@@ -229,7 +230,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Presentation boundary (Q-011):** Generated locale pages expose matching locale metadata/context to themes and plugins. Retain seven theme roles, shared assets and existing site/theme text defaults. No translated UI catalog, translated site settings, language switcher, translation pairing or per-locale 404 is added. An English theme label on a Korean route is not automatically translated by this feature.
 - **Shared 404 (Q-012):** Keep one root `404.html` with default-locale context, including default-locale navigation. When enabled, an explicit custom-404 locale that normalizes differently from `Site.Locale` fails generation with source/field context; omission uses the site default. Equivalent spellings are accepted. Its content remains owner-authored, does not create a locale and is not automatically translated. Disabled-mode behavior remains unchanged.
 - **Acceptance example:** Given published English and Korean posts sharing tag `dotnet`, each locale homepage and tag page lists only its own content and links to the correct locale-prefixed documents. `/blog/` reaches the default locale homepage. With routing disabled, the original root homepage and shared tag listings remain. Route collisions and unsafe destinations fail explicitly rather than overwriting generated collections.
-- **Dependencies / evidence:** Q-006 through Q-012 are resolved product decisions; TR-023/DES-013 define technical acceptance and proposed mechanisms. V-009 owns new evidence; NFR-002/003/005/006/007/008/010 still apply. #89 owns preview mounting independently: creating locale directories does not mount `Site.BaseUrl`, and failed prefix requests block that acceptance rather than counting as passes.
+- **Dependencies / evidence:** Q-006 through Q-012, TR-023 and DES-013/DEC-004 are covered by the locale-only approval. DQ-009's integration checks and wider gaps remain open; approval is not feasibility evidence. V-009 owns new evidence; NFR-002/003/005/006/007/008/010 still apply. #89 owns preview mounting independently: creating locale directories does not mount `Site.BaseUrl`, and failed prefix requests block that acceptance rather than counting as passes.
 
 **Authoring examples:** for `BaseUrl: "/blog/"`, locale routing enabled and dated post URLs enabled, organizational folders plus explicit slugs keep routes independent of source placement:
 
@@ -393,7 +394,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | Q-011 / Confirmed | Routing/filtering and locale context only; unchanged text defaults, shared assets and one default-locale root 404 | FR-012, Theme scope | Selected by @justinyoo on 2026-09-16; translated text/catalogs, language-switching UI and localized 404 variants are outside scope |
 | Q-012 / Confirmed | Reject a custom shared-404 locale that normalizes differently from `Site.Locale` when locale routing is enabled | FR-003/004/012, metadata compatibility | Selected by @justinyoo on 2026-09-16; omission uses site default, equivalent spellings pass, mismatch fails with actionable source/field context |
 
-Historical approvals and evidence remain intact. v0.11 adds FR-012 with Q-006 through Q-012 confirmed, without changing #81's completed acceptance or broader verification. Product decisions are settled; implementation, new evidence and review of proposed technical mechanisms remain separate.
+Historical approvals and evidence remain intact. v0.11's locale scope is approved, including Q-006 through Q-012, without changing #81's completed acceptance or broader verification. Design approval is recorded in TDD v0.8; implementation-detail validation, new evidence and execution authorization remain separate.
 
 ### Decisions and material changes
 
@@ -418,12 +419,13 @@ Historical approvals and evidence remain intact. v0.11 adds FR-012 with Q-006 th
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
 | 2026-09-16 | Draft locale-specific generated collections and confirm the root entry point in v0.11 | @justinyoo requested PRD/TRD/TDD updates and selected redirect to `Site.Locale` | Add FR-012/V-009/RD-006/Q-006 through Q-011; preserve historical IDs/approvals, mark unresolved choices explicitly, and retain #89 as independent mount work. No application implementation |
 | 2026-09-16 | Resolve locale feature choices and issue a Review-ready revision | Explicit selections by @justinyoo for Q-007 through Q-012 | Require discovered locales, organizational folders, isolated browsing, conditional legacy redirects, routing-only presentation and shared-404 mismatch errors; reconcile TRD/TDD without implementation or whole-document sign-off |
+| 2026-09-16 | Approve PRD v0.11 only for the locale scope | Explicit @justinyoo approval of PRD/TRD/TDD only for this scope, reviewing `94fc60b` | Approve FR-012/Q-006 through Q-012/V-009/RD-006 and applicable shared obligations; preserve existing gaps, historical approvals, #89 separation and unimplemented status. No implementation or release authorization |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready. FR-012 product choices Q-006 through Q-012 are confirmed; no unanswered feature product choice remains. Technical mechanism review, implementation and V-009 execution remain separate; broader historical gaps are not declared resolved.
+- **Supported status:** Review-ready overall with locale-only approval. No unanswered feature product choice remains; DQ-009 integration checks, implementation and V-009 execution remain separate. Broader historical gaps are not declared resolved.
 - **Remaining decisions versus execution:** V-008's approved checks pass after the targeted fixes. No feature acceptance gap remains for #81; merging the implementing PR can close it. #89, V-005 and broader release work remain separate.
-- **Approval:** @justinyoo approved the #81-specific requirements and then separately requested implementation on 2026-09-13. Historical approvals remain intact. The implementation request authorized the recorded code and scoped checks, not whole-document sign-off, resolution of shared gaps, publication or deployment.
+- **Approval:** @justinyoo approved this locale scope on 2026-09-16. Historical approvals, including #81's separate 2026-09-13 implementation request, remain intact. The new sign-off approves the locale documents only, not unrelated scope, resolution of existing gaps, implementation, publication or deployment.
 - **Reviewer pass:** Reconciled FR-012 with TRD v0.7/TDD v0.8, disabled-mode/current-behavior qualifications, source/generated ownership, confirmed choices and the migration/404 exceptions. The prior v0.10 review and runtime evidence remain historical, not new locale results.
 - **Review limitations:** Historical #81 automated evidence is complete only for its recorded scope. V-009 has no implementation results; no new accessibility/security audit, physical-device matrix or blog benchmark is claimed.
 
