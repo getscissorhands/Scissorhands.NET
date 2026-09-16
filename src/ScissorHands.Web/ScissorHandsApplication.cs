@@ -4,6 +4,7 @@ using System.Runtime.ExceptionServices;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
+using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Hosting;
@@ -179,6 +180,20 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         else
         {
             _app.Map(pathBase, ConfigurePreviewFiles);
+            _app.Run(context =>
+            {
+                if (context.Request.Path == "/"
+                    && (HttpMethods.IsGet(context.Request.Method) || HttpMethods.IsHead(context.Request.Method)))
+                {
+                    context.Response.Redirect($"{pathBase}/{context.Request.QueryString}");
+                }
+                else
+                {
+                    context.Response.StatusCode = StatusCodes.Status404NotFound;
+                }
+
+                return Task.CompletedTask;
+            });
         }
 
         void ConfigurePreviewFiles(IApplicationBuilder app)

@@ -8,7 +8,7 @@
 | Status | Review-ready |
 | Last updated | 2026-09-16 |
 | Scope | Retained vNext baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting with scoped V-003 evidence; broader verification remains open |
-| Code baseline | `4b32a4c` plus the tested #89 prefix-only follow-up in this revision |
+| Code baseline | `589d45f` plus the tested #89 root-redirect follow-up in this revision |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
@@ -175,7 +175,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Basis / scope:** Confirmed [application](src\ScissorHands.Web\ScissorHandsApplication.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs), and [Web guide](src\ScissorHands.Web\README.md); Supporting.
 - **Actor / rationale:** Owner iterates on content and sees generated results before publishing (J-002, G-002).
 - **Behavior:** Perform initial generation and serve `preview`; watch content/theme file create, change, rename, and delete events, coalesce bursts, and serialize regeneration. Report successful rebuilds and instruct the owner to refresh the browser.
-- **Base path:** Preview serves pages and assets only at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. With `/docs/`, `/docs` redirects to `/docs/`, while `/` and other outside-prefix requests return 404. Configuring `/` retains root hosting. This prefix-only behavior was confirmed by the user on 2026-09-16, superseding the initial implementation's unrequested alias-preservation assumption; see V-003 and TR-017.
+- **Base path:** Preview serves pages and assets only at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. With `/docs/`, browsing `/` redirects to `/docs/` without serving a duplicate homepage at root; `/docs` also redirects to `/docs/`. Other outside-prefix requests return 404. Configuring `/` retains root hosting without a redirect loop. The user confirmed prefix-only serving and then requested the root-redirect exception on 2026-09-16, superseding the initial alias-preservation assumption and the later root 404; see V-003 and TR-017.
 - **Acceptance:** After a successful content edit and rebuild, browser refresh displays the regenerated file. A watcher callback failure is logged; subsequent changes can trigger another rebuild. Initial generation errors propagate rather than being reported as completed builds.
 - **Recovery boundary:** Preview regeneration writes into the existing output, so deleted/renamed sources can leave stale generated files until preview is restarted. Writes are not atomic: a failed build/rebuild may leave partial or mixed output, and initial build/preview startup clears its output folder. Use only a successful production build as a publication candidate; automated cleanup/rollback is not promised.
 
@@ -270,11 +270,17 @@ The historical September 13/14 failures below remain valid for those revisions. 
 
 #### Prefix-only follow-up: 2026-09-16
 
-The user clarified that preview must serve only beneath `Site.BaseUrl` and requested the correction. With a non-root prefix, requests outside the mount now return 404 instead of serving duplicate root aliases; `/docs` still redirects to `/docs/`, and root configuration `/` is unchanged. No new authentication or general URL-normalization policy is introduced.
+The user clarified that preview must serve only beneath `Site.BaseUrl` and requested the correction, committed as `589d45f`. With a non-root prefix, this revision returned 404 outside the mount instead of serving duplicate root aliases; `/docs` still redirected to `/docs/`, and root configuration `/` was unchanged. No new authentication or general URL-normalization policy was introduced. Its root 404 is superseded by the root-redirect follow-up below; these results remain historical evidence for that revision.
 
 On Windows with .NET SDK **10.0.401**, Release configuration, and `4b32a4c` plus this follow-up, the revised tests first failed all four non-root cases because `/` returned 200; both root cases still passed. After isolating static-file middleware inside the prefix branch, all six cases passed, including outside-prefix page/asset GET and CSS HEAD rejection, no outside redirects, locale/date/tag routes, mount/directory redirects with queries, and unchanged file inventories. The affected Web suite passed **290/290** and the full solution passed **503/503**, with no skips, after a successful Release solution build.
 
 Real sample preview passed **74 HTTP checks**: `/` with locale off/on had 12 checks each; `/docs/` with locale off/on had 25 each, using `Locale=ko-KR` and ephemeral loopback ports. Valid page/neighbor/theme/image URLs returned 200, outside-prefix and nonmatching/doubled-prefix requests returned 404, and redirects retained the prefix/query. Each preview contained 21 files with no physical `docs` directory. Configuration overrides were child-process-local, user sample settings were preserved, and all temporary servers were stopped. The earlier 56-check build/preview comparison remains historical evidence, not a rerun claim. Browser/device, third-party plugin and production-host verification were not rerun; broader evidence boundaries remain unchanged.
+
+#### Root-redirect follow-up: 2026-09-16
+
+The user requested that `/` redirect to `Site.BaseUrl`. With a non-root mount, GET/HEAD `/` now returns **302**, an empty body, and a same-origin path `Location` pointing at the mounted homepage with the query preserved. Other outside-prefix requests remain 404. Root configuration remains 200 without a redirect. The six actual-application HTTP cases first failed all four prefixed configurations on the existing root 404, then passed after the redirect was added; checks include queries, HEAD, POST rejection, empty redirect bodies and successful one-hop target requests.
+
+On Windows with .NET SDK **10.0.401**, Release, and `589d45f` plus this follow-up, the solution built successfully and **503/503** tests passed with no skips. A temporary copy of real sample content/configuration passed **94 HTTP checks**: 17 each for `/` with locale off/on and 30 each for `/docs/` with locale off/on, using `Locale=ko-KR` and ephemeral ports. Raw root responses were 200 for root hosting or 302 for a prefix; automatically followed requests ended at the base URL with their query intact. In-prefix content/assets and existing directory redirects passed, other outside-prefix requests remained 404, and each preview retained 21 files. Temporary processes and files were cleaned up; the user's running server, output and sample settings were left untouched. The existing port-5000 process was separately observed returning root 404 and `/docs/` 200 before restart, not duplicate homepage bodies. Browser-cache behavior was not diagnosed. Broader verification limitations and earlier results remain unchanged.
 
 ### V-008: #81 feature acceptance
 
@@ -397,6 +403,7 @@ Historical approvals and evidence remain intact. v0.11 adds #89's scoped preview
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
 | 2026-09-16 | Record #89 preview-mount implementation in v0.11 | User requested the fix; actual application HTTP regressions, sample build/preview matrix and full .NET suite | Record scoped V-003 passes and unchanged artifact layout; preserve historical failures, all IDs, approvals and broader gaps |
 | 2026-09-16 | Require prefix-only preview serving | User clarified the expected meaning of `BaseUrl` and requested the fix | Supersede the unrequested root-alias assumption; FR-009/TR-017 require outside-prefix 404, with retained mount redirects and root configuration; record follow-up V-003 evidence without broader sign-off |
+| 2026-09-16 | Redirect the preview root to a non-root base URL | User requested a root redirect instead of a duplicate homepage | Add a root GET/HEAD redirect exception to FR-009/TR-017; preserve other outside-prefix 404s, root-mode serving, historical evidence and broader gaps |
 
 ### Readiness assessment
 

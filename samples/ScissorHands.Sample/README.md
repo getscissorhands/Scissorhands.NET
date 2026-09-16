@@ -18,7 +18,7 @@ dotnet run -- --build
 
 Generated preview and build outputs are written to `preview/` and `dist/` respectively.
 
-To preview below a subpath, set `Site:BaseUrl` in `appsettings.json` to `/docs/` and open the logged URL ending in `/docs/`. With `Site:UseLocaleInUrl` enabled and `Site:Locale` set to `ko-KR`, the Parent page is at `/docs/ko-kr/parent/`; otherwise it is at `/docs/parent/`. Keep the leading and trailing slashes. The prefix mounts the existing `preview/` output, not an extra physical `docs/` directory. Requests outside the configured prefix, including `/`, return 404; `/docs` redirects to `/docs/`. Set `BaseUrl` back to `/` for normal root hosting; a production host must configure its own mount for `dist/`.
+To preview below a subpath, set `Site:BaseUrl` in `appsettings.json` to `/docs/` and open the logged URL ending in `/docs/`. With `Site:UseLocaleInUrl` enabled and `Site:Locale` set to `ko-KR`, the Parent page is at `/docs/ko-kr/parent/`; otherwise it is at `/docs/parent/`. Keep the leading and trailing slashes. The prefix mounts the existing `preview/` output, not an extra physical `docs/` directory. Browsing `/` redirects to `/docs/` with HTTP 302, preserving the query string; `/docs` also redirects to `/docs/`. Other requests outside the configured prefix return 404. Set `BaseUrl` back to `/` for normal root hosting; a production host must configure its own mount for `dist/`.
 
 ## What to explore
 

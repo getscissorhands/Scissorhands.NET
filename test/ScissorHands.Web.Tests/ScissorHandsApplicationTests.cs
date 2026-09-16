@@ -121,10 +121,26 @@ public class ScissorHandsApplicationTests
 
                 if (baseUrl != "/")
                 {
+                    foreach (var query in new[] { "", "?from=preview&next=%2Fother%2F" })
+                    {
+                        foreach (var method in new[] { HttpMethod.Get, HttpMethod.Head })
+                        {
+                            using var rootRequest = new HttpRequestMessage(method, $"/{query}");
+                            using var rootResponse = await client.SendAsync(rootRequest, cancellationToken);
+                            rootResponse.StatusCode.ShouldBe(HttpStatusCode.Found);
+                            rootResponse.Headers.Location.ShouldBe(new Uri($"{baseUrl}{query}", UriKind.Relative));
+                            (await rootResponse.Content.ReadAsStringAsync(cancellationToken)).ShouldBeEmpty();
+                            (await client.GetStringAsync(rootResponse.Headers.Location, cancellationToken)).ShouldBe("home");
+                        }
+                    }
+                    using var rootPost = new HttpRequestMessage(HttpMethod.Post, "/");
+                    using var rootPostResponse = await client.SendAsync(rootPost, cancellationToken);
+                    rootPostResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+                    rootPostResponse.Headers.Location.ShouldBeNull();
                     using var mountRedirect = await client.GetAsync($"{baseUrl.TrimEnd('/')}?from=preview", cancellationToken);
                     mountRedirect.StatusCode.ShouldBe(HttpStatusCode.MovedPermanently);
                     mountRedirect.Headers.Location.ShouldBe(new Uri($"{address}{baseUrl}?from=preview"));
-                    foreach (var outsidePath in new[] { "/", $"/{route}/", $"/{route}", $"/{postRoute}/", "/tags/", "/404.html", "/themes/default/assets/theme.css", "/themes/default/assets/theme.js", "/images/sample.svg" })
+                    foreach (var outsidePath in new[] { $"/{route}/", $"/{route}", $"/{postRoute}/", "/tags/", "/404.html", "/themes/default/assets/theme.css", "/themes/default/assets/theme.js", "/images/sample.svg" })
                     {
                         using var outsideResponse = await client.GetAsync(outsidePath, cancellationToken);
                         outsideResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound, outsidePath);
