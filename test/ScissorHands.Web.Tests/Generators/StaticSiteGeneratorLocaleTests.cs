@@ -25,6 +25,10 @@ public class StaticSiteGeneratorLocaleTests
     [InlineData(true, "/")]
     [InlineData(false, "/blog/")]
     [InlineData(true, "/blog/")]
+    [InlineData(false, "/blog")]
+    [InlineData(true, "/blog")]
+    [InlineData(false, "/manual/docs")]
+    [InlineData(true, "/manual/docs")]
     public async Task Given_MultipleLocales_When_Generated_Then_It_Should_IsolateCollectionsNavigationAndRedirects(bool preview, string baseUrl)
     {
         var english = Page("English", "en-us/about", "en-US", @"en-us\01-about.md");
@@ -43,14 +47,16 @@ public class StaticSiteGeneratorLocaleTests
             Metadata = new() { Slug = "fr-fr/draft", Locale = "fr-FR", Draft = true, Tags = ["draft"] },
         };
         using var fixture = new Fixture([koreanNext, englishPost, koreanPost, korean, english, hidden, draft], baseUrl: baseUrl);
+        var effectiveBaseUrl = baseUrl.EndsWith('/') ? baseUrl : baseUrl + "/";
 
         await fixture.BuildAsync(preview);
 
+        fixture.Site.BaseUrl.ShouldBe(effectiveBaseUrl);
         fixture.Site.Locale.ShouldBe("en-US");
         fixture.Site.IsPreview.ShouldBe(preview);
         using var root = fixture.Html("index.html");
-        root.QuerySelector("meta[http-equiv='refresh']")!.GetAttribute("content").ShouldBe($"0;url={baseUrl}en-us/");
-        root.QuerySelector("a")!.GetAttribute("href").ShouldBe($"{baseUrl}en-us/");
+        root.QuerySelector("meta[http-equiv='refresh']")!.GetAttribute("content").ShouldBe($"0;url={effectiveBaseUrl}en-us/");
+        root.QuerySelector("a")!.GetAttribute("href").ShouldBe($"{effectiveBaseUrl}en-us/");
         root.QuerySelectorAll("script").ShouldBeEmpty();
         foreach (var (locale, title, pageTitles) in new[]
         {
@@ -96,7 +102,7 @@ public class StaticSiteGeneratorLocaleTests
         fixture.Exists("ja-jp/tags/index.html").ShouldBeFalse();
         fixture.Exists("fr-fr/index.html").ShouldBeFalse();
         using var legacy = fixture.Html("tags/shared/index.html");
-        legacy.QuerySelector("a")!.GetAttribute("href").ShouldBe($"{baseUrl}en-us/tags/shared/");
+        legacy.QuerySelector("a")!.GetAttribute("href").ShouldBe($"{effectiveBaseUrl}en-us/tags/shared/");
         fixture.Exists("tags/korean-only/index.html").ShouldBeFalse();
         using var missing = fixture.Html("404.html");
         missing.DocumentElement.GetAttribute("lang").ShouldBe("en-us");
@@ -199,7 +205,6 @@ public class StaticSiteGeneratorLocaleTests
     [InlineData("https://example.com/")]
     [InlineData("//example.com/")]
     [InlineData("blog/")]
-    [InlineData("/blog")]
     [InlineData("/../")]
     [InlineData("/%2e%2e/")]
     [InlineData("/%2fhost/")]

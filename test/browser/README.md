@@ -3,7 +3,7 @@
 This opt-in suite records V-008 evidence for the generated default-theme pager
 and V-009 checks for locale generation and navigation.
 It does not replace the .NET regression suite, the broader V-005 real-device
-assessment, or the preview-prefix work in issue #89.
+assessment, or the [real preview HTTP integration tests](..\ScissorHands.Web.Tests\ScissorHandsApplicationLocaleTests.cs).
 
 ## Run
 
@@ -24,11 +24,13 @@ install the browser system dependencies as well.
 `npm test` builds the sample, copies its content/configuration into the ignored
 `artifacts/locale-source` directory, and adds English, Japanese and draft-only
 locale fixtures. It generates `/docs/` output with default `ko-kr` under
-`artifacts/prefix`, then regenerates the default root-site `dist` output.
+`artifacts/prefix`, checks byte-identical localized build output for `/docs` and
+`/docs/`, then regenerates the default root-site `dist` output.
 The normal sample content is unchanged; settings are process-local. Tests serve only these
 artifacts through loopback servers on dynamically assigned ports; fixtures
 close their servers and isolated browser contexts. The controlled prefix host
-tests generated URLs, not the separate application preview-mount defect.
+tests generated URLs; actual application mounting is covered by the .NET
+preview tests, including real generation and canonical slash variants.
 
 ## Coverage and evidence
 
@@ -40,7 +42,9 @@ keyboard navigation, JavaScript-disabled navigation and horizontal layout.
 Locale cases follow generated home/tag/navigation links, check language-specific
 collections and adjacency endpoints, exercise root/legacy redirects without
 JavaScript, and verify absent tag/draft-only routes and shared asset requests.
-These are controlled static-host requests, not evidence that #89 is fixed.
+These are controlled static-host requests. The merged #89 fix has separate
+actual-application coverage for mount redirects, generated locale entry points,
+content/assets, outside-prefix rejection and regeneration.
 
 Both themes are measured in normal, hover and keyboard-focus states:
 

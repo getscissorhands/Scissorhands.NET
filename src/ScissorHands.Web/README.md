@@ -79,7 +79,7 @@ Set `Site.UseLocaleInUrl` to `true` to generate a homepage and eligible tag list
 
 Locale folders under `contents\posts` and `contents\pages` are organizational only. Frontmatter `locale` overrides `Site.Locale`; explicit locale-free slugs keep URLs independent of source folders. Keep the single root `404.html` in the site-default locale: a conflicting custom-404 locale fails generation.
 
-Unprefixed tag URLs redirect only when the matching default-locale destination exists. Existing locale-enabled sites and custom themes must follow the [locale migration guidance](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-routing-migration). Disabled-mode routes remain unchanged. Locale redirects require a rooted `BaseUrl` ending in `/`, such as `/blog/`; generation does not fix the separately tracked preview-prefix mount in #89.
+Legacy tag URLs without a locale redirect only when the matching default-locale destination exists, and still live beneath `BaseUrl`. Existing locale-enabled sites and custom themes must follow the [locale migration guidance](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-routing-migration). Disabled-mode routes remain unchanged. Rooted prefixes such as `/blog` and `/blog/` normalize to the same effective `/blog/` for generation and preview.
 
 ## Preview and build
 
@@ -96,6 +96,10 @@ dotnet run -- --build
 ```
 
 Refresh the browser after preview regeneration. Razor/C# changes require recompilation. Use `BaseUrl` for subpath hosting.
+
+Set `Site:BaseUrl` to `/` or a path prefix with a leading slash. The trailing slash is optional: `/docs` and `/docs/` both normalize to `/docs/`, and `/manual/docs` normalizes to `/manual/docs/`. The manifest supplies the canonical value to generated markup, plugins, build and preview without rewriting configuration. Open the logged preview URL; pages, assets and directory redirects resolve beneath that prefix in both locale modes. Output stays directly under `preview/`.
+
+For a non-root prefix, GET/HEAD `/` returns HTTP 302 to the effective base URL, preserving its query and serving no homepage body at `/`. Other outside-prefix requests return 404. `/docs` redirects to `/docs/`. When locale routing is enabled, the generated entry page then redirects to the default locale: `/` leads to `/docs/`, whose HTML leads to `/docs/en-us/` for `Site.Locale: en-US`. Root hosting adds no HTTP mount redirect but retains the locale HTML redirect. This is a routing boundary, not authentication; other base-URL forms are outside this preview contract. Production hosts must mount `dist/` themselves.
 
 vNext includes breaking plugin identity, theme-component, and page-route changes. Review the migration reference before upgrading.
 

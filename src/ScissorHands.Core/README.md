@@ -41,6 +41,12 @@ The package also provides site/theme/plugin manifests, immutable `NavigationNode
 
 vNext changes several collection APIs and requires plugin IDs. Legacy non-cancellable `IThemeService` overloads are obsolete; review the migration reference before upgrading.
 
+## Site base URL
+
+`SiteManifest.BaseUrl` normalizes a missing trailing slash on site path prefixes during initialization. `/docs` and `/docs/` both read back as `/docs/`; `/manual/docs` becomes `/manual/docs/`, and `/` stays `/`. This applies to direct object initialization and configuration binding, so themes, plugins, build output and preview consume the same effective value. The public property remains init-only, and the source configuration is not rewritten.
+
+This is trailing-slash normalization, not URL validation: absolute URLs, network-relative URLs (`//host/path`), relative paths without a leading slash, and values containing backslashes, queries or fragments are not rewritten by this rule. Their existing behavior and the broader supported-URL policy are unchanged; preservation does not establish safety or preview support.
+
 ## Generated page navigation
 
 `PageNavigation` and `PageNavigationLink` provide optional, immutable previous/next page data for themes. They are generated models, not frontmatter.

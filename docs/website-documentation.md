@@ -133,12 +133,18 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | `HeroImage` | Site-level hero image reference available to themes and plugins |
 | `Theme` | Theme slug; use `default` for the built-in theme |
 | `SiteUrl` | Public site URL |
-| `BaseUrl` | Site base path, such as `/` or `/project/` |
+| `BaseUrl` | Site base path, such as `/`, `/project` or `/project/`; path prefixes normalize to a trailing slash |
 | `UseLocaleInUrl` | Generate locale-prefixed content, home/tag collections and locale-scoped navigation |
 | `UseDateInPostUrl` | Include the publication date in post routes |
 | `Debug` | Site debug setting |
 
 Use `BaseUrl` when publishing below a subpath. Generated navigation and shared URL helpers produce base-relative links rather than hardcoding the domain root.
+
+`SiteManifest.BaseUrl` supplies a trailing slash for a configured path prefix: `/docs` and `/docs/` both become `/docs/`, `/manual/docs` becomes `/manual/docs/`, and `/` remains `/`. This happens during manifest initialization, including configuration binding and direct .NET initialization. Build, preview, themes and plugins use the same effective value, while source settings remain unchanged. Generated HTML therefore uses `<base href="/docs/">` for either spelling. This does not trim whitespace, change case, decode URLs, or validate them. Absolute/network-relative URLs, relative paths without a leading slash, and values containing backslashes, query strings or fragments are not rewritten by this rule and gain no new support guarantee.
+
+Preview serves generated files only at the effective path prefix. With either `/docs` or `/docs/` configured, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. GET/HEAD `/` returns HTTP 302 to `/docs/`, preserving the query and serving no homepage body at root. Browsers follow to the generated entry point; locale-enabled entry points then use the HTML locale redirect below. Other outside-prefix requests, including `/parent/child/`, `/docs-other/`, unprefixed assets and POST `/`, return 404. `/docs` and directory redirects retain the prefix and query. Files remain directly under `preview/`; update old preview bookmarks rather than relying on root aliases. Configuring `/` adds no HTTP mount redirect but retains any generated locale redirect. This is a routing boundary, not authentication. Other base-URL forms remain outside this preview contract; normalization is not general URL validation.
+
+For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
 
 During generation, the engine sets `SiteManifest.IsPreview` to indicate preview or production output. It also populates `DescriptionInHtml` from the site description.
 
@@ -177,7 +183,7 @@ For `Site.Locale: "en-US"` and `BaseUrl: "/blog/"`:
 
 Every discovered locale has a generated homepage, including page-only locales. The default homepage is always generated, even when empty. A locale without eligible tags has no tag pages or built-in Tags link. Home/site-title links, tag links, navigation and previous/next stay within the active locale; there is no automatic cross-language fallback or language switcher.
 
-The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. Locale redirects require a rooted `BaseUrl` ending in `/`; external URLs, traversal, encoded separators and malformed percent escapes fail validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the static host's normal 404 behavior. Initial builds are clean, but an in-place preview can retain old locale/redirect files until restarted.
+The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. They use the canonical rooted `BaseUrl`: configured `/blog` and `/blog/` both become `/blog/`. External URLs, traversal, encoded separators and malformed percent escapes fail locale-redirect validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the host's normal 404 behavior. Initial builds are clean, but in-place preview can retain old locale/redirect files until restarted.
 
 Keep `contents\posts` and `contents\pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
 
@@ -198,7 +204,7 @@ Home/tag pages are generated, not additional Markdown sources. A page at a gener
 
 Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. `Site.Locale` is never mutated between renders. With locale routing disabled, the existing root homepage, shared tag pages and unprefixed navigation behavior remain unchanged.
 
-**Serving boundary:** generating locale directories does not mount `Site.BaseUrl` in preview. [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) remains the separate prefix-mount defect; root preview and correctly mounted static hosts can exercise locale output independently.
+**Serving boundary:** preview now mounts the artifact at canonical `Site.BaseUrl` through the merged [#89 fix](https://github.com/getscissorhands/Scissorhands.NET/pull/101). With `/docs` and default `en-US`, `/` returns HTTP 302 to `/docs/`, whose HTML entry redirects to `/docs/en-us/`. Legacy tag redirects use `/docs/tags/...`; unrelated domain-root page/asset URLs remain 404. Production hosts still configure their own mount. No physical deployment-prefix directory is added.
 
 ## Content and frontmatter
 
@@ -1037,7 +1043,7 @@ Retain frontmatter/site locale fallback and optional organizational folders. Use
 
 Custom themes should forward `LocaleContext` and adopt the Home/Tags helpers above. Existing public signatures and direct rendering without context remain supported, but hard-coded links are not automatically rewritten. Plugins must consume synthetic route/locale metadata rather than prepend another locale. A custom root 404 with a different explicit locale must be corrected or omit its locale.
 
-Use a rooted `BaseUrl` ending in `/` for locale redirects. No deployment-prefix directories are added to the artifact. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. This change does not implement #89, translate site/theme text or add a language switcher.
+Use a rooted `BaseUrl`; the manifest supplies a missing trailing slash before locale redirects and preview mounting. No deployment-prefix directories are added to the artifact. The #89 middleware fix is integrated, so update preview bookmarks to use the effective mount rather than former domain-root aliases. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. Site/theme text is not translated and no language switcher is added.
 
 ## Source coverage
 
