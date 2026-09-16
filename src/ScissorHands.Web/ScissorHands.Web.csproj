@@ -25,6 +25,10 @@
   </ItemGroup>
 
   <ItemGroup>
+    <InternalsVisibleTo Include="ScissorHands.Web.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
     <Content Include="contents/**/*" CopyToOutputDirectory="PreserveNewest" />
     <Content Include="themes/**/*" CopyToOutputDirectory="PreserveNewest" />
     <None Include="THIRD-PARTY-NOTICES.md" Pack="true" PackagePath="\" />

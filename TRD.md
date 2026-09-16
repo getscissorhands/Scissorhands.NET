@@ -4,12 +4,12 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.6 |
+| Document version | 0.7 |
 | Status | Review-ready |
-| Last updated / PRD consulted | 2026-09-14 |
-| PRD baseline | [PRD.md](PRD.md) v0.10, Review-ready with approved #81 component criteria; historical approvals retained |
-| Release scope | Retained baseline plus implemented #81 code with passed scoped V-008 acceptance; #89 and broader V-005 remain independent |
-| Code baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the pager acceptance follow-up recorded in this revision |
+| Last updated / PRD consulted | 2026-09-16 |
+| PRD baseline | [PRD.md](PRD.md) v0.11, Review-ready with scoped #89 evidence and retained #81 criteria/approvals |
+| Release scope | Retained baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting; broader verification remains open |
+| Code baseline | `3e50dab` plus the tested #89 preview-mount fix in this revision |
 | Product owner | @justinyoo, as recorded in the PRD |
 | Execution owners | Not assigned |
 | Intended audience | Engine, theme, and plugin contributors translating the PRD into implementation and verification obligations |
@@ -20,7 +20,7 @@
 
 **Baseline rule:** the PRD owns product scope and acceptance. This TRD elaborates technical obligations without modifying the PRD. V-001 through V-007 remain open broad programs; V-008 records scoped execution and remaining #81 acceptance. Only the explicitly recorded runs establish evidence, not document generation or approval.
 
-**Readiness:** v0.6 remains Review-ready overall against PRD v0.10. #81's V-008 acceptance passes the approved ratios and three-engine matrix after component-only fixes. Shared gaps, broad V-005 assessment and #89 remain separate; feature acceptance is not whole-product release readiness.
+**Readiness:** v0.7 remains Review-ready overall against PRD v0.11. #81's V-008 acceptance is unchanged; #89's preview-mount implementation has scoped passing V-003 HTTP evidence. Shared gaps and broader V-003/V-005 assessment remain open; neither this evidence update nor feature acceptance is whole-product release readiness.
 
 ## 1. Purpose and source relationship
 
@@ -28,7 +28,7 @@ The system converts local Markdown and configuration into static site artifacts 
 
 [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md) establishes historical intent. Its assistant-proposed renderer snippets, route crawling, general asset copying, feeds, search, and example plugins are not additional requirements. The current PRD governs those scope distinctions.
 
-Source code and guides describe the implementation; [TDD.md](TDD.md) v0.7 records the repeatable check mechanism and [PRD V-008](PRD.md#v-008-81-feature-acceptance) owns final passing results and earlier failures. No wider conformance claim is inferred.
+Source code and guides describe the implementation; [TDD.md](TDD.md) v0.8 records the mechanisms. [PRD V-003](PRD.md#v-003-89-preview-mount-execution-2026-09-16) owns #89's scoped HTTP evidence, while [PRD V-008](PRD.md#v-008-81-feature-acceptance) retains #81's results and earlier failures. No wider conformance claim is inferred.
 
 ## 2. Technical scope and boundaries
 
@@ -117,7 +117,7 @@ Applicability is separate from whether implementation evidence exists.
 
 ## 4. Technical requirements
 
-Each `TR-...` is stable; **must** expresses obligation, not complete verification. v0.6 retains all 22 IDs against PRD v0.10, adding approved component acceptance criteria to TR-022. Historical approvals, feature evidence ownership and broader programs remain intact.
+Each `TR-...` is stable; **must** expresses obligation, not complete verification. v0.7 retains all 22 IDs against PRD v0.11, recording #89 implementation under TR-017 without changing TR-022's approved criteria. Historical approvals, feature evidence ownership and broader programs remain intact.
 
 ### TR-001: Execute the selected application mode
 
@@ -264,13 +264,14 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 - **Shared formatting contract:** Reuse [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs) through the [Theme wrappers](docs\website-documentation.md#url-helpers). Content URLs trim outer whitespace, split either slash separator, discard empty segments, escape each segment, and return `.` for an empty route; literal `.`/`..` segments fail. Tag URLs trim/lowercase and escape one segment under `tags/`; empty/dot tags fail. Theme URLs concatenate `themes/<slug>/<path>` with forward-slash trimming only. Image URLs only strip leading forward slashes, preserving HTTP(S), queries, fragments, and existing encoding. Locale segments retain trim/lowercase and underscore/forward-slash-to-hyphen normalization.
 - **Errors / base handling:** Content/theme/image/tag null inputs fail; locale null/whitespace maps to empty. The layout theme wrapper checks null path before missing `Theme`, which throws `InvalidOperationException`. Content, tag, and theme URLs remain base-relative without prepending `Site.BaseUrl`; do not escape images as content slugs or treat formatting as scheme validation.
 - **Boundary:** Distinguish artifact-relative paths from deployment mount paths. The production host owns mounting, directory indexes, and 404 routing; preview behavior must also be evaluated. Do not rewrite unrelated absolute external URLs into local assets or promise a specific hosting provider.
-- **Implementation gap:** Preview lacks configured prefix mounting, tracked in [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) under TDD DEC-002 and V-003. Shared helpers and `<base>` markup do not fix it.
+- **Preview implementation:** [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) implements TDD DEC-002 with scoped passing V-003 HTTP evidence. Preview serves the existing artifact beneath `/` or slash-delimited path prefixes such as `/docs/` and `/manual/docs/`, with or without locale routes. Directory redirects retain the prefix and query; missing files remain 404. No additional physical prefix directory or URL-helper prefix is introduced.
+- **Preview compatibility / limits:** Unprefixed requests continue through the existing static-file pipeline; prefix mounting is not an access restriction. The documented prefix usage has leading and trailing slashes. Other base-URL forms, including absolute URLs, relative paths, queries/fragments and ambiguous encodings, remain outside this fix's guaranteed behavior and under TG-001; do not infer new normalization or general URL validation.
 - **Feature relationship:** TR-022/V-008 retain correct locale/base-relative neighbor URLs, root preview navigation and requests on correctly mounted static output. The user explicitly removed #89 from #81's completion gate; this broader preview-serving obligation remains in force independently.
 - **Verification:** V-003 real root/prefix requests including hierarchy, directory indexes, date/locale routes, and extension output; V-007 helper/view parity, encoded text, null/invalid inputs, and preserved image semantics.
 
 ### TR-018: Deliver the agreed built-in-theme client behavior
 
-- **State / source:** Confirmed shared requirement; PRD v0.10 FR-010 and NFR-008, retaining the user's broader quality decision.
+- **State / source:** Confirmed shared requirement; PRD v0.11 FR-010 and NFR-008, retaining the user's broader quality decision.
 - **Rationale / obligation:** To make generated pages usable, the built-in theme must support the agreed browser matrix, keyboard navigation, visible focus, meaningful control labels, and readable light/dark contrast.
 - **Acceptance:** Evaluate ordinary reading/navigation and the theme control on current stable desktop Edge/Chrome/Firefox/Safari, Android Chrome, and iOS Safari; record actual versions/platforms/devices. With JavaScript and storage available, the light/dark selection persists. Page title/description/locale follow the document/site fallback contract.
 - **Navigation / tags:** Render page nodes as anchors and null-URL groups as text, with separate labelled disclosure buttons and accurate expanded state. JavaScript enables mouse/touch/Enter/Space toggling, closes the applicable group on Escape and restores button focus, and dismisses menus outside navigation. Without JavaScript, eligible child links remain visible. Render normalized tag links on both posts and pages.
@@ -322,7 +323,7 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 
 ### Product-to-technical coverage
 
-All active references below use PRD v0.10. Outcomes remain recorded under V-008, not inferred from a requirement mapping or acceptance decision.
+All active references below use PRD v0.11. #89 outcomes are recorded under V-003 and #81 outcomes under V-008, not inferred from a requirement mapping or acceptance decision.
 
 | PRD ID | TRD coverage | Disposition |
 | --- | --- | --- |
@@ -373,7 +374,7 @@ The original V-001 through V-007 programs retain their broad scope. V-008 separa
 | --- | --- | --- | --- |
 | V-001 | TR-003/008/013/015 | Filesystem and path/ownership cases, including link escapes, asset interactions, and final transformed routes | Pending; existing [route tests](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorRouteTests.cs) are a starting point, not full proof |
 | V-002 | TR-014/015 | Contextual rendering/URL, navigation-label encoding, and synthetic-privacy cases; TG-001 precedes new scheme rules | Pending; shared formatting is not a completed sink inventory or safety certification |
-| V-003 | TR-005/006/008/017 | Serve artifacts and preview at root/prefix; inspect hierarchy, locale routes, directory indexes and assets. #89 owns the preview-mount defect | Open; observed prefix 404 remains unfixed and independently tracked, not a #81 blocker |
+| V-003 | TR-005/006/008/017 | Serve artifacts and preview at root/prefix; inspect hierarchy, locale routes, directory indexes and assets. #89 owns the preview-mount fix | Broad program open; #89 passed six actual-application HTTP cases and 56 real-sample HTTP checks on Windows. Historical 404 retained; see PRD V-003 |
 | V-004 | TR-001/002/012/013/016/020 | Controlled failures/cancellation/event bursts; inspect completion signals, recovery, and filesystem state | Pending; no atomic or bounded-shutdown requirement |
 | V-005 | TR-018 | Browser/device versions, disclosure/touch/keyboard/focus/no-JavaScript behavior and contrast; TG-002 retains method uncertainty | Pending; component markup cases do not prove browser coverage |
 | V-006 | TR-019 | Actual-blog measurements with workload/environment/method; TG-003 supplies execution inputs | Pending; no measurements or numerical performance target |
@@ -384,7 +385,7 @@ The original V-001 through V-007 programs retain their broad scope. V-008 separa
 
 A verification record must identify the code/configuration/workload, environment, exercised cases, outcomes, and reproducible failures or blocked/skipped coverage. Recording an attempt is not passing evidence. For TR-019, acceptance is a usable measurement record rather than beating an unagreed time budget.
 
-For #81, completion still requires its delivered obligations, remaining V-008 evidence and RD-005 documentation. The explicit scope update makes #89 independent: its unresolved mount does not block #81, and its failed request is not relabeled as passing. Other in-scope feature blockers remain genuine blockers. Shared programs and original IDs remain open where work remains; no product-wide release readiness is inferred.
+For #81, completion requires its delivered obligations, V-008 evidence and RD-005 documentation, now recorded as complete. #89 remains independently owned: its later passing preview checks do not rewrite the earlier failed request or change V-008. Shared programs and original IDs remain open where work remains; no product-wide release readiness is inferred.
 
 Technical evidence supports the approved PRD release criteria: functional/contract regression, failure and integrity behavior, root/subpath serving, client accessibility, actual-blog measurement, and consistent migration documentation. Approval of those criteria is not evidence that they have been met or authorization for a release. Failed mandatory behavior needs correction and re-evaluation; scope changes or waivers cannot be invented by this TRD.
 
@@ -423,10 +424,11 @@ Within-process watcher serialization is defined; cross-process coordination, tra
 | 2026-09-13 | Track preview-prefix mounting independently in #89 | Explicit user confirmation; scope update linked in TR-022 | Remove the mount from #81/V-008 completion while retaining locale-aware neighbor checks; keep TR-017/V-003/DEC-002 obligations and failed HTTP evidence with #89 |
 | 2026-09-14 | Specify approved component acceptance in TRD v0.6 | User selected measurable ratios and three-engine desktop/mobile evidence; decision linked in TR-022 | Resolve the #81-specific method, preserve global TR-018/V-005 scope, and require execution rather than infer success from earlier Chromium observations |
 | 2026-09-14 | Record complete component acceptance | Further implementation request; browser suite, math tests and full .NET run | Correct contrast and WebKit keyboard failures; V-008 passes its approved scope, with #89 and broader obligations retained |
+| 2026-09-16 | Record #89 preview implementation in v0.7 | User requested the fix; PRD v0.11 and actual HTTP evidence | Update TR-017's implementation/compatibility boundary and V-003 evidence; preserve all 22 IDs, TG-001 and broader verification |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall against PRD v0.10; #81's scoped technical acceptance is complete. No whole-document/release sign-off is inferred.
+- **Supported status:** Review-ready overall against PRD v0.11; #81 acceptance is unchanged and #89's scoped preview checks pass. No whole-document/release sign-off is inferred.
 - **Material limitations:** No V-008 feature gap remains after the passing checks. #89 and broad TG-002/V-005 obligations remain separate, as do existing shared gaps.
 - **Approval:** Historical v0.2 and v0.4 #81-only sign-offs remain. @justinyoo subsequently requested the feature implementation and scoped checks recorded here; neither action grants whole-document/release approval or resolves the still-open shared gaps.
 - **Reviewer pass:** Reconciled all 22 IDs with targeted fixes, the complete six-project report, measurements and retained broader boundaries.
@@ -440,7 +442,7 @@ Within-process watcher serialization is defined; cross-process coordination, tra
 | Public usage and migration | [Root guide](README.md), [Core](src\ScissorHands.Core\README.md), [Plugin](src\ScissorHands.Plugin\README.md), [Theme](src\ScissorHands.Theme\README.md), [Web](src\ScissorHands.Web\README.md) |
 | Runtime and content | [Application](src\ScissorHands.Web\ScissorHandsApplication.cs), [loader](src\ScissorHands.Web\Loaders\ContentLoader.cs), [generator](src\ScissorHands.Web\Generators\StaticSiteGenerator.cs), [renderer](src\ScissorHands.Web\Renderers\ComponentRenderer.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs) |
 | Model and configuration contracts | [ContentDocument](src\ScissorHands.Core\Models\ContentDocument.cs), [ContentMetadata](src\ScissorHands.Core\Models\ContentMetadata.cs), [SiteManifest](src\ScissorHands.Core\Manifests\SiteManifest.cs), [ThemeManifest](src\ScissorHands.Core\Manifests\ThemeManifest.cs), [PluginManifest](src\ScissorHands.Core\Manifests\PluginManifest.cs) |
-| Navigation, URLs, and design | [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs), [builder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs), [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs), [website handoff](docs\website-documentation.md), [TDD v0.7](TDD.md) |
+| Navigation, URLs, and design | [NavigationNode](src\ScissorHands.Core\Models\NavigationNode.cs), [builder](src\ScissorHands.Web\Navigation\NavigationTreeBuilder.cs), [ContentUrlHelper](src\ScissorHands.Core\Urls\ContentUrlHelper.cs), [website handoff](docs\website-documentation.md), [TDD v0.8](TDD.md) |
 | Implemented reading order and adjacency | [Reading order](src\ScissorHands.Web\Navigation\PageReadingOrder.cs), [PageNavigation](src\ScissorHands.Core\Models\PageNavigation.cs), PRD FR-011/V-008, TR-021/TR-022 |
 | Extension implementation evidence | [Plugin runner](src\ScissorHands.Web\Runners\PluginRunner.cs), [dependency resolver](src\ScissorHands.Web\Runners\PluginDependencyResolver.cs), [theme resolver](src\ScissorHands.Web\Services\ThemeComponentResolver.cs), [theme service](src\ScissorHands.Web\Services\ThemeService.cs) |
 | Standards and verification conventions | [AGENTS.md](AGENTS.md), [SDK configuration](global.json), [build settings](Directory.Build.props), [CI](.github\workflows\main.yaml), [sample guide](samples\ScissorHands.Sample\README.md) |

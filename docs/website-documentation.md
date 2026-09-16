@@ -140,6 +140,10 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 
 Use `BaseUrl` when publishing below a subpath. Generated navigation and shared URL helpers produce base-relative links rather than hardcoding the domain root.
 
+Preview mounts generated files at the configured path prefix. Use `/` for root hosting, or a prefix with leading and trailing slashes such as `/docs/` or `/manual/docs/`. With `/docs/`, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. Directory redirects retain the prefix and query string. Files remain directly under `preview/`, and unprefixed URLs remain accessible for compatibility; this is not an access restriction. Other base-URL forms, including absolute URLs, relative paths, or query/fragment-bearing prefixes, are outside this preview contract. No new general URL-validation policy is implied.
+
+For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
+
 During generation, the engine sets `SiteManifest.IsPreview` to indicate preview or production output. It also populates `DescriptionInHtml` from the site description.
 
 The `Plugins` array selects installed plugins by ID:

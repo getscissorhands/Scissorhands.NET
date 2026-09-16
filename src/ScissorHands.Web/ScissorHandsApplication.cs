@@ -171,6 +171,7 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         Directory.CreateDirectory(previewPath);
 
         var fileProvider = new PhysicalFileProvider(previewPath);
+        _app.UsePathBase(_site!.BaseUrl);
         _app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
         _app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
 

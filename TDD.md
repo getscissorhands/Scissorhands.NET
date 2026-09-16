@@ -4,10 +4,10 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.7 |
+| Document version | 0.8 |
 | Status | Review-ready |
-| Last updated | 2026-09-14 |
-| Baselines consulted | 2026-09-14 |
+| Last updated | 2026-09-16 |
+| Baselines consulted | 2026-09-16 |
 | Product owner | @justinyoo |
 | Design approver | @justinyoo |
 | Implementation owners | Not assigned |
@@ -16,10 +16,10 @@
 | #81 scoped approval | @justinyoo approved DES-012, DEC-003, the TG-006/DQ-008 policy and V-008 evidence strategy on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Decision confirmation | @justinyoo confirmed DEC-001 on 2026-09-11, DEC-002 on 2026-09-12, and DEC-003's source-order/automatic-adjacency direction on 2026-09-13 |
 | Intended audience | Engine, theme, and plugin contributors reviewing implementation mechanisms and compatibility |
-| Release scope | Retained baseline plus implemented #81 code with complete scoped V-008 evidence; #89 and broad V-005 remain independent |
-| PRD baseline | [PRD.md](PRD.md) v0.10, Review-ready with approved #81 component criteria; historical approvals retained |
-| TRD baseline | [TRD.md](TRD.md) v0.6, Review-ready with explicit pager thresholds and three-engine evidence requirements |
-| Implementation baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the tested pager-acceptance follow-up in this revision |
+| Release scope | Retained baseline, complete #81/V-008 acceptance, and implemented #89 preview mounting; broader verification remains open |
+| PRD baseline | [PRD.md](PRD.md) v0.11, Review-ready with scoped #89 evidence and retained #81 criteria/approvals |
+| TRD baseline | [TRD.md](TRD.md) v0.7, Review-ready with the implemented TR-017 preview boundary |
+| Implementation baseline | `3e50dab` plus the tested #89 preview-mount fix in this revision |
 
 **Authority:** the PRD owns scope/acceptance and the TRD owns obligations. Scoped #81 approval, implementation authorization and component criteria are retained. V-008 now passes the approved scope; #89 and broader V-005 work remain separate. The PR may close #81 on merge, without implying whole-document approval, publication or deployment.
 
@@ -27,7 +27,7 @@
 
 Retain the four-package, local .NET application: Core defines shared models/contracts; Plugin and Theme extend Core; Web composes loading, transformations, rendering, filesystem output, and preview. Visitors receive static files, not a server-interactive Blazor application. Existing interfaces and the owner-controlled executable-extension boundary are the starting point, not a reason to replace the engine.
 
-The target retains the existing architecture with the implemented FR-011 addition. This document distinguishes current mechanisms, approved decisions, proposed wider hardening/mount work, and evidence limits. Two-tier ordering and automatic adjacency are implemented; separately owned preview-prefix mounting is not. Implementation does not by itself complete V-008 or the wider requirements.
+The target retains the existing architecture with the implemented FR-011 addition and DEC-002 preview mount. This document distinguishes current mechanisms, approved decisions, proposed wider hardening work, and evidence limits. Two-tier ordering, automatic adjacency and preview-prefix mounting are implemented. Scoped V-008 and #89/V-003 evidence is recorded separately; implementation does not by itself complete the wider requirements.
 
 | Driver / constraint | Source and status | Design consequence |
 | --- | --- | --- |
@@ -59,7 +59,7 @@ Design IDs identify mechanisms, not new public APIs. Existing `ContentUrlHelper`
 | DES-005 | Static Razor rendering | Scope/renderer per render; separate layout-only navigation from view/cascading context; adapt flat-only callers | `IComponentRenderer`, `HtmlRenderer`, Theme base components | TR-005/006/011/014/016; Current rendering/compatibility confirmed; broader URL policy unresolved |
 | DES-006 | Theme resolution and assets | Resolve component roles and manifest; select/copy the supported asset inventory | Theme resolver/service, assembly catalog, IO abstractions | TR-007/008/011/013; Confirmed discovery/copy surfaces, proposed guarded copying |
 | DES-007 | Root containment and output ownership | Share path checks; track file ownership for a single build before engine writes/copies | Internal Web helpers using existing IO seams; explicit per-build context | TR-003/008/013/015/020; Per-write approach confirmed in DEC-001; integration/feasibility remain DQ-002 |
-| DES-008 | Preview serving and regeneration | Own the static-file mount, watcher subscription, serialized rebuild callback, and shutdown lifetime | ASP.NET Core static-file middleware, watcher factory, Rx | TR-012/016/017/020; DEC-002 mount implementation pending in #89, independently of #81 |
+| DES-008 | Preview serving and regeneration | Own the static-file mount, watcher subscription, serialized rebuild callback, and shutdown lifetime | ASP.NET Core static-file middleware, watcher factory, Rx | TR-012/016/017/020; DEC-002 implemented in #89 with scoped HTTP evidence, independently of #81 |
 | DES-009 | Built-in presentation and URL emitters | Render prepared hierarchy/metadata/tag links; keep raw content separate; own disclosure and theme preference behavior | Core URL helper, Theme wrappers, Razor views, CSS/JS | TR-006/014/017/018; Current formatting/presentation confirmed; broader scheme policy remains TG-001 |
 | DES-010 | Compatibility and failure boundaries | Preserve existing public contracts and distinguish failures/cancellation from completion without exposing sensitive payloads | Core interfaces/models, application, runner, renderer, logging | TR-011/015/016/020; Confirmed obligations, proposed focused corrections |
 | DES-011 | Resource model and verification instrumentation | Explain cost/latency drivers and collect later evidence without production telemetry | Existing logs, tests/sample, external measurement tools when authorized | TR-019 and V-001 through V-007; Proposed measurement approach, no executed results |
@@ -193,7 +193,7 @@ The following is a **partial source inventory**, not TG-001's completed scheme p
 
 **Recommendation:** after TG-001 is resolved in the TRD, implement context-specific checks at the responsible built-in URL emitters and relevant engine input boundaries, reusing local helpers instead of creating a general HTML rewriting layer. Cover post-plugin values where that boundary consumes them. Do not invent an allowlist, reinterpret all Markdown as unsafe text, or change external-asset compatibility in this document.
 
-**Current helper integration:** Core owns `ContentUrlHelper`; the loader reuses locale normalization and the generator reuses tag route formatting, wrapping invalid tag-route arguments as contextual `InvalidDataException`. Theme base wrappers expose the applicable content/theme/image/tag operations to derived layouts/views. TR-017 and the [helper reference](docs\website-documentation.md#shared-url-helpers) specify exact input/output rules. Helpers do not prepend `Site.BaseUrl`; the layout's `<base>` resolves relative URLs. This reuse neither supplies the missing full scheme policy nor implements DEC-002's preview mount.
+**Current helper integration:** Core owns `ContentUrlHelper`; the loader reuses locale normalization and the generator reuses tag route formatting, wrapping invalid tag-route arguments as contextual `InvalidDataException`. Theme base wrappers expose the applicable content/theme/image/tag operations to derived layouts/views. TR-017 and the [helper reference](docs\website-documentation.md#shared-url-helpers) specify exact input/output rules. Helpers do not prepend `Site.BaseUrl`; the layout's `<base>` resolves relative URLs. This reuse does not supply the missing full scheme policy. DEC-002's mount is implemented separately at the server boundary without changing these helpers.
 
 ### DES-006 / DES-007: Theme assets, containment, and ownership
 
@@ -217,7 +217,7 @@ The registry is fresh on each regeneration and permits intentional regeneration 
 
 ### DES-008: Preview mount and event lifecycle
 
-Current preview startup clears/creates its destination, attaches `PhysicalFileProvider` to default/static-file middleware, starts the server, sets the effective `SiteUrl` from its listening address, and then performs the first build. It installs the watcher only after that build succeeds and stops the server in `finally`. The server may therefore be listening during initial generation; no atomic visibility or initial-readiness barrier is promised.
+Current preview startup clears/creates its destination, applies `UsePathBase(Site.BaseUrl)` before default/static-file middleware backed by `PhysicalFileProvider`, starts the server, sets the effective `SiteUrl` from its listening address, and then performs the first build. It installs the watcher only after that build succeeds and stops the server in `finally`. The server may therefore be listening during initial generation; no atomic visibility or initial-readiness barrier is promised.
 
 [ContentWatcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs) creates missing watched roots and observes recursive create/change/delete/rename events. Rx `Throttle` coalesces bursts; asynchronous callbacks are serialized with `Concat`. A failed callback is logged so future events can still rebuild. Disposal removes subscriptions/watchers; application stopping supplies the preview generation token.
 
@@ -225,7 +225,9 @@ Keep the current 500 ms debounce as an implementation setting, not an SLA. Seria
 
 **Confirmed mount design (DEC-002):** keep files directly under `preview`, but map the configured site path prefix to that root before default/static-file processing, using ASP.NET Core path-base handling for supported path-prefix configurations. `/docs/post/` should reach the same artifact-relative `post\index.html` that root hosting would serve. Do not generate a second physical `docs` directory or rewrite unrelated external URLs. Retain root behavior for `/`; URL forms outside an agreed path-prefix shape need TG-001 clarification rather than guessed coercion.
 
-The current middleware lacks configured prefix handling even though output uses `BaseUrl` and the logged preview URL includes it. [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) owns this defect and V-003's actual-request evidence. It is explicitly not a #81 completion dependency; #81 keeps locale-aware URL and correctly mounted host checks.
+**Implemented in #89:** `UsePathBase` extracts a matching path prefix into `Request.PathBase`, leaving the artifact-relative `Request.Path` for default/static-file processing. The existing middleware preserves the path base in directory redirects. `/` retains root behavior; nonmatching requests continue unchanged, retaining unprefixed aliases rather than introducing an access restriction. Documented usage is root or leading/trailing-slash path prefixes such as `/docs/` and `/manual/docs/`; other forms remain outside the guaranteed boundary under TG-001. No custom path stripping, new URL normalization, generated-directory nesting or locale change is introduced.
+
+[Application HTTP tests](test/ScissorHands.Web.Tests/ScissorHandsApplicationTests.cs) use the internal application constructor, an ephemeral Kestrel port, a temporary output root and a fixture generator. Readiness is signalled at watcher creation after the initial build; bounded waits, host shutdown and restoration of the process working directory isolate each `NonParallel` case. Six cases cover three mounts with locale on/off, assets, HEAD, redirects/queries, missing and nonmatching paths, retained aliases and artifact inventory. The separate real sample run confirms generation and resolved neighbor requests; see [PRD V-003](PRD.md#v-003-89-preview-mount-execution-2026-09-16). #89 remains independent of #81; these checks do not complete the broader V-003 or scheme-policy work.
 
 ### DES-009 / DES-010: Client behavior, diagnostics, and compatibility
 
@@ -301,6 +303,7 @@ V-006 should record the actual blog snapshot, extension configuration, machine/O
 - **State / confirmation:** Confirmed by @justinyoo on 2026-09-12, selecting Option A. This settles the mount mechanism, not unspecified URL rules or implementation evidence. Full document approval is recorded separately in Document control.
 - **Independent tracking:** The user moved implementation and HTTP acceptance to #89 on 2026-09-13. This is a preview base-path defect, not a locale-generation issue, and no longer blocks #81/V-008.
 - **Option A - prefix-aware static serving (chosen):** place path-base handling before default/static-file middleware for supported configured prefixes; keep one artifact layout.
+- **Implementation evidence, 2026-09-16:** the user requested #89's fix; `UsePathBase` now precedes both middleware registrations. Six actual-application HTTP cases and the four-configuration real sample matrix pass on Windows. Root aliases are retained for compatibility; unsupported URL policy remains TG-001. Full results and historical failures remain in PRD V-003/V-008, not a whole-document or release approval.
 - **Option B - duplicate or nest generated output under the prefix:** changes physical layout and couples generation to deployment URLs, increasing the risk of double-prefixes and divergent root/subpath artifacts.
 - **Rationale / consequences:** Option A changes the server boundary rather than every generator/theme destination. Retain root-mode behavior and verify directory-index redirects and asset requests. Unsupported `BaseUrl` forms cannot be silently normalized; TG-001 remains authoritative.
 - **ADR relationship:** None; a local middleware mechanism does not need a separate ADR unless its contract later expands.
@@ -320,7 +323,7 @@ Keeping .NET/Razor, current package direction, explicit plugin identity, and sta
 
 ## 4. Requirement coverage and verification strategy
 
-All mappings use TRD v0.6 against PRD v0.10. Earlier evidence remains valid for its actual scope; new acceptance decisions do not retroactively establish passing contrast or engine-matrix results.
+All mappings use TRD v0.7 against PRD v0.11. Earlier evidence remains valid for its actual scope; #89's later preview results do not rewrite earlier failures or expand the #81 browser evidence.
 
 | TRD requirement | Design references | Mechanism / coverage | Verification and evidence state |
 | --- | --- | --- | --- |
@@ -340,7 +343,7 @@ All mappings use TRD v0.6 against PRD v0.10. Earlier evidence remains valid for 
 | TR-014 | DES-005/009 | Razor encoding/raw boundaries; shared formatting with limited checks, broader scheme policy pending | V-002: navigation labels and sink-specific compatible/unsafe cases; Pending; DQ-001 |
 | TR-015 | DES-001/003/007/010 | Installed-code trust boundary, bounded data access, contextual diagnostics | V-001/V-002/V-007: synthetic markers and explicit enablement; Pending |
 | TR-016 | DES-003/005/008/010 | Shared token forwarding, observed cancellation, legacy checks and honest completion | V-004/V-007: baseline controlled cancellation; Pending. New sequence-preparation evidence belongs to V-008 under TR-021 |
-| TR-017 | DES-004/008/009 | Shared formatting and #89's unimplemented preview mount; locale-aware new-link application owned by TR-022 | V-003/V-007 remain open. V-008 retains root preview/correctly mounted static-host checks; #89 does not block #81 |
+| TR-017 | DES-004/008/009 | Shared formatting and #89's implemented preview mount; locale-aware new-link application owned by TR-022 | Scoped #89 HTTP checks pass; broader V-003/V-007 remain open. V-008 retains its separate #81 evidence |
 | TR-018 | DES-009 | Shared theme behavior; component-specific thresholds/evidence owned by TR-022 | V-005/V-007: broader real-browser/device and theme assessment remains open. DQ-003 is resolved only for the #81 component method |
 | TR-019 | DES-011 | Resource model and reproducible actual-blog measurement boundaries | V-006: workload/environment/results record; Pending; DQ-004 |
 | TR-020 | DES-001/004/008/010 | Propagation/logging and documented partial/stale artifact lifecycle | V-004/V-007: success, invalid input, I/O/hooks/render/cancellation failures; Pending |
@@ -387,7 +390,7 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 
 | ID | Issue / state and source | Affected references | Impact and blocking distinction | Owner / next action |
 | --- | --- | --- | --- | --- |
-| DQ-001 | Shared formatting now explicit; complete scheme rules and sink inventory remain unknown under TG-001 | DES-004/005/008/009; TR-014/017 | Blocks new scheme rules and unsupported base-URL decisions, not existing helper reuse; preview mount remains separately unimplemented | Unassigned; resolve remaining TRD rules before new validation; route product compatibility changes to PRD |
+| DQ-001 | Shared formatting now explicit; complete scheme rules and sink inventory remain unknown under TG-001 | DES-004/005/008/009; TR-014/017 | Blocks new scheme rules and unsupported base-URL decisions, not existing helper reuse or the now-implemented path-prefix mount | Unassigned; resolve remaining TRD rules before new validation; route product compatibility changes to PRD |
 | DQ-002 | Per-write ownership direction confirmed; platform-safe link/I/O details and compatible custom-theme-service integration remain unknown | DEC-001, DES-006/007; TR-011/013 | Blocks comprehensive containment/ownership implementation readiness; neither string checks nor built-in-only integration establish full coverage | Unassigned; resolve detailed mechanism and authorize bounded platform/API analysis separately; retain public contracts meanwhile |
 | DQ-003 | #81 method resolved and component checks passed on 2026-09-14; broader methodology remains open | DES-009/012; TR-018 generally, TR-022 scoped criteria | No remaining #81 method/evidence gap; broad V-005 is not complete | Retain the repeatable suite and V-008 results; resolve wider methodology separately |
 | DQ-004 | Missing actual-blog snapshot/access, extensions, environment and executor; inherited TG-003 | DES-011; TR-019 | Blocks benchmark execution, not baseline engine design; no invented substitute dataset or results | Unassigned; owner selects inputs for next-phase V-006 |
@@ -398,7 +401,7 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall against PRD v0.10/TRD v0.6, with complete #81-specific V-008 evidence.
+- **Supported status:** Review-ready overall against PRD v0.11/TRD v0.7, with retained #81-specific V-008 evidence and passing scoped #89 preview checks.
 - **Material blockers:** No scoped V-008 gap remains after the contrast/WebKit fixes. #89 and broader gaps remain independent; no whole-product readiness claim is made.
 - **Confirmation:** Historical approvals and DEC-001/002 confirmations stand. @justinyoo approved #81's design and then requested implementation on 2026-09-13. Concrete model/context names and observed results are recorded in this alignment; shared gaps, whole-document approval and release authorization remain separate.
 - **Reviewer pass:** Reconciled the runner, isolated server, state calculations, scoped style/markup fixes and final report with all 22 mappings.
@@ -423,6 +426,7 @@ The implemented baseline adds optional `show_in_navigation` frontmatter and chan
 | 2026-09-13 | Remove preview mounting from #81's gate and track it in #89 | Explicit user confirmation; scope update linked in DEC-003 | Keep DEC-002/DES-008/TR-017/V-003 as the mount work's owners, preserve the 404 observation, and retain locale-aware link checks plus other V-008 acceptance in #81 |
 | 2026-09-14 | Define approved component-check method in TDD v0.7 | User selected TR-022 ratios and three-engine desktop/mobile automation | Resolve #81's method, specify rendered-color/luminance and engine evidence collection, keep broader V-005 separate, and retain pending execution without invented pass results |
 | 2026-09-14 | Complete repeatable V-008 acceptance | Further implementation request and observed matrix | Add pinned runner/PR CI, fix contrast/WebKit tabbing, record 42 browser/4 math/493 .NET passes, and preserve separate broader obligations |
+| 2026-09-16 | Record implemented DEC-002 in TDD v0.8 | User requested #89's fix; actual middleware, HTTP regressions and real sample matrix | Mount the existing artifact with `UsePathBase` before default/static files; retain aliases, all IDs/approvals, TG-001 and wider evidence boundaries |
 
 ### Source map
 

@@ -89,6 +89,8 @@ dotnet run -- --build
 
 Refresh the browser after preview regeneration. Razor/C# changes require recompilation. Use `BaseUrl` for subpath hosting.
 
+For preview, set `Site:BaseUrl` to `/` or a path prefix with leading and trailing slashes, such as `/docs/` or `/manual/docs/`. Open the logged preview URL: pages, assets, and directory redirects resolve beneath that prefix with or without locale routing. Output remains directly under `preview/`, without an extra prefix directory. Unprefixed URLs remain accessible for compatibility; the mount is not an access restriction. Other base-URL forms are not covered by this preview contract. Production hosts must mount `dist/` at the configured prefix themselves.
+
 vNext includes breaking plugin identity, theme-component, and page-route changes. Review the migration reference before upgrading.
 
 ## Learn more

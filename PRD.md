@@ -4,11 +4,11 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.10 |
+| Document version | 0.11 |
 | Status | Review-ready |
-| Last updated | 2026-09-14 |
-| Scope | Retained vNext baseline plus implemented #81 code with passed V-008 component acceptance; preview mounting and broader V-005 work remain separate |
-| Code baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the pager acceptance follow-up recorded in this revision |
+| Last updated | 2026-09-16 |
+| Scope | Retained vNext baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting with scoped V-003 evidence; broader verification remains open |
+| Code baseline | `3e50dab` plus the tested #89 preview-mount fix in this revision |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
@@ -18,7 +18,7 @@
 | Feature decision | @justinyoo confirmed #81's replacement scope and two-tier source-less compatibility policy on 2026-09-13; this is behavior confirmation, not whole-document sign-off or delivered code |
 | Component acceptance | @justinyoo confirmed #81-only contrast thresholds and three-engine desktop/mobile automation on 2026-09-14; [decision record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5654089522) |
 
-**Readiness:** v0.10 remains Review-ready overall, while #81's approved V-008 acceptance is complete. The repeatable suite passed in Chromium, Firefox and WebKit at both viewport sizes after pager-only contrast and keyboard fixes. Historical approvals remain intact; #89 and broader V-005 work are separate. This is feature acceptance, not whole-product or release sign-off.
+**Readiness:** v0.11 remains Review-ready overall. #81's approved V-008 acceptance is complete; #89 now has passing scoped preview HTTP evidence under V-003. Historical approvals and the earlier three-engine component results remain intact. This revision records implementation and evidence, not new whole-document approval, completion of broader V-003/V-005, or release sign-off.
 
 ## 1. Overview and evidence
 
@@ -175,6 +175,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Basis / scope:** Confirmed [application](src\ScissorHands.Web\ScissorHandsApplication.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs), and [Web guide](src\ScissorHands.Web\README.md); Supporting.
 - **Actor / rationale:** Owner iterates on content and sees generated results before publishing (J-002, G-002).
 - **Behavior:** Perform initial generation and serve `preview`; watch content/theme file create, change, rename, and delete events, coalesce bursts, and serialize regeneration. Report successful rebuilds and instruct the owner to refresh the browser.
+- **Base path:** Preview serves pages and assets at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. See V-003's #89 execution record and TR-017 for the supported usage and retained compatibility behavior.
 - **Acceptance:** After a successful content edit and rebuild, browser refresh displays the regenerated file. A watcher callback failure is logged; subsequent changes can trigger another rebuild. Initial generation errors propagate rather than being reported as completed builds.
 - **Recovery boundary:** Preview regeneration writes into the existing output, so deleted/renamed sources can leave stale generated files until preview is restarted. Writes are not atomic: a failed build/rebuild may leave partial or mixed output, and initial build/preview startup clears its output folder. Use only a successful production build as a publication candidate; automated cleanup/rollback is not promised.
 
@@ -242,7 +243,7 @@ The user agreed on 2026-09-11 to keep V-001 through V-007 as broad next-phase ve
 | --- | --- | --- |
 | V-001 | Filesystem safety / NFR-002 | Exercise content reads, generated-page writes, and asset copying against traversal, symbolic-link escapes, and output collisions. Record containment and overwrite-protection results, including gaps beyond existing route tests |
 | V-002 | Rendering and privacy / NFR-003/010 | Check metadata encoding, unsafe URL schemes at relevant boundaries, and accidental secret exposure in generated output/logs using synthetic fixtures, not real credentials. Preserve supported raw Markdown/plugin HTML as an explicit trust boundary; record results and any unsafe paths |
-| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and prefixes such as `/docs/`, including pages, locale routes and assets. #89 owns the actual preview-prefix defect and its HTTP acceptance. Record serving configuration and request results; helper assertions alone do not establish mounting. V-008's locale-aware links/root preview/controlled-host evidence remains separately scoped |
+| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and prefixes such as `/docs/`, including pages, locale routes and assets. #89's preview-mount checks pass in the execution record below; the broader program remains open. Record serving configuration and request results; helper assertions alone do not establish mounting. V-008's evidence remains separately scoped |
 | V-004 | Failures and cancellation / NFR-004/006 | Exercise invalid input, generation failures, and cancellation-aware APIs. Confirm actionable errors and no misleading success; record partial-output behavior against documented limitations, without introducing atomic-output or bounded CLI-shutdown guarantees |
 | V-005 | Accessibility and browsers / NFR-008, FR-010 | Evaluate reading/navigation, nested disclosure buttons, keyboard/touch use, Escape/focus return, outside dismissal, no-JavaScript links, labels, and light/dark contrast across the agreed desktop/mobile browsers. Record actual browser/OS/device coverage and findings; no formal WCAG certification is required. V-008 separately records the #81 controls |
 | V-006 | Performance baseline / NFR-009 | Benchmark the owner's actual blog with its assets and enabled extensions. Record the workload/environment details, build duration, preview-update delay, memory usage, and measurement method. Completion establishes measurements, not compliance with an unagreed numerical target |
@@ -250,6 +251,22 @@ The user agreed on 2026-09-11 to keep V-001 through V-007 as broad next-phase ve
 | V-008 | #81 feature acceptance / FR-011, TR-021/TR-022 | Complete under the approved #81 scope: prior engine/root-preview evidence plus 42 passing three-engine browser checks, 4 contrast-math tests and passing rendered ratios. #89 and broader V-005 remain outside this gate |
 
 For each item, record what was exercised, the environment, results, and reproducible gaps. Failed, blocked, or skipped checks remain explicit; an attempted check is not a passing result. Track necessary corrections against the existing requirements, then recheck affected behavior. The benchmark needs reproducible measurements, not an invented speed threshold. These records are next-phase deliverables, not prerequisites for finishing the requirements document.
+
+### V-003: #89 preview-mount execution, 2026-09-16
+
+The user requested the fix after issue analysis. On Windows with .NET SDK **10.0.401**, Release configuration, and code `3e50dab` plus this revision, the original middleware reproduced the reported prefix 404. The new [preview HTTP regression](test/ScissorHands.Web.Tests/ScissorHandsApplicationTests.cs) first passed both root cases and failed both `/docs/` cases; after prefix handling was added, all six expanded cases passed.
+
+| Scope | Observed evidence | Outcome |
+| --- | --- | --- |
+| Actual application middleware | Ephemeral Kestrel servers at `/`, `/docs/`, and `/manual/docs/`, each with locale routing on/off; fixture generator supplies known files through the real preview startup path | Six cases passed |
+| Request behavior | Home, nested/encoded pages, dated/locale posts, tags, explicit 404 document, CSS/JS/images, CSS HEAD, directory and mount-root redirects with retained queries, missing routes/assets, nonmatching/doubled prefixes and retained unprefixed aliases | Passed; no generated prefix directory or file-inventory changes |
+| Real sample build and preview | Four configurations: `/` and `/docs/`, each with `UseLocaleInUrl` false/true and `Locale=ko-KR`; isolated sample processes using `--preview` and `--build`, with preview listening on `http://127.0.0.1:0` | 56 HTTP checks passed; each build/preview pair had the same 21 artifact-relative files |
+| Reported failure and generated links | `/docs/ko-kr/parent/group/visible-grandchild/`, its generated Child/Child 2 neighbor targets, and prefixed theme/image requests | Returned 200; directory redirects returned 301 retaining prefix/query, and missing routes returned 404 |
+| Regression gate | Release solution build, affected Web suite, then `dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal` | Build succeeded; Web 290/290 and full suite 503/503 passed, no skips |
+
+The automated HTTP fixture isolates serving from generation; the separate sample run exercises real generation and rendered neighbor URLs. Temporary servers were stopped and sample configuration overrides were child-process-local. This fixes #89's preview mount without changing URL helpers, locale generation, production-host responsibilities, or watcher behavior. Root and slash-delimited path prefixes are the documented usage; other base-URL forms and broader scheme policy remain TG-001. The retained unprefixed aliases are compatibility behavior, not an access-control guarantee.
+
+The historical September 13/14 failures below remain valid for those revisions. This run did not rerun browser/device tests, test representative third-party plugin output, or certify other operating systems or a production host. It does not close the broader V-003 program, TG-001, V-005, or authorize publication or issue closure. #81/V-008 acceptance remains unchanged.
 
 ### V-008: #81 feature acceptance
 
@@ -347,7 +364,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | Q-004 / Unknown (release arrangements) | Who owns operational release acceptance and any further outcome evaluation, and when will they occur? | Goals and release criteria | Historical v0.6 and scoped #81 approvals are recorded; remaining whole-document review is separate. Execution ownership, timing and actual release authorization remain to be confirmed; these are not new feature behavior decisions |
 | Q-005 / Confirmed | Approved ordering/adjacency, two-tier fallback and component criteria; #89 and broad V-005 tracked separately | FR-010/011, NFR-007, RD-005 | Implemented with passing V-008 evidence; #81 is ready to close on merge, without completing unrelated work |
 
-Historical approvals and evidence remain intact. v0.10 adds the explicitly approved #81 component thresholds and engine-based evidence boundary without changing the broader V-005 program. Optional outcome measurement and release arrangements remain separate; no release authorization is inferred.
+Historical approvals and evidence remain intact. v0.11 adds #89's scoped preview evidence to v0.10's approved #81 component criteria without changing the broader verification programs. Optional outcome measurement and release arrangements remain separate; no release authorization is inferred.
 
 ### Decisions and material changes
 
@@ -370,13 +387,14 @@ Historical approvals and evidence remain intact. v0.10 adds the explicitly appro
 | 2026-09-13 | Move preview base-path mounting out of #81's acceptance gate | Explicit user confirmation; #89 and scope update linked in FR-011 | Supersede the earlier mount dependency gate, retain the 404 evidence under V-003/DEC-002, keep locale-aware new-link checks and other V-008 criteria unchanged; neither issue closed |
 | 2026-09-14 | Set component acceptance standards for #81 in v0.10 | Explicit user selections; decision linked in FR-011 | Require 4.5:1 pager text / 3:1 focus contrast and accept three-engine desktop/mobile automation; retain broad V-005 obligations separately. Method settled, execution pending |
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
+| 2026-09-16 | Record #89 preview-mount implementation in v0.11 | User requested the fix; actual application HTTP regressions, sample build/preview matrix and full .NET suite | Record scoped V-003 passes and unchanged artifact layout; preserve historical failures, all IDs, approvals and broader gaps |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall. Historical approvals remain; v0.10 records explicitly approved #81 component criteria, not whole-document or release sign-off.
+- **Supported status:** Review-ready overall. v0.11 adds scoped #89 evidence; historical approvals remain, with no new whole-document or release sign-off.
 - **Remaining decisions versus execution:** V-008's approved checks pass after the targeted fixes. No feature acceptance gap remains for #81; merging the implementing PR can close it. #89, V-005 and broader release work remain separate.
 - **Approval:** @justinyoo approved the #81-specific requirements and then separately requested implementation on 2026-09-13. Historical approvals remain intact. The implementation request authorized the recorded code and scoped checks, not whole-document sign-off, resolution of shared gaps, publication or deployment.
-- **Reviewer pass:** Reconciled TRD v0.6/TDD v0.7 with the actual fixes and complete local engine/viewport report, preserving the earlier failures and all historical IDs.
+- **Reviewer pass:** Reconciled TRD v0.7/TDD v0.8 with the preview middleware, six HTTP cases and real sample results; preserved the earlier #81 evidence, failures, approvals and all historical IDs.
 - **Review limitations:** Scoped automated evidence is complete, not a full accessibility/security audit, physical-device matrix or blog benchmark. CI execution of the new job remains separately observable on the PR.
 
 ## 9. Reference map
