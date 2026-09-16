@@ -1,0 +1,40 @@
+name: General Request
+description: Request repository maintenance, documentation updates, or other changes
+labels: [ 'triage' ]
+
+body:
+  - type: textarea
+    id: request
+    attributes:
+      label: Request
+      description: What would you like to change?
+      placeholder: Describe the requested change.
+    validations:
+      required: true
+
+  - type: textarea
+    id: motivation
+    attributes:
+      label: Motivation
+      description: Why is this change needed?
+      placeholder: Explain the problem or benefit motivating this request.
+    validations:
+      required: false
+
+  - type: textarea
+    id: completion-criteria
+    attributes:
+      label: Completion Criteria
+      description: What would count as done?
+      placeholder: List the expected outcomes or checks for completion.
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Add related issues, examples, or other useful details.
+      placeholder: Include any supporting context or links.
+    validations:
+      required: false
