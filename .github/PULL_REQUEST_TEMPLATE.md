@@ -41,7 +41,7 @@ git checkout [branch-name]
 ```
 
 * Test the code
-<!-- Add steps to run the tests suite and/or manually test. Use one bash code block for commands shared by Bash and PowerShell; provide separate variants only when syntax or behavior differs. -->
+<!-- Add steps to run the tests suite and/or manually test -->
 ```
 ```
 

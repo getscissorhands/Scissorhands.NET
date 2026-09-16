@@ -1,22 +1,10 @@
 # Changelog
 
-This file summarizes the repository's tagged releases, newest first, from the
-initial commit onward. Each release covers changes since the preceding tag in
-the same Git history; the first tag in each history includes its initial
-development. Dates are the tagged commits' calendar dates, which can differ from
-the publication dates shown in
-[GitHub Releases](https://github.com/getscissorhands/Scissorhands.NET/releases).
+This file summarizes the repository's tagged releases, newest first, from the initial commit onward. Each release covers changes since the preceding tag in the same Git history; the first tag in each history includes its initial development. Dates are the tagged commits' calendar dates, which can differ from the publication dates shown in [GitHub Releases](https://github.com/getscissorhands/Scissorhands.NET/releases).
 
-The original engine began on
-[2015-08-08](https://github.com/getscissorhands/Scissorhands.NET/commit/f35f751effe868d336a800229dae5ae5cd57616d).
-The modern Blazor line has a separate root commit on
-[2022-01-01](https://github.com/getscissorhands/Scissorhands.NET/commit/53b1ca3491e41b6e83dbebb1393ad573a75ab1fb).
-These are unrelated Git histories, so the first modern release is not presented
-as a tag-to-tag comparison with the legacy alpha.
+The original engine began on [2015-08-08](https://github.com/getscissorhands/Scissorhands.NET/commit/f35f751effe868d336a800229dae5ae5cd57616d). The modern Blazor line has a separate root commit on [2022-01-01](https://github.com/getscissorhands/Scissorhands.NET/commit/53b1ca3491e41b6e83dbebb1393ad573a75ab1fb). These are unrelated Git histories, so the first modern release is not presented as a tag-to-tag comparison with the legacy alpha.
 
-Preview releases belong to the `vnext` development line. Their inclusion here
-does not imply that the same implementation is present on `main`. Use the tag
-matching your installed package version.
+Preview releases belong to the `vnext` development line. Their inclusion here does not imply that the same implementation is present on `main`. Use the tag matching your installed package version.
 
 ## v1.0.0-preview.20260915.1 - 2026-09-15
 
@@ -190,12 +178,6 @@ exists in that history.
 
 ## Development and migration
 
-Consult the
-[vNext documentation handoff](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md)
-and [migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext)
-for current behavior and upgrade instructions. Branch documentation can describe
-changes not yet in a published package.
+Consult the [vNext documentation handoff](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md) and [migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) for current behavior and upgrade instructions. Branch documentation can describe changes not yet in a published package.
 
-Only actual Git tags are release headings above. Draft release names without
-corresponding tags and version strings mentioned only in commit messages are not
-treated as additional releases.
+Only actual Git tags are release headings above. Draft release names without corresponding tags and version strings mentioned only in commit messages are not treated as additional releases.
