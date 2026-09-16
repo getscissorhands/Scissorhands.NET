@@ -34,7 +34,7 @@ The top-level readme for this repo contains a link to each sample in the repo. I
 ## How to Test
 *  Get the code
 
-```
+```bash
 git clone [repo-address]
 cd [repo-name]
 git checkout [branch-name]

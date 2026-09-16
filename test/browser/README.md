@@ -8,9 +8,9 @@ in Chromium, Firefox and WebKit.
 Prerequisites: the repository's .NET SDK, restored sample project dependencies,
 and Node.js 24. From the repository root:
 
-```powershell
+```bash
 dotnet restore ./samples/ScissorHands.Sample/ScissorHands.Sample.csproj
-Set-Location ./test/browser
+cd ./test/browser
 npm ci
 npx playwright install chromium firefox webkit
 npm test

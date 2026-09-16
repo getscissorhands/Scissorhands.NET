@@ -77,6 +77,7 @@ Read the relevant package README and its linked sections in the [detailed refere
 
 - Follow [.editorconfig](.editorconfig) and nearby code instead of reformatting unrelated files. The configuration specifies CRLF, four-space C# indentation, file-scoped namespaces, and two-space indentation for JSON, XML, and YAML.
 - Use `/` for directory separators in Markdown prose, links, and command/code examples. Preserve non-path escapes such as regex anchors.
+- Use a single `bash` code block for commands that work unchanged in Bash and PowerShell. Prefer shared directory commands (`cd`, `pushd`, `popd`), which are also PowerShell aliases, when their behavior is equivalent for the example. Provide separate Bash and PowerShell variants only when syntax or behavior differs.
 - Nullable reference types, implicit usings, and warnings-as-errors are enabled in [Directory.Build.props](Directory.Build.props). Do not weaken them to hide errors.
 - Manage dependency versions in [Directory.Packages.props](Directory.Packages.props); add versionless `PackageReference` entries to the appropriate project.
 - Reuse existing validation, path handling, and service abstractions. Surface errors with actionable context; do not swallow exceptions or substitute success-shaped results for invalid configuration or failed generation.
