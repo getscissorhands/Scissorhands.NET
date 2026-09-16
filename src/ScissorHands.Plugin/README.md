@@ -9,15 +9,7 @@ Install this package when authoring a plugin. Applications that only consume plu
 
 ## Install
 
-Bash:
-
 ```bash
-dotnet add package ScissorHands.Plugin --prerelease
-```
-
-PowerShell:
-
-```powershell
 dotnet add package ScissorHands.Plugin --prerelease
 ```
 

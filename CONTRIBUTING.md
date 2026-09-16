@@ -22,16 +22,7 @@ Fork the repository, clone your fork, and create a branch from the current
 
 Run these commands from the repository root:
 
-Bash:
-
 ```bash
-dotnet restore ./ScissorHands.slnx
-dotnet build ./ScissorHands.slnx -c Release --no-restore
-```
-
-PowerShell:
-
-```powershell
 dotnet restore ./ScissorHands.slnx
 dotnet build ./ScissorHands.slnx -c Release --no-restore
 ```
@@ -44,30 +35,14 @@ for the browser acceptance suite.
 
 Start with the affected test project, replacing `Web` as appropriate:
 
-Bash:
-
 ```bash
-dotnet test --project ./test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj -c Release
-```
-
-PowerShell:
-
-```powershell
 dotnet test --project ./test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj -c Release
 ```
 
 After a successful Release build, run the full suite for shared-contract or
 cross-project changes:
 
-Bash:
-
 ```bash
-dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal
-```
-
-PowerShell:
-
-```powershell
 dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal
 ```
 

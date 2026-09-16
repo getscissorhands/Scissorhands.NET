@@ -46,19 +46,9 @@ ScissorHands.NET is a .NET 10 static site generator that combines Markdown, YAML
 
 Create an empty ASP.NET Core application and install the engine:
 
-Bash:
-
 ```bash
 dotnet new web -n MyScissorHandsApp
 cd MyScissorHandsApp
-dotnet add package ScissorHands.Web --prerelease
-```
-
-PowerShell:
-
-```powershell
-dotnet new web -n MyScissorHandsApp
-Set-Location MyScissorHandsApp
 dotnet add package ScissorHands.Web --prerelease
 ```
 
@@ -118,29 +108,13 @@ Write the post in Markdown.
 
 Run from the application directory so configuration and content resolve there:
 
-Bash:
-
 ```bash
-dotnet run -- --preview
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --preview
 ```
 
 Generate deployable static files without starting a preview server:
 
-Bash:
-
 ```bash
-dotnet run -- --build
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --build
 ```
 
@@ -440,16 +414,7 @@ Website destination: `/docs/build/`.
 
 Run the application from its own directory so configuration and content resolve correctly.
 
-Bash:
-
 ```bash
-dotnet run -- --preview
-dotnet run -- --build
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --preview
 dotnet run -- --build
 ```
@@ -490,15 +455,7 @@ Website destination: `/docs/themes/`.
 
 Install `ScissorHands.Theme` when authoring a theme. Applications consuming a theme normally install `ScissorHands.Web`, which references the shared packages.
 
-Bash:
-
 ```bash
-dotnet add package ScissorHands.Theme --prerelease
-```
-
-PowerShell:
-
-```powershell
 dotnet add package ScissorHands.Theme --prerelease
 ```
 
@@ -746,15 +703,7 @@ Website destination: `/docs/plugins/`.
 
 Install `ScissorHands.Plugin` when authoring plugins. Applications consuming plugins normally install `ScissorHands.Web`.
 
-Bash:
-
 ```bash
-dotnet add package ScissorHands.Plugin --prerelease
-```
-
-PowerShell:
-
-```powershell
 dotnet add package ScissorHands.Plugin --prerelease
 ```
 

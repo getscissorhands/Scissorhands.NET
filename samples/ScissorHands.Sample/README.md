@@ -4,15 +4,7 @@ A runnable sample using the built-in `default` theme and local project reference
 
 Run from this directory and select the mode explicitly:
 
-Bash:
-
 ```bash
-dotnet run -- --preview
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --preview
 ```
 
@@ -20,15 +12,7 @@ For IDE runs, supply `--preview` or `--build` as application arguments; the laun
 
 Generate static files without starting the preview server:
 
-Bash:
-
 ```bash
-dotnet run -- --build
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --build
 ```
 

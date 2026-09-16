@@ -9,19 +9,9 @@
 
 Create an empty ASP.NET Core application:
 
-Bash:
-
 ```bash
 dotnet new web -n MyScissorHandsApp
 cd MyScissorHandsApp
-dotnet add package ScissorHands.Web --prerelease
-```
-
-PowerShell:
-
-```powershell
-dotnet new web -n MyScissorHandsApp
-Set-Location MyScissorHandsApp
 dotnet add package ScissorHands.Web --prerelease
 ```
 
@@ -47,15 +37,7 @@ tags: [static-site]
 
 Run from the application directory:
 
-Bash:
-
 ```bash
-dotnet run -- --preview
-```
-
-PowerShell:
-
-```powershell
 dotnet run -- --preview
 ```
 
