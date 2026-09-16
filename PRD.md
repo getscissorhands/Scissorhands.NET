@@ -4,21 +4,24 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.10 |
+| Document version | 0.11 |
 | Status | Review-ready |
-| Last updated | 2026-09-14 |
-| Scope | Retained vNext baseline plus implemented #81 code with passed V-008 component acceptance; preview mounting and broader V-005 work remain separate |
+| Last updated | 2026-09-16 |
+| Scope | Retained vNext baseline and completed #81 acceptance, plus the unimplemented FR-012 locale-generation extension; #89 and broader verification remain separate |
 | Code baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the pager acceptance follow-up recorded in this revision |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
 | Sign-off | Historical v0.6 and v0.8 #81-only approvals retained; the user confirmed v0.10's component criteria on 2026-09-14, not whole-document or release sign-off |
-| Approval scope | Historical v0.6 approval is retained. New approval covers only #81's requirements and acceptance structure; remaining revised text, shared gaps and release authorization are not approved by this action |
+| Approval scope | Historical v0.6 approval and later #81-only approvals are retained. The 2026-09-16 confirmations cover Q-006 through Q-012, not whole-document sign-off, resolution of unrelated gaps or implementation/release authorization |
 | #81 scoped approval | @justinyoo approved FR-011, V-008's acceptance structure and RD-005's feature mitigation/residual-risk requirements on 2026-09-13; [approval record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653569790) |
 | Feature decision | @justinyoo confirmed #81's replacement scope and two-tier source-less compatibility policy on 2026-09-13; this is behavior confirmation, not whole-document sign-off or delivered code |
 | Component acceptance | @justinyoo confirmed #81-only contrast thresholds and three-engine desktop/mobile automation on 2026-09-14; [decision record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5654089522) |
+| Locale revision | @justinyoo requested this revision and confirmed Q-006 through Q-012 on 2026-09-16; individual feature decisions are not whole-document sign-off or implementation authorization |
 
-**Readiness:** v0.10 remains Review-ready overall, while #81's approved V-008 acceptance is complete. The repeatable suite passed in Chromium, Firefox and WebKit at both viewport sizes after pager-only contrast and keyboard fixes. Historical approvals remain intact; #89 and broader V-005 work are separate. This is feature acceptance, not whole-product or release sign-off.
+**Readiness:** v0.11 is Review-ready with FR-012's product choices confirmed in Q-006 through Q-012. The feature is not implemented; V-009 has no execution evidence. Historical approvals and #81's completed V-008 evidence remain intact, without whole-document approval or implementation/release authorization for the new work.
+
+**Current versus target behavior:** FR-001 through FR-011 describe the retained implementation unless explicitly qualified. FR-012 owns the confirmed, unimplemented changes to locale-enabled root/index/tag/navigation contracts. `UseLocaleInUrl: false` retains existing behavior. Do not interpret the target as already shipped.
 
 ## 1. Overview and evidence
 
@@ -46,6 +49,7 @@ This is qualitative evidence: the amount of time saved and degree of improvement
 | Merged [theme URL helper change](https://github.com/getscissorhands/Scissorhands.NET/pull/86), [navigation change](https://github.com/getscissorhands/Scissorhands.NET/pull/87), and user update request on 2026-09-13 | Current implementation baseline and authorization to align these documents; detailed behavior is in the [website documentation handoff](docs\website-documentation.md) | Source-backed behavior and existing regression cases are not new document sign-off, completed release verification, or evidence that the website handoff has been published |
 | User-confirmed [#81 decision comment](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653313907) and document update request on 2026-09-13 | Filename-based, index-first, depth-first reading order and automatic previous/next links; retain slug-based grouping and replace the original metadata/JSON proposal | Confirmed implementation scope, not current behavior or issue completion; the issue remains open until delivery |
 | User's implementation request and scoped execution on 2026-09-13 | #81 code, sample and guides implemented; Release solution build and 493 tests passed on Windows; root HTTP, controlled prefix/locale serving and Chromium interactions observed under V-008 | Preview-prefix serving returned 404 at the configured prefix; other browsers/devices, formal contrast acceptance and wider verification remain outstanding. No release or issue-closure claim |
+| Locale discussion and focused decisions on 2026-09-16 | Owner selected default-locale root redirect, discovered locales, organizational folders, strict locale browsing, conditional legacy redirects, routing-only presentation scope and rejection of conflicting shared-404 locale metadata | Q-006 through Q-012 record the selections. This is a requirements revision, not implementation authorization, passing verification or approval of unrelated document scope |
 
 **Terminology:** *Confirmed* means supported by a user decision or identified source, with the basis stated. *Proposed* means not yet agreed. *Unknown* means unresolved. *Not applicable* means deliberately outside this scope with a reason. Code-backed baseline behavior is distinguished from new proposals throughout.
 
@@ -75,13 +79,15 @@ Guardrail observations should include broken internal links, accidental draft pu
 
 ## 4. Scope and priorities
 
-FR-001 through FR-010 retain the existing baseline except for FR-011's navigation-order extension. FR-011 is **implemented with passing scoped V-008 evidence**. These feature results do not complete broader requirements or authorize a release.
+FR-001 through FR-011 retain the existing baseline and completed #81 evidence. FR-012 adds the confirmed, **unimplemented** locale-generation extension. Earlier feature results do not establish acceptance of FR-012 or authorize a release.
 
 ### In scope
 
 Local .NET application setup; explicit build/preview/help modes; Markdown and supported YAML frontmatter; posts and independent pages; nested page directory indexes; date/locale URL options; index, tags, and 404 generation; opt-in hierarchical page navigation; Razor rendering; configured themes and supported assets; opt-in plugin stages and dependencies; local regeneration; current compatibility obligations.
 
 The #81 addition is source-filename navigation ordering and automatic previous/next links across source directories, retaining existing slug-based grouping and eligibility. Eligible source-less pages follow file-backed pages using the confirmed title/route fallback. It does not change post-date ordering or title ordering on tag collection pages.
+
+The locale addition generates language-specific collections when `UseLocaleInUrl` is enabled and redirects the generated root to the default locale. FR-012 specifies discovered locales, organizational source folders, isolated browsing and conditional legacy-tag redirects. Translation management, translated theme/site text and a language switcher remain outside this revision.
 
 ### Non-goals
 
@@ -129,6 +135,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Directory indexes:** With an omitted or blank slug, a nested page `parent\index.md` infers `parent`; the filename comparison is case-insensitive. A non-blank explicit slug wins. Root-level page `index.md` still infers `index`, not the generated homepage, and post inference is unchanged. Locale handling follows inference. Keeping both `parent.md` and `parent\index.md` with inferred slugs fails as a collision; use explicit `slug: parent/index` to retain that older nested-page URL.
 - **Acceptance:** A `hello` post dated 2026-09-11 with effective locale `ko-KR` becomes URL path `ko-kr/2026/09/11/hello` when both options are enabled. A page does not acquire the post-date prefix. Literal `.`/`..` route segments and case-insensitive output collisions, including a file used as a parent directory, fail validation.
 - **Boundary:** Planned content and generated routes are checked before page writes, but after the application may have removed the previous output. This is not proof of complete asset-collision or symlink protection (NFR-002).
+- **Locale extension:** FR-012 adds generated locale roots and tag/redirect routes to output ownership, preserving explicit slug precedence and source inference. Source-page/generated-home collisions remain errors. Q-012 additionally rejects conflicting locale metadata on the shared 404 when enabled.
 
 ### FR-004: Provide index, tag, and not-found pages
 
@@ -137,6 +144,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Behavior:** Always generate the site index and `404.html`; list posts newest first, with undated posts last. A page whose slug is `404.html` supplies the custom not-found document rather than a normal content page.
 - **Acceptance:** With ordinary tagged content, produce a tag index at `tags` and per-tag routes under `tags`; group names case-insensitively via lowercase normalization and encode tag route text. Pass posts ordered by publication date descending and pages by title ascending. Exclude the custom 404 document from displayed tag collections.
 - **Empty / hosting boundary:** With no eligible tagged content, emit no tag pages; an empty post collection still renders the index and 404. Generated `404.html` does not itself configure HTTP status codes or fallback routing on a static host.
+- **Locale extension:** These unprefixed collection destinations describe current behavior and remain the disabled-mode contract. FR-012 replaces them with locale-scoped collections and a root redirect when enabled, with per-locale empty-tag rules and conditional legacy-tag redirects.
 
 ### FR-005: Swap compatible Razor themes without rewriting content
 
@@ -188,6 +196,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Client acceptance:** With JavaScript enabled, adjacent buttons expand/collapse child lists using mouse, touch, Enter, or Space; Escape closes the applicable group and returns focus to its button. Leaving navigation or clicking outside closes menus. Without JavaScript, the eligible hierarchy remains visible with working links. Metadata retains document/site fallbacks; the light/dark preference persists when JavaScript and browser storage are available. Reading requires no Blazor circuit or client runtime.
 - **Boundary:** Optional theme/plugin JavaScript can still run in the browser. Browser coverage and basic accessibility expectations follow NFR-008; their implementation is not established by the presence of a toggle or responsive CSS. Formal WCAG conformance is not claimed. Storage-disabled preference persistence remains unestablished; no new storage fallback is promised.
 - **Feature relationship:** FR-011 owns #81's new ordering and previous/next behavior, with acceptance evidence in V-008. Delivering that extension does not establish completion of this broader presentation requirement or its assessment.
+- **Locale extension:** The shared-navigation rule above is the current/disabled-mode contract. FR-012/Q-009 require locale-specific navigation and Home/Tags targets when enabled; a locale without tagged content has no generated Tags link.
 
 ### FR-011: Follow an author-controlled page reading sequence
 
@@ -204,6 +213,34 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Acceptance ownership:** FR-011 owns the feature's product criteria; TRD TR-021/TR-022 own its technical obligations, with TDD DES-012/DEC-003 providing design and decision history. The [accepted separation](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653514346) assigns V-008 as the feature acceptance record. Shared rendering, navigation, compatibility, URL, and accessibility requirements still apply without making all their broader work part of #81.
 - **Preview-mount separation:** The user explicitly moved the preview base-path defect to [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89), removing it from #81's completion gate while retaining locale-aware previous/next checks; see the [scope update](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5653999108). #81 owns correct target URLs, root preview navigation, and requests against correctly mounted static output, including locale/subpath combinations. Actual preview-prefix mounting remains required separately under NFR-005/V-003 and DEC-002.
 - **Completion boundary:** The approved feature obligations, compatibility policy, V-008 evidence and RD-005 mitigation are complete. The implementing PR can close #81 on merge. #89 and broader programs remain independent; this document does not merge or directly close an issue.
+- **Locale extension:** FR-012 applies the same ordering and adjacency rules separately within each locale when enabled. This is new scope under V-009, not a retroactive change to #81's acceptance or historical evidence.
+
+### FR-012: Browse generated collections within a locale
+
+- **State / source:** Confirmed product choices by @justinyoo on 2026-09-16, recorded in Q-006 through Q-012. This is unimplemented feature scope, not authorization to implement or release it.
+- **Actor / rationale:** Visitors reading one language need matching entry and discovery pages instead of returning from localized content to mixed-language listings (J-005). Owners continue authoring Markdown and using Razor themes rather than maintaining collection-page Markdown.
+- **Enablement / compatibility:** Apply the new behavior under `Site.UseLocaleInUrl: true`; preserve current unprefixed generation when false. Existing sites already using true need a documented route migration, not a claim of transparent compatibility.
+- **Locale inventory (Q-007):** Always include `Site.Locale`, plus effective locales of published, non-404 posts/pages. Group normalized equivalents such as `en-US` and `en_US` as one locale. No supported-locale list or inference from directory names is added. Draft-only locales do not participate; publication retains FR-002's rules, including future-dated content. A navigation-hidden but published page still contributes its locale.
+- **Generated collections:** For each participating locale, generate `<locale>\index.html`, listing only its posts, even if empty. Generate `<locale>\tags\index.html` and per-tag pages only when that locale has eligible tagged content. Retain newest-first posts, title-ordered tagged pages, draft exclusion and the custom-404 exclusion. A locale with no tags has no tag pages or built-in Tags navigation link. No Markdown homepage or tag index is required.
+- **Confirmed root entry point (Q-006):** Generate root `index.html` that redirects to the locale homepage selected by `Site.Locale`. With base `/blog/` and default `en-US`, `/blog/` leads to `/blog/en-us/`, not `/en-us/` or a mixed-language root homepage. This is static output, not a production .NET endpoint; TRD/TDD specify the portable mechanism and failure safeguards.
+- **Browsing scope (Q-009):** Engine-generated Home/site-title links, tag links, page navigation and previous/next remain in the active locale. Reuse FR-010 eligibility and FR-011 ordering within that locale; do not cross languages at source-directory or source-less-tier boundaries. Do not substitute another language's content when a translation is absent. This controls generated discovery/navigation, not author-written links, publication permissions or a new translation-pair model.
+- **Authoring convention (Q-008):** Retain `contents\posts` and `contents\pages`, with optional locale subdirectories. Document locale comes from frontmatter, otherwise `Site.Locale`; folders do not infer, validate or override it. Recommend explicit `locale` plus locale-free `slug` for locale-folder content. Example: `contents\pages\ko-kr\about.md` with `locale: ko-KR` and `slug: about` produces `/ko-kr/about`. Missing/blank slugs still use existing path inference, including source folders; nothing strips folder/numeric prefixes or mandates new frontmatter fields. No `contents\<locale>\posts` discovery or automatic source rewriting is added.
+- **Legacy tag routes (Q-010):** Generate redirects from unprefixed `tags` and `tags/<tag>` only to corresponding generated default-locale destinations. A tag used only in another locale has no legacy redirect; neither does a tag index when the default locale has no tagged content. An otherwise unowned missing route follows the host's normal not-found behavior, not a different-language listing or a dangling redirect. Do not retain shared mixed-language tag listings when enabled.
+- **Presentation boundary (Q-011):** Generated locale pages expose matching locale metadata/context to themes and plugins. Retain seven theme roles, shared assets and existing site/theme text defaults. No translated UI catalog, translated site settings, language switcher, translation pairing or per-locale 404 is added. An English theme label on a Korean route is not automatically translated by this feature.
+- **Shared 404 (Q-012):** Keep one root `404.html` with default-locale context, including default-locale navigation. When enabled, an explicit custom-404 locale that normalizes differently from `Site.Locale` fails generation with source/field context; omission uses the site default. Equivalent spellings are accepted. Its content remains owner-authored, does not create a locale and is not automatically translated. Disabled-mode behavior remains unchanged.
+- **Acceptance example:** Given published English and Korean posts sharing tag `dotnet`, each locale homepage and tag page lists only its own content and links to the correct locale-prefixed documents. `/blog/` reaches the default locale homepage. With routing disabled, the original root homepage and shared tag listings remain. Route collisions and unsafe destinations fail explicitly rather than overwriting generated collections.
+- **Dependencies / evidence:** Q-006 through Q-012 are resolved product decisions; TR-023/DES-013 define technical acceptance and proposed mechanisms. V-009 owns new evidence; NFR-002/003/005/006/007/008/010 still apply. #89 owns preview mounting independently: creating locale directories does not mount `Site.BaseUrl`, and failed prefix requests block that acceptance rather than counting as passes.
+
+**Authoring examples:** for `BaseUrl: "/blog/"`, locale routing enabled and dated post URLs enabled, organizational folders plus explicit slugs keep routes independent of source placement:
+
+| Source under `contents` | Frontmatter | Resulting URL |
+| --- | --- | --- |
+| `pages\en-us\about.md` | `locale: en-US`, `slug: about` | `/blog/en-us/about` |
+| `pages\ko-kr\about.md` | `locale: ko-KR`, `slug: about` | `/blog/ko-kr/about` |
+| `pages\ko-kr\docs\index.md` | `locale: ko-KR`, `slug: docs` | `/blog/ko-kr/docs` |
+| `posts\ko-kr\hello.md` | `locale: ko-KR`, `slug: hello`, `published: 2026-09-16` | `/blog/ko-kr/2026/09/16/hello` |
+
+The generated root and locale homepages are output only; do not add a source `index.md` to claim those routes. Existing sources that collide must use a distinct explicit slug.
 
 ## 6. Quality requirements and constraints
 
@@ -230,7 +267,7 @@ The user confirmed the following quality baseline on 2026-09-11. Agreed requirem
 
 **Benchmark record (NFR-009):** identify the blog snapshot, post/page counts, asset volume, enabled theme/plugins, machine specifications, OS, and .NET SDK used, together with the measurement method and results. The particular snapshot and machine details are execution inputs to record when benchmarking, not new product-scope decisions. Do not infer an SLA from a single measurement or require arbitrary numerical targets to accept this baseline.
 
-**Additional coverage:** locale metadata and optional URL prefixes are supported, but translation management and a localized UI catalog are outside this baseline. Accounts, account-data retention/deletion, payments, entitlements, and AI behavior are not applicable because this scope contains no such services. Local content/output lifecycle is covered by FR-002 and FR-009; generated artifacts remain on disk until removed/replaced. No special compliance certification or regulated workflow was supplied. Third-party analytics/consent obligations must be addressed if an analytics integration is separately scoped.
+**Additional coverage:** locale metadata and optional URL prefixes are supported; FR-012 adds the unimplemented locale-collection extension. Translation management and a localized UI catalog remain outside this revision under confirmed Q-011. Accounts, account-data retention/deletion, payments, entitlements, and AI behavior are not applicable because this scope contains no such services. Local content/output lifecycle is covered by FR-002 and FR-009; generated artifacts remain on disk until removed/replaced. No special compliance certification or regulated workflow was supplied. Third-party analytics/consent obligations must be addressed if an analytics integration is separately scoped.
 
 ## 7. Next-phase verification, release, and evaluation
 
@@ -248,6 +285,7 @@ The user agreed on 2026-09-11 to keep V-001 through V-007 as broad next-phase ve
 | V-006 | Performance baseline / NFR-009 | Benchmark the owner's actual blog with its assets and enabled extensions. Record the workload/environment details, build duration, preview-update delay, memory usage, and measurement method. Completion establishes measurements, not compliance with an unagreed numerical target |
 | V-007 | Functional regression and compatibility / FR-001 through FR-010, NFR-007 | Run existing suites and sample build/preview; cover metadata defaults/errors, directory-index overrides/collisions, navigation visibility/groups/layout delivery, shared URL semantics, tags/404, seven-role theme discovery, plugin ordering, and migration compatibility. Reuse V-008 for FR-011-specific evidence without treating it as completion of this system-wide program. Record results and review Windows/macOS/Linux CI evidence without assuming untested platforms passed |
 | V-008 | #81 feature acceptance / FR-011, TR-021/TR-022 | Complete under the approved #81 scope: prior engine/root-preview evidence plus 42 passing three-engine browser checks, 4 contrast-math tests and passing rendered ratios. #89 and broader V-005 remain outside this gate |
+| V-009 | Locale-generation acceptance / FR-012, TR-023 | Pending implementation/execution: verify Q-006 through Q-012, including default/content-discovered locales, scoped collections/navigation, root/conditional legacy redirects, empty sets and absent tags, organizational folders, conflicting 404 locale, disabled mode, context, collisions, cancellation and real root/subpath requests. No V-008 pass establishes new-feature evidence |
 
 For each item, record what was exercised, the environment, results, and reproducible gaps. Failed, blocked, or skipped checks remain explicit; an attempted check is not a passing result. Track necessary corrections against the existing requirements, then recheck affected behavior. The benchmark needs reproducible measurements, not an invented speed threshold. These records are next-phase deliverables, not prerequisites for finishing the requirements document.
 
@@ -336,6 +374,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | RD-003 | Static-host behavior varies | Directory indexes, subpaths, 404 handling, and external assets can differ from local preview. Record and evaluate serving assumptions in V-003; no particular host is required | Unassigned |
 | RD-004 | Third-party extensions and existing content may lag vNext contracts | Name-based configuration, mutable-collection consumers, and themes relying on tag-view fallback can break; inferred nested-index URLs can move or collide. Verify the documented migration, explicit slug overrides, and compatibility in V-007 | Unassigned |
 | RD-005 | #81-specific source-order migration can diverge from slug hierarchy or change inferred URLs after renaming | Mitigated in the implementation/sample/guides and scoped V-008 evidence: grouping retained and explicit-slug URLs preserved. Not eliminated: renaming still changes inferred URLs without an explicit slug | Residual behavior documented; further release ownership unassigned |
+| RD-006 | Locale generation changes public collection routes, navigation membership and generated-route ownership | Conditional redirects preserve only bookmarks with default-locale targets; a source such as `pages\ko-kr\index.md` can collide with a generated locale home. Confirmed decisions retain explicit failures; implementation must document source/theme/plugin adoption and unsupported legacy URLs. In-place preview can retain stale redirects under FR-009 | Product decisions: @justinyoo; implementation/release owners unassigned |
 
 ### Decision and evidence gaps
 
@@ -346,8 +385,15 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | Q-003 / Confirmed | Built-in-theme accessibility and the NFR-008 desktop/mobile browser coverage; custom-theme authors own accessibility. Benchmark the actual blog on a documented environment, with no formal SLA, numerical performance gate, maximum supported site size, or WCAG conformance claim | FR-010, NFR-008/009 | Quality choices resolved by the user on 2026-09-11; verification is assigned to next-phase V-005/V-006, with execution owners and dates still unassigned |
 | Q-004 / Unknown (release arrangements) | Who owns operational release acceptance and any further outcome evaluation, and when will they occur? | Goals and release criteria | Historical v0.6 and scoped #81 approvals are recorded; remaining whole-document review is separate. Execution ownership, timing and actual release authorization remain to be confirmed; these are not new feature behavior decisions |
 | Q-005 / Confirmed | Approved ordering/adjacency, two-tier fallback and component criteria; #89 and broad V-005 tracked separately | FR-010/011, NFR-007, RD-005 | Implemented with passing V-008 evidence; #81 is ready to close on merge, without completing unrelated work |
+| Q-006 / Confirmed | Root entry point redirects to the generated homepage for `Site.Locale` when locale routing is enabled | FR-012, TR-023, DEC-004 | Selected by @justinyoo on 2026-09-16; preserve `BaseUrl` and guarantee a valid generated default-locale target |
+| Q-007 / Confirmed | Generate `Site.Locale` plus effective locales of published non-404 content; always generate the default homepage, even empty | FR-012 locale inventory | Selected by @justinyoo on 2026-09-16; no configured list, draft-only locale or folder-based discovery |
+| Q-008 / Confirmed | Locale folders are organizational only; retain frontmatter/site fallback and recommend explicit locale-free slugs | FR-002/003/012, source migration | Selected by @justinyoo on 2026-09-16; do not infer locale or strip folders from inferred slugs |
+| Q-009 / Confirmed | Strict locale-scoped generated browsing, with no automatic language fallback | FR-010/011/012 | Selected by @justinyoo on 2026-09-16; apply existing ordering/eligibility separately within each locale |
+| Q-010 / Confirmed | Redirect old unprefixed tag routes only when their corresponding default-locale page exists; otherwise normal not-found behavior | FR-004/012, NFR-007, RD-006 | Selected by @justinyoo on 2026-09-16; no mixed-language legacy listings or nonexistent/cross-language redirect targets |
+| Q-011 / Confirmed | Routing/filtering and locale context only; unchanged text defaults, shared assets and one default-locale root 404 | FR-012, Theme scope | Selected by @justinyoo on 2026-09-16; translated text/catalogs, language-switching UI and localized 404 variants are outside scope |
+| Q-012 / Confirmed | Reject a custom shared-404 locale that normalizes differently from `Site.Locale` when locale routing is enabled | FR-003/004/012, metadata compatibility | Selected by @justinyoo on 2026-09-16; omission uses site default, equivalent spellings pass, mismatch fails with actionable source/field context |
 
-Historical approvals and evidence remain intact. v0.10 adds the explicitly approved #81 component thresholds and engine-based evidence boundary without changing the broader V-005 program. Optional outcome measurement and release arrangements remain separate; no release authorization is inferred.
+Historical approvals and evidence remain intact. v0.11 adds FR-012 with Q-006 through Q-012 confirmed, without changing #81's completed acceptance or broader verification. Product decisions are settled; implementation, new evidence and review of proposed technical mechanisms remain separate.
 
 ### Decisions and material changes
 
@@ -370,14 +416,16 @@ Historical approvals and evidence remain intact. v0.10 adds the explicitly appro
 | 2026-09-13 | Move preview base-path mounting out of #81's acceptance gate | Explicit user confirmation; #89 and scope update linked in FR-011 | Supersede the earlier mount dependency gate, retain the 404 evidence under V-003/DEC-002, keep locale-aware new-link checks and other V-008 criteria unchanged; neither issue closed |
 | 2026-09-14 | Set component acceptance standards for #81 in v0.10 | Explicit user selections; decision linked in FR-011 | Require 4.5:1 pager text / 3:1 focus contrast and accept three-engine desktop/mobile automation; retain broad V-005 obligations separately. Method settled, execution pending |
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
+| 2026-09-16 | Draft locale-specific generated collections and confirm the root entry point in v0.11 | @justinyoo requested PRD/TRD/TDD updates and selected redirect to `Site.Locale` | Add FR-012/V-009/RD-006/Q-006 through Q-011; preserve historical IDs/approvals, mark unresolved choices explicitly, and retain #89 as independent mount work. No application implementation |
+| 2026-09-16 | Resolve locale feature choices and issue a Review-ready revision | Explicit selections by @justinyoo for Q-007 through Q-012 | Require discovered locales, organizational folders, isolated browsing, conditional legacy redirects, routing-only presentation and shared-404 mismatch errors; reconcile TRD/TDD without implementation or whole-document sign-off |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall. Historical approvals remain; v0.10 records explicitly approved #81 component criteria, not whole-document or release sign-off.
+- **Supported status:** Review-ready. FR-012 product choices Q-006 through Q-012 are confirmed; no unanswered feature product choice remains. Technical mechanism review, implementation and V-009 execution remain separate; broader historical gaps are not declared resolved.
 - **Remaining decisions versus execution:** V-008's approved checks pass after the targeted fixes. No feature acceptance gap remains for #81; merging the implementing PR can close it. #89, V-005 and broader release work remain separate.
 - **Approval:** @justinyoo approved the #81-specific requirements and then separately requested implementation on 2026-09-13. Historical approvals remain intact. The implementation request authorized the recorded code and scoped checks, not whole-document sign-off, resolution of shared gaps, publication or deployment.
-- **Reviewer pass:** Reconciled TRD v0.6/TDD v0.7 with the actual fixes and complete local engine/viewport report, preserving the earlier failures and all historical IDs.
-- **Review limitations:** Scoped automated evidence is complete, not a full accessibility/security audit, physical-device matrix or blog benchmark. CI execution of the new job remains separately observable on the PR.
+- **Reviewer pass:** Reconciled FR-012 with TRD v0.7/TDD v0.8, disabled-mode/current-behavior qualifications, source/generated ownership, confirmed choices and the migration/404 exceptions. The prior v0.10 review and runtime evidence remain historical, not new locale results.
+- **Review limitations:** Historical #81 automated evidence is complete only for its recorded scope. V-009 has no implementation results; no new accessibility/security audit, physical-device matrix or blog benchmark is claimed.
 
 ## 9. Reference map
 
