@@ -23,11 +23,11 @@ Fork the repository, clone your fork, and create a branch from the current
 Run these commands from the repository root:
 
 ```powershell
-dotnet restore .\ScissorHands.slnx
-dotnet build .\ScissorHands.slnx -c Release --no-restore
+dotnet restore ./ScissorHands.slnx
+dotnet build ./ScissorHands.slnx -c Release --no-restore
 ```
 
-The examples use PowerShell path syntax; use forward-slash paths in other shells.
+Paths use forward slashes, including in PowerShell.
 Node.js is not required for the .NET build. Node.js 24 and npm are needed only
 for the browser acceptance suite.
 
@@ -36,14 +36,14 @@ for the browser acceptance suite.
 Start with the affected test project, replacing `Web` as appropriate:
 
 ```powershell
-dotnet test --project .\test\ScissorHands.Web.Tests\ScissorHands.Web.Tests.csproj -c Release
+dotnet test --project ./test/ScissorHands.Web.Tests/ScissorHands.Web.Tests.csproj -c Release
 ```
 
 After a successful Release build, run the full suite for shared-contract or
 cross-project changes:
 
 ```powershell
-dotnet test --solution .\ScissorHands.slnx -c Release --no-build --verbosity normal
+dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal
 ```
 
 The repository uses Microsoft.Testing.Platform, not VSTest. Use the explicit

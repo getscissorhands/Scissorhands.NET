@@ -2,7 +2,7 @@
 @layout MainLayout
 
 <section class="post">
-    <a class="back-link" href=".">&larr; Back to posts</a>
+    <a class="back-link" href="@(LocaleContext?.HomeUrl ?? ".")">&larr; Back to posts</a>
     <article class="prose">
         @if (!string.IsNullOrWhiteSpace(Document?.Metadata.HeroImage))
         {

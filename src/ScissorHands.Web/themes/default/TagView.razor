@@ -2,7 +2,10 @@
 @layout MainLayout
 
 <section class="tag prose">
-    <a class="back-link" href="tags">&larr; All tags</a>
+    @if ((LocaleContext is null ? "tags" : LocaleContext.TagIndexUrl) is { } tagIndexUrl)
+    {
+        <a class="back-link" href="@tagIndexUrl">&larr; All tags</a>
+    }
     <h1>#@Tag</h1>
     @if ((TaggedPosts?.Any() != true) && (TaggedPages?.Any() != true))
     {

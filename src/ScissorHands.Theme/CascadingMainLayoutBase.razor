@@ -8,7 +8,9 @@
                             <CascadingValue Name="TaggedPosts" Value="TaggedPosts">
                                 <CascadingValue Name="TaggedPages" Value="TaggedPages">
                                     <CascadingValue TValue="PageNavigation" Value="PageNavigation">
-                                        @ChildContent
+                                        <CascadingValue TValue="LocaleContext" Value="LocaleContext">
+                                            @ChildContent
+                                        </CascadingValue>
                                     </CascadingValue>
                                 </CascadingValue>
                             </CascadingValue>
@@ -72,6 +74,12 @@
     /// </summary>
     [Parameter]
     public PageNavigation PageNavigation { get; set; } = new();
+
+    /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [Parameter]
+    public LocaleContext? LocaleContext { get; set; }
 
     /// <summary>
     /// Gets or sets the collection of <see cref="PluginManifest"/> instances.

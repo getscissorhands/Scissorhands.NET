@@ -13,6 +13,12 @@ namespace ScissorHands.Theme;
 public abstract class TagListViewBase : ComponentBase
 {
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the dictionary of tags and their associated documents.
     /// The key is the tag name, and the value is the tuple of posts and pages.
     /// </summary>
@@ -38,5 +44,5 @@ public abstract class TagListViewBase : ComponentBase
     public SiteManifest? Site { get; set; }
 
     /// <inheritdoc cref="ContentUrlHelper.GetTagUrl(string)" />
-    protected string GetTagUrl(string tag) => ContentUrlHelper.GetTagUrl(tag);
+    protected string GetTagUrl(string tag) => LocaleContext is null ? ContentUrlHelper.GetTagUrl(tag) : LocaleContext.GetTagUrl(tag);
 }

@@ -12,6 +12,12 @@ namespace ScissorHands.Theme;
 public abstract class PostViewBase : ComponentBase
 {
     /// <summary>
+    /// Gets or sets the optional engine-prepared locale context for the current render.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="ContentDocument"/> instance.
     /// </summary>
     [CascadingParameter]
@@ -36,7 +42,7 @@ public abstract class PostViewBase : ComponentBase
     public SiteManifest? Site { get; set; }
 
     /// <inheritdoc cref="ContentUrlHelper.GetTagUrl(string)" />
-    protected string GetTagUrl(string tag) => ContentUrlHelper.GetTagUrl(tag);
+    protected string GetTagUrl(string tag) => LocaleContext is null ? ContentUrlHelper.GetTagUrl(tag) : LocaleContext.GetTagUrl(tag);
 
     /// <inheritdoc cref="ContentUrlHelper.GetImageUrl(string)" />
     protected string GetImageUrl(string path) => ContentUrlHelper.GetImageUrl(path);

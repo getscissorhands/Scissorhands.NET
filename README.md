@@ -15,13 +15,7 @@ Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), cl
 dotnet run -- --preview
 ```
 
-Stop the preview with Ctrl+C. To generate static files instead:
-
-```bash
-dotnet run -- --build
-```
-
-The [sample guide](samples/ScissorHands.Sample/README.md) explains its content and output. To create your own application, start with [ScissorHands.Web](src/ScissorHands.Web/README.md).
+Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](samples/ScissorHands.Sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
 
 ## Packages
 
@@ -32,15 +26,13 @@ The [sample guide](samples/ScissorHands.Sample/README.md) explains its content a
 | [Theme](src/ScissorHands.Theme/README.md) | Base types for theme authors |
 | [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts |
 
-The engine handles routes and navigation rules; themes render the prepared content. Publish the generated `dist` directory to a static host.
-
 ## Documentation and compatibility
 
 - [Documentation website](https://getscissorhands.app/docs/)
-- [vNext documentation handoff](docs/website-documentation.md), including configuration, authoring guides, and API details awaiting website publication
+- [vNext reference](docs/website-documentation.md): configuration, content, locales, themes, plugins, and APIs
 - [Upgrading to vNext](docs/website-documentation.md#upgrading-to-vnext)
 
-vNext includes breaking plugin identity, collection API, theme-component, and directory-index route changes. Review the migration guidance before upgrading older applications or extensions.
+vNext includes breaking changes; review the migration guide before upgrading.
 
 ## Support and license
 

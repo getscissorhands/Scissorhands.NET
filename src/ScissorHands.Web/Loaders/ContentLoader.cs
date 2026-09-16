@@ -204,6 +204,22 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             : metadata.Slug.Trim('/');
 
         var effectiveLocale = string.IsNullOrWhiteSpace(metadata.Locale) ? _options.Locale : metadata.Locale;
+        var localeSegment = _options.UseLocaleInUrl ? ContentUrlHelper.GetLocaleSegment(effectiveLocale) : string.Empty;
+        var hadLocalePrefix = false;
+        if (localeSegment.Length > 0)
+        {
+            slug = slug.Trim('/');
+            if (slug.Equals(localeSegment, StringComparison.OrdinalIgnoreCase))
+            {
+                slug = string.Empty;
+                hadLocalePrefix = true;
+            }
+            else if (slug.StartsWith(localeSegment + "/", StringComparison.OrdinalIgnoreCase))
+            {
+                slug = slug[(localeSegment.Length + 1)..];
+                hadLocalePrefix = true;
+            }
+        }
 
         if (kind == ContentKind.Post && _options.UseDateInPostUrl)
         {
@@ -217,20 +233,10 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             }
         }
 
-        if (_options.UseLocaleInUrl)
+        if (localeSegment.Length > 0
+            && (hadLocalePrefix || (!string.IsNullOrWhiteSpace(slug) && !slug.Equals("404.html", StringComparison.OrdinalIgnoreCase))))
         {
-            var localeSegment = ContentUrlHelper.GetLocaleSegment(effectiveLocale);
-            if (!string.IsNullOrWhiteSpace(localeSegment))
-            {
-                slug = slug.Trim('/');
-                if (!string.IsNullOrWhiteSpace(slug)
-                    && !slug.Equals("404.html", StringComparison.OrdinalIgnoreCase)
-                    && !slug.Equals(localeSegment, StringComparison.OrdinalIgnoreCase)
-                    && !slug.StartsWith(localeSegment + "/", StringComparison.OrdinalIgnoreCase))
-                {
-                    slug = string.Concat(localeSegment, "/", slug);
-                }
-            }
+            slug = string.IsNullOrEmpty(slug) ? localeSegment : string.Concat(localeSegment, "/", slug);
         }
 
         return metadata with { Slug = slug, Locale = effectiveLocale };

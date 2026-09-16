@@ -6,7 +6,7 @@ This document preserves the detailed material extracted from the repository READ
 
 ## Publishing notes
 
-Each guide below names its intended website destination. Existing destinations were present when this handoff was prepared; proposed destinations need to be created and added to the documentation navigation.
+The table distinguishes website destinations from repository-specific reference material. Existing destinations were present when this handoff was prepared; proposed destinations need to be created and added to the documentation navigation.
 
 | Guide in this document | Website destination | Publication action |
 | --- | --- | --- |
@@ -15,10 +15,12 @@ Each guide below names its intended website destination. Existing destinations w
 | [Content and frontmatter](#content-and-frontmatter) | `/docs/front-matter/`, `/docs/posts/`, `/docs/pages/` | Update supported fields and content guidance |
 | [Page routes and navigation](#page-routes-and-navigation) | `/docs/pages/`; proposed `/docs/navigation/` | Document directory indexes and navigation visibility |
 | [Preview and build](#preview-and-build) | `/docs/build/` | Document modes, regeneration, and output |
+| [Sample walkthrough](#sample-walkthrough) | Repository sample reference | Keep fixture details here and run commands in the sample README |
 | [Theme authoring](#theme-authoring) | `/docs/themes/` | Update discovery, prepared data, rendering, and URL helpers |
 | [Plugin authoring](#plugin-authoring) | `/docs/plugins/` | Replace name-based identity and add dependency rules |
 | [Core API reference](#core-api-reference) | Proposed `/docs/api/` | Publish shared models, manifests, services, and URL conventions |
 | [Upgrading to vNext](#upgrading-to-vnext) | Proposed `/docs/migration/` | Publish source, binary, configuration, and route migration guidance |
+| [Browser acceptance](#browser-acceptance) | Repository contributor reference | Keep coverage and evidence methodology here and run commands with the test suite |
 
 The existing website needs several corrections before it can replace this reference:
 
@@ -134,7 +136,7 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | `Theme` | Theme slug; use `default` for the built-in theme |
 | `SiteUrl` | Public site URL |
 | `BaseUrl` | Site base path, such as `/`, `/project` or `/project/`; path prefixes normalize to a trailing slash |
-| `UseLocaleInUrl` | Include a normalized locale prefix in content routes |
+| `UseLocaleInUrl` | Generate locale-prefixed content, home/tag collections and locale-scoped navigation |
 | `UseDateInPostUrl` | Include the publication date in post routes |
 | `Debug` | Site debug setting |
 
@@ -142,7 +144,7 @@ Use `BaseUrl` when publishing below a subpath. Generated navigation and shared U
 
 `SiteManifest.BaseUrl` supplies a trailing slash for a configured path prefix: `/docs` and `/docs/` both become `/docs/`, `/manual/docs` becomes `/manual/docs/`, and `/` remains `/`. This happens during manifest initialization, including configuration binding and direct .NET initialization. Build, preview, themes and plugins use the same effective value, while source settings remain unchanged. Generated HTML therefore uses `<base href="/docs/">` for either spelling. This does not trim whitespace, change case, decode URLs, or validate them. Absolute/network-relative URLs, relative paths without a leading slash, and values containing backslashes, query strings or fragments are not rewritten by this rule and gain no new support guarantee.
 
-Preview serves generated files only at the effective path prefix. With either `/docs` or `/docs/` configured, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. GET/HEAD requests to `/` return a temporary 302 redirect to `/docs/`, preserving the query string; the root response does not contain the homepage. Browsers follow this redirect and display the homepage at the base URL. Other requests outside the prefix, including `/parent/child/`, `/docs-other/`, unprefixed assets, and POST to `/`, return 404. `/docs` redirects to `/docs/`, and directory redirects retain the prefix and query string. Files remain directly under `preview/`. This removes the former unprefixed content aliases for non-root configurations; update preview bookmarks and links to use the effective prefix. Configuring `/` serves the homepage normally without redirecting. It is a routing boundary, not authentication. Other base-URL forms remain outside this preview contract; no new general URL-validation policy is implied.
+Preview serves generated files only at the effective path prefix. With either `/docs` or `/docs/` configured, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. GET/HEAD `/` returns HTTP 302 to `/docs/`, preserving the query and serving no homepage body at root. Browsers follow to the generated entry point; locale-enabled entry points then use the HTML locale redirect below. Other outside-prefix requests, including `/parent/child/`, `/docs-other/`, unprefixed assets and POST `/`, return 404. `/docs` and directory redirects retain the prefix and query. Files remain directly under `preview/`; update old preview bookmarks rather than relying on root aliases. Configuring `/` adds no HTTP mount redirect but retains any generated locale redirect. This is a routing boundary, not authentication. Other base-URL forms remain outside this preview contract; normalization is not general URL validation.
 
 For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
 
@@ -165,6 +167,46 @@ The `Plugins` array selects installed plugins by ID:
 ```
 
 `Name` is optional display metadata. Options are plugin-specific; validate and interpret them in the plugin rather than assuming every plugin supports the same keys. Installed plugins without a matching manifest remain disabled.
+
+### Locale-specific sites
+
+With `Site.UseLocaleInUrl: true`, the engine generates `Site.Locale` plus the effective locales of published non-404 posts and pages. Frontmatter `locale` takes precedence over the site default. Locale keys are trimmed, lowercased, and normalize underscores/forward slashes to hyphens; equivalent spellings such as `ko-KR` and `ko_KR` share one scope. Draft-only locales are excluded; future dates and hidden-navigation pages retain their normal publication rules.
+
+For `Site.Locale: "en-US"` and `BaseUrl: "/blog/"`:
+
+| Surface | URL / behavior |
+| --- | --- |
+| Root | `/blog/` redirects to `/blog/en-us/` |
+| Locale homepages | `/blog/en-us/`, `/blog/ko-kr/`, each listing only its own posts |
+| Locale tag index | `/blog/ko-kr/tags`, only if Korean content has tags |
+| Locale tag view | `/blog/ko-kr/tags/dotnet`, containing only Korean tagged content |
+| Legacy tag URL | `/blog/tags/dotnet` redirects only if `/blog/en-us/tags/dotnet` exists |
+| Shared not-found page | `/blog/404.html`, using the site-default locale |
+
+Every discovered locale has a generated homepage, including page-only locales. The default homepage is always generated, even when empty. A locale without eligible tags has no tag pages or built-in Tags link. Home/site-title links, tag links, navigation and previous/next stay within the active locale; there is no automatic cross-language fallback or language switcher.
+
+The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. They use the canonical rooted `BaseUrl`: configured `/blog` and `/blog/` both become `/blog/`. External URLs, traversal, encoded separators and malformed percent escapes fail locale-redirect validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the host's normal 404 behavior. Initial builds are clean, but in-place preview can retain old locale/redirect files until restarted.
+
+Keep `contents/posts` and `contents/pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
+
+```text
+contents/
+  posts/
+    en-us/hello.md
+    ko-kr/hello.md
+  pages/
+    en-us/about.md
+    ko-kr/about.md
+    not-found.md
+```
+
+Use `locale: ko-KR` with `slug: about` in the Korean page to obtain `/blog/ko-kr/about`. Explicit locale-free slugs avoid coupling URLs to source folders; when omitted, existing directory-based inference still applies. A matching leading locale is recognized before post-date composition to avoid duplicating it. Folders with a different name are not stripped, and `contents/<locale>/posts` is not a discovery root.
+
+Home/tag pages are generated, not additional Markdown sources. A page at a generated locale-home or tag/redirect destination fails as an output collision; for example, a Korean `pages/ko-kr/index.md` needs a distinct explicit slug rather than claiming `/ko-kr/`. Empty/unsafe locale segments are rejected; locale-enabled generated-page and content-image destinations reject linked ancestors. This is not a comprehensive audit of input links or theme-service copying.
+
+Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. `Site.Locale` is never mutated between renders. With locale routing disabled, the existing root homepage, shared tag pages and unprefixed navigation behavior remain unchanged.
+
+**Serving boundary:** preview now mounts the artifact at canonical `Site.BaseUrl` through the merged [#89 fix](https://github.com/getscissorhands/Scissorhands.NET/pull/101). With `/docs` and default `en-US`, `/` returns HTTP 302 to `/docs/`, whose HTML entry redirects to `/docs/en-us/`. Legacy tag redirects use `/docs/tags/...`; unrelated domain-root page/asset URLs remain 404. Production hosts still configure their own mount. No physical deployment-prefix directory is added.
 
 ## Content and frontmatter
 
@@ -213,9 +255,9 @@ The built-in theme displays tags as links below page and post content. Each link
 
 Tags on content remain optional. A page or post without tags is generated normally, is omitted from tag listings, and retains its independently configured navigation visibility. Requiring tag-view components in a theme does not require authors to assign tags.
 
-If there is no eligible tagged content anywhere in the site, the engine skips generating the tag index and individual tag pages. The theme must still provide both tag-view components as part of its rendering contract, even though those views are not invoked for that build.
+If there is no eligible tagged content, the engine skips the tag index and individual tag pages. With locale routing enabled this rule applies independently to each locale. The theme must still provide both tag-view components even when those views are not invoked.
 
-**Current limitation:** the built-in layout always includes a Tags navigation link. On an entirely untagged site, that link can point to a missing tag index. This is existing behavior, not a requirement that pages or posts have tags.
+**Disabled-mode limitation:** without locale context, the built-in layout retains its existing Tags link even on an untagged site. Locale-enabled rendering omits that link when the active locale has no tags. Neither mode requires every post or page to have tags.
 
 Use one H1 in the body when using the built-in views, then H2/H3 for sections. Other themes can choose a different heading layout. Do not assume the engine itself inserts an H1 from frontmatter.
 
@@ -286,16 +328,16 @@ Parent
 
 ### Reading order and previous/next links
 
-Within each source directory under `contents\pages`, `index.md` comes first (case-insensitive filename recognition). Other files and directories share ordinal filename ordering, and a directory's eligible descendants are visited before its next sibling. Numeric prefixes are sorted as text, not as numbers: use consistent padding such as `01-`, `02-`, and `03-`.
+Within each source directory under `contents/pages`, `index.md` comes first (case-insensitive filename recognition). Other files and directories share ordinal filename ordering, and a directory's eligible descendants are visited before its next sibling. Numeric prefixes are sorted as text, not as numbers: use consistent padding such as `01-`, `02-`, and `03-`.
 
 For example, with these eligible sources:
 
 | Source | Title | Previous | Next |
 | --- | --- | --- | --- |
-| `parent\index.md` | Parent | None | Child |
-| `parent\01-child.md` | Child | Parent | Visible Grandchild |
-| `parent\02-group\visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
-| `parent\03-child-2.md` | Child 2 | Visible Grandchild | None |
+| `parent/index.md` | Parent | None | Child |
+| `parent/01-child.md` | Child | Parent | Visible Grandchild |
+| `parent/02-group/visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
+| `parent/03-child-2.md` | Child 2 | Visible Grandchild | None |
 
 The sequence continues across source directories and outside this example subtree when other eligible pages exist. The built-in page view displays the previous/next anchors automatically. The first page has no previous link, the last has no next link, and a zero- or one-page sequence has neither. Posts, drafts, hidden/suppressed pages, 404 content, and non-clickable groups are not targets. Group descendants can still participate.
 
@@ -338,7 +380,7 @@ Groups do not create pages, output files, or placeholder links. Locale routing p
 
 ### Rendering and interaction
 
-The engine builds an immutable `NavigationTree` once per generation and supplies it to every layout: home, posts, pages, tag lists, individual tags, and 404.
+The engine builds immutable navigation once per generation, or once per active locale when locale routing is enabled. Home, posts, pages and tag views receive their locale's tree and reading sequence; the shared 404 receives the default locale's navigation. Previous/next never cross locale boundaries, including the file-backed/source-less boundary.
 
 The built-in theme renders page nodes as links and missing-parent nodes as plain text. Adjacent buttons expand and collapse child lists. Mouse, touch, Enter, Space, and Escape are supported. Escape closes the current group and restores focus to its button; moving focus or clicking outside navigation closes the menus.
 
@@ -361,6 +403,8 @@ Return to the [home page](.).
 ```
 
 The engine renders it through the theme's not-found view and writes `404.html` at the output root, without a locale prefix. It is not written as `404.html/index.html` and is excluded from navigation and tag listings.
+
+With locale routing enabled, the shared 404 must use `Site.Locale`. Omit its locale or supply a normalized-equivalent spelling; an explicit mismatch fails generation with source/field context. It does not create a locale or get translated automatically. Disabled-mode metadata behavior remains unchanged.
 
 If no custom document exists, the engine still generates the not-found page; the built-in theme supplies a default message. Hosting configuration determines when missing requests use the generated file. The current preview server serves `/404.html` directly but does not automatically rewrite unknown URLs to its contents.
 
@@ -385,6 +429,25 @@ Refresh the browser after preview regeneration. Razor and C# changes require rec
 The repository sample's launch profile does not select an application mode. Supply `--preview` or `--build` explicitly, including in IDE run arguments. `--no-launch-profile` is optional when you also want to bypass profile environment settings. Stop the preview server with Ctrl+C.
 
 The engine sets `SiteManifest.IsPreview` before plugin hooks and rendering. Plugins can use it to suppress production-only side effects.
+
+### Sample walkthrough
+
+The [repository sample](../samples/ScissorHands.Sample/README.md) uses local project references and the built-in `default` theme. Its README contains the run commands; the following sources demonstrate the engine's behavior:
+
+| Source | What to explore |
+| --- | --- |
+| [Hello, ScissorHands](../samples/ScissorHands.Sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
+| [About](../samples/ScissorHands.Sample/contents/pages/about.md) | The first page in the sample reading sequence |
+| [Parent](../samples/ScissorHands.Sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
+| [Child](../samples/ScissorHands.Sample/contents/pages/parent/01-child.md), [Visible Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../samples/ScissorHands.Sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
+| [Hidden Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
+| [Not found](../samples/ScissorHands.Sample/contents/pages/not-found.md) | Custom root `404.html` content with locale inherited from the site |
+
+The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
+
+The sample starts with an empty `Plugins` array and locale routing disabled. In its `appsettings.json`, enable `Site.UseLocaleInUrl` to generate `dist/en-us/index.html` and a default-locale root redirect. To explore Korean-prefixed preview, also set `Site.Locale` to `ko-KR` and `Site.BaseUrl` to `/docs` or `/docs/`; Parent then lives at `/docs/ko-kr/parent/`. See [site configuration](#site-configuration) for slash normalization and the HTTP/HTML redirect stages, and [locale-specific sites](#locale-specific-sites) for additional-language authoring and generated-route collisions.
+
+The custom 404 omits `locale`, so it follows the site default. Shared assets and authored Markdown links are not translated or rewritten. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
 
 ## Theme authoring
 
@@ -482,6 +545,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
     TaggedPages="@TaggedPages"
     Document="@Document"
     PageNavigation="@PageNavigation"
+    LocaleContext="@LocaleContext"
     Plugins="@Plugins"
     Theme="@Theme"
     Site="@Site">
@@ -498,7 +562,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
 </CascadingMainLayoutBase>
 ```
 
-`MainLayoutBase` calculates page title, description, and locale from the site and current document. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
+`MainLayoutBase` calculates page title and description from the site/document. Locale uses the active `LocaleContext` when supplied, otherwise the existing document/site fallback. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
 
 Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `MarkupString` is an explicit raw-HTML trust boundary; render metadata through ordinary Razor expressions so it remains encoded.
 
@@ -518,9 +582,12 @@ The following rendering fragment can be used inside a layout derived from `MainL
 
 <nav aria-label="Primary navigation">
     <ul>
-        <li><a href=".">Home</a></li>
+        <li><a href="@GetHomeUrl()">Home</a></li>
         @RenderNodes(NavigationTree)
-        <li><a href="tags">Tags</a></li>
+        @if (GetTagIndexUrl() is { } tagIndexUrl)
+        {
+            <li><a href="@tagIndexUrl">Tags</a></li>
+        }
     </ul>
 </nav>
 
@@ -548,6 +615,24 @@ The following rendering fragment can be used inside a layout derived from `MainL
 ```
 
 Both collections default to empty lists. They are layout-only parameters, not content-view attributes or automatic cascading values. `Documents` remains the ordered post collection for the home view. Implicit groups are not added to `NavigationPages`.
+
+### Locale render context
+
+`ScissorHands.Core.Models.LocaleContext` is an optional immutable engine snapshot:
+
+| Member | Meaning |
+| --- | --- |
+| `Locale` | Normalized active locale, independent of the unchanged `Site.Locale` default |
+| `Route` | Resolved current route; source documents retain the loaded pre-hook route snapshot |
+| `HomeUrl` | Already escaped, base-relative home URL, such as `ko-kr/` |
+| `TagIndexUrl` | Already escaped, base-relative tag-index URL, or null if the locale has no tags |
+| `GetTagUrl(tag)` | Compose a raw tag with the prepared home URL using shared tag escaping |
+
+Forward `LocaleContext` through `CascadingMainLayoutBase` for view and plugin components. The renderer keeps it out of ordinary view attributes. Full navigation remains layout-only and the seven required theme roles are unchanged.
+
+Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags`; without context they retain those original values. Existing post/page/tag-list `GetTagUrl` wrappers become locale-aware when context exists. Core static helpers keep their context-free contracts. Context values are prepared rendering data, not a general URL sanitizer.
+
+Locale inventory, collections and navigation are prepared from loaded documents before hooks. They are not recomputed when plugins return replacement locale/slug/title metadata; per-document hook propagation is retained without promising cross-collection refresh or a second plugin pass.
 
 Normal generation supplies both navigation parameters automatically. For compatibility, `ComponentRenderer` prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree`.
 
@@ -578,7 +663,7 @@ A custom page view can opt into the links without rebuilding navigation:
 
 Use ordinary Razor text rendering for titles. Do not escape an already formatted target URL again or prepend `Site.BaseUrl`; the layout's base element resolves it. Existing themes that ignore this additive context continue to work, but must forward/render it to show adjacent links. The two full navigation collections remain layout-only and are not added to the cascade. Non-participating pages and collection/404/post views have no sequence links.
 
-The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](..\test\browser\README.md). Custom-theme authors remain responsible for their own complete accessibility.
+The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](../test/browser/README.md). Custom-theme authors remain responsible for their own complete accessibility.
 
 ### URL helpers
 
@@ -744,11 +829,11 @@ A valid component ID without a configured manifest leaves `Plugin` null, allowin
 
 ### Generated tag route context
 
-The engine owns generated tag routes and resolves them before Razor rendering. For the tag index and individual tag pages, it supplies the layout's `Document` with a synthetic `ContentKind.Page` whose `Metadata.Slug` is the resolved route (`tags` or the escaped `tags/{tag}` route). Layouts must forward `Document` through `CascadingMainLayoutBase`, as the built-in layout does, for `PluginComponentBase.Document` to receive it.
+The engine resolves tag routes before Razor rendering and supplies a synthetic page `Document` with the final slug (`tags` or `tags/{tag}` when disabled; `<locale>/tags` or `<locale>/tags/{tag}` when enabled). Locale-enabled homepages also receive a route-only rendering document. Layouts must forward `Document` and `LocaleContext` through `CascadingMainLayoutBase` for plugin components to receive them.
 
-This rendering document is route-only: its title, Markdown, HTML, and source path are empty, and it has no document-specific description, locale, author, Twitter handle, image, or publication date. Existing site-level layout metadata and tag-view headings remain unchanged. A non-null `Document` does not imply a post; components should use `Kind` and the available metadata. Tag collections, layout-only navigation, and empty tag-page adjacency are unchanged.
+The rendering document's title, Markdown, HTML and source path are empty, with no document-specific description, author, Twitter handle, image or publication date. `Metadata.Locale` is the active normalized locale when enabled and remains null on disabled-mode tag documents. Site title/description defaults and tag-view headings remain unchanged. A non-null `Document` does not imply a post. Collections/navigation are locale-scoped when enabled; tag-page adjacency remains empty.
 
-Post-HTML hooks retain their existing synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug supplied during Razor rendering. These synthetic pages still bypass the Markdown hooks. When composing publication URLs, respect `Site.SiteUrl` and `Site.BaseUrl`, and use the supplied tag slug without reconstructing it from labels, adding a locale prefix, or escaping it again. For example, tag `C#` has slug `tags/c%23`; with site URL `https://example.com` and base URL `/blog/`, its publication URL is `https://example.com/blog/tags/c%23` in both rendering and post-HTML processing.
+Post-HTML hooks retain synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug/locale supplied during rendering. Synthetic pages, including root/legacy redirects, bypass Markdown hooks and receive post-HTML processing. Compose publication URLs using `Site.SiteUrl`, `Site.BaseUrl` and the supplied slug, without rebuilding or escaping it again. For tag `C#` in `ko-KR` with locale routing enabled, the slug is `ko-kr/tags/c%23`; with site URL `https://example.com` and base `/blog/`, the publication URL is `https://example.com/blog/ko-kr/tags/c%23`.
 
 ### Preview and generated URLs
 
@@ -761,6 +846,8 @@ Internal URLs emitted by plugins must respect `SiteManifest.BaseUrl`. Do not ass
 Proposed website destination: `/docs/api/`.
 
 `ScissorHands.Core` contains shared models, manifests, service contracts, and command options. Plugin and Theme depend on Core; Web contains engine implementations and depends on those packages. Avoid reverse references or dependency cycles.
+
+See [site configuration](#site-configuration) for `SiteManifest.BaseUrl` normalization and [locale render context](#locale-render-context) for the `LocaleContext` contract and helper behavior.
 
 ### ContentDocument and ContentMetadata
 
@@ -971,6 +1058,40 @@ Navigation now uses filename-based order for file-backed pages, with index-first
 
 Existing public URL-helper signatures remain supported. Shared helpers also make post/tag-list whitespace normalization and content-link escaping consistent with engine route conventions.
 
+### Locale routing migration
+
+Enabling `UseLocaleInUrl` now changes generated collection URLs and navigation scope, not just source-document prefixes. The root becomes a default-locale HTML redirect; home/tag collections and navigation move inside each locale. Unprefixed tag redirects are generated only for existing default-locale destinations. A tag present only in another locale has no legacy redirect, and an empty default locale still has a homepage but no tag index.
+
+Retain frontmatter/site locale fallback and optional organizational folders. Use explicit locale-free slugs to preserve source-independent URLs and resolve any collision with a generated locale homepage/tag/redirect. Existing already-prefixed dated posts now get the effective locale once before the date, rather than duplicating it around the date.
+
+Custom themes should forward `LocaleContext` and adopt the Home/Tags helpers above. Existing public signatures and direct rendering without context remain supported, but hard-coded links are not automatically rewritten. Plugins must consume synthetic route/locale metadata rather than prepend another locale. A custom root 404 with a different explicit locale must be corrected or omit its locale.
+
+Use a rooted `BaseUrl`; the manifest supplies a missing trailing slash before locale redirects and preview mounting. No deployment-prefix directories are added to the artifact. The #89 middleware fix is integrated, so update preview bookmarks to use the effective mount rather than former domain-root aliases. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. Site/theme text is not translated and no language switcher is added.
+
+## Browser acceptance
+
+This is repository contributor reference material for the [browser suite](../test/browser/README.md), whose README contains prerequisites and run commands. The suite provides V-008 pager and V-009 locale evidence, not a replacement for the .NET suite, actual preview-server coverage, or the broader V-005 real-device assessment.
+
+### Fixtures and coverage
+
+The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds English, Japanese and draft-only locale fixtures. It generates `/docs/` output with default `ko-kr` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
+
+Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
+
+- Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
+- Locale-specific home/tag collections, navigation boundaries, root/legacy redirects without JavaScript, tagless/draft-only routes and shared assets.
+- Light/dark pager appearance in normal, hover and keyboard-focus states.
+
+Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, canonical base-path variants, mount/locale redirects, outside-prefix rejection and regeneration callbacks.
+
+### Contrast and evidence
+
+All pager text must reach **4.5:1** contrast, and focus indicators **3:1** against the adjacent background. Measurements use rendered RGB/alpha values and relative luminance, compositing transparent layers. Unsupported backgrounds or group opacity fail explicitly; transitions are disabled only while measuring settled states. The [contrast math](../test/browser/contrast.mjs) has [independent Node tests](../test/browser/contrast.test.mjs).
+
+The pager uses native links with `tabindex="0"` so WebKit's keyboard mode includes them without positive tab ordering. These component checks do not claim whole-site WCAG or real Safari/iOS/device conformance.
+
+Ignored `test/browser/test-results` contains the JSON report and attached per-engine/theme/state color measurements; failures retain traces and screenshots. Record the actual browser, platform and viewport alongside results. Failed or incomplete runs are not passing acceptance. Execution history belongs in the existing [PRD verification records](../PRD.md#7-next-phase-verification-release-and-evaluation), not in the suite README.
+
 ## Source coverage
 
 The following removed or shortened README material is preserved above:
@@ -978,10 +1099,11 @@ The following removed or shortened README material is preserved above:
 | Original README | Material retained in this document |
 | --- | --- |
 | Repository root | Detailed page-navigation behavior; source/binary/configuration compatibility; plugin ordering and directory-index migration |
-| `ScissorHands.Core` | Content and navigation models; manifest examples and collection contracts; URL-helper contracts; cancellation and obsolete service overloads |
+| `ScissorHands.Core` | Content/navigation models, locale context, BaseUrl normalization, manifest/collection contracts, URL helpers, cancellation and obsolete service overloads |
 | `ScissorHands.Plugin` | Complete plugin example; ID rules; stages; dependencies and failures; configuration; Razor components; preview behavior; migration steps |
 | `ScissorHands.Theme` | Required view roles and tag-view migration; automatic discovery; manifest and assets; layout/cascading data; recursive navigation rendering; URL helpers; plugin selection |
 | `ScissorHands.Web` | Full application/configuration/content examples; frontmatter reference; routes; navigation; preview/build; theme and plugin integration; migration notes |
-| Sample | General navigation and plugin explanations; sample-specific execution instructions and fixture descriptions remain in the sample README |
+| Sample | Fixture descriptions, navigation experiments and locale/subpath walkthrough; essential execution instructions and entry-point source links remain in the sample README |
+| Browser tests | Fixture lifecycle, viewport/engine coverage, contrast thresholds and measurement, reports and evidence limits; prerequisites and run commands remain in the suite README |
 
 Keep repository-specific commands and sample file pointers in the repository. Keep package installation, supported framework, essential compatibility warnings, license links, and required third-party attribution in the corresponding READMEs.

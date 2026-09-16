@@ -1,3 +1,6 @@
+using System.Reflection;
+
+using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
 
 using ScissorHands.Core.Manifests;
@@ -7,6 +10,62 @@ namespace ScissorHands.Plugin.Tests;
 
 public class PluginComponentBaseTests
 {
+    [Theory]
+    [InlineData(false, false)]
+    [InlineData(true, false)]
+    [InlineData(true, true)]
+    public void Given_OptionalLocaleContext_When_Render_Invoked_Then_It_Should_BindOnlyTheTypedContext(bool supplyCascade, bool supplyValue)
+    {
+        // Arrange
+        using var context = new BunitContext();
+        var locale = supplyValue ? new LocaleContext { Locale = "ko-kr", Route = "ko-kr/about", HomeUrl = "ko-kr/" } : null;
+        var document = new ContentDocument { Metadata = new ContentMetadata { Slug = "ko-kr/about" } };
+        var site = new SiteManifest { Locale = "en-US" };
+
+        // Act
+        var cut = supplyCascade
+            ? context.Render<CascadingValue<LocaleContext>>(parameters => parameters
+                .Add(p => p.Value, locale!)
+                .AddCascadingValue(document)
+                .AddCascadingValue(site)
+                .AddChildContent<TestPluginComponent>(child => child.Add(p => p.Id, "test")))
+                .FindComponent<TestPluginComponent>()
+            : context.Render<TestPluginComponent>(parameters => parameters
+                .Add(p => p.Id, "test")
+                .AddCascadingValue(document)
+                .AddCascadingValue(site));
+
+        // Assert
+        cut.Instance.BoundLocaleContext.ShouldBeSameAs(locale);
+        cut.Instance.BoundDocument.ShouldBeSameAs(document);
+        cut.Instance.BoundSite.ShouldBeSameAs(site);
+        cut.Instance.BoundPlugin.ShouldBeNull();
+        site.Locale.ShouldBe("en-US");
+    }
+
+    [Fact]
+    public void Given_PluginContract_When_GetProperty_Invoked_Then_It_Should_ExposeProtectedOptionalTypedLocaleContext()
+    {
+        // Arrange
+        var type = typeof(PluginComponentBase);
+
+        // Act
+        var property = type.GetProperty(nameof(LocaleContext), BindingFlags.NonPublic | BindingFlags.Instance);
+
+        // Assert
+        property.ShouldNotBeNull();
+        property.PropertyType.ShouldBe(typeof(LocaleContext));
+        new NullabilityInfoContext().Create(property).ReadState.ShouldBe(NullabilityState.Nullable);
+        property.GetMethod.ShouldNotBeNull();
+        property.GetMethod.IsFamily.ShouldBeTrue();
+        property.GetCustomAttribute<ParameterAttribute>().ShouldBeNull();
+        var attribute = property.GetCustomAttribute<CascadingParameterAttribute>();
+        attribute.ShouldNotBeNull();
+        attribute.Name.ShouldBeNull();
+        type.GetProperty("NavigationPages", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ShouldBeNull();
+        type.GetProperty("NavigationTree", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Instance).ShouldBeNull();
+    }
+
     [Fact]
     public void Given_CascadingValues_When_ComponentRendered_Then_It_Should_BindAllCascadingParameters()
     {
@@ -163,6 +222,7 @@ internal class TestPluginComponent : PluginComponentBase
 {
     public IEnumerable<ContentDocument>? BoundDocuments => Documents;
     public ContentDocument? BoundDocument => Document;
+    public LocaleContext? BoundLocaleContext => LocaleContext;
     public IEnumerable<PluginManifest>? BoundPlugins => Plugins;
     public PluginManifest? BoundPlugin => Plugin;
     public ThemeManifest? BoundTheme => Theme;

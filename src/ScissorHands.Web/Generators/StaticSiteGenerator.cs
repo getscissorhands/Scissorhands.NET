@@ -1,5 +1,6 @@
 using System.IO.Abstractions;
 using System.Text;
+using System.Text.Encodings.Web;
 
 using Microsoft.Extensions.Logging;
 
@@ -58,6 +59,7 @@ public sealed class StaticSiteGenerator(
         where TTagListView : ScissorHands.Theme.TagListViewBase
         where TTagView : ScissorHands.Theme.TagViewBase
     {
+        cancellationToken.ThrowIfCancellationRequested();
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
@@ -66,7 +68,96 @@ public sealed class StaticSiteGenerator(
         var plugins = _pluginRunner.Manifests;
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
         var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
-        ValidateOutputRoutes(destination, documents);
+        cancellationToken.ThrowIfCancellationRequested();
+        var outputs = new OutputRoutes(destination, _fileSystem, _options.UseLocaleInUrl);
+        var scopes = CreateScopes(documents, outputs, cancellationToken);
+        var defaultScope = scopes[0];
+        var notFoundDocument = documents.SingleOrDefault(IsNotFoundPage);
+        var notFoundOwner = (object?)notFoundDocument ?? new object();
+        if (_options.UseLocaleInUrl && notFoundDocument is not null
+            && ResolveLocale(notFoundDocument.Metadata.Locale, $"locale in '{notFoundDocument.SourcePath}'") != defaultScope.Locale)
+        {
+            throw new InvalidDataException(
+                $"The locale in '{notFoundDocument.SourcePath}' for the shared 404.html must match Site.Locale.");
+        }
+
+        var redirects = CreateRedirects(defaultScope);
+        ValidateOutputRoutes(destination, scopes, redirects, notFoundOwner);
+        var documentScopes = new Dictionary<ContentDocument, GenerationScope>(ReferenceEqualityComparer.Instance);
+        var layoutType = typeof(TMainLayout);
+        foreach (var scope in scopes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            foreach (var document in scope.Documents)
+            {
+                documentScopes.Add(document, scope);
+            }
+
+            await RenderIndexAsync<TIndexView>(scope, plugins, theme, destination, layoutType, cancellationToken);
+        }
+
+        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, notFoundOwner, defaultScope, plugins, theme, destination, layoutType, cancellationToken);
+
+        foreach (var document in documents.Where(d => !IsNotFoundPage(d) && documentScopes.ContainsKey(d)))
+        {
+            await RenderDocumentAsync<TPostView, TPageView>(document, documentScopes[document], plugins, theme, destination, layoutType, cancellationToken);
+        }
+
+        foreach (var scope in scopes)
+        {
+            await RenderTagPagesAsync<TTagListView, TTagView>(scope, plugins, theme, destination, layoutType, cancellationToken);
+        }
+
+        foreach (var redirect in redirects)
+        {
+            await RenderRedirectAsync(redirect, destination, outputs, cancellationToken);
+        }
+
+        CopyContentAssets(destination, outputs);
+        await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
+    }
+
+    private IReadOnlyList<GenerationScope> CreateScopes(
+        IReadOnlyList<ContentDocument> documents, OutputRoutes outputs, CancellationToken cancellationToken)
+    {
+        if (!_options.UseLocaleInUrl)
+        {
+            return [CreateScope(null, documents, outputs, cancellationToken)];
+        }
+
+        ValidateRedirectBaseUrl();
+        var defaultLocale = ResolveLocale(_options.Locale, "Site.Locale");
+        var groups = new Dictionary<string, List<ContentDocument>>(StringComparer.Ordinal)
+        {
+            [defaultLocale] = [],
+        };
+        foreach (var document in documents.Where(d => !d.Metadata.Draft && !IsNotFoundPage(d)))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var locale = ResolveLocale(document.Metadata.Locale, $"locale in '{document.SourcePath}'");
+            if (!groups.TryGetValue(locale, out var group))
+            {
+                group = [];
+                groups.Add(locale, group);
+            }
+            group.Add(document);
+        }
+
+        var scopes = new List<GenerationScope>
+        {
+            CreateScope(defaultLocale, groups[defaultLocale], outputs, cancellationToken),
+        };
+        foreach (var locale in groups.Keys.Where(key => key != defaultLocale).Order(StringComparer.Ordinal))
+        {
+            scopes.Add(CreateScope(locale, groups[locale], outputs, cancellationToken));
+        }
+        return scopes;
+    }
+
+    private GenerationScope CreateScope(
+        string? locale, IReadOnlyList<ContentDocument> documents, OutputRoutes outputs, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
         var hiddenPageRoutes = documents
             .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || d.Metadata.Draft || IsNotFoundPage(d)))
             .Select(d => NormalizeRoute(d.Metadata.Slug))
@@ -82,21 +173,94 @@ public sealed class StaticSiteGenerator(
             NavigationTreeBuilder.BuildOrdered(navigationPages, _options, cancellationToken),
             CreatePageNavigation(navigationPages, cancellationToken));
 
-        var layoutType = typeof(TMainLayout);
-        await RenderIndexAsync<TIndexView>(documents, navigation, plugins, theme, destination, layoutType, cancellationToken);
-
-        var notFoundDocument = documents.SingleOrDefault(d => d.Kind == ContentKind.Page && string.Equals(d.Metadata.Slug, PAGE_NOT_FOUND_SLUG, StringComparison.OrdinalIgnoreCase));
-        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, navigation, plugins, theme, destination, layoutType, cancellationToken);
-
-        foreach (var document in documents.Where(d => IsNotFoundPage(d) == false))
+        var tags = new List<TagGroup>();
+        foreach (var group in documents.Where(d => !IsNotFoundPage(d))
+            .SelectMany(d => d.Metadata.Tags.Select(tag => (Tag: tag.ToLowerInvariant(), Document: d)))
+            .GroupBy(item => item.Tag))
         {
-            await RenderDocumentAsync<TPostView, TPageView>(document, navigation, plugins, theme, destination, layoutType, cancellationToken);
+            cancellationToken.ThrowIfCancellationRequested();
+            var route = PrefixLocale(locale, GetTagRoute(group.Key));
+            tags.Add(new TagGroup(
+                group.Key,
+                CreateRouteDocument(route, locale),
+                group.Where(item => item.Document.Kind == ContentKind.Post).Select(item => item.Document)
+                    .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue).ToList().AsReadOnly(),
+                group.Where(item => item.Document.Kind == ContentKind.Page).Select(item => item.Document)
+                    .OrderBy(d => d.Metadata.Title).ToList().AsReadOnly()));
         }
 
-        await RenderTagPagesAsync<TTagListView, TTagView>(documents, navigation, plugins, theme, destination, layoutType, cancellationToken);
+        return new GenerationScope(locale, documents, navigation, tags, outputs,
+            CreateRouteDocument(locale ?? string.Empty, locale),
+            CreateRouteDocument(PrefixLocale(locale, "tags"), locale));
+    }
 
-        CopyContentAssets(destination);
-        await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
+    private static ContentDocument CreateRouteDocument(string route, string? locale) => new()
+    {
+        Kind = ContentKind.Page,
+        Metadata = new ContentMetadata { Slug = route, Locale = locale },
+    };
+
+    private static string PrefixLocale(string? locale, string route)
+        => locale is null ? route : $"{locale}/{route}";
+
+    private string ResolveLocale(string? locale, string source)
+    {
+        var normalized = ContentUrlHelper.GetLocaleSegment(string.IsNullOrWhiteSpace(locale) ? _options.Locale : locale);
+        if (normalized.Length == 0 || normalized is "." or ".."
+            || normalized.IndexOfAny(['\\', ':', '*', '?', '"', '<', '>', '|']) >= 0
+            || normalized.Any(char.IsControl) || normalized.EndsWith('.'))
+        {
+            throw new InvalidDataException($"Invalid {source}: a non-empty, safe locale route segment is required.");
+        }
+        return normalized;
+    }
+
+    private void ValidateRedirectBaseUrl()
+    {
+        var baseUrl = _options.BaseUrl;
+        if (string.IsNullOrEmpty(baseUrl) || !baseUrl.StartsWith('/') || baseUrl.StartsWith("//", StringComparison.Ordinal)
+            || !baseUrl.EndsWith('/') || baseUrl.IndexOfAny(['\\', '?', '#']) >= 0
+            || baseUrl.Any(char.IsWhiteSpace) || baseUrl.Any(char.IsControl))
+        {
+            throw new InvalidDataException("Site.BaseUrl must be a rooted path ending in '/' (for example '/blog/') for locale redirects.");
+        }
+        foreach (var segment in baseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries))
+        {
+            for (var index = 0; index < segment.Length; index++)
+            {
+                if (segment[index] == '%'
+                    && (index + 2 >= segment.Length || !Uri.IsHexDigit(segment[index + 1]) || !Uri.IsHexDigit(segment[index + 2])))
+                {
+                    throw new InvalidDataException("Site.BaseUrl contains an invalid percent escape for locale redirects.");
+                }
+            }
+            var decoded = Uri.UnescapeDataString(segment);
+            if (decoded is "." or ".." || decoded.IndexOfAny(['/', '\\', '?', '#']) >= 0 || decoded.Any(char.IsControl))
+            {
+                throw new InvalidDataException("Site.BaseUrl contains an unsafe path segment for locale redirects.");
+            }
+        }
+    }
+
+    private static IReadOnlyList<RedirectPage> CreateRedirects(GenerationScope scope)
+    {
+        if (scope.Locale is null)
+        {
+            return [];
+        }
+
+        var context = scope.CreateLocaleContext(string.Empty)!;
+        var redirects = new List<RedirectPage>
+        {
+            new(CreateRouteDocument(string.Empty, scope.Locale), scope.IndexDocument, context.HomeUrl),
+        };
+        if (scope.Tags.Count > 0)
+        {
+            redirects.Add(new(CreateRouteDocument("tags", scope.Locale), scope.TagIndexDocument, context.TagIndexUrl! + "/"));
+            redirects.AddRange(scope.Tags.Select(tag => new RedirectPage(
+                CreateRouteDocument(GetTagRoute(tag.Tag), scope.Locale), tag.Document, context.GetTagUrl(tag.Tag) + "/")));
+        }
+        return redirects;
     }
 
     private static bool HasHiddenNavigationAncestor(string slug, HashSet<string> hiddenPageRoutes)
@@ -117,31 +281,35 @@ public sealed class StaticSiteGenerator(
         return false;
     }
 
-    private async Task RenderIndexAsync<TIndexView>(IEnumerable<ContentDocument> documents, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderIndexAsync<TIndexView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TIndexView : ScissorHands.Theme.IndexViewBase
     {
-        var posts = documents
+        var posts = scope.Documents
             .Where(d => d.Kind == ContentKind.Post)
             .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
             .ToList();
 
-        var parameters = CreateBaseParameters(plugins, theme, navigation);
+        var parameters = CreateBaseParameters(plugins, theme, scope, scope.IndexDocument.Metadata.Slug);
         parameters["Documents"] = posts;
+        if (scope.Locale is not null)
+        {
+            parameters["Document"] = scope.IndexDocument;
+        }
 
         var rendered = await _renderer.RenderAsync<TIndexView>(layoutType, parameters, cancellationToken);
         var indexDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Title = _options.Title, Slug = string.Empty },
+            Metadata = scope.IndexDocument.Metadata with { Title = _options.Title },
             Markdown = string.Empty,
             Html = rendered
         };
 
-        var outputPath = ResolveOutputPath(destination, string.Empty);
-        await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, cancellationToken);
+        var outputPath = ResolveOutputPath(destination, scope.IndexDocument.Metadata.Slug);
+        await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, scope.Outputs, scope.IndexDocument, cancellationToken);
     }
 
-    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, object owner, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
     {
         ContentDocument documentToRender;
@@ -150,7 +318,7 @@ public sealed class StaticSiteGenerator(
             documentToRender = new ContentDocument
             {
                 Kind = ContentKind.Page,
-                Metadata = new ContentMetadata { Title = "404 - Not Found", Description = "Page not found", Slug = PAGE_NOT_FOUND_SLUG },
+                Metadata = new ContentMetadata { Title = "404 - Not Found", Description = "Page not found", Slug = PAGE_NOT_FOUND_SLUG, Locale = scope.Locale },
                 Markdown = string.Empty,
                 Html = string.Empty
             };
@@ -172,25 +340,25 @@ public sealed class StaticSiteGenerator(
             }
         }
 
-        var parameters = CreateBaseParameters(plugins, theme, navigation);
+        var parameters = CreateBaseParameters(plugins, theme, scope, PAGE_NOT_FOUND_SLUG);
         parameters["Document"] = documentToRender;
 
         var rendered = await _renderer.RenderAsync<TNotFoundView>(layoutType, parameters, cancellationToken);
 
         var outputPath = _fileSystem.Path.Combine(destination, PAGE_NOT_FOUND_SLUG);
-        await WriteRenderedHtmlAsync(outputPath, rendered, documentToRender, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, documentToRender, scope.Outputs, owner, cancellationToken);
     }
 
-    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
     {
         cancellationToken.ThrowIfCancellationRequested();
-        navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
+        scope.Navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
 
         var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
 
-        var parameters = CreateBaseParameters(plugins, theme, navigation);
+        var parameters = CreateBaseParameters(plugins, theme, scope, document.Metadata.Slug);
         parameters["Document"] = postMarkdown;
         if (postMarkdown.Kind == ContentKind.Page && pageNavigation is not null)
         {
@@ -204,65 +372,35 @@ public sealed class StaticSiteGenerator(
         };
         var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
 
-        await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, scope.Outputs, document, cancellationToken);
     }
 
-    private async Task RenderTagPagesAsync<TTagListView, TTagView>(IEnumerable<ContentDocument> documents, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPagesAsync<TTagListView, TTagView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
         where TTagView : ScissorHands.Theme.TagViewBase
     {
-        // Build the tag dictionary: for each tag, group posts (sorted by published date descending) and pages (sorted by title ascending)
-        var taggedDocuments = documents
-            .Where(d => d.Metadata.Tags.Any() && IsNotFoundPage(d) == false)
-            .SelectMany(d => d.Metadata.Tags.Select(tag => (Tag: tag.ToLowerInvariant(), Document: d)))
-            .GroupBy(x => x.Tag)
-            .ToDictionary(
-                g => g.Key,
-                g =>
-                {
-                    var posts = g
-                        .Where(x => x.Document.Kind == ContentKind.Post)
-                        .Select(x => x.Document)
-                        .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
-                        .ToList()
-                        .AsEnumerable();
-
-                    var pages = g
-                        .Where(x => x.Document.Kind == ContentKind.Page)
-                        .Select(x => x.Document)
-                        .OrderBy(d => d.Metadata.Title)
-                        .ToList()
-                        .AsEnumerable();
-
-                    return (Posts: posts, Pages: pages);
-                });
-
-        if (taggedDocuments.Count == 0)
+        if (scope.Tags.Count == 0)
         {
             _logger.LogInformation("No tags found in content documents; skipping tag pages");
             return;
         }
 
-        // Render the tag list page at /tags
-        await RenderTagListPageAsync<TTagListView>(taggedDocuments, navigation, plugins, theme, destination, layoutType, cancellationToken);
+        var taggedDocuments = scope.Tags.ToDictionary(
+            tag => tag.Tag,
+            tag => ((IEnumerable<ContentDocument>)tag.Posts, (IEnumerable<ContentDocument>)tag.Pages));
+        await RenderTagListPageAsync<TTagListView>(taggedDocuments, scope, plugins, theme, destination, layoutType, cancellationToken);
 
-        // Render individual tag pages at /tags/{tag}
-        foreach (var tagEntry in taggedDocuments)
+        foreach (var tag in scope.Tags)
         {
-            await RenderTagPageAsync<TTagView>(tagEntry.Key, tagEntry.Value.Posts, tagEntry.Value.Pages, navigation, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderTagPageAsync<TTagView>(tag, scope, plugins, theme, destination, layoutType, cancellationToken);
         }
     }
 
-    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
     {
-        // Route-only metadata preserves the layout's site-level title and description.
-        var routeDocument = new ContentDocument
-        {
-            Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Slug = "tags" },
-        };
-        var parameters = CreateBaseParameters(plugins, theme, navigation);
+        var routeDocument = scope.TagIndexDocument;
+        var parameters = CreateBaseParameters(plugins, theme, scope, routeDocument.Metadata.Slug);
         parameters["Document"] = routeDocument;
         parameters["TaggedDocuments"] = taggedDocuments;
 
@@ -275,47 +413,48 @@ public sealed class StaticSiteGenerator(
             Html = rendered
         };
         var outputPath = ResolveOutputPath(destination, routeDocument.Metadata.Slug);
-        await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, scope.Outputs, routeDocument, cancellationToken);
     }
 
-    private async Task RenderTagPageAsync<TTagView>(string tag, IEnumerable<ContentDocument> posts, IEnumerable<ContentDocument> pages, NavigationContext navigation, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPageAsync<TTagView>(TagGroup tag, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagView : ScissorHands.Theme.TagViewBase
     {
-        var tagRoute = GetTagRoute(tag);
-        var routeDocument = new ContentDocument
-        {
-            Kind = ContentKind.Page,
-            Metadata = new ContentMetadata { Slug = tagRoute },
-        };
-        var parameters = CreateBaseParameters(plugins, theme, navigation);
+        var routeDocument = tag.Document;
+        var tagRoute = routeDocument.Metadata.Slug;
+        var parameters = CreateBaseParameters(plugins, theme, scope, tagRoute);
         parameters["Document"] = routeDocument;
-        parameters["Tag"] = tag;
-        parameters["TaggedPosts"] = posts;
-        parameters["TaggedPages"] = pages;
+        parameters["Tag"] = tag.Tag;
+        parameters["TaggedPosts"] = tag.Posts;
+        parameters["TaggedPages"] = tag.Pages;
 
         var rendered = await _renderer.RenderAsync<TTagView>(layoutType, parameters, cancellationToken);
         var tagDocument = new ContentDocument
         {
             Kind = ContentKind.Page,
-            Metadata = routeDocument.Metadata with { Title = $"Tag: {tag}" },
+            Metadata = routeDocument.Metadata with { Title = $"Tag: {tag.Tag}" },
             Markdown = string.Empty,
             Html = rendered
         };
         var outputPath = ResolveOutputPath(destination, tagRoute);
-        await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, scope.Outputs, routeDocument, cancellationToken);
     }
 
-    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, NavigationContext navigation)
+    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, GenerationScope scope, string route)
     {
-        return new Dictionary<string, object?>
+        var parameters = new Dictionary<string, object?>
         {
             ["Plugins"] = plugins,
             ["Theme"] = theme,
             ["Site"] = _options,
-            ["NavigationPages"] = navigation.Pages,
-            ["NavigationTree"] = navigation.Tree,
+            ["NavigationPages"] = scope.Navigation.Pages,
+            ["NavigationTree"] = scope.Navigation.Tree,
             ["PageNavigation"] = new PageNavigation(),
         };
+        if (scope.Locale is not null)
+        {
+            parameters["LocaleContext"] = scope.CreateLocaleContext(route);
+        }
+        return parameters;
     }
 
     private static IReadOnlyDictionary<ContentDocument, PageNavigation> CreatePageNavigation(
@@ -352,10 +491,71 @@ public sealed class StaticSiteGenerator(
         IReadOnlyList<NavigationNode> Tree,
         IReadOnlyDictionary<ContentDocument, PageNavigation> AdjacentPages);
 
-    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, CancellationToken cancellationToken)
+    private sealed record TagGroup(
+        string Tag, ContentDocument Document, IReadOnlyList<ContentDocument> Posts, IReadOnlyList<ContentDocument> Pages);
+
+    private sealed record RedirectPage(ContentDocument Document, ContentDocument Target, string TargetUrl);
+
+    private sealed record GenerationScope(
+        string? Locale,
+        IReadOnlyList<ContentDocument> Documents,
+        NavigationContext Navigation,
+        IReadOnlyList<TagGroup> Tags,
+        OutputRoutes Outputs,
+        ContentDocument IndexDocument,
+        ContentDocument TagIndexDocument)
     {
+        public LocaleContext? CreateLocaleContext(string route)
+        {
+            if (Locale is null)
+            {
+                return null;
+            }
+            var homeUrl = ContentUrlHelper.GetContentUrl(Locale) + "/";
+            return new LocaleContext
+            {
+                Locale = Locale,
+                Route = route,
+                HomeUrl = homeUrl,
+                TagIndexUrl = Tags.Count == 0 ? null : homeUrl + "tags",
+            };
+        }
+    }
+
+    private async Task RenderRedirectAsync(RedirectPage redirect, string destination, OutputRoutes outputs, CancellationToken cancellationToken)
+    {
+        var target = _options.BaseUrl + redirect.TargetUrl;
+        var encodedTarget = HtmlEncoder.Default.Encode(target);
+        var encodedLocale = HtmlEncoder.Default.Encode(redirect.Document.Metadata.Locale!);
+        var html = $"""
+            <!DOCTYPE html>
+            <html lang="{encodedLocale}">
+            <head>
+                <meta charset="utf-8">
+                <meta http-equiv="refresh" content="0;url={encodedTarget}">
+                <title>Redirect</title>
+            </head>
+            <body><p><a href="{encodedTarget}">Continue</a></p></body>
+            </html>
+            """;
+        var document = new ContentDocument
+        {
+            Kind = ContentKind.Page,
+            Metadata = redirect.Document.Metadata with { Title = "Redirect" },
+            Html = html,
+        };
+        await WriteRenderedHtmlAsync(ResolveOutputPath(destination, document.Metadata.Slug),
+            html, document, outputs, redirect.Document, cancellationToken);
+    }
+
+    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner, CancellationToken cancellationToken)
+    {
+        cancellationToken.ThrowIfCancellationRequested();
+        outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'");
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
 
+        cancellationToken.ThrowIfCancellationRequested();
+        outputs.ValidateLinks(outputPath);
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
@@ -370,7 +570,7 @@ public sealed class StaticSiteGenerator(
         return await _pluginRunner.RunPostMarkdownAsync(preProcessed, cancellationToken);
     }
 
-    private void CopyContentAssets(string destination)
+    private void CopyContentAssets(string destination, OutputRoutes outputs)
     {
         var source = _fileSystem.Path.Combine(_paths.GetContentsRoot(), "images");
         var target = _fileSystem.Path.Combine(destination, "images");
@@ -381,23 +581,28 @@ public sealed class StaticSiteGenerator(
             return;
         }
 
-        CopyDirectory(source, target);
+        CopyDirectory(source, target, outputs);
     }
 
-    private void CopyDirectory(string sourceDir, string destinationDir)
+    private void CopyDirectory(string sourceDir, string destinationDir, OutputRoutes outputs)
     {
+        outputs.ValidateLinks(destinationDir);
         _fileSystem.Directory.CreateDirectory(destinationDir);
 
         foreach (var file in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
             var destFile = _fileSystem.Path.Combine(destinationDir, _fileSystem.Path.GetFileName(file));
+            if (_options.UseLocaleInUrl)
+            {
+                outputs.Claim(destFile, new object(), $"content asset '{file}'");
+            }
             _fileSystem.File.Copy(file, destFile, overwrite: true);
         }
 
         foreach (var directory in _fileSystem.Directory.GetDirectories(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
             var name = _fileSystem.Path.GetFileName(directory);
-            CopyDirectory(directory, _fileSystem.Path.Combine(destinationDir, name));
+            CopyDirectory(directory, _fileSystem.Path.Combine(destinationDir, name), outputs);
         }
     }
 
@@ -426,61 +631,112 @@ public sealed class StaticSiteGenerator(
         return outputPath;
     }
 
-    private static void ValidateOutputRoutes(string destination, IEnumerable<ContentDocument> documents)
+    private static void ValidateOutputRoutes(
+        string destination, IReadOnlyList<GenerationScope> scopes, IReadOnlyList<RedirectPage> redirects, object notFoundOwner)
     {
-        var routes = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-        AddRoute(string.Empty, "site index");
-        AddOutputPath(Path.Combine(Path.GetFullPath(destination), PAGE_NOT_FOUND_SLUG), "not-found page");
-
-        var taggedDocuments = false;
-        var tags = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
-        foreach (var document in documents)
+        var outputs = scopes[0].Outputs;
+        outputs.Plan(Path.Combine(Path.GetFullPath(destination), PAGE_NOT_FOUND_SLUG), notFoundOwner, "not-found page");
+        foreach (var scope in scopes)
         {
-            if (!IsNotFoundPage(document))
+            AddRoute(scope.IndexDocument, "site index");
+            foreach (var document in scope.Documents.Where(d => !IsNotFoundPage(d)))
             {
-                AddRoute(document.Metadata.Slug, document.SourcePath);
+                AddRoute(document, string.IsNullOrEmpty(document.SourcePath) ? $"content '{document.Metadata.Slug}'" : document.SourcePath);
             }
-
-            foreach (var tag in document.Metadata.Tags)
+            if (scope.Tags.Count > 0)
             {
-                taggedDocuments = true;
-                tags.Add(tag);
+                AddRoute(scope.TagIndexDocument, "tag index");
+                foreach (var tag in scope.Tags)
+                {
+                    AddRoute(tag.Document, $"tag '{tag.Tag}'");
+                }
             }
         }
 
-        if (taggedDocuments)
+        foreach (var redirect in redirects)
         {
-            AddRoute("tags", "tag index");
-            foreach (var tag in tags)
+            var redirectPath = ResolveOutputPath(destination, redirect.Document.Metadata.Slug);
+            var targetPath = ResolveOutputPath(destination, redirect.Target.Metadata.Slug);
+            if (redirectPath.Equals(targetPath, StringComparison.OrdinalIgnoreCase) || !outputs.Contains(targetPath))
             {
-                AddRoute(GetTagRoute(tag), $"tag '{tag}'");
+                throw new InvalidDataException($"Invalid redirect route '{redirect.Document.Metadata.Slug}': its target must be a different generated page.");
             }
+            AddRoute(redirect.Document, $"redirect '{redirect.Document.Metadata.Slug}'");
         }
 
-        void AddRoute(string route, string owner)
-            => AddOutputPath(ResolveOutputPath(destination, route), owner);
+        void AddRoute(ContentDocument document, string description)
+            => outputs.Plan(ResolveOutputPath(destination, document.Metadata.Slug), document, description);
+    }
 
-        void AddOutputPath(string outputPath, string owner)
+    private sealed class OutputRoutes(string root, IFileSystem fileSystem, bool validateLinks)
+    {
+        private readonly Dictionary<string, (object Owner, string Description)> _routes = new(StringComparer.OrdinalIgnoreCase);
+        private readonly HashSet<string> _written = new(StringComparer.OrdinalIgnoreCase);
+        private readonly string _root = Path.GetFullPath(root);
+
+        public bool Contains(string path) => _routes.ContainsKey(Path.GetFullPath(path));
+
+        public void Plan(string outputPath, object owner, string description)
+            => Register(outputPath, owner, description, false);
+
+        public void Claim(string outputPath, object owner, string description)
         {
             var fullPath = Path.GetFullPath(outputPath);
-            if (routes.TryGetValue(fullPath, out var existingOwner))
+            Register(fullPath, owner, description, true);
+            if (!_written.Add(fullPath))
             {
+                throw new InvalidDataException($"Output collision at '{fullPath}': the destination was already written.");
+            }
+        }
+
+        private void Register(string outputPath, object owner, string description, bool existingClaim)
+        {
+            var fullPath = Path.GetFullPath(outputPath);
+            ValidateLinks(fullPath);
+            if (_routes.TryGetValue(fullPath, out var existing))
+            {
+                if (existingClaim && ReferenceEquals(owner, existing.Owner))
+                {
+                    return;
+                }
                 throw new InvalidDataException(
-                    $"Output collision at '{fullPath}' between '{existingOwner}' and '{owner}'.");
+                    $"Output collision at '{fullPath}' between '{existing.Description}' and '{description}'.");
             }
 
             var separator = Path.DirectorySeparatorChar.ToString();
-            var conflictingRoute = routes.FirstOrDefault(route =>
+            var conflictingRoute = _routes.FirstOrDefault(route =>
                 fullPath.StartsWith(route.Key + separator, StringComparison.OrdinalIgnoreCase)
                 || route.Key.StartsWith(fullPath + separator, StringComparison.OrdinalIgnoreCase));
             if (!string.IsNullOrEmpty(conflictingRoute.Key))
             {
                 throw new InvalidDataException(
-                    $"Output collision between file '{conflictingRoute.Key}' from '{conflictingRoute.Value}' and '{fullPath}' from '{owner}'.");
+                    $"Output collision between file '{conflictingRoute.Key}' from '{conflictingRoute.Value.Description}' and '{fullPath}' from '{description}'.");
             }
 
-            routes.Add(fullPath, owner);
+            _routes.Add(fullPath, (owner, description));
+        }
+
+        public void ValidateLinks(string outputPath)
+        {
+            if (!validateLinks)
+            {
+                return;
+            }
+            var path = Path.GetFullPath(outputPath);
+            while (true)
+            {
+                if ((fileSystem.File.Exists(path) || fileSystem.Directory.Exists(path))
+                    && (fileSystem.File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0)
+                {
+                    throw new InvalidDataException($"Generated output path '{outputPath}' crosses a filesystem link at '{path}'.");
+                }
+                if (path.Equals(_root, StringComparison.OrdinalIgnoreCase))
+                {
+                    break;
+                }
+                path = Path.GetDirectoryName(path)
+                    ?? throw new InvalidDataException($"Generated output path '{outputPath}' is outside its output root.");
+            }
         }
     }
 

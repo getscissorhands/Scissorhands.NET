@@ -2,7 +2,7 @@
 @layout MainLayout
 
 <section class="not-found prose">
-    <a class="back-link" href=".">&larr; Back home</a>
+    <a class="back-link" href="@(LocaleContext?.HomeUrl ?? ".")">&larr; Back home</a>
     @if (string.IsNullOrWhiteSpace(Document?.Html) == true)
     {
         <article>
