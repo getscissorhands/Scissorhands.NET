@@ -5,7 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 
 const directory = path.dirname(fileURLToPath(import.meta.url));
-const sample = path.resolve(directory, "..", "..", "samples", "ScissorHands.Sample");
+const sample = path.resolve(directory, "..", "..", "sample");
 const options = {
   cwd: sample,
   stdio: "inherit",

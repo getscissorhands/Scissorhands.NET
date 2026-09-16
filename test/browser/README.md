@@ -9,7 +9,7 @@ Prerequisites: the repository's .NET SDK, restored sample project dependencies,
 and Node.js 24. From the repository root:
 
 ```bash
-dotnet restore ./samples/ScissorHands.Sample/ScissorHands.Sample.csproj
+dotnet restore ./sample/sample.csproj
 cd ./test/browser
 npm ci
 npx playwright install chromium firefox webkit

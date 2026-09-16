@@ -32,7 +32,7 @@ dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity nor
 Run the sample from its own directory so configuration and content resolve there. For preview, stop the server with Ctrl+C before returning to the root:
 
 ```bash
-pushd ./samples/ScissorHands.Sample
+pushd ./sample
 dotnet run -- --preview
 popd
 ```
@@ -40,24 +40,24 @@ popd
 Generate static output without starting the preview server:
 
 ```bash
-pushd ./samples/ScissorHands.Sample
+pushd ./sample
 dotnet run -- --build
 popd
 ```
 
-The sample launch profile does not select a mode; pass `--preview` or `--build` explicitly, including in IDE run arguments. Generated output is in the sample's `preview` or `dist` directory. See the [sample guide](samples/ScissorHands.Sample/README.md).
+The sample launch profile does not select a mode; pass `--preview` or `--build` explicitly, including in IDE run arguments. Generated output is in the sample's `preview` or `dist` directory. See the [sample guide](sample/README.md).
 
 ## Repository map
 
 | Location                      | Responsibility                                                                                    |
 | ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `.github/workflows`           | Build, test, packaging, and publishing automation.                                                |
+| `sample`                      | Runnable integration sample using local project references.                                       |
 | `src/ScissorHands.Core`       | Shared contracts, manifests, content/navigation models, URL helpers, and command options.         |
 | `src/ScissorHands.Plugin`     | Plugin contracts, pipeline hooks, and Razor plugin base components.                               |
 | `src/ScissorHands.Theme`      | Razor layout and view base types for theme authors.                                               |
 | `src/ScissorHands.Web`        | Application composition, content loading, generation, rendering, preview, and the built-in theme. |
 | `test/ScissorHands.*.Tests`   | Tests corresponding to each source project.                                                       |
-| `samples/ScissorHands.Sample` | Runnable integration sample using local project references.                                       |
-| `.github/workflows`           | Build, test, packaging, and publishing automation.                                                |
 
 ## Architecture and boundaries
 

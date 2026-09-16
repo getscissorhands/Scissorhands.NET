@@ -9,22 +9,22 @@ A .NET 10 static site generator that turns Markdown into HTML using Razor themes
 
 ## Try the sample
 
-Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone this repository, and run from `samples/ScissorHands.Sample`:
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone this repository, and run from `sample`:
 
 ```bash
 dotnet run -- --preview
 ```
 
-Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](samples/ScissorHands.Sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
+Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| [Web](src/ScissorHands.Web/README.md) | Application composition, generation, preview, and the built-in theme |
-| [Core](src/ScissorHands.Core/README.md) | Shared models, manifests, and contracts |
-| [Theme](src/ScissorHands.Theme/README.md) | Base types for theme authors |
-| [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts |
+| Package                                     | Purpose                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| [Web](src/ScissorHands.Web/README.md)       | Application composition, generation, preview, and the built-in theme |
+| [Core](src/ScissorHands.Core/README.md)     | Shared models, manifests, and contracts                              |
+| [Theme](src/ScissorHands.Theme/README.md)   | Base types for theme authors                                         |
+| [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts                         |
 
 ## Documentation and compatibility
 

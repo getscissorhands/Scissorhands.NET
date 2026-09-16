@@ -115,7 +115,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 
 ### FR-001: Build a site without starting its preview server
 
-- **Basis / scope:** Confirmed original intent and current application/renderer behavior; Core. Sources: [application](src/ScissorHands.Web/ScissorHandsApplication.cs), [renderer](src/ScissorHands.Web/Renderers/ComponentRenderer.cs), [sample guide](samples/ScissorHands.Sample/README.md).
+- **Basis / scope:** Confirmed original intent and current application/renderer behavior; Core. Sources: [application](src/ScissorHands.Web/ScissorHandsApplication.cs), [renderer](src/ScissorHands.Web/Renderers/ComponentRenderer.cs), [sample guide](sample/README.md).
 - **Actor / rationale:** Owner runs the application from the site directory to obtain a deployable static artifact (J-001, G-001).
 - **Behavior:** `--build` generates into `dist`; `--preview` generates into `preview` and starts a local server; `--help` displays usage. Recognized modes are explicit, not inferred from content.
 - **Acceptance:** A successful build writes the generated HTML and supported assets and reports the output location without starting the preview listener. HTML rendering uses compiled Razor components through `HtmlRenderer`; serving the resulting site does not require the generation application.
@@ -511,7 +511,7 @@ Use linked source files and the [website documentation handoff](docs/website-doc
 
 | Topic | References |
 | --- | --- |
-| Original discussion and product setup | [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md), [README.md](README.md), [sample](samples/ScissorHands.Sample/README.md) |
+| Original discussion and product setup | [Original discussion (archived)](https://github.com/getscissorhands/Scissorhands.NET/blob/464ce0f3454d473d4a39bc6f5c9005e86cd5396a/DISCUSSIONS.md), [README.md](README.md), [sample](sample/README.md) |
 | Shared contracts and extension guidance | [Core](src/ScissorHands.Core/README.md), [Plugin](src/ScissorHands.Plugin/README.md), [Theme](src/ScissorHands.Theme/README.md), [Web](src/ScissorHands.Web/README.md) |
 | Content/route regression evidence | [Loader tests](test/ScissorHands.Web.Tests/Loaders/ContentLoaderTests.cs), [generator tests](test/ScissorHands.Web.Tests/Generators/StaticSiteGeneratorTests.cs), [route tests](test/ScissorHands.Web.Tests/Generators/StaticSiteGeneratorRouteTests.cs) |
 | Navigation and current route behavior | [Navigation reference](docs/website-documentation.md#page-routes-and-navigation), [navigation generation cases](test/ScissorHands.Web.Tests/Generators/StaticSiteGeneratorNavigationTests.cs), [directory-index cases](test/ScissorHands.Web.Tests/Loaders/ContentLoaderDirectoryIndexTests.cs), [shared URL cases](test/ScissorHands.Core.Tests/Urls/ContentUrlHelperTests.cs) |
