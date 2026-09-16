@@ -1,6 +1,7 @@
 using System.IO.Abstractions;
 using System.Reflection;
 using System.Text;
+using System.Text.Json;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -20,6 +21,25 @@ namespace ScissorHands.Web.Tests.Extensions;
 
 public class ServiceCollectionExtensionsTests
 {
+    [Theory]
+    [InlineData("/", "/")]
+    [InlineData("/docs", "/docs/")]
+    [InlineData("/docs/", "/docs/")]
+    [InlineData("/manual/docs", "/manual/docs/")]
+    [InlineData("/manual/docs/", "/manual/docs/")]
+    public void Given_JsonBasePath_When_AddConfigurationsInvoked_Then_It_Should_BindCanonicalBaseUrl(string baseUrl, string expected)
+    {
+        using var stream = new MemoryStream(JsonSerializer.SerializeToUtf8Bytes(new { Site = new { BaseUrl = baseUrl } }));
+        var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
+        var services = new ServiceCollection();
+
+        services.AddConfigurations(config);
+
+        using var provider = services.BuildServiceProvider();
+        provider.GetRequiredService<SiteManifest>().BaseUrl.ShouldBe(expected);
+        config["Site:BaseUrl"].ShouldBe(baseUrl);
+    }
+
     [Fact]
     public async Task Given_JsonConfigurationAndPluginDependency_When_ResolvedRunnerInvoked_Then_It_Should_UseDependencyOrder()
     {

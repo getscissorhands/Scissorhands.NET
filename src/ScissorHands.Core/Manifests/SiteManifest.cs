@@ -13,6 +13,8 @@ public sealed class SiteManifest
     private const string BASE_URL = "/";
     private const string HERO_IMAGE_URL = "https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/hero.jpg";
 
+    private readonly string _baseUrl = BASE_URL;
+
     /// <summary>
     /// Defines the contents directory.
     /// </summary>
@@ -71,7 +73,17 @@ public sealed class SiteManifest
     /// <summary>
     /// Gets the base URL of the site.
     /// </summary>
-    public string BaseUrl { get; init; } = BASE_URL;
+    public string BaseUrl
+    {
+        get => _baseUrl;
+        init => _baseUrl = value is not null
+                          && value.StartsWith('/')
+                          && !value.StartsWith("//", StringComparison.Ordinal)
+                          && !value.EndsWith('/')
+                          && value.IndexOfAny(['\\', '?', '#']) < 0
+                              ? $"{value}/"
+                              : value!;
+    }
 
     /// <summary>
     /// Gets the site hero image.

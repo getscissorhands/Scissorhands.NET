@@ -4,11 +4,11 @@
 
 | Field | Value |
 | --- | --- |
-| Document version | 0.10 |
+| Document version | 0.11 |
 | Status | Review-ready |
-| Last updated | 2026-09-14 |
-| Scope | Retained vNext baseline plus implemented #81 code with passed V-008 component acceptance; preview mounting and broader V-005 work remain separate |
-| Code baseline | `935f5376fe6425b2e7f466725cec60df808974ba` plus the pager acceptance follow-up recorded in this revision |
+| Last updated | 2026-09-16 |
+| Scope | Retained vNext baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting with scoped V-003 evidence; broader verification remains open |
+| Code baseline | `b3069df` plus the tested #89 BaseUrl normalization follow-up in this revision |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
@@ -18,7 +18,7 @@
 | Feature decision | @justinyoo confirmed #81's replacement scope and two-tier source-less compatibility policy on 2026-09-13; this is behavior confirmation, not whole-document sign-off or delivered code |
 | Component acceptance | @justinyoo confirmed #81-only contrast thresholds and three-engine desktop/mobile automation on 2026-09-14; [decision record](https://github.com/getscissorhands/Scissorhands.NET/issues/81#issuecomment-5654089522) |
 
-**Readiness:** v0.10 remains Review-ready overall, while #81's approved V-008 acceptance is complete. The repeatable suite passed in Chromium, Firefox and WebKit at both viewport sizes after pager-only contrast and keyboard fixes. Historical approvals remain intact; #89 and broader V-005 work are separate. This is feature acceptance, not whole-product or release sign-off.
+**Readiness:** v0.11 remains Review-ready overall. #81's approved V-008 acceptance is complete; #89 now has passing scoped preview HTTP evidence under V-003. Historical approvals and the earlier three-engine component results remain intact. This revision records implementation and evidence, not new whole-document approval, completion of broader V-003/V-005, or release sign-off.
 
 ## 1. Overview and evidence
 
@@ -175,6 +175,8 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Basis / scope:** Confirmed [application](src\ScissorHands.Web\ScissorHandsApplication.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs), and [Web guide](src\ScissorHands.Web\README.md); Supporting.
 - **Actor / rationale:** Owner iterates on content and sees generated results before publishing (J-002, G-002).
 - **Behavior:** Perform initial generation and serve `preview`; watch content/theme file create, change, rename, and delete events, coalesce bursts, and serialize regeneration. Report successful rebuilds and instruct the owner to refresh the browser.
+- **Base path:** Preview serves pages and assets only at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. With `/docs/`, browsing `/` redirects to `/docs/` without serving a duplicate homepage at root; `/docs` also redirects to `/docs/`. Other outside-prefix requests return 404. Configuring `/` retains root hosting without a redirect loop. The user confirmed prefix-only serving and then requested the root-redirect exception on 2026-09-16, superseding the initial alias-preservation assumption and the later root 404; see V-003 and TR-017.
+- **Base-path configuration:** Per the user's subsequent 2026-09-16 request, the trailing slash is optional in `Site:BaseUrl`. `/docs` and `/docs/` have the same effective `/docs/` value in build and preview; nested prefixes behave likewise and `/` is unchanged. Generated links, `<base>` markup, preview mount and redirects must agree on that value without rewriting user configuration. Broader URL forms and scheme policy remain outside this change.
 - **Acceptance:** After a successful content edit and rebuild, browser refresh displays the regenerated file. A watcher callback failure is logged; subsequent changes can trigger another rebuild. Initial generation errors propagate rather than being reported as completed builds.
 - **Recovery boundary:** Preview regeneration writes into the existing output, so deleted/renamed sources can leave stale generated files until preview is restarted. Writes are not atomic: a failed build/rebuild may leave partial or mixed output, and initial build/preview startup clears its output folder. Use only a successful production build as a publication candidate; automated cleanup/rollback is not promised.
 
@@ -242,7 +244,7 @@ The user agreed on 2026-09-11 to keep V-001 through V-007 as broad next-phase ve
 | --- | --- | --- |
 | V-001 | Filesystem safety / NFR-002 | Exercise content reads, generated-page writes, and asset copying against traversal, symbolic-link escapes, and output collisions. Record containment and overwrite-protection results, including gaps beyond existing route tests |
 | V-002 | Rendering and privacy / NFR-003/010 | Check metadata encoding, unsafe URL schemes at relevant boundaries, and accidental secret exposure in generated output/logs using synthetic fixtures, not real credentials. Preserve supported raw Markdown/plugin HTML as an explicit trust boundary; record results and any unsafe paths |
-| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and prefixes such as `/docs/`, including pages, locale routes and assets. #89 owns the actual preview-prefix defect and its HTTP acceptance. Record serving configuration and request results; helper assertions alone do not establish mounting. V-008's locale-aware links/root preview/controlled-host evidence remains separately scoped |
+| V-003 | Subpath hosting / NFR-005 | Exercise preview and production output at `/` and prefixes such as `/docs/`, including pages, locale routes and assets. #89's preview-mount checks pass in the execution record below; the broader program remains open. Record serving configuration and request results; helper assertions alone do not establish mounting. V-008's evidence remains separately scoped |
 | V-004 | Failures and cancellation / NFR-004/006 | Exercise invalid input, generation failures, and cancellation-aware APIs. Confirm actionable errors and no misleading success; record partial-output behavior against documented limitations, without introducing atomic-output or bounded CLI-shutdown guarantees |
 | V-005 | Accessibility and browsers / NFR-008, FR-010 | Evaluate reading/navigation, nested disclosure buttons, keyboard/touch use, Escape/focus return, outside dismissal, no-JavaScript links, labels, and light/dark contrast across the agreed desktop/mobile browsers. Record actual browser/OS/device coverage and findings; no formal WCAG certification is required. V-008 separately records the #81 controls |
 | V-006 | Performance baseline / NFR-009 | Benchmark the owner's actual blog with its assets and enabled extensions. Record the workload/environment details, build duration, preview-update delay, memory usage, and measurement method. Completion establishes measurements, not compliance with an unagreed numerical target |
@@ -250,6 +252,44 @@ The user agreed on 2026-09-11 to keep V-001 through V-007 as broad next-phase ve
 | V-008 | #81 feature acceptance / FR-011, TR-021/TR-022 | Complete under the approved #81 scope: prior engine/root-preview evidence plus 42 passing three-engine browser checks, 4 contrast-math tests and passing rendered ratios. #89 and broader V-005 remain outside this gate |
 
 For each item, record what was exercised, the environment, results, and reproducible gaps. Failed, blocked, or skipped checks remain explicit; an attempted check is not a passing result. Track necessary corrections against the existing requirements, then recheck affected behavior. The benchmark needs reproducible measurements, not an invented speed threshold. These records are next-phase deliverables, not prerequisites for finishing the requirements document.
+
+### V-003: #89 preview-mount execution, 2026-09-16
+
+The user requested the fix after issue analysis. On Windows with .NET SDK **10.0.401**, Release configuration, and code `3e50dab` plus the initial fix committed as `4b32a4c`, the original middleware reproduced the reported prefix 404. The new [preview HTTP regression](test/ScissorHands.Web.Tests/ScissorHandsApplicationTests.cs) first passed both root cases and failed both `/docs/` cases; after prefix handling was added, all six expanded cases passed. The following table records that initial run; its root-alias behavior is superseded by the prefix-only follow-up below.
+
+| Scope | Observed evidence | Outcome |
+| --- | --- | --- |
+| Actual application middleware | Ephemeral Kestrel servers at `/`, `/docs/`, and `/manual/docs/`, each with locale routing on/off; fixture generator supplies known files through the real preview startup path | Six cases passed |
+| Request behavior | Home, nested/encoded pages, dated/locale posts, tags, explicit 404 document, CSS/JS/images, CSS HEAD, directory and mount-root redirects with retained queries, missing routes/assets, nonmatching/doubled prefixes and retained unprefixed aliases | Passed; no generated prefix directory or file-inventory changes |
+| Real sample build and preview | Four configurations: `/` and `/docs/`, each with `UseLocaleInUrl` false/true and `Locale=ko-KR`; isolated sample processes using `--preview` and `--build`, with preview listening on `http://127.0.0.1:0` | 56 HTTP checks passed; each build/preview pair had the same 21 artifact-relative files |
+| Reported failure and generated links | `/docs/ko-kr/parent/group/visible-grandchild/`, its generated Child/Child 2 neighbor targets, and prefixed theme/image requests | Returned 200; directory redirects returned 301 retaining prefix/query, and missing routes returned 404 |
+| Regression gate | Release solution build, affected Web suite, then `dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal` | Build succeeded; Web 290/290 and full suite 503/503 passed, no skips |
+
+The automated HTTP fixture isolates serving from generation; the separate sample run exercises real generation and rendered neighbor URLs. Temporary servers were stopped and sample configuration overrides were child-process-local. The initial fix did not change URL helpers, locale generation, production-host responsibilities, or watcher behavior. Root and slash-delimited path prefixes are the documented usage; other base-URL forms and broader scheme policy remain TG-001. Retaining unprefixed aliases was an implementation assumption, not a user-confirmed compatibility requirement.
+
+The historical September 13/14 failures below remain valid for those revisions. This run did not rerun browser/device tests, test representative third-party plugin output, or certify other operating systems or a production host. It does not close the broader V-003 program, TG-001, V-005, or authorize publication or issue closure. #81/V-008 acceptance remains unchanged.
+
+#### Prefix-only follow-up: 2026-09-16
+
+The user clarified that preview must serve only beneath `Site.BaseUrl` and requested the correction, committed as `589d45f`. With a non-root prefix, this revision returned 404 outside the mount instead of serving duplicate root aliases; `/docs` still redirected to `/docs/`, and root configuration `/` was unchanged. No new authentication or general URL-normalization policy was introduced. Its root 404 is superseded by the root-redirect follow-up below; these results remain historical evidence for that revision.
+
+On Windows with .NET SDK **10.0.401**, Release configuration, and `4b32a4c` plus this follow-up, the revised tests first failed all four non-root cases because `/` returned 200; both root cases still passed. After isolating static-file middleware inside the prefix branch, all six cases passed, including outside-prefix page/asset GET and CSS HEAD rejection, no outside redirects, locale/date/tag routes, mount/directory redirects with queries, and unchanged file inventories. The affected Web suite passed **290/290** and the full solution passed **503/503**, with no skips, after a successful Release solution build.
+
+Real sample preview passed **74 HTTP checks**: `/` with locale off/on had 12 checks each; `/docs/` with locale off/on had 25 each, using `Locale=ko-KR` and ephemeral loopback ports. Valid page/neighbor/theme/image URLs returned 200, outside-prefix and nonmatching/doubled-prefix requests returned 404, and redirects retained the prefix/query. Each preview contained 21 files with no physical `docs` directory. Configuration overrides were child-process-local, user sample settings were preserved, and all temporary servers were stopped. The earlier 56-check build/preview comparison remains historical evidence, not a rerun claim. Browser/device, third-party plugin and production-host verification were not rerun; broader evidence boundaries remain unchanged.
+
+#### Root-redirect follow-up: 2026-09-16
+
+The user requested that `/` redirect to `Site.BaseUrl`. With a non-root mount, GET/HEAD `/` now returns **302**, an empty body, and a same-origin path `Location` pointing at the mounted homepage with the query preserved. Other outside-prefix requests remain 404. Root configuration remains 200 without a redirect. The six actual-application HTTP cases first failed all four prefixed configurations on the existing root 404, then passed after the redirect was added; checks include queries, HEAD, POST rejection, empty redirect bodies and successful one-hop target requests.
+
+On Windows with .NET SDK **10.0.401**, Release, and `589d45f` plus this follow-up, the solution built successfully and **503/503** tests passed with no skips. A temporary copy of real sample content/configuration passed **94 HTTP checks**: 17 each for `/` with locale off/on and 30 each for `/docs/` with locale off/on, using `Locale=ko-KR` and ephemeral ports. Raw root responses were 200 for root hosting or 302 for a prefix; automatically followed requests ended at the base URL with their query intact. In-prefix content/assets and existing directory redirects passed, other outside-prefix requests remained 404, and each preview retained 21 files. Temporary processes and files were cleaned up; the user's running server, output and sample settings were left untouched. The existing port-5000 process was separately observed returning root 404 and `/docs/` 200 before restart, not duplicate homepage bodies. Browser-cache behavior was not diagnosed. Broader verification limitations and earlier results remain unchanged.
+
+#### BaseUrl normalization follow-up: 2026-09-16
+
+The user requested accepting both slash-terminated and non-terminated path prefixes in settings. `SiteManifest.BaseUrl` now supplies a missing trailing slash during initialization, covering direct .NET callers and configuration binding. `/docs` and `/docs/` both yield `/docs/`, nested prefixes follow the same rule, and `/` stays unchanged. Root redirects and prefix-only serving consume the canonical value, as do build/preview rendering and plugin site context. Source settings are not rewritten. This is not general URL validation: absolute/network-relative URLs, relative paths without a leading slash, and backslash/query/fragment-bearing values are not rewritten by the rule and gain no new safety or serving guarantee.
+
+On Windows, .NET SDK **10.0.401**, Release, and `b3069df` plus this follow-up, the new manifest test first failed the two missing-slash cases. After normalization, **19** manifest cases and **36** focused Web binding/rendering/HTTP cases passed. The solution built successfully and **538/538** .NET tests passed with no skips. The existing HTTP matrix now covers **10** cases: `/`, `/docs`, `/docs/`, `/manual/docs`, and `/manual/docs/`, each with locale routing off/on.
+
+A temporary real-sample copy exercised all ten configurations in both `--build` and `--preview`, with `Locale=ko-KR` and ephemeral loopback ports. **274 HTTP checks** passed; generated HTML in both modes and the logged preview URL used the canonical base. Corresponding trailing/non-trailing variants produced byte-identical build artifacts at each locale setting, and every build/preview pair retained the same 21-file layout. Root 302/query behavior, mount/directory redirects, locale-aware neighbor links, assets and outside-prefix 404s remained correct. Temporary files/processes were cleaned up; user settings and any existing preview process/output were untouched. Earlier runs remain historical evidence. No browser/device, third-party plugin, production-host or broader scheme-policy completion is claimed.
 
 ### V-008: #81 feature acceptance
 
@@ -347,7 +387,7 @@ This PRD describes a public-preview baseline, not a new release authorization. T
 | Q-004 / Unknown (release arrangements) | Who owns operational release acceptance and any further outcome evaluation, and when will they occur? | Goals and release criteria | Historical v0.6 and scoped #81 approvals are recorded; remaining whole-document review is separate. Execution ownership, timing and actual release authorization remain to be confirmed; these are not new feature behavior decisions |
 | Q-005 / Confirmed | Approved ordering/adjacency, two-tier fallback and component criteria; #89 and broad V-005 tracked separately | FR-010/011, NFR-007, RD-005 | Implemented with passing V-008 evidence; #81 is ready to close on merge, without completing unrelated work |
 
-Historical approvals and evidence remain intact. v0.10 adds the explicitly approved #81 component thresholds and engine-based evidence boundary without changing the broader V-005 program. Optional outcome measurement and release arrangements remain separate; no release authorization is inferred.
+Historical approvals and evidence remain intact. v0.11 adds #89's scoped preview evidence to v0.10's approved #81 component criteria without changing the broader verification programs. Optional outcome measurement and release arrangements remain separate; no release authorization is inferred.
 
 ### Decisions and material changes
 
@@ -370,13 +410,17 @@ Historical approvals and evidence remain intact. v0.10 adds the explicitly appro
 | 2026-09-13 | Move preview base-path mounting out of #81's acceptance gate | Explicit user confirmation; #89 and scope update linked in FR-011 | Supersede the earlier mount dependency gate, retain the 404 evidence under V-003/DEC-002, keep locale-aware new-link checks and other V-008 criteria unchanged; neither issue closed |
 | 2026-09-14 | Set component acceptance standards for #81 in v0.10 | Explicit user selections; decision linked in FR-011 | Require 4.5:1 pager text / 3:1 focus contrast and accept three-engine desktop/mobile automation; retain broad V-005 obligations separately. Method settled, execution pending |
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
+| 2026-09-16 | Record #89 preview-mount implementation in v0.11 | User requested the fix; actual application HTTP regressions, sample build/preview matrix and full .NET suite | Record scoped V-003 passes and unchanged artifact layout; preserve historical failures, all IDs, approvals and broader gaps |
+| 2026-09-16 | Require prefix-only preview serving | User clarified the expected meaning of `BaseUrl` and requested the fix | Supersede the unrequested root-alias assumption; FR-009/TR-017 require outside-prefix 404, with retained mount redirects and root configuration; record follow-up V-003 evidence without broader sign-off |
+| 2026-09-16 | Redirect the preview root to a non-root base URL | User requested a root redirect instead of a duplicate homepage | Add a root GET/HEAD redirect exception to FR-009/TR-017; preserve other outside-prefix 404s, root-mode serving, historical evidence and broader gaps |
+| 2026-09-16 | Accept both trailing-slash forms of site base paths | User requested code-side normalization of `Site:BaseUrl` | Canonicalize supported path prefixes for build/preview without rewriting settings; retain root/redirect behavior and broader URL-policy gaps; record 538 tests and 274 sample HTTP checks |
 
 ### Readiness assessment
 
-- **Supported status:** Review-ready overall. Historical approvals remain; v0.10 records explicitly approved #81 component criteria, not whole-document or release sign-off.
+- **Supported status:** Review-ready overall. v0.11 adds scoped #89 evidence; historical approvals remain, with no new whole-document or release sign-off.
 - **Remaining decisions versus execution:** V-008's approved checks pass after the targeted fixes. No feature acceptance gap remains for #81; merging the implementing PR can close it. #89, V-005 and broader release work remain separate.
 - **Approval:** @justinyoo approved the #81-specific requirements and then separately requested implementation on 2026-09-13. Historical approvals remain intact. The implementation request authorized the recorded code and scoped checks, not whole-document sign-off, resolution of shared gaps, publication or deployment.
-- **Reviewer pass:** Reconciled TRD v0.6/TDD v0.7 with the actual fixes and complete local engine/viewport report, preserving the earlier failures and all historical IDs.
+- **Reviewer pass:** Reconciled TRD v0.7/TDD v0.8 with the preview middleware, six HTTP cases and real sample results; preserved the earlier #81 evidence, failures, approvals and all historical IDs.
 - **Review limitations:** Scoped automated evidence is complete, not a full accessibility/security audit, physical-device matrix or blog benchmark. CI execution of the new job remains separately observable on the PR.
 
 ## 9. Reference map

@@ -89,6 +89,8 @@ dotnet run -- --build
 
 Refresh the browser after preview regeneration. Razor/C# changes require recompilation. Use `BaseUrl` for subpath hosting.
 
+Set `Site:BaseUrl` to `/` or a path prefix with a leading slash. The trailing slash is optional in configuration: `/docs` and `/docs/` both normalize to `/docs/`, and `/manual/docs` normalizes to `/manual/docs/`. The shared site manifest supplies that canonical value to generated `<base>` markup, plugins, build and preview; your configuration file is not rewritten. Open the logged preview URL: pages, assets, and directory redirects resolve beneath that prefix with or without locale routing. Output remains directly under `preview/`, without an extra prefix directory. With a non-root prefix, GET/HEAD requests to `/` temporarily redirect (302) to the effective base URL, preserving the query string and serving no homepage body at `/`. Other outside-prefix requests, including unprefixed page/asset URLs, return 404. A request to `/docs` redirects to `/docs/`; configuring `/` retains normal root hosting without a redirect loop. This is a routing boundary, not authentication. Other base-URL forms are not covered by this preview contract. Production hosts must mount `dist/` at the effective prefix themselves.
+
 vNext includes breaking plugin identity, theme-component, and page-route changes. Review the migration reference before upgrading.
 
 ## Learn more
