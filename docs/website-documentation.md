@@ -187,22 +187,22 @@ Every discovered locale has a generated homepage, including page-only locales. T
 
 The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. They use the canonical rooted `BaseUrl`: configured `/blog` and `/blog/` both become `/blog/`. External URLs, traversal, encoded separators and malformed percent escapes fail locale-redirect validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the host's normal 404 behavior. Initial builds are clean, but in-place preview can retain old locale/redirect files until restarted.
 
-Keep `contents\posts` and `contents\pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
+Keep `contents/posts` and `contents/pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
 
 ```text
-contents\
-  posts\
-    en-us\hello.md
-    ko-kr\hello.md
-  pages\
-    en-us\about.md
-    ko-kr\about.md
+contents/
+  posts/
+    en-us/hello.md
+    ko-kr/hello.md
+  pages/
+    en-us/about.md
+    ko-kr/about.md
     not-found.md
 ```
 
-Use `locale: ko-KR` with `slug: about` in the Korean page to obtain `/blog/ko-kr/about`. Explicit locale-free slugs avoid coupling URLs to source folders; when omitted, existing directory-based inference still applies. A matching leading locale is recognized before post-date composition to avoid duplicating it. Folders with a different name are not stripped, and `contents\<locale>\posts` is not a discovery root.
+Use `locale: ko-KR` with `slug: about` in the Korean page to obtain `/blog/ko-kr/about`. Explicit locale-free slugs avoid coupling URLs to source folders; when omitted, existing directory-based inference still applies. A matching leading locale is recognized before post-date composition to avoid duplicating it. Folders with a different name are not stripped, and `contents/<locale>/posts` is not a discovery root.
 
-Home/tag pages are generated, not additional Markdown sources. A page at a generated locale-home or tag/redirect destination fails as an output collision; for example, a Korean `pages\ko-kr\index.md` needs a distinct explicit slug rather than claiming `/ko-kr/`. Empty/unsafe locale segments are rejected; locale-enabled generated-page and content-image destinations reject linked ancestors. This is not a comprehensive audit of input links or theme-service copying.
+Home/tag pages are generated, not additional Markdown sources. A page at a generated locale-home or tag/redirect destination fails as an output collision; for example, a Korean `pages/ko-kr/index.md` needs a distinct explicit slug rather than claiming `/ko-kr/`. Empty/unsafe locale segments are rejected; locale-enabled generated-page and content-image destinations reject linked ancestors. This is not a comprehensive audit of input links or theme-service copying.
 
 Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. `Site.Locale` is never mutated between renders. With locale routing disabled, the existing root homepage, shared tag pages and unprefixed navigation behavior remain unchanged.
 
@@ -328,16 +328,16 @@ Parent
 
 ### Reading order and previous/next links
 
-Within each source directory under `contents\pages`, `index.md` comes first (case-insensitive filename recognition). Other files and directories share ordinal filename ordering, and a directory's eligible descendants are visited before its next sibling. Numeric prefixes are sorted as text, not as numbers: use consistent padding such as `01-`, `02-`, and `03-`.
+Within each source directory under `contents/pages`, `index.md` comes first (case-insensitive filename recognition). Other files and directories share ordinal filename ordering, and a directory's eligible descendants are visited before its next sibling. Numeric prefixes are sorted as text, not as numbers: use consistent padding such as `01-`, `02-`, and `03-`.
 
 For example, with these eligible sources:
 
 | Source | Title | Previous | Next |
 | --- | --- | --- | --- |
-| `parent\index.md` | Parent | None | Child |
-| `parent\01-child.md` | Child | Parent | Visible Grandchild |
-| `parent\02-group\visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
-| `parent\03-child-2.md` | Child 2 | Visible Grandchild | None |
+| `parent/index.md` | Parent | None | Child |
+| `parent/01-child.md` | Child | Parent | Visible Grandchild |
+| `parent/02-group/visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
+| `parent/03-child-2.md` | Child 2 | Visible Grandchild | None |
 
 The sequence continues across source directories and outside this example subtree when other eligible pages exist. The built-in page view displays the previous/next anchors automatically. The first page has no previous link, the last has no next link, and a zero- or one-page sequence has neither. Posts, drafts, hidden/suppressed pages, 404 content, and non-clickable groups are not targets. Group descendants can still participate.
 
@@ -445,7 +445,7 @@ The [repository sample](../samples/ScissorHands.Sample/README.md) uses local pro
 
 The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
 
-The sample starts with an empty `Plugins` array and locale routing disabled. In its `appsettings.json`, enable `Site.UseLocaleInUrl` to generate `dist\en-us\index.html` and a default-locale root redirect. To explore Korean-prefixed preview, also set `Site.Locale` to `ko-KR` and `Site.BaseUrl` to `/docs` or `/docs/`; Parent then lives at `/docs/ko-kr/parent/`. See [site configuration](#site-configuration) for slash normalization and the HTTP/HTML redirect stages, and [locale-specific sites](#locale-specific-sites) for additional-language authoring and generated-route collisions.
+The sample starts with an empty `Plugins` array and locale routing disabled. In its `appsettings.json`, enable `Site.UseLocaleInUrl` to generate `dist/en-us/index.html` and a default-locale root redirect. To explore Korean-prefixed preview, also set `Site.Locale` to `ko-KR` and `Site.BaseUrl` to `/docs` or `/docs/`; Parent then lives at `/docs/ko-kr/parent/`. See [site configuration](#site-configuration) for slash normalization and the HTTP/HTML redirect stages, and [locale-specific sites](#locale-specific-sites) for additional-language authoring and generated-route collisions.
 
 The custom 404 omits `locale`, so it follows the site default. Shared assets and authored Markdown links are not translated or rewritten. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
 
@@ -663,7 +663,7 @@ A custom page view can opt into the links without rebuilding navigation:
 
 Use ordinary Razor text rendering for titles. Do not escape an already formatted target URL again or prepend `Site.BaseUrl`; the layout's base element resolves it. Existing themes that ignore this additive context continue to work, but must forward/render it to show adjacent links. The two full navigation collections remain layout-only and are not added to the cascade. Non-participating pages and collection/404/post views have no sequence links.
 
-The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](..\test\browser\README.md). Custom-theme authors remain responsible for their own complete accessibility.
+The explicit zero tab index preserves native sequential link access in WebKit keyboard modes. The default pager reuses the theme's text palette for labels and focus outlines; its component-only 4.5:1 text and 3:1 focus checks run through the [browser acceptance suite](../test/browser/README.md). Custom-theme authors remain responsible for their own complete accessibility.
 
 ### URL helpers
 
@@ -1074,7 +1074,7 @@ This is repository contributor reference material for the [browser suite](../tes
 
 ### Fixtures and coverage
 
-The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test\browser\artifacts\locale-source`, then adds English, Japanese and draft-only locale fixtures. It generates `/docs/` output with default `ko-kr` under `artifacts\prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
+The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds English, Japanese and draft-only locale fixtures. It generates `/docs/` output with default `ko-kr` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
 
 Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
 
@@ -1090,7 +1090,7 @@ All pager text must reach **4.5:1** contrast, and focus indicators **3:1** again
 
 The pager uses native links with `tabindex="0"` so WebKit's keyboard mode includes them without positive tab ordering. These component checks do not claim whole-site WCAG or real Safari/iOS/device conformance.
 
-Ignored `test\browser\test-results` contains the JSON report and attached per-engine/theme/state color measurements; failures retain traces and screenshots. Record the actual browser, platform and viewport alongside results. Failed or incomplete runs are not passing acceptance. Execution history belongs in the existing [PRD verification records](../PRD.md#7-next-phase-verification-release-and-evaluation), not in the suite README.
+Ignored `test/browser/test-results` contains the JSON report and attached per-engine/theme/state color measurements; failures retain traces and screenshots. Record the actual browser, platform and viewport alongside results. Failed or incomplete runs are not passing acceptance. Execution history belongs in the existing [PRD verification records](../PRD.md#7-next-phase-verification-release-and-evaluation), not in the suite README.
 
 ## Source coverage
 

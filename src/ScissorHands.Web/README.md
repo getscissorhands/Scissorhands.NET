@@ -24,7 +24,7 @@ var app = new ScissorHandsApplicationBuilder(args).Build();
 await app.RunAsync();
 ```
 
-The default settings select the built-in theme. Create `contents\posts\hello.md`:
+The default settings select the built-in theme. Create `contents/posts/hello.md`:
 
 ```markdown
 ---
