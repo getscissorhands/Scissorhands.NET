@@ -171,9 +171,21 @@ public sealed class ScissorHandsApplication : IScissorHandsApplication
         Directory.CreateDirectory(previewPath);
 
         var fileProvider = new PhysicalFileProvider(previewPath);
-        _app.UsePathBase(_site!.BaseUrl);
-        _app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
-        _app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
+        var pathBase = _site!.BaseUrl.TrimEnd('/');
+        if (pathBase.Length == 0)
+        {
+            ConfigurePreviewFiles(_app);
+        }
+        else
+        {
+            _app.Map(pathBase, ConfigurePreviewFiles);
+        }
+
+        void ConfigurePreviewFiles(IApplicationBuilder app)
+        {
+            app.UseDefaultFiles(new DefaultFilesOptions { FileProvider = fileProvider });
+            app.UseStaticFiles(new StaticFileOptions { FileProvider = fileProvider });
+        }
 
         await _app.StartAsync();
         try

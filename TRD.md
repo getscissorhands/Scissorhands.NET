@@ -9,7 +9,7 @@
 | Last updated / PRD consulted | 2026-09-16 |
 | PRD baseline | [PRD.md](PRD.md) v0.11, Review-ready with scoped #89 evidence and retained #81 criteria/approvals |
 | Release scope | Retained baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting; broader verification remains open |
-| Code baseline | `3e50dab` plus the tested #89 preview-mount fix in this revision |
+| Code baseline | `4b32a4c` plus the tested #89 prefix-only follow-up in this revision |
 | Product owner | @justinyoo, as recorded in the PRD |
 | Execution owners | Not assigned |
 | Intended audience | Engine, theme, and plugin contributors translating the PRD into implementation and verification obligations |
@@ -265,7 +265,8 @@ Each `TR-...` is stable; **must** expresses obligation, not complete verificatio
 - **Errors / base handling:** Content/theme/image/tag null inputs fail; locale null/whitespace maps to empty. The layout theme wrapper checks null path before missing `Theme`, which throws `InvalidOperationException`. Content, tag, and theme URLs remain base-relative without prepending `Site.BaseUrl`; do not escape images as content slugs or treat formatting as scheme validation.
 - **Boundary:** Distinguish artifact-relative paths from deployment mount paths. The production host owns mounting, directory indexes, and 404 routing; preview behavior must also be evaluated. Do not rewrite unrelated absolute external URLs into local assets or promise a specific hosting provider.
 - **Preview implementation:** [#89](https://github.com/getscissorhands/Scissorhands.NET/issues/89) implements TDD DEC-002 with scoped passing V-003 HTTP evidence. Preview serves the existing artifact beneath `/` or slash-delimited path prefixes such as `/docs/` and `/manual/docs/`, with or without locale routes. Directory redirects retain the prefix and query; missing files remain 404. No additional physical prefix directory or URL-helper prefix is introduced.
-- **Preview compatibility / limits:** Unprefixed requests continue through the existing static-file pipeline; prefix mounting is not an access restriction. The documented prefix usage has leading and trailing slashes. Other base-URL forms, including absolute URLs, relative paths, queries/fragments and ambiguous encodings, remain outside this fix's guaranteed behavior and under TG-001; do not infer new normalization or general URL validation.
+- **Preview mount boundary:** Per the user's 2026-09-16 clarification under PRD FR-009, a non-root prefix must exclusively mount preview output. Outside-prefix requests, including `/` and unprefixed page/asset GET or HEAD requests, return 404 without an automatic redirect. Matching uses complete path segments, so `/docs-other/` does not match `/docs/`. A request to the mount without its final slash (`/docs`) redirects to `/docs/`, preserving the query. Configuring `/` retains root hosting. This supersedes the initial fix's alias assumption; update preview bookmarks and links that used those aliases. It is not authentication.
+- **Preview limits:** The documented prefix usage has leading and trailing slashes. Other base-URL forms, including absolute URLs, relative paths, queries/fragments and ambiguous encodings, remain outside this fix's guaranteed behavior and under TG-001; do not infer new normalization or general URL validation.
 - **Feature relationship:** TR-022/V-008 retain correct locale/base-relative neighbor URLs, root preview navigation and requests on correctly mounted static output. The user explicitly removed #89 from #81's completion gate; this broader preview-serving obligation remains in force independently.
 - **Verification:** V-003 real root/prefix requests including hierarchy, directory indexes, date/locale routes, and extension output; V-007 helper/view parity, encoded text, null/invalid inputs, and preserved image semantics.
 
@@ -374,7 +375,7 @@ The original V-001 through V-007 programs retain their broad scope. V-008 separa
 | --- | --- | --- | --- |
 | V-001 | TR-003/008/013/015 | Filesystem and path/ownership cases, including link escapes, asset interactions, and final transformed routes | Pending; existing [route tests](test\ScissorHands.Web.Tests\Generators\StaticSiteGeneratorRouteTests.cs) are a starting point, not full proof |
 | V-002 | TR-014/015 | Contextual rendering/URL, navigation-label encoding, and synthetic-privacy cases; TG-001 precedes new scheme rules | Pending; shared formatting is not a completed sink inventory or safety certification |
-| V-003 | TR-005/006/008/017 | Serve artifacts and preview at root/prefix; inspect hierarchy, locale routes, directory indexes and assets. #89 owns the preview-mount fix | Broad program open; #89 passed six actual-application HTTP cases and 56 real-sample HTTP checks on Windows. Historical 404 retained; see PRD V-003 |
+| V-003 | TR-005/006/008/017 | Serve artifacts and preview at root/prefix; inspect hierarchy, locale routes, directory indexes and assets. #89 owns the preview-mount fix | Broad program open; prefix-only follow-up passed six actual-application HTTP cases and 74 real-sample HTTP checks on Windows. Historical initial-fix results and 404 retained; see PRD V-003 |
 | V-004 | TR-001/002/012/013/016/020 | Controlled failures/cancellation/event bursts; inspect completion signals, recovery, and filesystem state | Pending; no atomic or bounded-shutdown requirement |
 | V-005 | TR-018 | Browser/device versions, disclosure/touch/keyboard/focus/no-JavaScript behavior and contrast; TG-002 retains method uncertainty | Pending; component markup cases do not prove browser coverage |
 | V-006 | TR-019 | Actual-blog measurements with workload/environment/method; TG-003 supplies execution inputs | Pending; no measurements or numerical performance target |
@@ -425,6 +426,7 @@ Within-process watcher serialization is defined; cross-process coordination, tra
 | 2026-09-14 | Specify approved component acceptance in TRD v0.6 | User selected measurable ratios and three-engine desktop/mobile evidence; decision linked in TR-022 | Resolve the #81-specific method, preserve global TR-018/V-005 scope, and require execution rather than infer success from earlier Chromium observations |
 | 2026-09-14 | Record complete component acceptance | Further implementation request; browser suite, math tests and full .NET run | Correct contrast and WebKit keyboard failures; V-008 passes its approved scope, with #89 and broader obligations retained |
 | 2026-09-16 | Record #89 preview implementation in v0.7 | User requested the fix; PRD v0.11 and actual HTTP evidence | Update TR-017's implementation/compatibility boundary and V-003 evidence; preserve all 22 IDs, TG-001 and broader verification |
+| 2026-09-16 | Enforce prefix-only preview under TR-017 | User clarification and fix request, reflected in PRD FR-009 | Replace the unrequested alias assumption with outside-prefix 404; preserve root mode, redirects, public APIs and broader TG-001 scope; record passing follow-up HTTP evidence |
 
 ### Readiness assessment
 

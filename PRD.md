@@ -8,7 +8,7 @@
 | Status | Review-ready |
 | Last updated | 2026-09-16 |
 | Scope | Retained vNext baseline, passed #81/V-008 acceptance, and implemented #89 preview mounting with scoped V-003 evidence; broader verification remains open |
-| Code baseline | `3e50dab` plus the tested #89 preview-mount fix in this revision |
+| Code baseline | `4b32a4c` plus the tested #89 prefix-only follow-up in this revision |
 | Intended audience | Site owner and engine/theme/plugin contributors making baseline and compatibility decisions |
 | Product owner / reviewers | @justinyoo |
 | Target release / date | Not specified; this document does not schedule a release |
@@ -175,7 +175,7 @@ For #81, `section` frontmatter, `pages.json`, and manually authored `prev`/`next
 - **Basis / scope:** Confirmed [application](src\ScissorHands.Web\ScissorHandsApplication.cs), [watcher](src\ScissorHands.Web\Watchers\ContentWatcher.cs), and [Web guide](src\ScissorHands.Web\README.md); Supporting.
 - **Actor / rationale:** Owner iterates on content and sees generated results before publishing (J-002, G-002).
 - **Behavior:** Perform initial generation and serve `preview`; watch content/theme file create, change, rename, and delete events, coalesce bursts, and serialize regeneration. Report successful rebuilds and instruct the owner to refresh the browser.
-- **Base path:** Preview serves pages and assets at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. See V-003's #89 execution record and TR-017 for the supported usage and retained compatibility behavior.
+- **Base path:** Preview serves pages and assets only at the configured path prefix under NFR-005, including locale-enabled routes, without changing the physical output layout. With `/docs/`, `/docs` redirects to `/docs/`, while `/` and other outside-prefix requests return 404. Configuring `/` retains root hosting. This prefix-only behavior was confirmed by the user on 2026-09-16, superseding the initial implementation's unrequested alias-preservation assumption; see V-003 and TR-017.
 - **Acceptance:** After a successful content edit and rebuild, browser refresh displays the regenerated file. A watcher callback failure is logged; subsequent changes can trigger another rebuild. Initial generation errors propagate rather than being reported as completed builds.
 - **Recovery boundary:** Preview regeneration writes into the existing output, so deleted/renamed sources can leave stale generated files until preview is restarted. Writes are not atomic: a failed build/rebuild may leave partial or mixed output, and initial build/preview startup clears its output folder. Use only a successful production build as a publication candidate; automated cleanup/rollback is not promised.
 
@@ -254,7 +254,7 @@ For each item, record what was exercised, the environment, results, and reproduc
 
 ### V-003: #89 preview-mount execution, 2026-09-16
 
-The user requested the fix after issue analysis. On Windows with .NET SDK **10.0.401**, Release configuration, and code `3e50dab` plus this revision, the original middleware reproduced the reported prefix 404. The new [preview HTTP regression](test/ScissorHands.Web.Tests/ScissorHandsApplicationTests.cs) first passed both root cases and failed both `/docs/` cases; after prefix handling was added, all six expanded cases passed.
+The user requested the fix after issue analysis. On Windows with .NET SDK **10.0.401**, Release configuration, and code `3e50dab` plus the initial fix committed as `4b32a4c`, the original middleware reproduced the reported prefix 404. The new [preview HTTP regression](test/ScissorHands.Web.Tests/ScissorHandsApplicationTests.cs) first passed both root cases and failed both `/docs/` cases; after prefix handling was added, all six expanded cases passed. The following table records that initial run; its root-alias behavior is superseded by the prefix-only follow-up below.
 
 | Scope | Observed evidence | Outcome |
 | --- | --- | --- |
@@ -264,9 +264,17 @@ The user requested the fix after issue analysis. On Windows with .NET SDK **10.0
 | Reported failure and generated links | `/docs/ko-kr/parent/group/visible-grandchild/`, its generated Child/Child 2 neighbor targets, and prefixed theme/image requests | Returned 200; directory redirects returned 301 retaining prefix/query, and missing routes returned 404 |
 | Regression gate | Release solution build, affected Web suite, then `dotnet test --solution ./ScissorHands.slnx -c Release --no-build --verbosity normal` | Build succeeded; Web 290/290 and full suite 503/503 passed, no skips |
 
-The automated HTTP fixture isolates serving from generation; the separate sample run exercises real generation and rendered neighbor URLs. Temporary servers were stopped and sample configuration overrides were child-process-local. This fixes #89's preview mount without changing URL helpers, locale generation, production-host responsibilities, or watcher behavior. Root and slash-delimited path prefixes are the documented usage; other base-URL forms and broader scheme policy remain TG-001. The retained unprefixed aliases are compatibility behavior, not an access-control guarantee.
+The automated HTTP fixture isolates serving from generation; the separate sample run exercises real generation and rendered neighbor URLs. Temporary servers were stopped and sample configuration overrides were child-process-local. The initial fix did not change URL helpers, locale generation, production-host responsibilities, or watcher behavior. Root and slash-delimited path prefixes are the documented usage; other base-URL forms and broader scheme policy remain TG-001. Retaining unprefixed aliases was an implementation assumption, not a user-confirmed compatibility requirement.
 
 The historical September 13/14 failures below remain valid for those revisions. This run did not rerun browser/device tests, test representative third-party plugin output, or certify other operating systems or a production host. It does not close the broader V-003 program, TG-001, V-005, or authorize publication or issue closure. #81/V-008 acceptance remains unchanged.
+
+#### Prefix-only follow-up: 2026-09-16
+
+The user clarified that preview must serve only beneath `Site.BaseUrl` and requested the correction. With a non-root prefix, requests outside the mount now return 404 instead of serving duplicate root aliases; `/docs` still redirects to `/docs/`, and root configuration `/` is unchanged. No new authentication or general URL-normalization policy is introduced.
+
+On Windows with .NET SDK **10.0.401**, Release configuration, and `4b32a4c` plus this follow-up, the revised tests first failed all four non-root cases because `/` returned 200; both root cases still passed. After isolating static-file middleware inside the prefix branch, all six cases passed, including outside-prefix page/asset GET and CSS HEAD rejection, no outside redirects, locale/date/tag routes, mount/directory redirects with queries, and unchanged file inventories. The affected Web suite passed **290/290** and the full solution passed **503/503**, with no skips, after a successful Release solution build.
+
+Real sample preview passed **74 HTTP checks**: `/` with locale off/on had 12 checks each; `/docs/` with locale off/on had 25 each, using `Locale=ko-KR` and ephemeral loopback ports. Valid page/neighbor/theme/image URLs returned 200, outside-prefix and nonmatching/doubled-prefix requests returned 404, and redirects retained the prefix/query. Each preview contained 21 files with no physical `docs` directory. Configuration overrides were child-process-local, user sample settings were preserved, and all temporary servers were stopped. The earlier 56-check build/preview comparison remains historical evidence, not a rerun claim. Browser/device, third-party plugin and production-host verification were not rerun; broader evidence boundaries remain unchanged.
 
 ### V-008: #81 feature acceptance
 
@@ -388,6 +396,7 @@ Historical approvals and evidence remain intact. v0.11 adds #89's scoped preview
 | 2026-09-14 | Set component acceptance standards for #81 in v0.10 | Explicit user selections; decision linked in FR-011 | Require 4.5:1 pager text / 3:1 focus contrast and accept three-engine desktop/mobile automation; retain broad V-005 obligations separately. Method settled, execution pending |
 | 2026-09-14 | Complete the approved V-008 component checks | User requested further implementation; reproducible browser suite and recorded measurements | Fix pager-only contrast and WebKit tabbing; 42 browser, 4 math and 493 .NET cases pass. Mark V-008 complete for #81 while retaining broader gaps |
 | 2026-09-16 | Record #89 preview-mount implementation in v0.11 | User requested the fix; actual application HTTP regressions, sample build/preview matrix and full .NET suite | Record scoped V-003 passes and unchanged artifact layout; preserve historical failures, all IDs, approvals and broader gaps |
+| 2026-09-16 | Require prefix-only preview serving | User clarified the expected meaning of `BaseUrl` and requested the fix | Supersede the unrequested root-alias assumption; FR-009/TR-017 require outside-prefix 404, with retained mount redirects and root configuration; record follow-up V-003 evidence without broader sign-off |
 
 ### Readiness assessment
 

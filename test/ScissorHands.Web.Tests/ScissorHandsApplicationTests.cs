@@ -124,7 +124,15 @@ public class ScissorHandsApplicationTests
                     using var mountRedirect = await client.GetAsync($"{baseUrl.TrimEnd('/')}?from=preview", cancellationToken);
                     mountRedirect.StatusCode.ShouldBe(HttpStatusCode.MovedPermanently);
                     mountRedirect.Headers.Location.ShouldBe(new Uri($"{address}{baseUrl}?from=preview"));
-                    (await client.GetStringAsync($"/{route}/", cancellationToken)).ShouldBe("child");
+                    foreach (var outsidePath in new[] { "/", $"/{route}/", $"/{route}", $"/{postRoute}/", "/tags/", "/404.html", "/themes/default/assets/theme.css", "/themes/default/assets/theme.js", "/images/sample.svg" })
+                    {
+                        using var outsideResponse = await client.GetAsync(outsidePath, cancellationToken);
+                        outsideResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound, outsidePath);
+                        outsideResponse.Headers.Location.ShouldBeNull();
+                    }
+                    using var outsideHead = new HttpRequestMessage(HttpMethod.Head, "/themes/default/assets/theme.css");
+                    using var outsideHeadResponse = await client.SendAsync(outsideHead, cancellationToken);
+                    outsideHeadResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
                     using var nonmatchingPrefix = await client.GetAsync($"{baseUrl.TrimEnd('/')}-other/{route}/", cancellationToken);
                     nonmatchingPrefix.StatusCode.ShouldBe(HttpStatusCode.NotFound);
                     using var doubledPrefix = await client.GetAsync($"{baseUrl}{baseUrl.Trim('/')}/{route}/", cancellationToken);
