@@ -19,12 +19,12 @@ Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for sta
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| [Web](src/ScissorHands.Web/README.md) | Application composition, generation, preview, and the built-in theme |
-| [Core](src/ScissorHands.Core/README.md) | Shared models, manifests, and contracts |
-| [Theme](src/ScissorHands.Theme/README.md) | Base types for theme authors |
-| [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts |
+| Package                                     | Purpose                                                              |
+| ------------------------------------------- | -------------------------------------------------------------------- |
+| [Web](src/ScissorHands.Web/README.md)       | Application composition, generation, preview, and the built-in theme |
+| [Core](src/ScissorHands.Core/README.md)     | Shared models, manifests, and contracts                              |
+| [Theme](src/ScissorHands.Theme/README.md)   | Base types for theme authors                                         |
+| [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts                         |
 
 ## Documentation and compatibility
 

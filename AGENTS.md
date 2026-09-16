@@ -51,13 +51,13 @@ The sample launch profile does not select a mode; pass `--preview` or `--build` 
 
 | Location                      | Responsibility                                                                                    |
 | ----------------------------- | ------------------------------------------------------------------------------------------------- |
+| `.github/workflows`           | Build, test, packaging, and publishing automation.                                                |
+| `sample`                      | Runnable integration sample using local project references.                                       |
 | `src/ScissorHands.Core`       | Shared contracts, manifests, content/navigation models, URL helpers, and command options.         |
 | `src/ScissorHands.Plugin`     | Plugin contracts, pipeline hooks, and Razor plugin base components.                               |
 | `src/ScissorHands.Theme`      | Razor layout and view base types for theme authors.                                               |
 | `src/ScissorHands.Web`        | Application composition, content loading, generation, rendering, preview, and the built-in theme. |
 | `test/ScissorHands.*.Tests`   | Tests corresponding to each source project.                                                       |
-| `sample`                     | Runnable integration sample using local project references.                                       |
-| `.github/workflows`           | Build, test, packaging, and publishing automation.                                                |
 
 ## Architecture and boundaries
 
