@@ -6,7 +6,7 @@ This document preserves the detailed material extracted from the repository READ
 
 ## Publishing notes
 
-Each guide below names its intended website destination. Existing destinations were present when this handoff was prepared; proposed destinations need to be created and added to the documentation navigation.
+The table distinguishes website destinations from repository-specific reference material. Existing destinations were present when this handoff was prepared; proposed destinations need to be created and added to the documentation navigation.
 
 | Guide in this document | Website destination | Publication action |
 | --- | --- | --- |
@@ -15,10 +15,12 @@ Each guide below names its intended website destination. Existing destinations w
 | [Content and frontmatter](#content-and-frontmatter) | `/docs/front-matter/`, `/docs/posts/`, `/docs/pages/` | Update supported fields and content guidance |
 | [Page routes and navigation](#page-routes-and-navigation) | `/docs/pages/`; proposed `/docs/navigation/` | Document directory indexes and navigation visibility |
 | [Preview and build](#preview-and-build) | `/docs/build/` | Document modes, regeneration, and output |
+| [Sample walkthrough](#sample-walkthrough) | Repository sample reference | Keep fixture details here and run commands in the sample README |
 | [Theme authoring](#theme-authoring) | `/docs/themes/` | Update discovery, prepared data, rendering, and URL helpers |
 | [Plugin authoring](#plugin-authoring) | `/docs/plugins/` | Replace name-based identity and add dependency rules |
 | [Core API reference](#core-api-reference) | Proposed `/docs/api/` | Publish shared models, manifests, services, and URL conventions |
 | [Upgrading to vNext](#upgrading-to-vnext) | Proposed `/docs/migration/` | Publish source, binary, configuration, and route migration guidance |
+| [Browser acceptance](#browser-acceptance) | Repository contributor reference | Keep coverage and evidence methodology here and run commands with the test suite |
 
 The existing website needs several corrections before it can replace this reference:
 
@@ -428,6 +430,25 @@ The repository sample's launch profile does not select an application mode. Supp
 
 The engine sets `SiteManifest.IsPreview` before plugin hooks and rendering. Plugins can use it to suppress production-only side effects.
 
+### Sample walkthrough
+
+The [repository sample](../samples/ScissorHands.Sample/README.md) uses local project references and the built-in `default` theme. Its README contains the run commands; the following sources demonstrate the engine's behavior:
+
+| Source | What to explore |
+| --- | --- |
+| [Hello, ScissorHands](../samples/ScissorHands.Sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
+| [About](../samples/ScissorHands.Sample/contents/pages/about.md) | The first page in the sample reading sequence |
+| [Parent](../samples/ScissorHands.Sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
+| [Child](../samples/ScissorHands.Sample/contents/pages/parent/01-child.md), [Visible Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../samples/ScissorHands.Sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
+| [Hidden Grandchild](../samples/ScissorHands.Sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
+| [Not found](../samples/ScissorHands.Sample/contents/pages/not-found.md) | Custom root `404.html` content with locale inherited from the site |
+
+The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
+
+The sample starts with an empty `Plugins` array and locale routing disabled. In its `appsettings.json`, enable `Site.UseLocaleInUrl` to generate `dist\en-us\index.html` and a default-locale root redirect. To explore Korean-prefixed preview, also set `Site.Locale` to `ko-KR` and `Site.BaseUrl` to `/docs` or `/docs/`; Parent then lives at `/docs/ko-kr/parent/`. See [site configuration](#site-configuration) for slash normalization and the HTTP/HTML redirect stages, and [locale-specific sites](#locale-specific-sites) for additional-language authoring and generated-route collisions.
+
+The custom 404 omits `locale`, so it follows the site default. Shared assets and authored Markdown links are not translated or rewritten. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
+
 ## Theme authoring
 
 Website destination: `/docs/themes/`.
@@ -826,6 +847,8 @@ Proposed website destination: `/docs/api/`.
 
 `ScissorHands.Core` contains shared models, manifests, service contracts, and command options. Plugin and Theme depend on Core; Web contains engine implementations and depends on those packages. Avoid reverse references or dependency cycles.
 
+See [site configuration](#site-configuration) for `SiteManifest.BaseUrl` normalization and [locale render context](#locale-render-context) for the `LocaleContext` contract and helper behavior.
+
 ### ContentDocument and ContentMetadata
 
 `ContentDocument` represents a Markdown source document as it passes through generation:
@@ -1045,6 +1068,30 @@ Custom themes should forward `LocaleContext` and adopt the Home/Tags helpers abo
 
 Use a rooted `BaseUrl`; the manifest supplies a missing trailing slash before locale redirects and preview mounting. No deployment-prefix directories are added to the artifact. The #89 middleware fix is integrated, so update preview bookmarks to use the effective mount rather than former domain-root aliases. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. Site/theme text is not translated and no language switcher is added.
 
+## Browser acceptance
+
+This is repository contributor reference material for the [browser suite](../test/browser/README.md), whose README contains prerequisites and run commands. The suite provides V-008 pager and V-009 locale evidence, not a replacement for the .NET suite, actual preview-server coverage, or the broader V-005 real-device assessment.
+
+### Fixtures and coverage
+
+The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test\browser\artifacts\locale-source`, then adds English, Japanese and draft-only locale fixtures. It generates `/docs/` output with default `ko-kr` under `artifacts\prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
+
+Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
+
+- Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
+- Locale-specific home/tag collections, navigation boundaries, root/legacy redirects without JavaScript, tagless/draft-only routes and shared assets.
+- Light/dark pager appearance in normal, hover and keyboard-focus states.
+
+Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, canonical base-path variants, mount/locale redirects, outside-prefix rejection and regeneration callbacks.
+
+### Contrast and evidence
+
+All pager text must reach **4.5:1** contrast, and focus indicators **3:1** against the adjacent background. Measurements use rendered RGB/alpha values and relative luminance, compositing transparent layers. Unsupported backgrounds or group opacity fail explicitly; transitions are disabled only while measuring settled states. The [contrast math](../test/browser/contrast.mjs) has [independent Node tests](../test/browser/contrast.test.mjs).
+
+The pager uses native links with `tabindex="0"` so WebKit's keyboard mode includes them without positive tab ordering. These component checks do not claim whole-site WCAG or real Safari/iOS/device conformance.
+
+Ignored `test\browser\test-results` contains the JSON report and attached per-engine/theme/state color measurements; failures retain traces and screenshots. Record the actual browser, platform and viewport alongside results. Failed or incomplete runs are not passing acceptance. Execution history belongs in the existing [PRD verification records](../PRD.md#7-next-phase-verification-release-and-evaluation), not in the suite README.
+
 ## Source coverage
 
 The following removed or shortened README material is preserved above:
@@ -1052,10 +1099,11 @@ The following removed or shortened README material is preserved above:
 | Original README | Material retained in this document |
 | --- | --- |
 | Repository root | Detailed page-navigation behavior; source/binary/configuration compatibility; plugin ordering and directory-index migration |
-| `ScissorHands.Core` | Content and navigation models; manifest examples and collection contracts; URL-helper contracts; cancellation and obsolete service overloads |
+| `ScissorHands.Core` | Content/navigation models, locale context, BaseUrl normalization, manifest/collection contracts, URL helpers, cancellation and obsolete service overloads |
 | `ScissorHands.Plugin` | Complete plugin example; ID rules; stages; dependencies and failures; configuration; Razor components; preview behavior; migration steps |
 | `ScissorHands.Theme` | Required view roles and tag-view migration; automatic discovery; manifest and assets; layout/cascading data; recursive navigation rendering; URL helpers; plugin selection |
 | `ScissorHands.Web` | Full application/configuration/content examples; frontmatter reference; routes; navigation; preview/build; theme and plugin integration; migration notes |
-| Sample | General navigation and plugin explanations; sample-specific execution instructions and fixture descriptions remain in the sample README |
+| Sample | Fixture descriptions, navigation experiments and locale/subpath walkthrough; essential execution instructions and entry-point source links remain in the sample README |
+| Browser tests | Fixture lifecycle, viewport/engine coverage, contrast thresholds and measurement, reports and evidence limits; prerequisites and run commands remain in the suite README |
 
 Keep repository-specific commands and sample file pointers in the repository. Keep package installation, supported framework, essential compatibility warnings, license links, and required third-party attribution in the corresponding READMEs.

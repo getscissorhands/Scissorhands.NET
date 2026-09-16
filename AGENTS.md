@@ -71,7 +71,7 @@ The sample launch profile does not select a mode; pass `--preview` or `--build` 
 - Reuse `ContentUrlHelper` and Theme wrappers; preserve distinct content, theme, image, and tag semantics. Helpers are not general URL sanitizers or proof of subpath serving. Honor `SiteManifest.BaseUrl`, preview/build distinctions, and cancellation.
 - Treat manifest collections as immutable input. Preserve source and binary compatibility unless a breaking change is explicitly requested; do not remove obsolete overloads merely as cleanup.
 
-Read the relevant package guide before changing its contracts or behavior: [Core](src/ScissorHands.Core/README.md), [Plugin](src/ScissorHands.Plugin/README.md), [Theme](src/ScissorHands.Theme/README.md), and [Web](src/ScissorHands.Web/README.md).
+Read the relevant package README and its linked sections in the [detailed reference](docs/website-documentation.md) before changing contracts or behavior: [Core](src/ScissorHands.Core/README.md), [Plugin](src/ScissorHands.Plugin/README.md), [Theme](src/ScissorHands.Theme/README.md), and [Web](src/ScissorHands.Web/README.md).
 
 ## Coding conventions
 
@@ -118,7 +118,10 @@ These rules guide new and modified behavior; they do not certify existing covera
 
 ## Documentation and completion
 
-- Update the affected package README when its public behavior or configuration changes; package READMEs are shipped in NuGet packages.
+- Keep every README (root, package, sample, and test) a concise entry point: purpose, prerequisites, installation/run commands, at most a minimal usage example, essential warnings, and documentation/license links.
+- Put configuration details, API contracts, feature walkthroughs, edge cases, migration procedures, and test methodology in [docs/website-documentation.md](docs/website-documentation.md). Update the existing relevant section instead of appending a per-feature README section or duplicating material already in the handoff.
+- When public behavior or configuration changes, update that detailed reference first. Update affected READMEs only where their setup, short summary, essential warning, or links need to change. Package READMEs ship in NuGet, so use absolute documentation links and retain required license/third-party attribution.
+- Before finishing README edits, confirm that removed details remain covered by the linked reference, quickstarts remain usable, and file/section links resolve. Keep transient implementation status and execution history out of READMEs; use the existing requirements/evidence records where appropriate.
 - Keep sample/root guides and the [website handoff](docs/website-documentation.md) consistent; document compatibility changes and migration. Review [PRD](PRD.md), [TRD](TRD.md), and [TDD](TDD.md) when scope, contracts, or architecture changes; preserve IDs, approval history, and explicit gaps.
 - Before handing off, review the diff for scope and generated files. Summarize meaningful behavior changes and disclose any verification that was blocked or skipped. Follow the [PR template](.github/PULL_REQUEST_TEMPLATE.md) when opening a PR.
 - Keep this guide durable: link to authoritative configuration and detailed docs; do not add temporary plans, task status, or historical session notes.

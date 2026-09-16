@@ -3,17 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Web.svg)](https://www.nuget.org/packages/ScissorHands.Web)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE)
 
-`ScissorHands.Web` is the static site generation engine for [ScissorHands.NET](https://getscissorhands.app). It turns Markdown documents with YAML frontmatter into static HTML using Razor themes and optional content plugins.
-
-## Features
-
-- Markdown posts/pages with frontmatter, tags, and hierarchical navigation
-- Filename-based page reading order and automatic previous/next links
-- Razor themes and optional content-processing plugins
-- Configurable routes and static output for subpath hosting
-- Local preview and a built-in light/dark theme
-
-ScissorHands.NET currently targets .NET 10.
+`ScissorHands.Web` turns Markdown into static HTML using Razor themes and optional plugins. It includes a default theme and local preview server. Requires .NET 10.
 
 ## Quickstart
 
@@ -34,84 +24,30 @@ var app = new ScissorHandsApplicationBuilder(args).Build();
 await app.RunAsync();
 ```
 
-No theme component types need to be registered in `Program.cs`. The built-in theme is used when `Site:Theme` is `default`.
-
-Add these sections to `appsettings.json`:
-
-```json
-{
-  "Site": {
-    "Title": "My site",
-    "Theme": "default",
-    "SiteUrl": "https://example.com",
-    "BaseUrl": "/"
-  },
-  "Plugins": []
-}
-```
-
-Create `contents/posts/hello.md`:
+The default settings select the built-in theme. Create `contents\posts\hello.md`:
 
 ```markdown
 ---
 title: Hello, ScissorHands
-published: 2026-09-11
-tags:
-  - static-site
+tags: [static-site]
 ---
 
 # Hello, ScissorHands
-
-Write the post in Markdown.
 ```
 
-Place pages under `contents/pages/`. Page navigation is opt-in through `show_in_navigation: true`; hiding a navigation link is not access control.
-
-## Page reading order
-
-File-backed pages use filename order, with `index.md` first in each directory. The built-in theme renders automatic previous/next links for eligible pages; navigation grouping still follows slugs.
-
-Renaming sources can change inferred URLs, so use explicit slugs to preserve existing addresses. See the [reading order and navigation guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#reading-order-and-previousnext-links) for traversal, eligibility, custom-loader behavior, and plugin snapshots.
-
-## Locale-specific generation
-
-Set `Site.UseLocaleInUrl` to `true` to generate a homepage and eligible tag listings for each published content locale, plus `Site.Locale` even when empty. The root redirects to the default locale. Home/Tags links, page navigation and previous/next stay within the active locale; there is no automatic translation or language fallback.
-
-Locale folders under `contents\posts` and `contents\pages` are organizational only. Frontmatter `locale` overrides `Site.Locale`; explicit locale-free slugs keep URLs independent of source folders. Keep the single root `404.html` in the site-default locale: a conflicting custom-404 locale fails generation.
-
-Legacy tag URLs without a locale redirect only when the matching default-locale destination exists, and still live beneath `BaseUrl`. Existing locale-enabled sites and custom themes must follow the [locale migration guidance](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-routing-migration). Disabled-mode routes remain unchanged. Rooted prefixes such as `/blog` and `/blog/` normalize to the same effective `/blog/` for generation and preview.
-
-## Preview and build
-
-Run from the application directory. Start the local preview server:
+Run from the application directory:
 
 ```bash
 dotnet run -- --preview
 ```
 
-Generate the static site into `dist/`:
+Open the logged URL and refresh after edits. Stop preview with Ctrl+C, then run `dotnet run -- --build` to generate `dist` for static hosting.
 
-```bash
-dotnet run -- --build
-```
+## Documentation
 
-Refresh the browser after preview regeneration. Razor/C# changes require recompilation. Use `BaseUrl` for subpath hosting.
-
-Set `Site:BaseUrl` to `/` or a path prefix with a leading slash. The trailing slash is optional: `/docs` and `/docs/` both normalize to `/docs/`, and `/manual/docs` normalizes to `/manual/docs/`. The manifest supplies the canonical value to generated markup, plugins, build and preview without rewriting configuration. Open the logged preview URL; pages, assets and directory redirects resolve beneath that prefix in both locale modes. Output stays directly under `preview/`.
-
-For a non-root prefix, GET/HEAD `/` returns HTTP 302 to the effective base URL, preserving its query and serving no homepage body at `/`. Other outside-prefix requests return 404. `/docs` redirects to `/docs/`. When locale routing is enabled, the generated entry page then redirects to the default locale: `/` leads to `/docs/`, whose HTML leads to `/docs/en-us/` for `Site.Locale: en-US`. Root hosting adds no HTTP mount redirect but retains the locale HTML redirect. This is a routing boundary, not authentication; other base-URL forms are outside this preview contract. Production hosts must mount `dist/` themselves.
-
-vNext includes breaking plugin identity, theme-component, and page-route changes. Review the migration reference before upgrading.
-
-## Learn more
-
-- [vNext guides and reference (website handoff)](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md)
-- [vNext migration reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext)
-- [Documentation](https://getscissorhands.app/docs/)
-- [Source code](https://github.com/getscissorhands/ScissorHands.NET)
-- [Theme template](https://github.com/getscissorhands/theme-template)
-- [Official plugins](https://github.com/getscissorhands/plugins)
-- [Issue tracker](https://github.com/getscissorhands/ScissorHands.NET/issues)
+- [Configuration, content and authoring guides](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md)
+- [Preview and build](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#preview-and-build)
+- [vNext migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; vNext includes breaking changes
 
 ## License
 

@@ -1,9 +1,7 @@
 # Page navigation browser acceptance
 
-This opt-in suite records V-008 evidence for the generated default-theme pager
-and V-009 checks for locale generation and navigation.
-It does not replace the .NET regression suite, the broader V-005 real-device
-assessment, or the [real preview HTTP integration tests](..\ScissorHands.Web.Tests\ScissorHandsApplicationLocaleTests.cs).
+Test-only Playwright coverage for the default-theme pager and locale navigation
+in Chromium, Firefox and WebKit.
 
 ## Run
 
@@ -21,45 +19,8 @@ npm test
 On Linux, use `npx playwright install --with-deps chromium firefox webkit` to
 install the browser system dependencies as well.
 
-`npm test` builds the sample, copies its content/configuration into the ignored
-`artifacts/locale-source` directory, and adds English, Japanese and draft-only
-locale fixtures. It generates `/docs/` output with default `ko-kr` under
-`artifacts/prefix`, checks byte-identical localized build output for `/docs` and
-`/docs/`, then regenerates the default root-site `dist` output.
-The normal sample content is unchanged; settings are process-local. Tests serve only these
-artifacts through loopback servers on dynamically assigned ports; fixtures
-close their servers and isolated browser contexts. The controlled prefix host
-tests generated URLs; actual application mounting is covered by the .NET
-preview tests, including real generation and canonical slash variants.
+`npm test` regenerates sample `dist` and test fixtures without changing the
+sample's source content. Reports are written to ignored `test-results`.
 
-## Coverage and evidence
-
-The six projects combine Chromium, Firefox and WebKit with desktop (1280x800)
-and mobile-width (375x812) viewports. They cover the sample reading sequence,
-real root and localized subpath requests, endpoint/exclusion behavior, accessible link labels,
-keyboard navigation, JavaScript-disabled navigation and horizontal layout.
-
-Locale cases follow generated home/tag/navigation links, check language-specific
-collections and adjacency endpoints, exercise root/legacy redirects without
-JavaScript, and verify absent tag/draft-only routes and shared asset requests.
-These are controlled static-host requests. The merged #89 fix has separate
-actual-application coverage for mount redirects, generated locale entry points,
-content/assets, outside-prefix rejection and regeneration.
-
-Both themes are measured in normal, hover and keyboard-focus states:
-
-- All pager text must reach **4.5:1** contrast.
-- The focus indicator must reach **3:1** against its adjacent background.
-
-Measurements use rendered RGB/alpha values and relative luminance. Transparent
-layers are composited; unsupported backgrounds or group opacity fail explicitly.
-Transitions are disabled only in measurement tests to inspect settled states.
-The math has independent Node tests. No whole-site WCAG or real Safari/iOS/device
-conformance is implied by this component suite.
-
-The ignored `test-results` directory contains the JSON report and attached
-per-engine/theme/state color measurements. Failures also retain traces and
-screenshots. A failed or incomplete project is not passing V-008 evidence.
-
-The pager uses explicit `tabindex="0"` on its native links so WebKit's default
-keyboard mode includes them without introducing positive tab ordering.
+See [browser acceptance details](../../docs/website-documentation.md#browser-acceptance)
+for fixture setup, coverage, contrast requirements and evidence limits.
