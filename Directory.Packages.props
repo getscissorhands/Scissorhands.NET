@@ -5,6 +5,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageVersion Include="AngleSharp" Version="1.*" />
     <PackageVersion Include="bunit" Version="2.*" />
     <PackageVersion Include="coverlet.collector" Version="10.*" />
     <PackageVersion Include="Markdig" Version="1.*" />

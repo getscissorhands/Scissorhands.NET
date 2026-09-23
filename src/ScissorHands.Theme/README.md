@@ -7,6 +7,8 @@
 
 Install this package when authoring a theme. Applications that only consume a theme should install [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web).
 
+Themes rendering localized fallback must integrate the shared banner and document metadata components; see the [locale rendering contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context).
+
 ## Install
 
 ```bash

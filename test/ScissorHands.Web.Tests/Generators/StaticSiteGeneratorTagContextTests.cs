@@ -41,12 +41,11 @@ public class StaticSiteGeneratorTagContextTests
         {
             Title = "Site title",
             Description = "Site description",
-            Locale = "ko-KR",
+            Locale = useLocale ? "ko-KR" : null,
             SiteUrl = "https://example.com",
             BaseUrl = baseUrl,
-            UseLocaleInUrl = useLocale,
         };
-        var prefix = useLocale ? "ko-kr/" : string.Empty;
+        var prefix = string.Empty;
         var post = new ContentDocument
         {
             Kind = ContentKind.Post,
@@ -153,7 +152,7 @@ public class StaticSiteGeneratorTagContextTests
 
             using var html = parser.ParseDocument(ReadOutput($"{route}/index.html"));
             html.Title.ShouldBe(site.Title);
-            html.DocumentElement.GetAttribute("lang").ShouldBe("ko-kr");
+            html.DocumentElement.GetAttribute("lang").ShouldBe(useLocale ? "ko-kr" : "en-us");
             html.QuerySelector("meta[name='description']")!.GetAttribute("content").ShouldBe(site.Description);
             html.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
             var expectedUrl = $"https://example.com{baseUrl}{route}";

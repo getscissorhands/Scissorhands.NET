@@ -58,7 +58,12 @@ public class DefaultNavigationTests
         context.Services.AddSingleton(Substitute.For<IThemeService>());
         var childLocale = childSlug.StartsWith("ko-kr/", StringComparison.Ordinal) ? "ko-KR" : "en-US";
         var pages = new[] { Page("Parent", parentSlug, "en-US"), Page("Child", childSlug, childLocale) };
-        var site = new SiteManifest { BaseUrl = "/site/", UseLocaleInUrl = true };
+        var site = new SiteManifest
+        {
+            BaseUrl = "/site/",
+            Locale = "ja-jp",
+            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable", ["ko-kr"] = "Korean unavailable" }
+        };
 
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, site)
@@ -174,7 +179,11 @@ public class DefaultNavigationTests
             pages.Add(Page("English", "en-us", "en_US"));
         }
 
-        var site = new SiteManifest { UseLocaleInUrl = true };
+        var site = new SiteManifest
+        {
+            Locale = "ko-kr",
+            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable" }
+        };
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, site)
             .Add(p => p.Theme, new ThemeManifest())

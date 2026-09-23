@@ -7,7 +7,8 @@ internal static class PageReadingOrder
     internal static IReadOnlyList<ContentDocument> Order(
         IReadOnlyList<ContentDocument> pages,
         string? pagesRoot = null,
-        CancellationToken cancellationToken = default)
+        CancellationToken cancellationToken = default,
+        Func<ContentDocument, string>? sourcePathSelector = null)
     {
         ArgumentNullException.ThrowIfNull(pages);
         cancellationToken.ThrowIfCancellationRequested();
@@ -17,13 +18,14 @@ internal static class PageReadingOrder
         foreach (var page in pages)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            if (string.IsNullOrEmpty(page.SourcePath))
+            var sourcePath = sourcePathSelector?.Invoke(page) ?? page.SourcePath;
+            if (string.IsNullOrEmpty(sourcePath))
             {
                 sourceLess.Add(page);
             }
             else
             {
-                files.Add((page, GetSourceSegments(page.SourcePath, pagesRoot)));
+                files.Add((page, GetSourceSegments(sourcePath, pagesRoot)));
             }
         }
 

@@ -7,7 +7,6 @@ public sealed class SiteManifest
 {
     private const string SITE_TITLE = "ScissorHands.NET";
     private const string SITE_DESCRIPTION = "A Blazor-based static site generator.";
-    private const string SITE_LOCALE = "en-US";
     private const string SITE_AUTHOR = "The ScissorHands";
     private const string SITE_URL = "http://localhost:5000";
     private const string BASE_URL = "/";
@@ -53,7 +52,14 @@ public sealed class SiteManifest
     /// <summary>
     /// Gets the site locale.
     /// </summary>
-    public string Locale { get; init; } = SITE_LOCALE;
+    public string? Locale { get; init; }
+
+    /// <summary>
+    /// Gets additional locales and their plain-text missing-translation notices.
+    /// Ignored when <see cref="Locale"/> is blank.
+    /// </summary>
+    public IReadOnlyDictionary<string, string?> LocalizationFallbackMessages { get; init; }
+        = new Dictionary<string, string?>();
 
     /// <summary>
     /// Gets the site author.
@@ -91,9 +97,9 @@ public sealed class SiteManifest
     public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>
-    /// Gets a value indicating whether to use locale in URL or not.
+    /// Gets whether an explicit primary locale enables localization.
     /// </summary>
-    public bool UseLocaleInUrl { get; init; }
+    public bool IsLocalizationEnabled => !string.IsNullOrWhiteSpace(Locale);
 
     /// <summary>
     /// Gets a value indicating whether to use date in post URL or not.

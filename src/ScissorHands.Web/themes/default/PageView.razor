@@ -2,7 +2,7 @@
 @layout MainLayout
 
 <section class="page">
-    <article class="prose">
+    <article class="prose" lang="@LocaleContext?.ContentLocale">
         @((MarkupString)Document?.Html!)
 
         @if (Document?.Metadata.Tags.Any() == true)

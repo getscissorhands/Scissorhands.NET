@@ -22,6 +22,6 @@ Open the logged preview URL, refresh after edits, and stop with Ctrl+C.
 
 ## Explore
 
-Start with the [post](contents/posts/hello-scissorhands.md), [page tree](contents/pages/parent/index.md), and [custom 404](contents/pages/not-found.md).
+Start with the [post](contents/posts/hello-scissorhands.md), [page tree](contents/pages/parent/index.md), [Korean About translation](contents/pages/ko-kr/about.md), and [custom 404](contents/pages/not-found.md). Primary URLs stay unprefixed; `/ko-kr/` also demonstrates labelled fallback for untranslated documents.
 
 See the [sample walkthrough](../docs/website-documentation.md#sample-walkthrough) for navigation experiments and locale/subpath settings, and the [vNext reference](../docs/website-documentation.md) for the full guides.

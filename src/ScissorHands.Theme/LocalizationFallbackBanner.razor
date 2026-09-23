@@ -1,0 +1,34 @@
+@if (LocaleContext?.IsFallback == true)
+{
+    <aside class="localization-fallback" data-localization-fallback="@LocaleContext.Locale" lang="@LocaleContext.Locale" role="note">@LocaleContext.FallbackMessage</aside>
+}
+
+@code {
+    /// <summary>
+    /// Gets the engine-prepared localization context for the current document.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    /// <summary>
+    /// Gets the renderer's per-render receipt for required banner integration.
+    /// </summary>
+    [CascadingParameter]
+    public RenderReceipt? Receipt { get; set; }
+
+    protected override void OnParametersSet()
+    {
+        if (LocaleContext?.IsFallback == true && Receipt is not null)
+        {
+            Receipt.Rendered = true;
+        }
+    }
+
+    /// <summary>
+    /// Records actual shared-component rendering, not a theme capability declaration.
+    /// </summary>
+    public sealed class RenderReceipt
+    {
+        public bool Rendered { get; internal set; }
+    }
+}

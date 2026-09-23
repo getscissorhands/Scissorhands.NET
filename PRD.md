@@ -1,5 +1,17 @@
 # ScissorHands.NET - Product requirements document
 
+## Current scope amendment: directory locales and fallback
+
+The consolidated [#104 contract](https://github.com/getscissorhands/Scissorhands.NET/issues/104) supersedes the locale portions of FR-002/003/004/012 and Q-006 through Q-012 below. The existing document-control, approval, and execution records remain historical baselines, not approval or verification of this amendment.
+
+Primary content and URLs stay unprefixed. Explicit `Site:Locale` enables localization; `LocalizationFallbackMessages` keys declare additional locales and their values supply required notices. Undeclared folders remain ordinary content; declared locale formats must match the primary format. Same-kind, same-relative-path/filename pairs require matching slugs and required matching written calendar dates for paired posts. The primary publication state gates every translation/fallback. Missing/draft translations use labelled primary content, while withdrawn primary content removes all active variants and collection entries.
+
+Collections select translation or fallback once per primary identity; generated navigation stays in the requested locale and authored links remain unchanged. Individual documents have canonical/real-translation alternate metadata and required shared-theme banners with distinct requested/content languages. Generated home/tag collections and the one shared 404 do not acquire document fallback/SEO semantics. See the [current behavior and migration reference](docs/website-documentation.md#locale-specific-sites) for the complete contract and exceptions.
+
+Verification for this amendment belongs to the updated locale loader/generator tests, actual preview integration, and browser fixtures. Earlier V-009 counts below must not be cited as evidence for #104; release authorization and broader gaps are unchanged.
+
+Implementation evidence for #104: the Release solution build and all 714 .NET tests pass, including real root/subpath preview and withdrawal. Sample root/subpath generation, slash-variant byte equivalence, four contrast-math cases, and 48 Chromium/WebKit desktop/mobile cases pass. The 24 Firefox cases are blocked before test execution by the installed browser reporting `Could not find profile folder`, including a retry with a session-local temporary profile directory. This is not a three-engine acceptance pass; Firefox verification remains outstanding.
+
 ## Document control
 
 | Field | Value |
@@ -23,7 +35,7 @@
 
 **Readiness:** v0.13 remains Review-ready overall, retaining locale-only and historical approvals. V-009's scoped acceptance is complete after integrating #89 and verifying the combined implementation: 678 .NET tests, 60 browser cases, four contrast-math cases and actual prefixed preview/browser/regeneration checks pass. Earlier failures remain historical; broader programs and release authorization are not implied.
 
-**Current behavior:** FR-001 through FR-011 retain their baseline except for the explicit FR-012 locale-enabled qualifications. FR-012 is implemented in this revision, not published as a package. `UseLocaleInUrl: false` retains existing routes and presentation; acceptance gaps are recorded separately from code delivery.
+**Historical behavior before #104:** FR-001 through FR-011 retained their baseline except for the explicit FR-012 locale-enabled qualifications. The amendment above supersedes that locale contract; historical acceptance gaps and approvals below are retained.
 
 ## 1. Overview and evidence
 

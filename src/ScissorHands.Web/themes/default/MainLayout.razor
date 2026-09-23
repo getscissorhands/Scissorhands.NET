@@ -16,6 +16,7 @@
         <title>@PageTitle</title>
         <meta name="title" content="@PageTitle" />
         <meta name="description" content="@PageDescription" />
+        <LocalizationMetadata />
         <script>
             (() => {
                 const stored = localStorage.getItem("theme");
@@ -53,6 +54,7 @@
         </header>
 
         <main>
+            <LocalizationFallbackBanner />
             @Body
         </main>
 

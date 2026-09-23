@@ -99,7 +99,12 @@ public class NavigationTreeBuilderTests
             pages.Add(Page("English", "en-us", "en_US"));
         }
 
-        var tree = BuildTree(pages, new SiteManifest { UseLocaleInUrl = true, BaseUrl = "/site/" });
+        var tree = BuildTree(pages, new SiteManifest
+        {
+            Locale = "ko-kr",
+            BaseUrl = "/site/",
+            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable" }
+        });
 
         tree.ShouldHaveSingleItem().Title.ShouldBe(localePage ? "English" : "Docs");
         Flatten(tree).Where(node => node.Url is null).Select(node => node.Title).ShouldBe(["Docs"]);

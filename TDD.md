@@ -1,5 +1,15 @@
 # ScissorHands.NET - Technical design document
 
+## Current scope amendment: directory locales and fallback
+
+The [PRD](PRD.md#current-scope-amendment-directory-locales-and-fallback) and [TRD](TRD.md#current-scope-amendment-directory-locales-and-fallback) amendments for #104 supersede DES-013/DEC-004's earlier locale inventory, redirects, and no-fallback assumptions. The document-control and approval/evidence records below remain historical and are not retroactively extended.
+
+`LocaleConfiguration` validates a normalized snapshot of `Site:Locale` and `LocalizationFallbackMessages`. `ContentLoader` recognizes only active additional-locale roots, validates primary/translation identities before draft filtering, and returns primary-gated published sources. The generator builds primary and configured additional scopes, selects a real translation or a fresh fallback document per primary identity, and orders navigation through primary source paths. Scope-local `LocaleContext` snapshots carry requested/content languages, fallback state/message, canonical URLs, and reciprocal actual-language alternatives without mutating manifest input.
+
+Themes place `LocalizationFallbackBanner` above their content and `LocalizationMetadata` in their head. A per-render receipt verifies shared-banner rendering; an HTML parser validates the required notice after post-HTML plugins. The generated-output ledger records only owned HTML paths, validates root containment and filesystem links, and removes no-longer-written owned files after successful generation. It preserves unrelated output and records planned/new paths before writing so a subsequent successful generation can clean incomplete output.
+
+The seven theme roles, existing pipeline order, ordinary authored links, primary URL layout, and shared 404 are preserved. The current authoring/theme migration and verification entry points are in the [detailed reference](docs/website-documentation.md#locale-routing-migration). This is not release authorization or closure of wider filesystem, theme-copy, or real-device assessment gaps.
+
 ## Document control
 
 | Field | Value |

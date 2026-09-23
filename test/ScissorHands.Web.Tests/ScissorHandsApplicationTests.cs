@@ -36,7 +36,12 @@ public class ScissorHandsApplicationTests
         try
         {
             Directory.SetCurrentDirectory(temporaryDirectory.FullName);
-            var site = new SiteManifest { BaseUrl = configuredBaseUrl, Locale = "ko-KR", UseLocaleInUrl = useLocale };
+            var site = new SiteManifest
+            {
+                BaseUrl = configuredBaseUrl,
+                Locale = useLocale ? "en-us" : null,
+                LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Korean unavailable" }
+            };
             site.BaseUrl.ShouldBe(baseUrl);
             var route = useLocale ? "ko-kr/parent/child" : "parent/child";
             var postRoute = useLocale ? "ko-kr/2026/09/11/post" : "2026/09/11/post";

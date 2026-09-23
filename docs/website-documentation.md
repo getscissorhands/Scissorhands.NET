@@ -73,7 +73,6 @@ Add the following sections to `appsettings.json`:
     "Theme": "default",
     "SiteUrl": "https://example.com",
     "BaseUrl": "/",
-    "UseLocaleInUrl": false,
     "UseDateInPostUrl": true,
     "Debug": false
   },
@@ -94,7 +93,6 @@ description: My first generated post.
 slug: hello-scissorhands
 published: 2026-09-11
 author: Your name
-locale: en-US
 tags:
   - dotnet
   - static-site
@@ -130,13 +128,13 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | --- | --- |
 | `Title` | Site title used by the theme |
 | `Description` | Site description; the engine also makes its rendered HTML available |
-| `Locale` | Default locale used when resolving content locale |
+| `Locale` | Explicit primary language; omitted/null/blank disables localization without changing primary URLs |
+| `LocalizationFallbackMessages` | Additional-locale keys and plain-text notices for missing translations; ignored when `Locale` is blank |
 | `Author` | Site-level author information available to themes |
 | `HeroImage` | Site-level hero image reference available to themes and plugins |
 | `Theme` | Theme slug; use `default` for the built-in theme |
 | `SiteUrl` | Public site URL |
 | `BaseUrl` | Site base path, such as `/`, `/project` or `/project/`; path prefixes normalize to a trailing slash |
-| `UseLocaleInUrl` | Generate locale-prefixed content, home/tag collections and locale-scoped navigation |
 | `UseDateInPostUrl` | Include the publication date in post routes |
 | `Debug` | Site debug setting |
 
@@ -144,7 +142,7 @@ Use `BaseUrl` when publishing below a subpath. Generated navigation and shared U
 
 `SiteManifest.BaseUrl` supplies a trailing slash for a configured path prefix: `/docs` and `/docs/` both become `/docs/`, `/manual/docs` becomes `/manual/docs/`, and `/` remains `/`. This happens during manifest initialization, including configuration binding and direct .NET initialization. Build, preview, themes and plugins use the same effective value, while source settings remain unchanged. Generated HTML therefore uses `<base href="/docs/">` for either spelling. This does not trim whitespace, change case, decode URLs, or validate them. Absolute/network-relative URLs, relative paths without a leading slash, and values containing backslashes, query strings or fragments are not rewritten by this rule and gain no new support guarantee.
 
-Preview serves generated files only at the effective path prefix. With either `/docs` or `/docs/` configured, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. GET/HEAD `/` returns HTTP 302 to `/docs/`, preserving the query and serving no homepage body at root. Browsers follow to the generated entry point; locale-enabled entry points then use the HTML locale redirect below. Other outside-prefix requests, including `/parent/child/`, `/docs-other/`, unprefixed assets and POST `/`, return 404. `/docs` and directory redirects retain the prefix and query. Files remain directly under `preview/`; update old preview bookmarks rather than relying on root aliases. Configuring `/` adds no HTTP mount redirect but retains any generated locale redirect. This is a routing boundary, not authentication. Other base-URL forms remain outside this preview contract; normalization is not general URL validation.
+Preview serves generated files only at the effective path prefix. With either `/docs` or `/docs/` configured, a page route `parent/child` is served at `/docs/parent/child/`, and `ko-kr/parent/child` at `/docs/ko-kr/parent/child/`; theme assets and images use the same mount. GET/HEAD `/` returns HTTP 302 to `/docs/`, preserving the query and serving no homepage body at root. The entry point is the primary homepage, not a locale redirect. Other outside-prefix requests, including `/parent/child/`, `/docs-other/`, unprefixed assets and POST `/`, return 404. `/docs` and directory redirects retain the prefix and query. Files remain directly under `preview/`; update old preview bookmarks rather than relying on root aliases. Configuring `/` adds no HTTP mount redirect. This is a routing boundary, not authentication. Other base-URL forms remain outside this preview contract; normalization is not general URL validation.
 
 For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
 
@@ -170,43 +168,64 @@ The `Plugins` array selects installed plugins by ID:
 
 ### Locale-specific sites
 
-With `Site.UseLocaleInUrl: true`, the engine generates `Site.Locale` plus the effective locales of published non-404 posts and pages. Frontmatter `locale` takes precedence over the site default. Locale keys are trimmed, lowercased, and normalize underscores/forward slashes to hyphens; equivalent spellings such as `ko-KR` and `ko_KR` share one scope. Draft-only locales are excluded; future dates and hidden-navigation pages retain their normal publication rules.
+Primary content stays in its existing `contents/pages/` and `contents/posts/` structure, with unprefixed URLs. An explicitly configured, nonblank `Site.Locale` enables localization. `LocalizationFallbackMessages` declares each additional locale and its missing-translation notice; no separate locale inventory is needed.
 
-For `Site.Locale: "en-US"` and `BaseUrl: "/blog/"`:
+```json
+{
+  "Site": {
+    "Locale": "en-us",
+    "BaseUrl": "/blog/",
+    "LocalizationFallbackMessages": {
+      "ko-kr": "이 페이지는 현재 한국어 번역을 제공하지 않습니다",
+      "ja-jp": "このページは現在日本語翻訳を提供していません"
+    }
+  }
+}
+```
+
+For that configuration:
 
 | Surface | URL / behavior |
 | --- | --- |
-| Root | `/blog/` redirects to `/blog/en-us/` |
-| Locale homepages | `/blog/en-us/`, `/blog/ko-kr/`, each listing only its own posts |
-| Locale tag index | `/blog/ko-kr/tags`, only if Korean content has tags |
-| Locale tag view | `/blog/ko-kr/tags/dotnet`, containing only Korean tagged content |
-| Legacy tag URL | `/blog/tags/dotnet` redirects only if `/blog/en-us/tags/dotnet` exists |
+| Primary homepage and About | `/blog/`, `/blog/about/`; no locale redirects |
+| Additional locale homepages | `/blog/ko-kr/`, `/blog/ja-jp/`, including primary-content fallbacks |
+| Locale tag index | `/blog/ko-kr/tags`, only if its selected documents have tags |
+| Locale tag view | `/blog/ko-kr/tags/dotnet`, using translated-or-fallback documents and their selected metadata |
+| Primary tag URL | `/blog/tags/dotnet` remains the primary tag collection |
 | Shared not-found page | `/blog/404.html`, using the site-default locale |
 
-Every discovered locale has a generated homepage, including page-only locales. The default homepage is always generated, even when empty. A locale without eligible tags has no tag pages or built-in Tags link. Home/site-title links, tag links, navigation and previous/next stay within the active locale; there is no automatic cross-language fallback or language switcher.
-
-The root and supported legacy tag URLs are portable HTML redirects with an immediate meta refresh and an ordinary fallback anchor, not HTTP 301/302 guarantees. They use the canonical rooted `BaseUrl`: configured `/blog` and `/blog/` both become `/blog/`. External URLs, traversal, encoded separators and malformed percent escapes fail locale-redirect validation. A missing legacy tag target produces no redirect; an otherwise unowned missing route follows the host's normal 404 behavior. Initial builds are clean, but in-place preview can retain old locale/redirect files until restarted.
-
-Keep `contents/posts` and `contents/pages` as the discovery roots. Optional locale folders organize files but do not infer or override metadata:
+Every configured additional locale has a generated homepage, even before any translation files exist. The primary homepage is always generated. A locale without eligible tags has no tag pages or built-in Tags link. Generated Home/site-title links, tag links, navigation and previous/next remain in the requested locale, including links to fallback documents.
 
 ```text
 contents/
   posts/
-    en-us/hello.md
+    hello.md
     ko-kr/hello.md
   pages/
-    en-us/about.md
+    about.md
     ko-kr/about.md
     not-found.md
 ```
 
-Use `locale: ko-KR` with `slug: about` in the Korean page to obtain `/blog/ko-kr/about`. Explicit locale-free slugs avoid coupling URLs to source folders; when omitted, existing directory-based inference still applies. A matching leading locale is recognized before post-date composition to avoid duplicating it. Folders with a different name are not stripped, and `contents/<locale>/posts` is not a discovery root.
+**Recognition and validation:** only a matching configured key makes the directory immediately below `pages/` or `posts/` an additional locale. An undeclared `pages/it/` is ordinary primary content, not automatically Italian. When `Locale` is omitted/null/blank, the entire dictionary is ignored and all such folders are ordinary content. Removing a locale entry therefore does not exclude files left in its folder: remove, relocate, or mark them draft if they should not publish.
 
-Home/tag pages are generated, not additional Markdown sources. A page at a generated locale-home or tag/redirect destination fails as an output collision; for example, a Korean `pages/ko-kr/index.md` needs a distinct explicit slug rather than claiming `/ko-kr/`. Empty/unsafe locale segments are rejected; locale-enabled generated-page and content-image destinations reject linked ancestors. This is not a comprehensive audit of input links or theme-service copying.
+Locale keys normalize case and underscores/forward slashes to hyphens. Reject duplicate normalized declarations and keys equal to the primary locale. Locale identifiers must be safe language tags; the implementation accepts two/three-letter languages, optional four-letter scripts, and optional two-letter or three-digit regions. Additional locales must have the same script/region structure as the primary: `en-us` with `ko-kr` is valid, `en-us` with `ko` is not. This validates declarations, not ordinary folder names. Content under an explicitly declared primary-locale directory, such as `pages/en-us/`, fails with migration guidance to move it to the primary root. Frontmatter `locale` is removed and always produces a migration error.
 
-Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. `Site.Locale` is never mutated between renders. With locale routing disabled, the existing root homepage, shared tag pages and unprefixed navigation behavior remain unchanged.
+**Pairing:** match the content kind and complete locale-relative filename/path: `pages/guides/start.md` pairs with `pages/ko-kr/guides/start.md`, not a differently named file with the same slug. Both resolved slugs must match without the additional prefix. Explicit slugs remain supported, including a matching additional prefix that is stripped before date composition. Nested page `index.md` inference is relative to the locale root; root-level `index.md` remains route `index`. Documents cannot claim generated destinations or primary routes under an active additional-locale prefix.
 
-**Serving boundary:** preview now mounts the artifact at canonical `Site.BaseUrl` through the merged [#89 fix](https://github.com/getscissorhands/Scissorhands.NET/pull/101). With `/docs` and default `en-US`, `/` returns HTTP 302 to `/docs/`, whose HTML entry redirects to `/docs/en-us/`. Legacy tag redirects use `/docs/tags/...`; unrelated domain-root page/asset URLs remain 404. Production hosts still configure their own mount. No physical deployment-prefix directory is added.
+Both authored files in a post pair must declare valid `published` values. Compare their written year/month/day without timezone conversion; times and offsets may differ. `2026-09-01T09:00:00+09:00` matches `2026-09-01T12:00:00Z`, but a September 1 value does not match an August 31 value representing the same instant. Missing values on either/both sides or different dates fail build and preview with source context. Dated URLs use that same date. Dates remain optional for unpaired posts, and scheduling behavior is unchanged.
+
+**Publication:** the primary document must exist and not be draft. A ready translation then replaces primary content at its localized URL; a missing/draft translation uses primary content with the configured destination-language banner. Missing/draft primary content suppresses all its variants, even ready translations. Additional-language-only files never publish independently while they are classified as translations. Pair validation does not silently override conflicting metadata.
+
+For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and displays the English About document with its Korean notice; it does not redirect. A blank notice fails only when fallback is needed. Requested locale and actual content language remain distinct in rendering context. Translated-or-fallback collections have one entry per primary identity and use the selected document's title/tags. Navigation preserves visibility and hierarchy, ordering all variants by the primary source path.
+
+**Regeneration and output ownership:** `.scissorhands-output.json` records generated HTML paths inside the output root. Successful regeneration replaces fallback/translation output, removes withdrawn document and obsolete collection files, and preserves unrelated files. It works across generator instances and does not follow filesystem links. Keep this ledger for in-place regeneration; initial application preview/build still starts with a clean output directory. Deploy with deletion of withdrawn files rather than merely copying new files. Content source links and generated output links are rejected; this does not certify arbitrary executable theme/plugin behavior.
+
+**SEO and rendering:** primary documents and real translations are self-canonical; a fallback's canonical points to its primary document. Reciprocal `hreflang` alternatives list actual published versions, never fallback copies. Absolute URLs use `SiteUrl` and `BaseUrl`. These document-specific rules and the banner do not apply to home/tag collections or the shared 404. Themes must implement the [locale render context](#locale-render-context) contract.
+
+Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. An authored `/about/` continues to leave the localized route for the primary route. `Site.Locale` is not mutated between renders. No language-switcher UI is provided.
+
+**Serving boundary:** preview mounts the artifact at canonical `Site.BaseUrl`. With `/docs`, domain-root GET/HEAD `/` redirects to the primary `/docs/` homepage, not `/docs/en-us/`. Other outside-prefix requests remain 404. Production hosts configure their own mount; no physical deployment-prefix directory is added.
 
 ## Content and frontmatter
 
@@ -234,11 +253,10 @@ Frontmatter is YAML between opening and closing `---` delimiters.
 | `title` | Document title |
 | `slug` | Explicit route override; omitted or blank values use file-based inference |
 | `description` | Document description |
-| `locale` | Document locale override |
 | `author` | Document author metadata |
 | `twitter_handle` | Author's Twitter handle metadata |
 | `hero_image` | Hero image path or URL |
-| `published` | Publication date/time |
+| `published` | Publication date/time; required in both authored posts of a primary/translation pair |
 | `tags` | Optional tags associated with the document |
 | `draft` | Whether the document should be excluded from generation |
 | `show_in_navigation` | Whether a page opts into navigation; defaults to `false` |
@@ -296,7 +314,7 @@ It generates `parent/index.html` and links to `parent`, relative to `Site.BaseUr
 - The `index` filename comparison is case-insensitive.
 - Only nested pages use the directory-index convention. Post routes are unchanged.
 - Root-level `contents/pages/index.md` retains the `index` route; it does not replace the generated homepage.
-- Locale prefixes are applied after inference as usual.
+- Configured additional-locale prefixes are applied after locale-relative inference; primary routes stay unprefixed.
 - Do not keep both `parent.md` and `parent/index.md` with their inferred slugs: the output collision fails the build.
 
 To preserve an older `parent/index` URL, explicitly set `slug: parent/index`.
@@ -376,7 +394,7 @@ The navigation contains Parent, a non-clickable Group label, and Visible Grandch
 
 Group labels are derived from missing path segments. Hyphens and underscores become spaces, followed by invariant title casing: `deployment-tools` becomes `Deployment Tools`.
 
-Groups do not create pages, output files, or placeholder links. Locale routing prefixes are not synthesized as groups when `UseLocaleInUrl` is enabled, unless there is an actual visible page at that prefix.
+Groups do not create pages, output files, or placeholder links. Configured additional-locale prefixes are not synthesized as groups when localization is enabled, unless a direct navigation caller supplies an actual visible page at that prefix. Normal generation reserves locale homepages.
 
 ### Rendering and interaction
 
@@ -404,7 +422,7 @@ Return to the [home page](.).
 
 The engine renders it through the theme's not-found view and writes `404.html` at the output root, without a locale prefix. It is not written as `404.html/index.html` and is excluded from navigation and tag listings.
 
-With locale routing enabled, the shared 404 must use `Site.Locale`. Omit its locale or supply a normalized-equivalent spelling; an explicit mismatch fails generation with source/field context. It does not create a locale or get translated automatically. Disabled-mode metadata behavior remains unchanged.
+The shared 404 uses the primary language when localization is enabled. It is excluded from ordinary translation pairing, fallback replication, document SEO and fallback banners. Do not add frontmatter `locale`; that field is no longer supported.
 
 If no custom document exists, the engine still generates the not-found page; the built-in theme supplies a default message. Hosting configuration determines when missing requests use the generated file. The current preview server serves `/404.html` directly but does not automatically rewrite unknown URLs to its contents.
 
@@ -445,7 +463,7 @@ The [repository sample](../sample/README.md) uses local project references and t
 
 The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
 
-The sample starts with an empty `Plugins` array and locale routing disabled. In its `appsettings.json`, enable `Site.UseLocaleInUrl` to generate `dist/en-us/index.html` and a default-locale root redirect. To explore Korean-prefixed preview, also set `Site.Locale` to `ko-KR` and `Site.BaseUrl` to `/docs` or `/docs/`; Parent then lives at `/docs/ko-kr/parent/`. See [site configuration](#site-configuration) for slash normalization and the HTTP/HTML redirect stages, and [locale-specific sites](#locale-specific-sites) for additional-language authoring and generated-route collisions.
+The sample starts with an empty `Plugins` array, primary `en-US`, and a Korean `LocalizationFallbackMessages` entry. Its primary sequence stays unprefixed. `/ko-kr/about/` uses the [Korean translation](../sample/contents/pages/ko-kr/about.md); `/ko-kr/parent/` and other untranslated documents demonstrate the notice and English fallback. Set `Site.BaseUrl` to `/docs` or `/docs/` to explore subpath hosting. See [site configuration](#site-configuration) and [locale-specific sites](#locale-specific-sites). Clearing `Site.Locale` disables localization, but leaves locale-looking directories as ordinary content rather than excluding them.
 
 The custom 404 omits `locale`, so it follows the site default. Shared assets and authored Markdown links are not translated or rewritten. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
 
@@ -623,12 +641,20 @@ Both collections default to empty lists. They are layout-only parameters, not co
 | Member | Meaning |
 | --- | --- |
 | `Locale` | Normalized active locale, independent of the unchanged `Site.Locale` default |
+| `ContentLocale` | Actual document language, primary for a fallback and requested locale for a translation |
+| `IsFallback`, `FallbackMessage` | Whether this individual document needs the configured plain-text notice |
+| `CanonicalUrl` | Absolute document canonical URL; null for generated home/tag/404 pages |
+| `AlternateLanguageUrls` | Read-only engine snapshot of absolute primary/real-translation URLs, keyed by locale |
 | `Route` | Resolved current route; source documents retain the loaded pre-hook route snapshot |
-| `HomeUrl` | Already escaped, base-relative home URL, such as `ko-kr/` |
+| `HomeUrl` | Already escaped, base-relative home URL: `.` for primary or, for example, `ko-kr/` |
 | `TagIndexUrl` | Already escaped, base-relative tag-index URL, or null if the locale has no tags |
 | `GetTagUrl(tag)` | Compose a raw tag with the prepared home URL using shared tag escaping |
 
 Forward `LocaleContext` through `CascadingMainLayoutBase` for view and plugin components. The renderer keeps it out of ordinary view attributes. Full navigation remains layout-only and the seven required theme roles are unchanged.
+
+Inside that cascading layout, include `<LocalizationMetadata />` in `<head>` and `<LocalizationFallbackBanner />` above page/post content (the built-in layout puts it first in `<main>`). Mark the article container with `lang="@LocaleContext?.ContentLocale"`. The banner renders encoded text with the requested-language annotation and renders nothing for nonfallback documents. The metadata component emits document canonical/alternate links and nothing for collections. These components are in `ScissorHands.Theme`.
+
+The renderer verifies actual shared-banner component rendering using a per-render receipt; declaring support or embedding a lookalike in Markdown does not satisfy the contract. After post-HTML hooks, the generator also parses fallback HTML and requires exactly one correctly annotated, text-only notice with the configured message, not under `hidden`/`aria-hidden`. Missing or removed notices fail generation. Theme authors remain responsible for placement and CSS visibility/accessibility; this is not an arbitrary stylesheet audit.
 
 Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags`; without context they retain those original values. Existing post/page/tag-list `GetTagUrl` wrappers become locale-aware when context exists. Core static helpers keep their context-free contracts. Context values are prepared rendering data, not a general URL sanitizer.
 
@@ -829,11 +855,11 @@ A valid component ID without a configured manifest leaves `Plugin` null, allowin
 
 ### Generated tag route context
 
-The engine resolves tag routes before Razor rendering and supplies a synthetic page `Document` with the final slug (`tags` or `tags/{tag}` when disabled; `<locale>/tags` or `<locale>/tags/{tag}` when enabled). Locale-enabled homepages also receive a route-only rendering document. Layouts must forward `Document` and `LocaleContext` through `CascadingMainLayoutBase` for plugin components to receive them.
+The engine resolves tag routes before Razor rendering and supplies a synthetic page `Document` with the final slug (`tags` or `tags/{tag}` for primary/disabled generation; `<locale>/tags` or `<locale>/tags/{tag}` for configured additional locales). Locale-enabled homepages also receive a route-only rendering document. Layouts must forward `Document` and `LocaleContext` through `CascadingMainLayoutBase` for plugin components to receive them.
 
 The rendering document's title, Markdown, HTML and source path are empty, with no document-specific description, author, Twitter handle, image or publication date. `Metadata.Locale` is the active normalized locale when enabled and remains null on disabled-mode tag documents. Site title/description defaults and tag-view headings remain unchanged. A non-null `Document` does not imply a post. Collections/navigation are locale-scoped when enabled; tag-page adjacency remains empty.
 
-Post-HTML hooks retain synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug/locale supplied during rendering. Synthetic pages, including root/legacy redirects, bypass Markdown hooks and receive post-HTML processing. Compose publication URLs using `Site.SiteUrl`, `Site.BaseUrl` and the supplied slug, without rebuilding or escaping it again. For tag `C#` in `ko-KR` with locale routing enabled, the slug is `ko-kr/tags/c%23`; with site URL `https://example.com` and base `/blog/`, the publication URL is `https://example.com/blog/ko-kr/tags/c%23`.
+Post-HTML hooks retain synthetic tag titles (`Tags` or `Tag: {tag}`) and rendered `Html`, with the same resolved slug/locale supplied during rendering. Generated collections bypass Markdown hooks and receive post-HTML processing. Each individual translation/fallback document follows the existing pre-Markdown, conversion, post-Markdown, Razor, post-HTML sequence. Compose publication URLs using `Site.SiteUrl`, `Site.BaseUrl` and the supplied slug, without rebuilding or escaping it again. For tag `C#` in the configured additional locale `ko-KR`, the slug is `ko-kr/tags/c%23`; with site URL `https://example.com` and base `/blog/`, the publication URL is `https://example.com/blog/ko-kr/tags/c%23`.
 
 ### Preview and generated URLs
 
@@ -1060,13 +1086,15 @@ Existing public URL-helper signatures remain supported. Shared helpers also make
 
 ### Locale routing migration
 
-Enabling `UseLocaleInUrl` now changes generated collection URLs and navigation scope, not just source-document prefixes. The root becomes a default-locale HTML redirect; home/tag collections and navigation move inside each locale. Unprefixed tag redirects are generated only for existing default-locale destinations. A tag present only in another locale has no legacy redirect, and an empty default locale still has a homepage but no tag index.
+`UseLocaleInUrl` has been removed from configuration and the public manifest. `Site.Locale` is nullable and no longer implicitly defaults to `en-US` for routing. Set it explicitly to enable localization; omit or clear it to disable localization. Rendering without a configured language retains an English theme default, without enabling locale routing.
 
-Retain frontmatter/site locale fallback and optional organizational folders. Use explicit locale-free slugs to preserve source-independent URLs and resolve any collision with a generated locale homepage/tag/redirect. Existing already-prefixed dated posts now get the effective locale once before the date, rather than duplicating it around the date.
+Remove every frontmatter `locale` field, including on the shared 404. Keep primary files at their original unprefixed locations, moving old primary-locale-directory files back there and preserving intended slugs. Put translations in configured additional-locale directories with matching filenames/relative paths, matching slugs, and required matching calendar dates for paired posts. Primary home/tag URLs no longer redirect. Hosts migrating from the former prefixed-primary contract must supply any desired redirects from old published primary URLs; this feature does not infer historical URLs.
 
-Custom themes should forward `LocaleContext` and adopt the Home/Tags helpers above. Existing public signatures and direct rendering without context remain supported, but hard-coded links are not automatically rewritten. Plugins must consume synthetic route/locale metadata rather than prepend another locale. A custom root 404 with a different explicit locale must be corrected or omit its locale.
+Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. Primary drafts/missing primary files suppress active translations; fallback never uses draft content.
 
-Use a rooted `BaseUrl`; the manifest supplies a missing trailing slash before locale redirects and preview mounting. No deployment-prefix directories are added to the artifact. The #89 middleware fix is integrated, so update preview bookmarks to use the effective mount rather than former domain-root aliases. Rebuild cleanly or restart preview after removing locales/tags to avoid existing stale-output behavior. Site/theme text is not translated and no language switcher is added.
+Custom themes must forward `LocaleContext`, integrate the shared banner and metadata components, annotate actual content language, and retain Home/Tags helpers. Missing fallback banners fail rendering. Existing seven view roles and public URL helpers remain; authored links are not rewritten. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
+
+Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. Site/theme UI text is not automatically translated and no language switcher is added.
 
 ## Browser acceptance
 
@@ -1074,15 +1102,15 @@ This is repository contributor reference material for the [browser suite](../tes
 
 ### Fixtures and coverage
 
-The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds English, Japanese and draft-only locale fixtures. It generates `/docs/` output with default `ko-kr` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
+The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds paired English/Korean post fixtures, a configured Japanese fallback-only locale, and unpublished content. It generates `/docs/` output with primary `en-us` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
 
 Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
 
 - Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
-- Locale-specific home/tag collections, navigation boundaries, root/legacy redirects without JavaScript, tagless/draft-only routes and shared assets.
+- Primary URL stability, translated/fallback collections and navigation, encoded language-annotated notices without JavaScript, document SEO, unpublished routes and shared assets.
 - Light/dark pager appearance in normal, hover and keyboard-focus states.
 
-Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, canonical base-path variants, mount/locale redirects, outside-prefix rejection and regeneration callbacks.
+Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, base-path variants, mount redirects, outside-prefix rejection, fallback and regeneration/withdrawal callbacks.
 
 ### Contrast and evidence
 

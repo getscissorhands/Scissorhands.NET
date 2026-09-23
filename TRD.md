@@ -1,5 +1,15 @@
 # ScissorHands.NET - Technical requirements document
 
+## Current scope amendment: directory locales and fallback
+
+[PRD's #104 amendment](PRD.md#current-scope-amendment-directory-locales-and-fallback) supersedes the locale-specific obligations of TR-023 below, including prefixed primary routes, discovered frontmatter locales, and root/tag redirects. Preserve the existing IDs, approval records, historical baselines, and explicit wider gaps.
+
+Validate configured locale normalization/format independently from ordinary folders. Reject removed frontmatter, duplicate primary-locale source directories, unsafe paths, conflicting pair slugs, and missing/mismatched written dates in authored post pairs. Read drafts for pair validation but publish only eligible primary documents and their ready translations; synthesize primary fallback in each configured additional scope as needed. Primary-gated withdrawal must remove generated files during in-place regeneration, not merely stop rendering them.
+
+Preserve package dependency direction and plugin-stage order. Extend rendering context additively with actual content language, fallback state/message, canonical URL and real-translation alternatives. Custom themes must actually render the shared notice component; post-HTML hooks must preserve its encoded text and language. Maintain stable primary-source navigation ordering for mixed translated/fallback documents. Enforce output ownership and link/path validation for persisted cleanup, and retain root/subpath preview/build parity.
+
+The [current detailed reference](docs/website-documentation.md#locale-specific-sites) defines compatibility and migration. This amendment does not broaden old sign-offs or mark historical V-009 evidence as validation of the new contract.
+
 ## Document control
 
 | Field | Value |

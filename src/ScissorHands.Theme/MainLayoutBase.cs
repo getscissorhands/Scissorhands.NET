@@ -205,7 +205,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
             return LocaleContext.Locale;
         }
 
-        var locale = Site?.Locale ?? string.Empty;
+        var locale = Site is null ? string.Empty : string.IsNullOrWhiteSpace(Site.Locale) ? "en-US" : Site.Locale;
 
         if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Locale) == false)
         {

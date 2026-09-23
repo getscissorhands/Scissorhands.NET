@@ -41,7 +41,7 @@ public class StaticSiteGeneratorNavigationTests
         var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
         var destination = fileSystem.Path.Combine(baseRoot, preview ? "preview" : "dist");
         var paths = new TestAppPaths(baseRoot, contentsRoot, themesRoot);
-        var site = new SiteManifest { BaseUrl = baseUrl, UseLocaleInUrl = true, UseDateInPostUrl = false };
+        var site = new SiteManifest { BaseUrl = baseUrl, Locale = "en-us", UseDateInPostUrl = false };
         const string aboutTitle = "About <script>alert(1)</script> & team";
         AddContent("pages", "zebra.md", "title: Zebra\nshow_in_navigation: true");
         AddContent("pages", "about.md", $"title: '{aboutTitle}'\nslug: guides/about & team\nshow_in_navigation: true");
@@ -97,26 +97,26 @@ public class StaticSiteGeneratorNavigationTests
 
         var expectedPaths = new List<string>
         {
-            "en-us/index.html",
+            "index.html",
             "404.html",
-            "en-us/guides/about & team/index.html",
-            "en-us/zebra/index.html",
-            "en-us/docs/index.html",
-            "en-us/docs/quickstart/index.html",
-            "en-us/docs/deployment/github-pages/index.html",
-            "en-us/docs/deployment/netlify/index.html",
-            "en-us/docs-other/index.html",
-            "en-us/default/index.html",
-            "en-us/hidden/index.html",
-            "en-us/post/index.html",
-            "en-us/tags/index.html",
-            "en-us/tags/sample/index.html",
+            "guides/about & team/index.html",
+            "zebra/index.html",
+            "docs/index.html",
+            "docs/quickstart/index.html",
+            "docs/deployment/github-pages/index.html",
+            "docs/deployment/netlify/index.html",
+            "docs-other/index.html",
+            "default/index.html",
+            "hidden/index.html",
+            "post/index.html",
+            "tags/index.html",
+            "tags/sample/index.html",
         };
-        var deploymentPath = fileSystem.Path.Combine(destination, "en-us", "docs", "deployment", "index.html");
+        var deploymentPath = fileSystem.Path.Combine(destination, "docs", "deployment", "index.html");
         fileSystem.File.Exists(deploymentPath).ShouldBe(!missingDeployment);
         if (!missingDeployment)
         {
-            expectedPaths.Add("en-us/docs/deployment/index.html");
+            expectedPaths.Add("docs/deployment/index.html");
         }
         renderer.Navigations.Count.ShouldBe(expectedPaths.Count);
         renderer.Navigations[0].Pages.Count.ShouldBe(missingDeployment ? 6 : 7);
@@ -131,25 +131,25 @@ public class StaticSiteGeneratorNavigationTests
             var expectedTitles = new List<string> { "Home", aboutTitle, "Side docs", "Docs", "GitHub Pages", "Quickstart", "Zebra", "Tags" };
             var expectedUrls = new List<string>
             {
-                "en-us/", "en-us/guides/about%20%26%20team", "en-us/docs-other", "en-us/docs",
-                "en-us/docs/deployment/github-pages", "en-us/docs/quickstart", "en-us/zebra", "en-us/tags"
+                ".", "guides/about%20%26%20team", "docs-other", "docs",
+                "docs/deployment/github-pages", "docs/quickstart", "zebra", "tags"
             };
             if (!missingDeployment)
             {
                 expectedTitles = ["Home", aboutTitle, "Docs", "Deployment", "GitHub Pages", "Quickstart", "Side docs", "Zebra", "Tags"];
                 expectedUrls = [
-                    "en-us/", "en-us/guides/about%20%26%20team", "en-us/docs", "en-us/docs/deployment",
-                    "en-us/docs/deployment/github-pages", "en-us/docs/quickstart", "en-us/docs-other", "en-us/zebra", "en-us/tags",
+                    ".", "guides/about%20%26%20team", "docs", "docs/deployment",
+                    "docs/deployment/github-pages", "docs/quickstart", "docs-other", "zebra", "tags",
                 ];
             }
             links.Select(link => link.TextContent).ShouldBe(expectedTitles);
             links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
-            var docsItem = html.QuerySelector("nav a[href='en-us/docs']")!.Closest("li")!;
+            var docsItem = html.QuerySelector("nav a[href='docs']")!.Closest("li")!;
             docsItem.QuerySelectorAll(":scope > ul > li > .navigation-link")
                 .Select(line => line.QuerySelector("a, .navigation-label")!.TextContent).ShouldBe(["Deployment", "Quickstart"]);
             var deploymentLabel = missingDeployment
                 ? html.QuerySelectorAll("nav .navigation-label").Single(label => label.TextContent == "Deployment")
-                : html.QuerySelector("nav a[href='en-us/docs/deployment']")!;
+                : html.QuerySelector("nav a[href='docs/deployment']")!;
             var deploymentItem = deploymentLabel.Closest("li")!;
             (deploymentItem.QuerySelector(":scope > .navigation-link > a") is null).ShouldBe(missingDeployment);
             deploymentItem.QuerySelectorAll(":scope > ul > li > .navigation-link > a")
@@ -160,11 +160,11 @@ public class StaticSiteGeneratorNavigationTests
             html.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
             var siteBase = new Uri($"https://example.com{baseUrl}");
             new Uri(siteBase, links.Single(link => link.TextContent == aboutTitle).GetAttribute("href")!).AbsoluteUri.ShouldBe(
-                $"https://example.com{baseUrl}en-us/guides/about%20%26%20team");
+                $"https://example.com{baseUrl}guides/about%20%26%20team");
         }
 
-        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "en-us", "draft", "index.html")).ShouldBeFalse();
-        using var index = parser.ParseDocument(fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "en-us", "index.html")));
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "draft", "index.html")).ShouldBeFalse();
+        using var index = parser.ParseDocument(fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "index.html")));
         index.QuerySelectorAll(".post-list .post-link").Select(link => link.TextContent).ShouldBe(["Post"]);
         site.IsPreview.ShouldBe(preview);
 

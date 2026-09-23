@@ -97,12 +97,33 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
         }
 
         var parameterView = ParameterView.FromDictionary(layoutParams);
+        var receipt = new LocalizationFallbackBanner.RenderReceipt();
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
-            var root = await renderer.RenderComponentAsync(layoutType, parameterView);
+            var wrapper = ParameterView.FromDictionary(new Dictionary<string, object?>
+            {
+                ["Value"] = receipt,
+                ["IsFixed"] = true,
+                ["ChildContent"] = (RenderFragment)(builder =>
+                {
+                    builder.OpenComponent(0, layoutType);
+                    foreach (var parameter in parameterView)
+                    {
+                        builder.AddAttribute(1, parameter.Name, parameter.Value);
+                    }
+                    builder.CloseComponent();
+                }),
+            });
+            var root = await renderer.RenderComponentAsync<CascadingValue<LocalizationFallbackBanner.RenderReceipt>>(wrapper);
             return root.ToHtmlString();
         });
 
+        if (parameters.TryGetValue(nameof(MainLayoutBase.LocaleContext), out var context)
+            && context is LocaleContext { IsFallback: true } locale && !receipt.Rendered)
+        {
+            throw new InvalidDataException(
+                $"Theme '{layoutType.FullName}' must render LocalizationFallbackBanner above fallback content for route '{locale.Route}'.");
+        }
         return html;
     }
 }

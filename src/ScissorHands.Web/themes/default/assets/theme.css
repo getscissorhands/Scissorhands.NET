@@ -44,6 +44,15 @@
   box-sizing: border-box;
 }
 
+.localization-fallback {
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
 html {
   background: var(--background);
 }

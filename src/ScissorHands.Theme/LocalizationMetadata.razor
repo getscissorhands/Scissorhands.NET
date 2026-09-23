@@ -1,0 +1,16 @@
+@if (LocaleContext?.CanonicalUrl is { } canonicalUrl)
+{
+    <link rel="canonical" href="@canonicalUrl" />
+    @foreach (var (locale, url) in LocaleContext.AlternateLanguageUrls)
+    {
+        <link rel="alternate" hreflang="@locale" href="@url" />
+    }
+}
+
+@code {
+    /// <summary>
+    /// Gets document SEO metadata; generated collections have no canonical URL here.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+}
