@@ -20,8 +20,7 @@ Generated preview and build outputs are written to `preview/` and `dist/` respec
 
 Open the logged preview URL, refresh after edits, and stop with Ctrl+C.
 
-## Explore
+## Documentation
 
-Start with the [post](contents/posts/hello-scissorhands.md), [page tree](contents/pages/parent/index.md), [Korean About translation](contents/pages/ko-kr/about.md), and [custom 404](contents/pages/not-found.md). Primary URLs stay unprefixed; the language switcher reaches `/ko-kr/` translations and labelled fallback. The About pages demonstrate localized content links and the Markdown opt-out for primary-language links.
-
-See the [sample walkthrough](../docs/website-documentation.md#sample-walkthrough) for navigation experiments and locale/subpath settings, and the [vNext reference](../docs/website-documentation.md) for the full guides.
+- [Sample walkthrough](../docs/website-documentation.md#sample-walkthrough): content examples, navigation, localization, and subpath settings
+- [vNext reference](../docs/website-documentation.md): full configuration and authoring guides

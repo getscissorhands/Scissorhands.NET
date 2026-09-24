@@ -7,10 +7,6 @@
 
 Install this package when authoring a theme. Applications that only consume a theme should install [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web).
 
-Themes own their localization markup and derive from the supplied component base classes. Fallback notices must use the base's encoded message content and required attributes; see the [locale rendering contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context).
-
-Use the [language-switcher base](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#language-switcher) for engine-prepared destinations and customizable native labels.
-
 ## Install
 
 ```bash
@@ -20,6 +16,7 @@ dotnet add package ScissorHands.Theme --prerelease
 ## Documentation
 
 - [Theme authoring and examples](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)
+- [Locale rendering contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context) - required for fallback notices and theme-owned localization markup
 - [vNext migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; custom themes must supply all seven theme roles
 - [Theme template](https://github.com/getscissorhands/theme-template)
 

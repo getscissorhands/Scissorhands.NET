@@ -471,6 +471,7 @@ The [repository sample](../sample/README.md) uses local project references and t
 | --- | --- |
 | [Hello, ScissorHands](../sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
 | [About](../sample/contents/pages/about.md) | The first page in the sample reading sequence |
+| [Korean About](../sample/contents/pages/ko-kr/about.md) | A paired translation with localized links, a primary-language opt-out, and a shared resource link |
 | [Parent](../sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
 | [Child](../sample/contents/pages/parent/01-child.md), [Visible Grandchild](../sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
 | [Hidden Grandchild](../sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
@@ -1168,7 +1169,7 @@ This is repository contributor reference material for the [browser suite](../tes
 
 The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds paired English/Korean post fixtures, a configured Japanese fallback-only locale, and unpublished content. It generates `/docs/` output with primary `en-us` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
 
-Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
+Six projects combine Playwright-managed Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. Browsers run headlessly by default. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
 
 - Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
 - Primary URL stability, translated/fallback collections and navigation, encoded language-annotated notices without JavaScript, document SEO, unpublished routes and shared assets.
