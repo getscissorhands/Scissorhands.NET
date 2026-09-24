@@ -660,7 +660,8 @@ public sealed class StaticSiteGenerator(
     private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner, CancellationToken cancellationToken, LocaleContext? localeContext = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'", generatedDocument: true);
+        outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'",
+            generatedDocument: true, cancellationToken: cancellationToken);
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
@@ -783,23 +784,31 @@ public sealed class StaticSiteGenerator(
         private readonly HashSet<string> _written = new(StringComparer.OrdinalIgnoreCase);
         private readonly string _root = Path.GetFullPath(root);
         private readonly string _manifestPath = Path.Combine(Path.GetFullPath(root), ".scissorhands-output.json");
-        private readonly HashSet<string> _owned = new(StringComparer.OrdinalIgnoreCase);
+        // Preserve physical spellings independently of case-insensitive route collision checks.
+        private readonly HashSet<string> _owned = new(StringComparer.Ordinal);
 
         public void Plan(string outputPath, object owner, string description)
             => Register(outputPath, owner, description, false);
 
-        public void Claim(string outputPath, object owner, string description, bool generatedDocument = false)
+        public void Claim(string outputPath, object owner, string description, bool generatedDocument = false,
+            CancellationToken cancellationToken = default)
         {
             var fullPath = Path.GetFullPath(outputPath);
             Register(fullPath, owner, description, true);
-            if (!_written.Add(fullPath))
+            if (_written.Contains(fullPath))
             {
                 throw new InvalidDataException($"Output collision at '{fullPath}': the destination was already written.");
             }
-            if (generatedDocument && _owned.Add(fullPath))
+            if (generatedDocument)
             {
-                SaveManifest();
+                var changed = PrepareForWrite(fullPath, cancellationToken);
+                changed |= _owned.Add(fullPath);
+                if (changed)
+                {
+                    SaveManifest();
+                }
             }
+            _written.Add(fullPath);
         }
 
         public void BeginGeneration(CancellationToken cancellationToken)
@@ -831,24 +840,109 @@ public sealed class StaticSiteGenerator(
                     _owned.Add(path);
                 }
             }
+            // Check replacements before claiming new paths, so unmanaged blockers never enter the ledger.
+            foreach (var path in _routes.Keys)
+            {
+                PrepareForWrite(path, cancellationToken);
+            }
             _owned.UnionWith(_routes.Keys);
             SaveManifest();
         }
 
         public void CompleteGeneration(CancellationToken cancellationToken)
         {
-            foreach (var path in _owned.Except(_written).ToArray())
+            foreach (var path in _owned.Except(_written, StringComparer.Ordinal).ToArray())
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                ValidateLinks(path);
-                if (fileSystem.File.Exists(path))
-                {
-                    fileSystem.File.Delete(path);
-                }
-                _owned.Remove(path);
+                RemoveOwnedFile(path, cancellationToken);
             }
             SaveManifest();
         }
+
+        private bool PrepareForWrite(string outputPath, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(outputPath);
+            var changed = false;
+            foreach (var stale in _owned.Where(path => path != outputPath && PathsConflict(path, outputPath)).ToArray())
+            {
+                if (_written.Contains(stale))
+                {
+                    throw new InvalidDataException($"Output collision at '{outputPath}': '{stale}' was already written.");
+                }
+                RemoveOwnedFile(stale, cancellationToken);
+                changed = true;
+            }
+
+            for (var path = outputPath; path is not null && path != _root; path = Path.GetDirectoryName(path))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(path);
+                if (fileSystem.File.Exists(path) && (path != outputPath || !_owned.Contains(path)))
+                {
+                    throw new InvalidDataException(
+                        $"Cannot generate '{outputPath}': unmanaged output file '{path}' blocks the destination. Move or remove that file explicitly.");
+                }
+            }
+
+            if (fileSystem.Directory.Exists(outputPath))
+            {
+                var directories = new List<string>();
+                CollectEmptyDirectories(outputPath, directories, cancellationToken);
+                foreach (var directory in directories)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    ValidateLinks(directory);
+                    fileSystem.Directory.Delete(directory, recursive: false);
+                }
+            }
+            return changed;
+        }
+
+        private void CollectEmptyDirectories(string path, List<string> directories, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(path);
+            foreach (var entry in fileSystem.Directory.EnumerateFileSystemEntries(path))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(entry);
+                if (!fileSystem.Directory.Exists(entry))
+                {
+                    throw new InvalidDataException(
+                        $"Cannot replace output directory '{path}': it contains unmanaged entry '{entry}'. Move or remove that entry explicitly.");
+                }
+                CollectEmptyDirectories(entry, directories, cancellationToken);
+            }
+            directories.Add(path);
+        }
+
+        private void RemoveOwnedFile(string path, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(path);
+            if (fileSystem.File.Exists(path))
+            {
+                fileSystem.File.Delete(path);
+            }
+            _owned.Remove(path);
+
+            for (var parent = Path.GetDirectoryName(path); parent is not null && parent != _root; parent = Path.GetDirectoryName(parent))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(parent);
+                if (!fileSystem.Directory.Exists(parent) || fileSystem.Directory.EnumerateFileSystemEntries(parent).Any())
+                {
+                    break;
+                }
+                fileSystem.Directory.Delete(parent, recursive: false);
+            }
+        }
+
+        private static bool PathsConflict(string left, string right)
+            => left.Equals(right, StringComparison.OrdinalIgnoreCase)
+                || left.StartsWith(right + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                || right.StartsWith(left + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
 
         private void SaveManifest()
         {
@@ -876,10 +970,7 @@ public sealed class StaticSiteGenerator(
                     $"Output collision at '{fullPath}' between '{existing.Description}' and '{description}'.");
             }
 
-            var separator = Path.DirectorySeparatorChar.ToString();
-            var conflictingRoute = _routes.FirstOrDefault(route =>
-                fullPath.StartsWith(route.Key + separator, StringComparison.OrdinalIgnoreCase)
-                || route.Key.StartsWith(fullPath + separator, StringComparison.OrdinalIgnoreCase));
+            var conflictingRoute = _routes.FirstOrDefault(route => PathsConflict(fullPath, route.Key));
             if (!string.IsNullOrEmpty(conflictingRoute.Key))
             {
                 throw new InvalidDataException(
