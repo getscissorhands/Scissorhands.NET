@@ -39,6 +39,13 @@ public sealed record LocaleContext
         = System.Collections.ObjectModel.ReadOnlyDictionary<string, string>.Empty;
 
     /// <summary>
+    /// Gets generated, base-relative switch destinations keyed by locale, including fallbacks.
+    /// Labels and display order belong to the theme, not these routing values.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> SwitchLanguageUrls { get; init; }
+        = System.Collections.ObjectModel.ReadOnlyDictionary<string, string>.Empty;
+
+    /// <summary>
     /// Gets the resolved current raw route, including the metadata slug of synthetic pages.
     /// </summary>
     public string Route { get; init; } = string.Empty;

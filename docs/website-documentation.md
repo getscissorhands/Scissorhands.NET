@@ -223,7 +223,22 @@ For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and d
 
 **SEO and rendering:** primary documents and real translations are self-canonical; a fallback's canonical points to its primary document. Reciprocal `hreflang` alternatives list actual published versions, never fallback copies. Absolute URLs use `SiteUrl` and `BaseUrl`. These document-specific rules and the banner do not apply to home/tag collections or the shared 404. Themes must implement the [locale render context](#locale-render-context) contract.
 
-Shared images/theme assets, site text and authored Markdown links are not translated or rewritten. An authored `/about/` continues to leave the localized route for the primary route. `Site.Locale` is not mutated between renders. No language-switcher UI is provided.
+The shared layout includes a [language switcher](#language-switcher) with engine-prepared document, home, tag, and shared-404 destinations. It can offer primary-content fallbacks, unlike SEO alternatives. `Site.Locale` is not mutated between renders. Shared resources and site/theme UI text are not automatically translated.
+
+**Authored content links:** on additional-locale documents, including fallbacks, links to a known primary page/post route are rewritten to that locale's generated equivalent. This runs on the converted document HTML after post-Markdown hooks and before Razor rendering; it does not rewrite the surrounding theme or run another plugin pass. Primary/disabled generation leaves authored URLs unchanged.
+
+Relative links resolve against the site's HTML `<base>` (not the Markdown source directory). Root-relative URLs must include `BaseUrl` when the site is mounted below a subpath: for `/docs/`, `about/` and `/docs/about/` target site content, but `/about/` is outside the mount and stays unchanged. Same-origin absolute and scheme-relative links are recognized; preview also recognizes the originally configured publication origin. Internal links retain their root-relative, base-relative, or absolute form, trailing slash/index-file form, query string, and fragment. Existing explicit configured-locale links are not reprefixed.
+
+Only generated page/post destinations participate. Missing/draft targets, generated collection links, fragment-only/query-only links, external URLs and resources are not guessed or rewritten. Images, downloads, stylesheets and scripts stay shared; anchors with `download` are left alone. Mark an intentional primary-language link with the per-link opt-out:
+
+```markdown
+[Localized About](about/?source=docs#team)
+[Primary About](about/?source=docs#team){data-localize="false"}
+[Japanese About](ja-jp/about/)
+[Shared image](images/sample.svg)
+```
+
+On Korean output, the first becomes `ko-kr/about/?source=docs#team` when that document exists; the others remain unchanged. Markdig's generic-attributes syntax supports this without raw HTML. Rewriting changes only anchor destinations, not link text, and is not URL sanitization. Custom post-HTML plugins remain responsible for links they subsequently alter.
 
 **Serving boundary:** preview mounts the artifact at canonical `Site.BaseUrl`. With `/docs`, domain-root GET/HEAD `/` redirects to the primary `/docs/` homepage, not `/docs/en-us/`. Other outside-prefix requests remain 404. Production hosts configure their own mount; no physical deployment-prefix directory is added.
 
@@ -465,7 +480,7 @@ The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. S
 
 The sample starts with an empty `Plugins` array, primary `en-US`, and a Korean `LocalizationFallbackMessages` entry. Its primary sequence stays unprefixed. `/ko-kr/about/` uses the [Korean translation](../sample/contents/pages/ko-kr/about.md); `/ko-kr/parent/` and other untranslated documents demonstrate the notice and English fallback. Set `Site.BaseUrl` to `/docs` or `/docs/` to explore subpath hosting. See [site configuration](#site-configuration) and [locale-specific sites](#locale-specific-sites). Clearing `Site.Locale` disables localization, but leaves locale-looking directories as ordinary content rather than excluding them.
 
-The custom 404 omits `locale`, so it follows the site default. Shared assets and authored Markdown links are not translated or rewritten. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
+The custom 404 follows the primary language and offers switcher links to locale homepages without a fallback banner. The About pages demonstrate a localized Parent link with a query/fragment, a primary-language opt-out, and an unchanged shared image. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
 
 ## Theme authoring
 
@@ -645,6 +660,7 @@ Both collections default to empty lists. They are layout-only parameters, not co
 | `IsFallback`, `FallbackMessage` | Whether this individual document needs the configured plain-text notice |
 | `CanonicalUrl` | Absolute document canonical URL; null for generated home/tag/404 pages |
 | `AlternateLanguageUrls` | Read-only engine snapshot of absolute primary/real-translation URLs, keyed by locale |
+| `SwitchLanguageUrls` | Read-only engine snapshot of base-relative switch destinations, including generated fallback documents; separate from SEO alternatives |
 | `Route` | Resolved current route; source documents retain the loaded pre-hook route snapshot |
 | `HomeUrl` | Already escaped, base-relative home URL: `.` for primary or, for example, `ko-kr/` |
 | `TagIndexUrl` | Already escaped, base-relative tag-index URL, or null if the locale has no tags |
@@ -661,6 +677,33 @@ Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags
 Locale inventory, collections and navigation are prepared from loaded documents before hooks. They are not recomputed when plugins return replacement locale/slug/title metadata; per-document hook propagation is retained without promising cross-collection refresh or a second plugin pass.
 
 Normal generation supplies both navigation parameters automatically. For compatibility, `ComponentRenderer` prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree`.
+
+### Language switcher
+
+Import `ScissorHands.Theme.Components` and place `<LanguageSwitcher />` in the shared cascading layout, outside the main content article. The built-in theme places it between the site header and `<main>` so every document and generated page has the same control. It uses ordinary links and needs no JavaScript. It renders nothing when localization is disabled or there is only one destination language.
+
+The engine supplies supported locale identifiers, current requested locale, and valid targets through `LocaleContext.SwitchLanguageUrls`; themes must not reconstruct URLs or infer translation availability.
+
+| Current page | Switch destination |
+| --- | --- |
+| Individual page/post | Equivalent translation or generated fallback in the selected locale |
+| Homepage | Selected locale homepage |
+| Tag index | Selected locale tag index if generated, otherwise its homepage |
+| Tag page | Same tag in that locale if generated, otherwise its homepage |
+| Shared `404.html` | Selected locale homepage; there are no localized 404 copies |
+
+The current language is annotated with `aria-current="true"` and reflects the requested locale, not a fallback article's language. Links carry `lang` and `hreflang`, but are not SEO `rel="alternate"` declarations. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
+
+The component owns native-language label defaults using .NET culture names, for example English, 한국어 and 日本語. Multiple variants of the same language use full native culture names to distinguish their region/script. Themes can customize presentation without changing routing:
+
+| Parameter | Type / behavior |
+| --- | --- |
+| `Labels` | Optional `IReadOnlyDictionary<string, string>` of normalized locale to plain-text label; blank labels fail, and labels are encoded |
+| `LocaleOrder` | Optional `IReadOnlyList<string>` of locales to display first, followed by remaining destinations in engine order |
+| `AriaLabel` | Accessible navigation name; defaults to `Language` and can be localized by the theme |
+| `Class` | Additional CSS classes alongside `language-switcher` |
+
+These display settings neither enable locales nor change their identifiers, destinations, or publication eligibility. The default engine order is primary language followed by additional locales in ordinal order.
 
 ### Adjacent-page context
 
@@ -1092,9 +1135,9 @@ Remove every frontmatter `locale` field, including on the shared 404. Keep prima
 
 Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. Primary drafts/missing primary files suppress active translations; fallback never uses draft content.
 
-Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components` and integrate its shared banner and metadata components, annotate actual content language, and retain Home/Tags helpers. Missing fallback banners fail rendering. Existing seven view roles and public URL helpers remain; authored links are not rewritten. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
+Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components` and integrate its shared banner, metadata, and language-switcher components, annotate actual content language, and retain Home/Tags helpers. Missing fallback banners fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
 
-Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. Site/theme UI text is not automatically translated and no language switcher is added.
+Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. The switcher supplies native language labels, but other site/theme UI text is not automatically translated. Future-date scheduling remains unchanged.
 
 ## Browser acceptance
 
@@ -1108,6 +1151,7 @@ Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mo
 
 - Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
 - Primary URL stability, translated/fallback collections and navigation, encoded language-annotated notices without JavaScript, document SEO, unpublished routes and shared assets.
+- No-JavaScript and keyboard language switching on documents and generated pages, missing-tag homepage targets, authored-link localization/opt-out with query/fragment preservation, and switcher label/text/focus contrast.
 - Light/dark pager appearance in normal, hover and keyboard-focus states.
 
 Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, base-path variants, mount redirects, outside-prefix rejection, fallback and regeneration/withdrawal callbacks.

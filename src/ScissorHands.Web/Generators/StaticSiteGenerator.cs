@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
@@ -50,6 +51,7 @@ public sealed class StaticSiteGenerator(
     private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
     private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _configuredSiteUrl = options.SiteUrl;
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
@@ -91,6 +93,7 @@ public sealed class StaticSiteGenerator(
         }
 
         ValidateOutputRoutes(destination, scopes, notFoundOwner);
+        PrepareCollectionSwitches(scopes, cancellationToken);
         PrepareDocumentContexts(scopes, locales, cancellationToken);
         outputs.BeginGeneration(cancellationToken);
         var layoutType = typeof(TMainLayout);
@@ -242,6 +245,47 @@ public sealed class StaticSiteGenerator(
     private static string PrefixLocale(string? locale, string route)
         => string.IsNullOrEmpty(locale) ? route : route.Length == 0 ? locale : $"{locale}/{route}";
 
+    private static string GetSwitchUrl(string route)
+        => route.Length == 0 ? "." : ContentUrlHelper.GetContentUrl(route) + "/";
+
+    private static void PrepareCollectionSwitches(IReadOnlyList<GenerationScope> scopes, CancellationToken cancellationToken)
+    {
+        if (scopes[0].Locale is null)
+        {
+            return;
+        }
+        var homes = new ReadOnlyDictionary<string, string>(scopes.ToDictionary(
+            scope => scope.Locale!, scope => GetSwitchUrl(scope.Prefix), StringComparer.Ordinal));
+        var tagIndexes = new ReadOnlyDictionary<string, string>(scopes.ToDictionary(
+            scope => scope.Locale!,
+            scope => scope.Tags.Count == 0 ? homes[scope.Locale!] : GetSwitchUrl(scope.TagIndexDocument.Metadata.Slug),
+            StringComparer.Ordinal));
+        foreach (var scope in scopes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            scope.SwitchDestinations.Add(scope.IndexDocument.Metadata.Slug, homes);
+            scope.SwitchDestinations.Add(PAGE_NOT_FOUND_SLUG, homes);
+            scope.SwitchDestinations.Add(scope.TagIndexDocument.Metadata.Slug, tagIndexes);
+        }
+        foreach (var tag in scopes.SelectMany(scope => scope.Tags).Select(tag => tag.Tag).Distinct(StringComparer.Ordinal))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var urls = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var scope in scopes)
+            {
+                var target = scope.Tags.SingleOrDefault(candidate => candidate.Tag == tag);
+                urls.Add(scope.Locale!, target is null
+                    ? homes[scope.Locale!]
+                    : PrefixLocale(scope.Prefix, GetTagRoute(tag)) + "/");
+            }
+            var destinations = new ReadOnlyDictionary<string, string>(urls);
+            foreach (var scope in scopes)
+            {
+                scope.SwitchDestinations.Add(PrefixLocale(scope.Prefix, GetTagRoute(tag)), destinations);
+            }
+        }
+    }
+
     private void PrepareDocumentContexts(IReadOnlyList<GenerationScope> scopes, LocaleConfiguration locales, CancellationToken cancellationToken)
     {
         if (locales.Primary is null)
@@ -251,6 +295,12 @@ public sealed class StaticSiteGenerator(
         var families = new Dictionary<ContentDocument, List<(GenerationScope Scope, ContentDocument Document)>>(ReferenceEqualityComparer.Instance);
         foreach (var scope in scopes)
         {
+            if (scope.Prefix.Length > 0)
+            {
+                scope.LinkLocalizer = new ContentLinkLocalizer(_options.SiteUrl, _options.BaseUrl,
+                    scope.Documents.Select(document => (scope.Originals[document].Metadata.Slug, document.Metadata.Slug)),
+                    _configuredSiteUrl, cancellationToken);
+            }
             foreach (var document in scope.Documents)
             {
                 cancellationToken.ThrowIfCancellationRequested();
@@ -274,7 +324,9 @@ public sealed class StaticSiteGenerator(
                     alternatives.Add(scope.Locale!, GetPublicationUrl(translation.Metadata.Slug));
                 }
             }
-            var urls = new System.Collections.ObjectModel.ReadOnlyDictionary<string, string>(alternatives);
+            var urls = new ReadOnlyDictionary<string, string>(alternatives);
+            var switches = new ReadOnlyDictionary<string, string>(family.ToDictionary(
+                item => item.Scope.Locale!, item => GetSwitchUrl(item.Document.Metadata.Slug), StringComparer.Ordinal));
             foreach (var (scope, document) in family)
             {
                 var fallback = scope.Fallbacks.Contains(document);
@@ -285,6 +337,7 @@ public sealed class StaticSiteGenerator(
                     FallbackMessage = fallback ? locales.GetFallbackMessage(scope.Locale!) : null,
                     CanonicalUrl = GetPublicationUrl(fallback ? primary.Metadata.Slug : document.Metadata.Slug),
                     AlternateLanguageUrls = urls,
+                    SwitchLanguageUrls = switches,
                 });
             }
         }
@@ -422,6 +475,10 @@ public sealed class StaticSiteGenerator(
         scope.Navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
 
         var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
+        if (scope.LinkLocalizer is not null)
+        {
+            postMarkdown.Html = scope.LinkLocalizer.Localize(postMarkdown.Html, cancellationToken);
+        }
 
         var parameters = CreateBaseParameters(plugins, theme, scope, document.Metadata.Slug);
         scope.DocumentContexts.TryGetValue(document, out var documentContext);
@@ -577,6 +634,8 @@ public sealed class StaticSiteGenerator(
         ContentDocument TagIndexDocument)
     {
         public Dictionary<ContentDocument, LocaleContext> DocumentContexts { get; } = new(ReferenceEqualityComparer.Instance);
+        public Dictionary<string, IReadOnlyDictionary<string, string>> SwitchDestinations { get; } = new(StringComparer.Ordinal);
+        public ContentLinkLocalizer? LinkLocalizer { get; set; }
 
         public LocaleContext? CreateLocaleContext(string route)
         {
@@ -592,6 +651,8 @@ public sealed class StaticSiteGenerator(
                 Route = route,
                 HomeUrl = homeUrl,
                 TagIndexUrl = Tags.Count == 0 ? null : PrefixLocale(Prefix, "tags"),
+                SwitchLanguageUrls = SwitchDestinations.TryGetValue(route, out var switches)
+                    ? switches : ReadOnlyDictionary<string, string>.Empty,
             };
         }
     }

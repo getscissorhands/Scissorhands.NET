@@ -170,6 +170,27 @@ public class ScissorHandsApplicationLocaleTests
                     absentLegacy.StatusCode.ShouldBe(HttpStatusCode.NotFound);
                     using var koreanTag = await client.GetAsync($"{baseUrl}ko-kr/tags/korean-only/", cancellationToken);
                     koreanTag.StatusCode.ShouldBe(HttpStatusCode.OK);
+                    using var localizedPage = parser.ParseDocument(await client.GetStringAsync($"{baseUrl}ko-kr/start/", cancellationToken));
+                    localizedPage.QuerySelectorAll("article a").Select(a => a.GetAttribute("href"))
+                        .ShouldBe(["ko-kr/next/?q=a%2Fb#content", "next/?q=a%2Fb#content"]);
+                    using var buildPage = parser.ParseDocument(await File.ReadAllTextAsync(
+                        Path.Combine(dist, "ko-kr", "start", "index.html"), cancellationToken));
+                    buildPage.QuerySelectorAll("article a").Select(a => a.GetAttribute("href"))
+                        .ShouldBe(localizedPage.QuerySelectorAll("article a").Select(a => a.GetAttribute("href")));
+                    foreach (var route in new[] { "ko-kr/start/", "ko-kr/next/", "ko-kr/", "ko-kr/tags/", "ko-kr/tags/korean-only/", "404.html" })
+                    {
+                        using var switched = parser.ParseDocument(await client.GetStringAsync(baseUrl + route, cancellationToken));
+                        foreach (var link in switched.QuerySelectorAll(".language-switcher a"))
+                        {
+                            using var destination = await client.GetAsync(new Uri(new Uri(address + baseUrl), link.GetAttribute("href")!), cancellationToken);
+                            destination.StatusCode.ShouldBe(HttpStatusCode.OK);
+                        }
+                    }
+                }
+                else
+                {
+                    home.QuerySelector(".language-switcher").ShouldBeNull();
+                    page.QuerySelector("article a")!.GetAttribute("href").ShouldBe("next/?q=a%2Fb#content");
                 }
                 foreach (var route in new[] { "404.html", "images/sample.svg", "themes/default/assets/theme.css", "themes/default/assets/theme.js" })
                 {
@@ -241,7 +262,9 @@ public class ScissorHandsApplicationLocaleTests
             {
                 var filename = Path.Combine(temporaryDirectory.FullName, "contents", kind, path.Replace('/', Path.DirectorySeparatorChar));
                 Directory.CreateDirectory(Path.GetDirectoryName(filename)!);
-                await File.WriteAllTextAsync(filename, $"---\n{metadata}\n---\n# Content", cancellationToken);
+                await File.WriteAllTextAsync(filename,
+                    $"---\n{metadata}\n---\n# Content\n\n[Next](next/?q=a%2Fb#content)\n[Primary](next/?q=a%2Fb#content){{data-localize=\"false\"}}",
+                    cancellationToken);
             }
 
             static IEnumerable<string> Files(string root) => Directory.GetFiles(root, "*", SearchOption.AllDirectories)

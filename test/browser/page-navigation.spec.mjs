@@ -142,6 +142,104 @@ test("configured locales work without translations but primary drafts and orphan
   }
 });
 
+for (const prefixed of [false, true]) {
+  test(`language and authored-link navigation works without JavaScript at ${prefixed ? "a subpath" : "root"}`, async ({ browser, site, localeSite }, testInfo) => {
+    const origin = prefixed ? localeSite : site;
+    const context = await browser.newContext({ javaScriptEnabled: false, viewport: testInfo.project.use.viewport });
+    try {
+      const page = await context.newPage();
+      await page.goto(`${origin}/about/`);
+      const switcher = page.getByRole("navigation", { name: "Language", exact: true });
+      await expect(switcher).toBeVisible();
+      await expect(switcher.locator("a[lang='en-us']")).toHaveText("English");
+      await expect(switcher.locator("a[lang='ko-kr']")).toHaveText("한국어");
+      await switcher.locator("a[lang='ko-kr']").click();
+      await expect(page).toHaveURL(`${origin}/ko-kr/about/`);
+      await expect(switcher.locator("a[aria-current='true']")).toHaveAttribute("lang", "ko-kr");
+      await expect(page.getByRole("note")).toHaveCount(0);
+      await expect(page.locator("article a[href='images/sample.svg']")).toHaveCount(1);
+      await page.locator("article a[href='ko-kr/parent/?from=about#parent']").click();
+      await expect(page).toHaveURL(`${origin}/ko-kr/parent/?from=about#parent`);
+      await expect(page.getByRole("note")).toBeVisible();
+      await expect(switcher.locator("a[aria-current='true']")).toHaveAttribute("lang", "ko-kr");
+      await page.locator("article a[href='ko-kr/parent/child']").click();
+      await expect(page).toHaveURL(`${origin}/ko-kr/parent/child/`);
+      await switcher.locator("a[lang='en-us']").click();
+      await expect(page).toHaveURL(`${origin}/parent/child/`);
+      await page.goto(`${origin}/ko-kr/about/`);
+      await page.locator("article a[data-localize='false']").click();
+      await expect(page).toHaveURL(`${origin}/parent/?from=about#parent`);
+    } finally {
+      await context.close();
+    }
+  });
+}
+
+test("generated pages switch to available counterparts or locale homepages", async ({ browser, localeSite }, testInfo) => {
+  const context = await browser.newContext({ javaScriptEnabled: false, viewport: testInfo.project.use.viewport });
+  try {
+    const page = await context.newPage();
+    for (const [route, locale, target] of [
+      ["", "ko-kr", "ko-kr/"],
+      ["tags/", "ko-kr", "ko-kr/tags/"],
+      ["tags/dotnet/", "ko-kr", "ko-kr/tags/dotnet/"],
+      ["tags/english-only/", "ko-kr", "ko-kr/"],
+      ["ko-kr/tags/korean-only/", "en-us", ""],
+      ["404.html", "ja-jp", "ja-jp/"],
+    ]) {
+      await page.goto(`${localeSite}/${route}`);
+      await expect(page.getByRole("note")).toHaveCount(0);
+      await page.getByRole("navigation", { name: "Language", exact: true }).locator(`a[lang="${locale}"]`).click();
+      await expect(page).toHaveURL(`${localeSite}/${target}`);
+      await expect(page.getByRole("note")).toHaveCount(0);
+    }
+    expect((await page.request.get(`${localeSite}/ja-jp/404.html`)).status()).toBe(404);
+  } finally {
+    await context.close();
+  }
+});
+
+test("keyboard users can follow the language switcher", async ({ page, site }) => {
+  await page.goto(`${site}/parent/`);
+  const nav = page.getByRole("navigation", { name: "Language", exact: true });
+  await nav.locator("a[lang='en-us']").focus();
+  await page.keyboard.press("Tab");
+  await expect(nav.locator("a[lang='ko-kr']")).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page).toHaveURL(`${site}/ko-kr/parent/`);
+});
+
+for (const theme of ["light", "dark"]) {
+  test(`${theme} language switcher meets contrast and layout thresholds`, async ({ page, localeSite }) => {
+    await page.goto(`${localeSite}/ko-kr/about/`);
+    await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; }" });
+    await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
+    const links = page.locator(".language-switcher a");
+    for (const link of await links.all()) {
+      await link.focus();
+      const rendered = await link.evaluate(element => {
+        const layers = [];
+        for (let current = element; current; current = current.parentElement) {
+          const style = getComputedStyle(current);
+          layers.unshift({ color: style.backgroundColor, image: style.backgroundImage, opacity: style.opacity });
+        }
+        const style = getComputedStyle(element);
+        const box = element.getBoundingClientRect();
+        return {
+          color: style.color, layers, outline: style.outlineColor, outlineStyle: style.outlineStyle,
+          fits: box.left >= 0 && box.right <= innerWidth + 1,
+          overflow: document.documentElement.scrollWidth > innerWidth,
+        };
+      });
+      expect(rendered.fits).toBe(true);
+      expect(rendered.overflow).toBe(false);
+      expect(measureColor(rendered.color, rendered.layers).ratio).toBeGreaterThanOrEqual(4.5);
+      expect(rendered.outlineStyle).toBe("solid");
+      expect(measureColor(rendered.outline, rendered.layers.slice(0, -1)).ratio).toBeGreaterThanOrEqual(3);
+    }
+  });
+}
+
 for (const theme of ["light", "dark"]) {
   test(`${theme} fallback notice is visible, readable, and above the article`, async ({ page, localeSite }) => {
     await page.goto(`${localeSite}/ko-kr/parent/`);

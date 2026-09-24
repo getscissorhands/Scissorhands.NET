@@ -8,7 +8,7 @@ Validate configured locale normalization/format independently from ordinary fold
 
 Preserve package dependency direction and plugin-stage order. Extend rendering context additively with actual content language, fallback state/message, canonical URL and real-translation alternatives. Custom themes must actually render the shared notice component; post-HTML hooks must preserve its encoded text and language. Maintain stable primary-source navigation ordering for mixed translated/fallback documents. Enforce output ownership and link/path validation for persisted cleanup, and retain root/subpath preview/build parity.
 
-The [current detailed reference](docs/website-documentation.md#locale-specific-sites) defines compatibility and migration. This amendment does not broaden old sign-offs or mark historical V-009 evidence as validation of the new contract.
+The subsequent switcher/link scope prepares a separate destination inventory including fallback documents; it must not weaken SEO's actual-translation-only alternatives. Theme-owned native labels, region disambiguation and overrides consume that inventory without reconstructing routes. Localize only known page/post links after post-Markdown processing, preserving explicit locale choices, Markdown opt-out, shared resources, external URLs, query/fragment data and site mount boundaries. Real preview and browser tests must verify no-JavaScript switching on documents and generated pages. The [current detailed reference](docs/website-documentation.md#locale-specific-sites) defines compatibility and migration. This amendment does not broaden old sign-offs or mark historical V-009 evidence as validation of the new contract.
 
 ## Document control
 

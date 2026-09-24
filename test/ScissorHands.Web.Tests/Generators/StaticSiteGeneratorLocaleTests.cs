@@ -16,6 +16,7 @@ using ScissorHands.Web.Generators;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
+using ScissorHands.Web.Services;
 using ScissorHands.Web.Tests.TestDoubles;
 
 namespace ScissorHands.Web.Tests.Generators;
@@ -55,7 +56,7 @@ public class StaticSiteGeneratorLocaleTests
         fallback.QuerySelector("[data-localization-fallback]")!.GetAttribute("lang").ShouldBe("ko-kr");
         fallback.QuerySelector("article")!.GetAttribute("lang").ShouldBe("en-us");
         fallback.QuerySelector(".page-navigation-previous")!.GetAttribute("href").ShouldBe("ko-kr/about");
-        fallback.QuerySelector("article a")!.GetAttribute("href").ShouldBe("/about/");
+        fallback.QuerySelector("article a")!.GetAttribute("href").ShouldBe(baseUrl == "/" ? "/ko-kr/about/" : "/about/");
         fallback.QuerySelector("link[rel='canonical']")!.GetAttribute("href")
             .ShouldBe("https://example.test" + fixture.Site.BaseUrl + "next/");
         fallback.QuerySelectorAll("link[rel='alternate']").Select(link => link.GetAttribute("hreflang")).ShouldBe(["en-us"]);
@@ -76,6 +77,26 @@ public class StaticSiteGeneratorLocaleTests
         missing.DocumentElement.GetAttribute("lang").ShouldBe("en-us");
         missing.QuerySelector("[data-localization-fallback]").ShouldBeNull();
         missing.QuerySelector("link[rel='canonical']").ShouldBeNull();
+        foreach (var (path, targets) in new (string, string[])[]
+        {
+            ("about/index.html", ["about/", "ko-kr/about/"]),
+            ("ko-kr/about/index.html", ["about/", "ko-kr/about/"]),
+            ("ko-kr/next/index.html", ["next/", "ko-kr/next/"]),
+            ("index.html", [".", "ko-kr/"]),
+            ("ko-kr/index.html", [".", "ko-kr/"]),
+            ("tags/index.html", ["tags/", "ko-kr/tags/"]),
+            ("ko-kr/tags/index.html", ["tags/", "ko-kr/tags/"]),
+            ("tags/primary/index.html", ["tags/primary/", "ko-kr/"]),
+            ("ko-kr/tags/translated/index.html", [".", "ko-kr/tags/translated/"]),
+            ("tags/shared/index.html", ["tags/shared/", "ko-kr/tags/shared/"]),
+            ("404.html", [".", "ko-kr/"]),
+        })
+        {
+            using var html = fixture.Html(path);
+            html.QuerySelectorAll(".language-switcher a").Select(a => a.GetAttribute("href")).ShouldBe(targets, path);
+        }
+        fallback.QuerySelector(".language-switcher [aria-current='true']")!.GetAttribute("lang").ShouldBe("ko-kr");
+        missing.QuerySelector("[data-localization-fallback]").ShouldBeNull();
         fixture.Exists("ko-kr/404.html/index.html").ShouldBeFalse();
         fixture.Site.IsPreview.ShouldBe(preview);
         fixture.Site.Locale.ShouldBe("en-us");
@@ -342,6 +363,68 @@ public class StaticSiteGeneratorLocaleTests
         fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
         fixture.Exists("ko-kr/standalone/index.html").ShouldBeTrue();
         fixture.Exists("ko-kr/index.html").ShouldBeFalse();
+        using var primaryHtml = fixture.Html("about/index.html");
+        primaryHtml.QuerySelector(".language-switcher").ShouldBeNull();
+    }
+
+    [Theory]
+    [InlineData(true)]
+    [InlineData(false)]
+    public async Task Given_MissingTagIndexInAnotherLocale_When_Generated_Then_TheSwitcherShould_LinkToItsHomepage(bool primaryTagged)
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md", primaryTagged ? "tags: [topic]" : "");
+        fixture.Add("pages/ko-kr/about.md", primaryTagged ? "" : "tags: [topic]");
+        await fixture.Build();
+        var prefix = primaryTagged ? "" : "ko-kr/";
+        using var html = fixture.Html(prefix + "tags/index.html");
+        html.QuerySelectorAll(".language-switcher a").Select(a => a.GetAttribute("href"))
+            .ShouldBe(primaryTagged ? ["tags/", "ko-kr/"] : [".", "ko-kr/tags/"]);
+        fixture.Exists((primaryTagged ? "ko-kr/" : "") + "tags/index.html").ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData(false, "/", false)]
+    [InlineData(true, "/", true)]
+    [InlineData(false, "/docs/", true)]
+    [InlineData(true, "/docs/", false)]
+    public async Task Given_AuthoredMarkdown_When_Generated_Then_It_Should_LocalizeOnlyAvailableContentLinks(
+        bool preview, string baseUrl, bool hasTranslation)
+    {
+        using var fixture = new Fixture(baseUrl, realMarkdown: true);
+        fixture.Add("pages/target.md");
+        fixture.Add("pages/draft.md", "draft: true");
+        var markdown = $$"""
+            [Target](target/?q=a%2Fb&x=1#heading)
+            [Root]({{baseUrl}}target/)
+            [Primary](target/?q=a%2Fb&x=1#heading){data-localize="false"}
+            [Korean](ko-kr/target/)
+            [Missing](missing/)
+            [Draft](draft/)
+            [External](https://other.test/target/?q=1#heading)
+            [Image](images/sample.svg)
+            """;
+        fixture.Add("pages/source.md", markdown: markdown);
+        if (hasTranslation)
+        {
+            fixture.Add("pages/ko-kr/source.md", markdown: markdown);
+        }
+
+        await fixture.Build(preview);
+
+        using var localized = fixture.Html("ko-kr/source/index.html");
+        var links = localized.QuerySelectorAll("article a").ToDictionary(a => a.TextContent, a => a.GetAttribute("href"));
+        links["Target"].ShouldBe("ko-kr/target/?q=a%2Fb&x=1#heading");
+        links["Root"].ShouldBe(baseUrl + "ko-kr/target/");
+        links["Primary"].ShouldBe("target/?q=a%2Fb&x=1#heading");
+        links["Korean"].ShouldBe("ko-kr/target/");
+        links["Missing"].ShouldBe("missing/");
+        links["Draft"].ShouldBe("draft/");
+        links["External"].ShouldBe("https://other.test/target/?q=1#heading");
+        links["Image"].ShouldBe("images/sample.svg");
+        (localized.QuerySelector("[data-localization-fallback]") is null).ShouldBe(hasTranslation);
+        using var primary = fixture.Html("source/index.html");
+        primary.QuerySelector("article a")!.GetAttribute("href").ShouldBe("target/?q=a%2Fb&x=1#heading");
     }
 
     private sealed class Fixture : IDisposable
@@ -354,7 +437,7 @@ public class StaticSiteGeneratorLocaleTests
         private readonly IComponentRenderer _renderer;
         private readonly StaticSiteGenerator _generator;
 
-        public Fixture(string baseUrl = "/", string? message = Notice)
+        public Fixture(string baseUrl = "/", string? message = Notice, bool realMarkdown = false)
         {
             var root = Path.Combine(Path.GetPathRoot(Environment.CurrentDirectory)!, "locale-test");
             Destination = Path.Combine(root, "output");
@@ -367,9 +450,16 @@ public class StaticSiteGeneratorLocaleTests
                 SiteUrl = "https://example.test",
                 LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = message },
             };
-            _markdown = Substitute.For<IMarkdownService>();
-            _markdown.ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
-                .Returns("<p>Body <a href=\"/about/\">About</a></p>");
+            if (realMarkdown)
+            {
+                _markdown = new MarkdownService();
+            }
+            else
+            {
+                _markdown = Substitute.For<IMarkdownService>();
+                _markdown.ToHtmlAsync(Arg.Any<string>(), Arg.Any<bool?>(), Arg.Any<CancellationToken>())
+                    .Returns("<p>Body <a href=\"/about/\">About</a></p>");
+            }
             _theme = Substitute.For<IThemeService>();
             _theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
             var services = new ServiceCollection();
@@ -391,8 +481,8 @@ public class StaticSiteGeneratorLocaleTests
         public SiteManifest Site { get; }
         public string Destination { get; }
         public IPluginRunner Plugins { get; } = Substitute.For<IPluginRunner>();
-        public void Add(string path, string metadata = "") =>
-            FileSystem.AddFile(Path.Combine(_paths.GetContentsRoot(), path), new MockFileData($"---\n{metadata}\n---\nBody"));
+        public void Add(string path, string metadata = "", string markdown = "Body") =>
+            FileSystem.AddFile(Path.Combine(_paths.GetContentsRoot(), path), new MockFileData($"---\n{metadata}\n---\n{markdown}"));
         public void Remove(string path) => FileSystem.File.Delete(Path.Combine(_paths.GetContentsRoot(), path));
         public Task Build(bool preview = false) =>
             _generator.BuildAsync<MainLayout, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(

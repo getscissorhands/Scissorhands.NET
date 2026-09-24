@@ -9,6 +9,8 @@ Install this package when authoring a theme. Applications that only consume a th
 
 Themes rendering localized fallback must integrate the shared banner and document metadata components; see the [locale rendering contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context).
 
+Use the shared [language switcher](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#language-switcher) for engine-prepared destinations and theme-customizable native labels.
+
 ## Install
 
 ```bash
