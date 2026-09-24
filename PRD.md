@@ -18,6 +18,8 @@ Expanded switcher/link-localization evidence: the Release build and all 766 .NET
 
 Theme-owned markup follow-up: the Release build and all 790 .NET tests pass, including custom derived components, encoded nested notice markup, and missing/hidden notice rejection. Regenerated sample artifacts, four contrast-math checks, and all 72 Chromium/WebKit cases pass. Firefox was not rerun for this extraction; the earlier startup blocker remains an outstanding verification limitation.
 
+Firefox startup follow-up: the existing Playwright Firefox 155.0 build launches with explicit `MOZ_APP_DATA` and `MOZ_LOCAL_APP_DATA` directories. The test configuration now supplies isolated roots under ignored browser artifacts without changing browser security settings or personal profiles. The normal `npm test` command passes all 108 Chromium/Firefox/WebKit desktop/mobile cases and four contrast-math checks, clearing the browser-startup blocker. This does not resolve the separate regeneration and hidden-message defects recorded in the [acceptance audit](https://github.com/getscissorhands/Scissorhands.NET/issues/104#issuecomment-5812385148), or imply complete issue acceptance.
+
 ## Document control
 
 | Field | Value |

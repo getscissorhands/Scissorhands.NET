@@ -1177,6 +1177,14 @@ Six projects combine Chromium, Firefox and WebKit with desktop (1280x800) and mo
 
 Fixtures serve only generated artifacts through loopback servers on dynamic ports, and close their servers and browser contexts afterward. These are controlled static-host requests. [Real preview integration tests](../test/ScissorHands.Web.Tests/ScissorHandsApplicationLocaleTests.cs) separately cover the actual generator/middleware, base-path variants, mount redirects, outside-prefix rejection, fallback and regeneration/withdrawal callbacks.
 
+Firefox uses Playwright's managed headless browser, not a separately installed desktop Firefox. The test configuration sets `MOZ_APP_DATA` and `MOZ_LOCAL_APP_DATA` to writable, ignored `artifacts/firefox-runtime/data` and `cache` directories. These are Firefox's application-data roots, distinct from the temporary per-launch profiles managed by Playwright. This avoids startup failures in default application-data initialization that can report `Could not find profile folder` even when the specified temporary profile exists. No browser security settings or personal Firefox profiles are changed.
+
+After the normal prerequisites/install steps, run only Firefox from `test/browser` with:
+
+```bash
+npm test -- --project=firefox-desktop --project=firefox-mobile
+```
+
 ### Contrast and evidence
 
 All pager text must reach **4.5:1** contrast, and focus indicators **3:1** against the adjacent background. Measurements use rendered RGB/alpha values and relative luminance, compositing transparent layers. Unsupported backgrounds or group opacity fail explicitly; transitions are disabled only while measuring settled states. The [contrast math](../test/browser/contrast.mjs) has [independent Node tests](../test/browser/contrast.test.mjs).
