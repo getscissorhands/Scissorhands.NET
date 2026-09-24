@@ -8,6 +8,7 @@ using Microsoft.Extensions.Logging;
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Theme;
+using ScissorHands.Theme.Components;
 using ScissorHands.Web.Navigation;
 
 namespace ScissorHands.Web.Renderers;
