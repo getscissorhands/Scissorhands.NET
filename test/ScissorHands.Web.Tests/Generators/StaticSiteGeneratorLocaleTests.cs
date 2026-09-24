@@ -269,6 +269,109 @@ public class StaticSiteGeneratorLocaleTests
     }
 
     [Theory]
+    [InlineData("hidden", "", false)]
+    [InlineData("hidden", "false", true)]
+    [InlineData("aria-hidden", "true", false)]
+    [InlineData("aria-hidden", "true", true)]
+    [InlineData("aria-hidden", " TRUE ", false)]
+    public async Task Given_HiddenMessageDescendants_When_Generated_Then_It_Should_RejectTheNotice(
+        string attribute, string value, bool partiallyHidden)
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md");
+        fixture.Plugins.RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                using var html = new HtmlParser().ParseDocument(call.ArgAt<string>(0));
+                if (html.QuerySelector("[data-localization-fallback]") is { } banner)
+                {
+                    banner.TextContent = "";
+                    var split = partiallyHidden ? Fixture.Notice.IndexOf(' ') : 0;
+                    banner.AppendChild(html.CreateTextNode(Fixture.Notice[..split]));
+                    var hidden = html.CreateElement("span");
+                    hidden.SetAttribute(attribute, value);
+                    var nested = html.CreateElement("strong");
+                    nested.SetAttribute("aria-hidden", "false");
+                    nested.TextContent = Fixture.Notice[split..];
+                    hidden.AppendChild(nested);
+                    banner.AppendChild(hidden);
+                }
+                return html.DocumentElement.OuterHtml;
+            });
+
+        var error = await Should.ThrowAsync<InvalidDataException>(() => fixture.BuildWithCustomTheme<CustomBanner>());
+
+        error.Message.ShouldContain("LocalizationFallbackBannerBase");
+        fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
+    }
+
+    [Theory]
+    [InlineData("hidden", "")]
+    [InlineData("aria-hidden", "true")]
+    public async Task Given_HiddenDecorationAndExposedMessage_When_Generated_Then_It_Should_PreserveCustomFormatting(
+        string attribute, string value)
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md");
+        fixture.Plugins.RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                using var html = new HtmlParser().ParseDocument(call.ArgAt<string>(0));
+                if (html.QuerySelector("[data-localization-fallback]") is { } banner)
+                {
+                    var decoration = html.CreateElement("span");
+                    decoration.SetAttribute(attribute, value);
+                    decoration.TextContent = "Decorative icon";
+                    banner.AppendChild(decoration);
+                }
+                return html.DocumentElement.OuterHtml;
+            });
+
+        await fixture.BuildWithCustomTheme<CustomBanner>();
+
+        using var rendered = fixture.Html("ko-kr/about/index.html");
+        rendered.QuerySelector("[data-localization-fallback] strong")!.TextContent.ShouldBe(Fixture.Notice);
+        rendered.QuerySelector("[data-localization-fallback] span")!.TextContent.ShouldBe("Decorative icon");
+    }
+
+    [Theory]
+    [InlineData("changed-text")]
+    [InlineData("duplicate")]
+    [InlineData("wrong-language")]
+    [InlineData("hidden-ancestor")]
+    public async Task Given_AlteredRequiredNotice_When_Generated_Then_It_Should_KeepRejectingInvalidOutput(string mode)
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md");
+        fixture.Plugins.RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                using var html = new HtmlParser().ParseDocument(call.ArgAt<string>(0));
+                if (html.QuerySelector("[data-localization-fallback]") is { } banner)
+                {
+                    switch (mode)
+                    {
+                        case "changed-text":
+                            banner.TextContent = "Different message";
+                            break;
+                        case "duplicate":
+                            banner.Parent!.AppendChild(banner.Clone(deep: true));
+                            break;
+                        case "wrong-language":
+                            banner.SetAttribute("lang", "en-us");
+                            break;
+                        case "hidden-ancestor":
+                            banner.ParentElement!.SetAttribute("aria-hidden", "TRUE");
+                            break;
+                    }
+                }
+                return html.DocumentElement.OuterHtml;
+            });
+
+        await Should.ThrowAsync<InvalidDataException>(() => fixture.BuildWithCustomTheme<CustomBanner>());
+    }
+
+    [Theory]
     [InlineData("")]
     [InlineData("tags")]
     [InlineData("tags/topic")]

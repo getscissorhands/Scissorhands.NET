@@ -3,6 +3,7 @@ using System.IO.Abstractions;
 using System.Text;
 using System.Text.Json;
 
+using AngleSharp.Dom;
 using AngleSharp.Html.Parser;
 
 using Microsoft.Extensions.Logging;
@@ -671,9 +672,9 @@ public sealed class StaticSiteGenerator(
             var banners = html.QuerySelectorAll("body [data-localization-fallback]");
             var banner = banners.Length == 1 ? banners[0] : null;
             if (banner is null || banner.GetAttribute("lang") != localeContext.Locale
-                || banner.TextContent.Trim() != localeContext.FallbackMessage?.Trim()
+                || GetExposedNoticeText(banner, cancellationToken).Trim() != localeContext.FallbackMessage?.Trim()
                 || banner.QuerySelector("script, style, template") is not null
-                || banner.Closest("script, style, template, [hidden], [aria-hidden='true']") is not null)
+                || banner.Closest("script, style, template") is not null)
             {
                 throw new InvalidDataException(
                     $"Fallback route '{document.Metadata.Slug}' must render the notice from LocalizationFallbackBannerBase above the content with its BannerAttributes and configured '{localeContext.Locale}' message. Update the theme and ensure post-HTML plugins preserve the banner.");
@@ -683,6 +684,46 @@ public sealed class StaticSiteGenerator(
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
+    private static string GetExposedNoticeText(IElement banner, CancellationToken cancellationToken)
+    {
+        for (var ancestor = banner.ParentElement; ancestor is not null; ancestor = ancestor.ParentElement)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (IsHidden(ancestor))
+            {
+                return string.Empty;
+            }
+        }
+
+        var text = new StringBuilder();
+        var pending = new Stack<INode>();
+        pending.Push(banner);
+        while (pending.TryPop(out var node))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (node is IElement element && IsHidden(element))
+            {
+                continue;
+            }
+            if (node is IText content)
+            {
+                text.Append(content.Data);
+            }
+            else
+            {
+                for (var index = node.ChildNodes.Length - 1; index >= 0; index--)
+                {
+                    pending.Push(node.ChildNodes[index]);
+                }
+            }
+        }
+        return text.ToString();
+
+        static bool IsHidden(IElement element) =>
+            element.HasAttribute("hidden")
+            || string.Equals(element.GetAttribute("aria-hidden")?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<ContentDocument> ConvertMarkdownToHtmlAsync(ContentDocument document, CancellationToken cancellationToken)
