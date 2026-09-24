@@ -20,6 +20,8 @@ Theme-owned markup follow-up: the Release build and all 790 .NET tests pass, inc
 
 Firefox startup follow-up: the existing Playwright Firefox 155.0 build launches with explicit `MOZ_APP_DATA` and `MOZ_LOCAL_APP_DATA` directories. The test configuration now supplies isolated roots under ignored browser artifacts without changing browser security settings or personal profiles. The normal `npm test` command passes all 108 Chromium/Firefox/WebKit desktop/mobile cases and four contrast-math checks, clearing the browser-startup blocker. This does not resolve the separate regeneration and hidden-message defects recorded in the [acceptance audit](https://github.com/getscissorhands/Scissorhands.NET/issues/104#issuecomment-5812385148), or imply complete issue acceptance.
 
+Acceptance-gap closure: `db222cb` repairs output ownership and pre-write reconciliation; `3ebf901` validates exposed fallback-message text. The original audit reproductions now retain renamed output ownership, remove both variants after withdrawal, complete real-file directory transitions, and reject hidden message children. Fifteen regeneration cases and eleven additional notice cases cover these failures, unmanaged blockers, retry recovery, and permitted custom formatting. The Release solution build and all 816 .NET tests pass; sample root/subpath generation, four contrast-math checks, and all 108 three-engine desktop/mobile browser cases pass without skips or retries. This closes the reproduced AC 9/18 gaps and their coverage follow-up under the agreed contract; it does not claim transactional output rollback, arbitrary CSS visibility analysis, or broader security/release certification.
+
 ## Document control
 
 | Field | Value |
