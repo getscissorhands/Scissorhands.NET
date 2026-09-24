@@ -12,6 +12,25 @@ namespace ScissorHands.Web.Tests.Themes;
 public class DefaultLocaleContextTests
 {
     [Theory]
+    [InlineData(null, null)]
+    [InlineData("", null)]
+    [InlineData("   ", null)]
+    [InlineData("ja-JP", "ja-jp")]
+    public void Given_SiteLocale_When_Rendered_Then_It_Should_AnnotateLanguageOnlyWhenConfigured(
+        string? siteLocale, string? expectedLanguage)
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+        var site = new SiteManifest { Locale = siteLocale };
+        var cut = context.Render<MainLayout>(parameters => parameters
+            .Add(p => p.Site, site)
+            .Add(p => p.Theme, new ThemeManifest()));
+
+        cut.Find("html").GetAttribute("lang").ShouldBe(expectedLanguage);
+        site.Locale.ShouldBe(siteLocale);
+    }
+
+    [Theory]
     [InlineData(false, false, ".", "tags")]
     [InlineData(true, false, ".", "tags")]
     [InlineData(true, true, "ko-kr/", null)]

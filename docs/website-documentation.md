@@ -583,7 +583,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
     Theme="@Theme"
     Site="@Site">
     <!DOCTYPE html>
-    <html lang="@PageLocale">
+    <html lang="@(string.IsNullOrWhiteSpace(PageLocale) ? null : PageLocale)">
     <head>
         <base href="@Site!.BaseUrl" />
         <title>@PageTitle</title>
@@ -595,7 +595,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
 </CascadingMainLayoutBase>
 ```
 
-`MainLayoutBase` calculates page title and description from the site/document. Locale uses the active `LocaleContext` when supplied, otherwise the existing document/site fallback. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
+`MainLayoutBase` calculates page title and description from the site/document. When `Site.Locale` is absent or blank, `CalculatePageLocale()` returns an empty string without assuming a language from defaults, document metadata, or render context; the built-in layout omits the HTML `lang` attribute. When a site locale is explicitly configured, the active `LocaleContext` takes precedence, otherwise explicit document metadata falls back to the site locale. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
 
 Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `MarkupString` is an explicit raw-HTML trust boundary; render metadata through ordinary Razor expressions so it remains encoded.
 
@@ -1129,7 +1129,7 @@ Existing public URL-helper signatures remain supported. Shared helpers also make
 
 ### Locale routing migration
 
-`UseLocaleInUrl` has been removed from configuration and the public manifest. `Site.Locale` is nullable and no longer implicitly defaults to `en-US` for routing. Set it explicitly to enable localization; omit or clear it to disable localization. Rendering without a configured language retains an English theme default, without enabling locale routing.
+`UseLocaleInUrl` has been removed from configuration and the public manifest. `Site.Locale` is nullable and has no implicit language default for routing or rendering. Set it explicitly to enable localization and language annotations; omit or clear it to disable localization and leave the page language unspecified. The built-in layout omits `lang` rather than assuming English.
 
 Remove every frontmatter `locale` field, including on the shared 404. Keep primary files at their original unprefixed locations, moving old primary-locale-directory files back there and preserving intended slugs. Put translations in configured additional-locale directories with matching filenames/relative paths, matching slugs, and required matching calendar dates for paired posts. Primary home/tag URLs no longer redirect. Hosts migrating from the former prefixed-primary contract must supply any desired redirects from old published primary URLs; this feature does not infer historical URLs.
 

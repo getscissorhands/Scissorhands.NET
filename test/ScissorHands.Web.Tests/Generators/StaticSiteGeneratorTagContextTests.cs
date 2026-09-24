@@ -152,7 +152,7 @@ public class StaticSiteGeneratorTagContextTests
 
             using var html = parser.ParseDocument(ReadOutput($"{route}/index.html"));
             html.Title.ShouldBe(site.Title);
-            html.DocumentElement.GetAttribute("lang").ShouldBe(useLocale ? "ko-kr" : "en-us");
+            html.DocumentElement.GetAttribute("lang").ShouldBe(useLocale ? "ko-kr" : null);
             html.QuerySelector("meta[name='description']")!.GetAttribute("content").ShouldBe(site.Description);
             html.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
             var expectedUrl = $"https://example.com{baseUrl}{route}";

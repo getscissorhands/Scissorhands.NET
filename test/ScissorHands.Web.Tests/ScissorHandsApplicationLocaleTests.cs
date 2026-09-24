@@ -133,6 +133,7 @@ public class ScissorHandsApplicationLocaleTests
                 entryHtml.QuerySelector("meta[http-equiv='refresh']").ShouldBeNull();
                 using var home = parser.ParseDocument(await client.GetStringAsync($"{baseUrl}{localePrefix}", cancellationToken));
                 home.Title.ShouldBe("Locale integration");
+                home.DocumentElement.GetAttribute("lang").ShouldBe(useLocale ? "en-us" : null);
                 home.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
                 home.QuerySelectorAll(".post-link").Select(link => link.TextContent).ShouldBe(["English post"]);
                 home.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent)
