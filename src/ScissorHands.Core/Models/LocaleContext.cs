@@ -13,6 +13,39 @@ public sealed record LocaleContext
     public string Locale { get; init; } = string.Empty;
 
     /// <summary>
+    /// Gets the actual document language, which can differ from the requested locale.
+    /// </summary>
+    public string? ContentLocale { get; init; }
+
+    /// <summary>
+    /// Gets whether this individual document substitutes primary content for a translation.
+    /// </summary>
+    public bool IsFallback { get; init; }
+
+    /// <summary>
+    /// Gets the configured, plain-text notice for a fallback document.
+    /// </summary>
+    public string? FallbackMessage { get; init; }
+
+    /// <summary>
+    /// Gets the absolute canonical URL for an individual document, or null for a collection.
+    /// </summary>
+    public string? CanonicalUrl { get; init; }
+
+    /// <summary>
+    /// Gets absolute URLs for the published primary document and real translations only.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> AlternateLanguageUrls { get; init; }
+        = System.Collections.ObjectModel.ReadOnlyDictionary<string, string>.Empty;
+
+    /// <summary>
+    /// Gets generated, base-relative switch destinations keyed by locale, including fallbacks.
+    /// Labels and display order belong to the theme, not these routing values.
+    /// </summary>
+    public IReadOnlyDictionary<string, string> SwitchLanguageUrls { get; init; }
+        = System.Collections.ObjectModel.ReadOnlyDictionary<string, string>.Empty;
+
+    /// <summary>
     /// Gets the resolved current raw route, including the metadata slug of synthetic pages.
     /// </summary>
     public string Route { get; init; } = string.Empty;

@@ -1,6 +1,10 @@
+using System.Collections.ObjectModel;
 using System.IO.Abstractions;
 using System.Text;
-using System.Text.Encodings.Web;
+using System.Text.Json;
+
+using AngleSharp.Dom;
+using AngleSharp.Html.Parser;
 
 using Microsoft.Extensions.Logging;
 
@@ -10,6 +14,7 @@ using ScissorHands.Core.Services;
 using ScissorHands.Core.Urls;
 using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Loaders;
+using ScissorHands.Web.Localization;
 using ScissorHands.Web.Navigation;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
@@ -47,6 +52,7 @@ public sealed class StaticSiteGenerator(
     private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
     private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
+    private readonly string _configuredSiteUrl = options.SiteUrl;
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <inheritdoc />
@@ -67,40 +73,45 @@ public sealed class StaticSiteGenerator(
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
+        var locales = LocaleConfiguration.Create(_options);
+        if (locales.Primary is not null)
+        {
+            ValidateBaseUrl();
+        }
         var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
         cancellationToken.ThrowIfCancellationRequested();
-        var outputs = new OutputRoutes(destination, _fileSystem, _options.UseLocaleInUrl);
-        var scopes = CreateScopes(documents, outputs, cancellationToken);
+        var outputs = new OutputRoutes(destination, _fileSystem);
+        var scopes = CreateScopes(documents, locales, outputs, cancellationToken);
         var defaultScope = scopes[0];
-        var notFoundDocument = documents.SingleOrDefault(IsNotFoundPage);
+        var notFoundDocument = documents.Where(d => !d.Metadata.Draft).SingleOrDefault(IsNotFoundPage);
         var notFoundOwner = (object?)notFoundDocument ?? new object();
-        if (_options.UseLocaleInUrl && notFoundDocument is not null
-            && ResolveLocale(notFoundDocument.Metadata.Locale, $"locale in '{notFoundDocument.SourcePath}'") != defaultScope.Locale)
+        if (locales.Primary is not null && notFoundDocument is not null
+            && !string.IsNullOrWhiteSpace(notFoundDocument.Metadata.Locale)
+            && ContentUrlHelper.GetLocaleSegment(notFoundDocument.Metadata.Locale) != locales.Primary)
         {
             throw new InvalidDataException(
                 $"The locale in '{notFoundDocument.SourcePath}' for the shared 404.html must match Site.Locale.");
         }
 
-        var redirects = CreateRedirects(defaultScope);
-        ValidateOutputRoutes(destination, scopes, redirects, notFoundOwner);
-        var documentScopes = new Dictionary<ContentDocument, GenerationScope>(ReferenceEqualityComparer.Instance);
+        ValidateOutputRoutes(destination, scopes, notFoundOwner);
+        PrepareCollectionSwitches(scopes, cancellationToken);
+        PrepareDocumentContexts(scopes, locales, cancellationToken);
+        outputs.BeginGeneration(cancellationToken);
         var layoutType = typeof(TMainLayout);
         foreach (var scope in scopes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            foreach (var document in scope.Documents)
-            {
-                documentScopes.Add(document, scope);
-            }
-
             await RenderIndexAsync<TIndexView>(scope, plugins, theme, destination, layoutType, cancellationToken);
         }
 
         await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, notFoundOwner, defaultScope, plugins, theme, destination, layoutType, cancellationToken);
 
-        foreach (var document in documents.Where(d => !IsNotFoundPage(d) && documentScopes.ContainsKey(d)))
+        foreach (var scope in scopes)
         {
-            await RenderDocumentAsync<TPostView, TPageView>(document, documentScopes[document], plugins, theme, destination, layoutType, cancellationToken);
+            foreach (var document in scope.Documents)
+            {
+                await RenderDocumentAsync<TPostView, TPageView>(document, scope, plugins, theme, destination, layoutType, cancellationToken);
+            }
         }
 
         foreach (var scope in scopes)
@@ -108,54 +119,85 @@ public sealed class StaticSiteGenerator(
             await RenderTagPagesAsync<TTagListView, TTagView>(scope, plugins, theme, destination, layoutType, cancellationToken);
         }
 
-        foreach (var redirect in redirects)
-        {
-            await RenderRedirectAsync(redirect, destination, outputs, cancellationToken);
-        }
-
         CopyContentAssets(destination, outputs);
         await _themeService.CopyAssetsAsync(_options.Theme, destination, cancellationToken);
+        outputs.CompleteGeneration(cancellationToken);
     }
 
     private IReadOnlyList<GenerationScope> CreateScopes(
-        IReadOnlyList<ContentDocument> documents, OutputRoutes outputs, CancellationToken cancellationToken)
+        IReadOnlyList<ContentDocument> documents, LocaleConfiguration locales, OutputRoutes outputs, CancellationToken cancellationToken)
     {
-        if (!_options.UseLocaleInUrl)
+        var published = documents.Where(d => !d.Metadata.Draft && !IsNotFoundPage(d)).ToList();
+        if (locales.Primary is not null)
         {
-            return [CreateScope(null, documents, outputs, cancellationToken)];
-        }
-
-        ValidateRedirectBaseUrl();
-        var defaultLocale = ResolveLocale(_options.Locale, "Site.Locale");
-        var groups = new Dictionary<string, List<ContentDocument>>(StringComparer.Ordinal)
-        {
-            [defaultLocale] = [],
-        };
-        foreach (var document in documents.Where(d => !d.Metadata.Draft && !IsNotFoundPage(d)))
-        {
-            cancellationToken.ThrowIfCancellationRequested();
-            var locale = ResolveLocale(document.Metadata.Locale, $"locale in '{document.SourcePath}'");
-            if (!groups.TryGetValue(locale, out var group))
+            foreach (var document in published)
             {
-                group = [];
-                groups.Add(locale, group);
+                var locale = ContentUrlHelper.GetLocaleSegment(document.Metadata.Locale);
+                if (locale.Length > 0 && locale != locales.Primary && !locales.Messages.ContainsKey(locale))
+                {
+                    throw new InvalidDataException($"Document '{document.SourcePath}' has undeclared locale '{locale}'. Configure Site:LocalizationFallbackMessages or correct the content loader.");
+                }
             }
-            group.Add(document);
         }
-
+        var primary = published.Where(d => locales.Primary is null
+            || string.IsNullOrWhiteSpace(d.Metadata.Locale)
+            || ContentUrlHelper.GetLocaleSegment(d.Metadata.Locale) == locales.Primary).ToList();
+        var primarySources = new Dictionary<ContentDocument, ContentDocument>(ReferenceEqualityComparer.Instance);
+        foreach (var document in primary)
+        {
+            var leadingSegment = NormalizeRoute(document.Metadata.Slug).Split('/')[0];
+            if (locales.Messages.ContainsKey(ContentUrlHelper.GetLocaleSegment(leadingSegment)))
+            {
+                throw new InvalidDataException($"Output collision: primary route '{document.Metadata.Slug}' uses a reserved additional-locale prefix.");
+            }
+            primarySources.Add(document, document);
+        }
         var scopes = new List<GenerationScope>
         {
-            CreateScope(defaultLocale, groups[defaultLocale], outputs, cancellationToken),
+            CreateScope(locales.Primary, string.Empty, primary, primarySources, [], outputs, cancellationToken),
         };
-        foreach (var locale in groups.Keys.Where(key => key != defaultLocale).Order(StringComparer.Ordinal))
+        foreach (var locale in locales.Messages.Keys.Order(StringComparer.Ordinal))
         {
-            scopes.Add(CreateScope(locale, groups[locale], outputs, cancellationToken));
+            var selected = new List<ContentDocument>();
+            var originals = new Dictionary<ContentDocument, ContentDocument>(ReferenceEqualityComparer.Instance);
+            var fallbacks = new HashSet<ContentDocument>(ReferenceEqualityComparer.Instance);
+            var translations = published.Where(d => ContentUrlHelper.GetLocaleSegment(d.Metadata.Locale) == locale)
+                .ToLookup(d => (d.Kind, d.Metadata.Slug));
+            foreach (var original in primary)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var route = PrefixLocale(locale, original.Metadata.Slug);
+                var candidates = translations[(original.Kind, route)].ToList();
+                if (candidates.Count > 1)
+                {
+                    throw new InvalidDataException($"Output collision for translated route '{route}'.");
+                }
+                var document = candidates.SingleOrDefault();
+                if (document is null)
+                {
+                    _ = locales.GetFallbackMessage(locale);
+                    document = new ContentDocument
+                    {
+                        SourcePath = original.SourcePath,
+                        Kind = original.Kind,
+                        Metadata = original.Metadata with { Slug = route },
+                        Markdown = original.Markdown,
+                        Html = original.Html,
+                    };
+                    fallbacks.Add(document);
+                }
+                selected.Add(document);
+                originals.Add(document, original);
+            }
+            scopes.Add(CreateScope(locale, locale, selected, originals, fallbacks, outputs, cancellationToken));
         }
         return scopes;
     }
 
     private GenerationScope CreateScope(
-        string? locale, IReadOnlyList<ContentDocument> documents, OutputRoutes outputs, CancellationToken cancellationToken)
+        string? locale, string prefix, IReadOnlyList<ContentDocument> documents,
+        IReadOnlyDictionary<ContentDocument, ContentDocument> originals, HashSet<ContentDocument> fallbacks,
+        OutputRoutes outputs, CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
         var hiddenPageRoutes = documents
@@ -167,7 +209,8 @@ public sealed class StaticSiteGenerator(
             .Where(d => !HasHiddenNavigationAncestor(d.Metadata.Slug, hiddenPageRoutes))
             .ToList();
         var navigationPages = PageReadingOrder.Order(
-            visiblePages, _fileSystem.Path.Combine(_paths.GetContentsRoot(), "pages"), cancellationToken);
+            visiblePages, _fileSystem.Path.Combine(_paths.GetContentsRoot(), "pages"), cancellationToken,
+            document => originals[document].SourcePath);
         var navigation = new NavigationContext(
             navigationPages,
             NavigationTreeBuilder.BuildOrdered(navigationPages, _options, cancellationToken),
@@ -179,7 +222,7 @@ public sealed class StaticSiteGenerator(
             .GroupBy(item => item.Tag))
         {
             cancellationToken.ThrowIfCancellationRequested();
-            var route = PrefixLocale(locale, GetTagRoute(group.Key));
+            var route = PrefixLocale(prefix, GetTagRoute(group.Key));
             tags.Add(new TagGroup(
                 group.Key,
                 CreateRouteDocument(route, locale),
@@ -189,9 +232,9 @@ public sealed class StaticSiteGenerator(
                     .OrderBy(d => d.Metadata.Title).ToList().AsReadOnly()));
         }
 
-        return new GenerationScope(locale, documents, navigation, tags, outputs,
-            CreateRouteDocument(locale ?? string.Empty, locale),
-            CreateRouteDocument(PrefixLocale(locale, "tags"), locale));
+        return new GenerationScope(locale, prefix, documents, originals, fallbacks, navigation, tags, outputs,
+            CreateRouteDocument(prefix, locale),
+            CreateRouteDocument(PrefixLocale(prefix, "tags"), locale));
     }
 
     private static ContentDocument CreateRouteDocument(string route, string? locale) => new()
@@ -201,28 +244,125 @@ public sealed class StaticSiteGenerator(
     };
 
     private static string PrefixLocale(string? locale, string route)
-        => locale is null ? route : $"{locale}/{route}";
+        => string.IsNullOrEmpty(locale) ? route : route.Length == 0 ? locale : $"{locale}/{route}";
 
-    private string ResolveLocale(string? locale, string source)
+    private static string GetSwitchUrl(string route)
+        => route.Length == 0 ? "." : ContentUrlHelper.GetContentUrl(route) + "/";
+
+    private static void PrepareCollectionSwitches(IReadOnlyList<GenerationScope> scopes, CancellationToken cancellationToken)
     {
-        var normalized = ContentUrlHelper.GetLocaleSegment(string.IsNullOrWhiteSpace(locale) ? _options.Locale : locale);
-        if (normalized.Length == 0 || normalized is "." or ".."
-            || normalized.IndexOfAny(['\\', ':', '*', '?', '"', '<', '>', '|']) >= 0
-            || normalized.Any(char.IsControl) || normalized.EndsWith('.'))
+        if (scopes[0].Locale is null)
         {
-            throw new InvalidDataException($"Invalid {source}: a non-empty, safe locale route segment is required.");
+            return;
         }
-        return normalized;
+        var homes = new ReadOnlyDictionary<string, string>(scopes.ToDictionary(
+            scope => scope.Locale!, scope => GetSwitchUrl(scope.Prefix), StringComparer.Ordinal));
+        var tagIndexes = new ReadOnlyDictionary<string, string>(scopes.ToDictionary(
+            scope => scope.Locale!,
+            scope => scope.Tags.Count == 0 ? homes[scope.Locale!] : GetSwitchUrl(scope.TagIndexDocument.Metadata.Slug),
+            StringComparer.Ordinal));
+        foreach (var scope in scopes)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            scope.SwitchDestinations.Add(scope.IndexDocument.Metadata.Slug, homes);
+            scope.SwitchDestinations.Add(PAGE_NOT_FOUND_SLUG, homes);
+            scope.SwitchDestinations.Add(scope.TagIndexDocument.Metadata.Slug, tagIndexes);
+        }
+        foreach (var tag in scopes.SelectMany(scope => scope.Tags).Select(tag => tag.Tag).Distinct(StringComparer.Ordinal))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var urls = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var scope in scopes)
+            {
+                var target = scope.Tags.SingleOrDefault(candidate => candidate.Tag == tag);
+                urls.Add(scope.Locale!, target is null
+                    ? homes[scope.Locale!]
+                    : PrefixLocale(scope.Prefix, GetTagRoute(tag)) + "/");
+            }
+            var destinations = new ReadOnlyDictionary<string, string>(urls);
+            foreach (var scope in scopes)
+            {
+                scope.SwitchDestinations.Add(PrefixLocale(scope.Prefix, GetTagRoute(tag)), destinations);
+            }
+        }
     }
 
-    private void ValidateRedirectBaseUrl()
+    private void PrepareDocumentContexts(IReadOnlyList<GenerationScope> scopes, LocaleConfiguration locales, CancellationToken cancellationToken)
+    {
+        if (locales.Primary is null)
+        {
+            return;
+        }
+        var families = new Dictionary<ContentDocument, List<(GenerationScope Scope, ContentDocument Document)>>(ReferenceEqualityComparer.Instance);
+        foreach (var scope in scopes)
+        {
+            if (scope.Prefix.Length > 0)
+            {
+                scope.LinkLocalizer = new ContentLinkLocalizer(_options.SiteUrl, _options.BaseUrl,
+                    scope.Documents.Select(document => (scope.Originals[document].Metadata.Slug, document.Metadata.Slug)),
+                    _configuredSiteUrl, cancellationToken);
+            }
+            foreach (var document in scope.Documents)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var original = scope.Originals[document];
+                if (!families.TryGetValue(original, out var family))
+                {
+                    family = [];
+                    families.Add(original, family);
+                }
+                family.Add((scope, document));
+            }
+        }
+        foreach (var (primary, family) in families)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            var alternatives = new Dictionary<string, string>(StringComparer.Ordinal);
+            foreach (var (scope, translation) in family)
+            {
+                if (!scope.Fallbacks.Contains(translation))
+                {
+                    alternatives.Add(scope.Locale!, GetPublicationUrl(translation.Metadata.Slug));
+                }
+            }
+            var urls = new ReadOnlyDictionary<string, string>(alternatives);
+            var switches = new ReadOnlyDictionary<string, string>(family.ToDictionary(
+                item => item.Scope.Locale!, item => GetSwitchUrl(item.Document.Metadata.Slug), StringComparer.Ordinal));
+            foreach (var (scope, document) in family)
+            {
+                var fallback = scope.Fallbacks.Contains(document);
+                scope.DocumentContexts.Add(document, scope.CreateLocaleContext(document.Metadata.Slug)! with
+                {
+                    ContentLocale = fallback ? locales.Primary : scope.Locale,
+                    IsFallback = fallback,
+                    FallbackMessage = fallback ? locales.GetFallbackMessage(scope.Locale!) : null,
+                    CanonicalUrl = GetPublicationUrl(fallback ? primary.Metadata.Slug : document.Metadata.Slug),
+                    AlternateLanguageUrls = urls,
+                    SwitchLanguageUrls = switches,
+                });
+            }
+        }
+    }
+
+    private string GetPublicationUrl(string route)
+    {
+        if (!Uri.TryCreate(_options.SiteUrl, UriKind.Absolute, out var siteUrl)
+            || siteUrl.Scheme is not ("http" or "https")
+            || siteUrl.Query.Length != 0 || siteUrl.Fragment.Length != 0 || siteUrl.UserInfo.Length != 0)
+        {
+            throw new InvalidDataException("Site:SiteUrl must be an absolute HTTP(S) publication URL without credentials, query, or fragment.");
+        }
+        return _options.SiteUrl.TrimEnd('/') + _options.BaseUrl + ContentUrlHelper.GetContentUrl(route).TrimEnd('/') + "/";
+    }
+
+    private void ValidateBaseUrl()
     {
         var baseUrl = _options.BaseUrl;
         if (string.IsNullOrEmpty(baseUrl) || !baseUrl.StartsWith('/') || baseUrl.StartsWith("//", StringComparison.Ordinal)
             || !baseUrl.EndsWith('/') || baseUrl.IndexOfAny(['\\', '?', '#']) >= 0
             || baseUrl.Any(char.IsWhiteSpace) || baseUrl.Any(char.IsControl))
         {
-            throw new InvalidDataException("Site.BaseUrl must be a rooted path ending in '/' (for example '/blog/') for locale redirects.");
+            throw new InvalidDataException("Site.BaseUrl must be a rooted path ending in '/' (for example '/blog/') for localization.");
         }
         foreach (var segment in baseUrl.Split('/', StringSplitOptions.RemoveEmptyEntries))
         {
@@ -231,36 +371,15 @@ public sealed class StaticSiteGenerator(
                 if (segment[index] == '%'
                     && (index + 2 >= segment.Length || !Uri.IsHexDigit(segment[index + 1]) || !Uri.IsHexDigit(segment[index + 2])))
                 {
-                    throw new InvalidDataException("Site.BaseUrl contains an invalid percent escape for locale redirects.");
+                    throw new InvalidDataException("Site.BaseUrl contains an invalid percent escape for localization.");
                 }
             }
             var decoded = Uri.UnescapeDataString(segment);
             if (decoded is "." or ".." || decoded.IndexOfAny(['/', '\\', '?', '#']) >= 0 || decoded.Any(char.IsControl))
             {
-                throw new InvalidDataException("Site.BaseUrl contains an unsafe path segment for locale redirects.");
+                throw new InvalidDataException("Site.BaseUrl contains an unsafe path segment for localization.");
             }
         }
-    }
-
-    private static IReadOnlyList<RedirectPage> CreateRedirects(GenerationScope scope)
-    {
-        if (scope.Locale is null)
-        {
-            return [];
-        }
-
-        var context = scope.CreateLocaleContext(string.Empty)!;
-        var redirects = new List<RedirectPage>
-        {
-            new(CreateRouteDocument(string.Empty, scope.Locale), scope.IndexDocument, context.HomeUrl),
-        };
-        if (scope.Tags.Count > 0)
-        {
-            redirects.Add(new(CreateRouteDocument("tags", scope.Locale), scope.TagIndexDocument, context.TagIndexUrl! + "/"));
-            redirects.AddRange(scope.Tags.Select(tag => new RedirectPage(
-                CreateRouteDocument(GetTagRoute(tag.Tag), scope.Locale), tag.Document, context.GetTagUrl(tag.Tag) + "/")));
-        }
-        return redirects;
     }
 
     private static bool HasHiddenNavigationAncestor(string slug, HashSet<string> hiddenPageRoutes)
@@ -357,8 +476,17 @@ public sealed class StaticSiteGenerator(
         scope.Navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
 
         var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
+        if (scope.LinkLocalizer is not null)
+        {
+            postMarkdown.Html = scope.LinkLocalizer.Localize(postMarkdown.Html, cancellationToken);
+        }
 
         var parameters = CreateBaseParameters(plugins, theme, scope, document.Metadata.Slug);
+        scope.DocumentContexts.TryGetValue(document, out var documentContext);
+        if (documentContext is not null)
+        {
+            parameters["LocaleContext"] = documentContext;
+        }
         parameters["Document"] = postMarkdown;
         if (postMarkdown.Kind == ContentKind.Page && pageNavigation is not null)
         {
@@ -372,7 +500,7 @@ public sealed class StaticSiteGenerator(
         };
         var outputPath = ResolveOutputPath(destination, postMarkdown.Metadata.Slug);
 
-        await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, scope.Outputs, document, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, scope.Outputs, document, cancellationToken, documentContext);
     }
 
     private async Task RenderTagPagesAsync<TTagListView, TTagView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -494,71 +622,108 @@ public sealed class StaticSiteGenerator(
     private sealed record TagGroup(
         string Tag, ContentDocument Document, IReadOnlyList<ContentDocument> Posts, IReadOnlyList<ContentDocument> Pages);
 
-    private sealed record RedirectPage(ContentDocument Document, ContentDocument Target, string TargetUrl);
-
     private sealed record GenerationScope(
         string? Locale,
+        string Prefix,
         IReadOnlyList<ContentDocument> Documents,
+        IReadOnlyDictionary<ContentDocument, ContentDocument> Originals,
+        HashSet<ContentDocument> Fallbacks,
         NavigationContext Navigation,
         IReadOnlyList<TagGroup> Tags,
         OutputRoutes Outputs,
         ContentDocument IndexDocument,
         ContentDocument TagIndexDocument)
     {
+        public Dictionary<ContentDocument, LocaleContext> DocumentContexts { get; } = new(ReferenceEqualityComparer.Instance);
+        public Dictionary<string, IReadOnlyDictionary<string, string>> SwitchDestinations { get; } = new(StringComparer.Ordinal);
+        public ContentLinkLocalizer? LinkLocalizer { get; set; }
+
         public LocaleContext? CreateLocaleContext(string route)
         {
             if (Locale is null)
             {
                 return null;
             }
-            var homeUrl = ContentUrlHelper.GetContentUrl(Locale) + "/";
+            var homeUrl = Prefix.Length == 0 ? "." : ContentUrlHelper.GetContentUrl(Prefix) + "/";
             return new LocaleContext
             {
                 Locale = Locale,
+                ContentLocale = Locale,
                 Route = route,
                 HomeUrl = homeUrl,
-                TagIndexUrl = Tags.Count == 0 ? null : homeUrl + "tags",
+                TagIndexUrl = Tags.Count == 0 ? null : PrefixLocale(Prefix, "tags"),
+                SwitchLanguageUrls = SwitchDestinations.TryGetValue(route, out var switches)
+                    ? switches : ReadOnlyDictionary<string, string>.Empty,
             };
         }
     }
 
-    private async Task RenderRedirectAsync(RedirectPage redirect, string destination, OutputRoutes outputs, CancellationToken cancellationToken)
-    {
-        var target = _options.BaseUrl + redirect.TargetUrl;
-        var encodedTarget = HtmlEncoder.Default.Encode(target);
-        var encodedLocale = HtmlEncoder.Default.Encode(redirect.Document.Metadata.Locale!);
-        var html = $"""
-            <!DOCTYPE html>
-            <html lang="{encodedLocale}">
-            <head>
-                <meta charset="utf-8">
-                <meta http-equiv="refresh" content="0;url={encodedTarget}">
-                <title>Redirect</title>
-            </head>
-            <body><p><a href="{encodedTarget}">Continue</a></p></body>
-            </html>
-            """;
-        var document = new ContentDocument
-        {
-            Kind = ContentKind.Page,
-            Metadata = redirect.Document.Metadata with { Title = "Redirect" },
-            Html = html,
-        };
-        await WriteRenderedHtmlAsync(ResolveOutputPath(destination, document.Metadata.Slug),
-            html, document, outputs, redirect.Document, cancellationToken);
-    }
-
-    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner, CancellationToken cancellationToken)
+    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner, CancellationToken cancellationToken, LocaleContext? localeContext = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'");
+        outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'",
+            generatedDocument: true, cancellationToken: cancellationToken);
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
+        if (localeContext?.IsFallback == true)
+        {
+            using var html = new HtmlParser().ParseDocument(finalHtml);
+            var banners = html.QuerySelectorAll("body [data-localization-fallback]");
+            var banner = banners.Length == 1 ? banners[0] : null;
+            if (banner is null || banner.GetAttribute("lang") != localeContext.Locale
+                || GetExposedNoticeText(banner, cancellationToken).Trim() != localeContext.FallbackMessage?.Trim()
+                || banner.QuerySelector("script, style, template") is not null
+                || banner.Closest("script, style, template") is not null)
+            {
+                throw new InvalidDataException(
+                    $"Fallback route '{document.Metadata.Slug}' must render the notice from LocalizationFallbackBannerBase above the content with its BannerAttributes and configured '{localeContext.Locale}' message. Update the theme and ensure post-HTML plugins preserve the banner.");
+            }
+        }
         outputs.ValidateLinks(outputPath);
         _fileSystem.Directory.CreateDirectory(_fileSystem.Path.GetDirectoryName(outputPath)!);
         await _fileSystem.File.WriteAllTextAsync(outputPath, finalHtml, Encoding.UTF8, cancellationToken);
         _logger.LogInformation("Wrote {OutputPath}", outputPath);
+    }
+
+    private static string GetExposedNoticeText(IElement banner, CancellationToken cancellationToken)
+    {
+        for (var ancestor = banner.ParentElement; ancestor is not null; ancestor = ancestor.ParentElement)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (IsHidden(ancestor))
+            {
+                return string.Empty;
+            }
+        }
+
+        var text = new StringBuilder();
+        var pending = new Stack<INode>();
+        pending.Push(banner);
+        while (pending.TryPop(out var node))
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            if (node is IElement element && IsHidden(element))
+            {
+                continue;
+            }
+            if (node is IText content)
+            {
+                text.Append(content.Data);
+            }
+            else
+            {
+                for (var index = node.ChildNodes.Length - 1; index >= 0; index--)
+                {
+                    pending.Push(node.ChildNodes[index]);
+                }
+            }
+        }
+        return text.ToString();
+
+        static bool IsHidden(IElement element) =>
+            element.HasAttribute("hidden")
+            || string.Equals(element.GetAttribute("aria-hidden")?.Trim(), "true", StringComparison.OrdinalIgnoreCase);
     }
 
     private async Task<ContentDocument> ConvertMarkdownToHtmlAsync(ContentDocument document, CancellationToken cancellationToken)
@@ -592,10 +757,7 @@ public sealed class StaticSiteGenerator(
         foreach (var file in _fileSystem.Directory.GetFiles(sourceDir, "*", SearchOption.TopDirectoryOnly))
         {
             var destFile = _fileSystem.Path.Combine(destinationDir, _fileSystem.Path.GetFileName(file));
-            if (_options.UseLocaleInUrl)
-            {
-                outputs.Claim(destFile, new object(), $"content asset '{file}'");
-            }
+            outputs.Claim(destFile, new object(), $"content asset '{file}'");
             _fileSystem.File.Copy(file, destFile, overwrite: true);
         }
 
@@ -632,7 +794,7 @@ public sealed class StaticSiteGenerator(
     }
 
     private static void ValidateOutputRoutes(
-        string destination, IReadOnlyList<GenerationScope> scopes, IReadOnlyList<RedirectPage> redirects, object notFoundOwner)
+        string destination, IReadOnlyList<GenerationScope> scopes, object notFoundOwner)
     {
         var outputs = scopes[0].Outputs;
         outputs.Plan(Path.Combine(Path.GetFullPath(destination), PAGE_NOT_FOUND_SLUG), notFoundOwner, "not-found page");
@@ -653,46 +815,192 @@ public sealed class StaticSiteGenerator(
             }
         }
 
-        foreach (var redirect in redirects)
-        {
-            var redirectPath = ResolveOutputPath(destination, redirect.Document.Metadata.Slug);
-            var targetPath = ResolveOutputPath(destination, redirect.Target.Metadata.Slug);
-            if (redirectPath.Equals(targetPath, StringComparison.OrdinalIgnoreCase) || !outputs.Contains(targetPath))
-            {
-                throw new InvalidDataException($"Invalid redirect route '{redirect.Document.Metadata.Slug}': its target must be a different generated page.");
-            }
-            AddRoute(redirect.Document, $"redirect '{redirect.Document.Metadata.Slug}'");
-        }
-
         void AddRoute(ContentDocument document, string description)
             => outputs.Plan(ResolveOutputPath(destination, document.Metadata.Slug), document, description);
     }
 
-    private sealed class OutputRoutes(string root, IFileSystem fileSystem, bool validateLinks)
+    private sealed class OutputRoutes(string root, IFileSystem fileSystem)
     {
         private readonly Dictionary<string, (object Owner, string Description)> _routes = new(StringComparer.OrdinalIgnoreCase);
         private readonly HashSet<string> _written = new(StringComparer.OrdinalIgnoreCase);
         private readonly string _root = Path.GetFullPath(root);
-
-        public bool Contains(string path) => _routes.ContainsKey(Path.GetFullPath(path));
+        private readonly string _manifestPath = Path.Combine(Path.GetFullPath(root), ".scissorhands-output.json");
+        // Preserve physical spellings independently of case-insensitive route collision checks.
+        private readonly HashSet<string> _owned = new(StringComparer.Ordinal);
 
         public void Plan(string outputPath, object owner, string description)
             => Register(outputPath, owner, description, false);
 
-        public void Claim(string outputPath, object owner, string description)
+        public void Claim(string outputPath, object owner, string description, bool generatedDocument = false,
+            CancellationToken cancellationToken = default)
         {
             var fullPath = Path.GetFullPath(outputPath);
             Register(fullPath, owner, description, true);
-            if (!_written.Add(fullPath))
+            if (_written.Contains(fullPath))
             {
                 throw new InvalidDataException($"Output collision at '{fullPath}': the destination was already written.");
             }
+            if (generatedDocument)
+            {
+                var changed = PrepareForWrite(fullPath, cancellationToken);
+                changed |= _owned.Add(fullPath);
+                if (changed)
+                {
+                    SaveManifest();
+                }
+            }
+            _written.Add(fullPath);
+        }
+
+        public void BeginGeneration(CancellationToken cancellationToken)
+        {
+            ValidateLinks(_manifestPath);
+            if (fileSystem.File.Exists(_manifestPath))
+            {
+                string[] previous;
+                try
+                {
+                    previous = JsonSerializer.Deserialize<string[]>(fileSystem.File.ReadAllText(_manifestPath))
+                        ?? throw new InvalidDataException($"Invalid generated-output manifest '{_manifestPath}'.");
+                }
+                catch (JsonException exception)
+                {
+                    throw new InvalidDataException($"Invalid generated-output manifest '{_manifestPath}'.", exception);
+                }
+                foreach (var relative in previous)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    if (string.IsNullOrWhiteSpace(relative) || Path.IsPathRooted(relative)
+                        || relative.Split('/', '\\').Any(segment => segment is "." or "..")
+                        || !relative.EndsWith(".html", StringComparison.OrdinalIgnoreCase))
+                    {
+                        throw new InvalidDataException($"Unsafe generated-output manifest entry in '{_manifestPath}'.");
+                    }
+                    var path = Path.GetFullPath(Path.Combine(_root, relative.Replace('\\', Path.DirectorySeparatorChar)));
+                    ValidateLinks(path);
+                    _owned.Add(path);
+                }
+            }
+            // Check replacements before claiming new paths, so unmanaged blockers never enter the ledger.
+            foreach (var path in _routes.Keys)
+            {
+                PrepareForWrite(path, cancellationToken);
+            }
+            _owned.UnionWith(_routes.Keys);
+            SaveManifest();
+        }
+
+        public void CompleteGeneration(CancellationToken cancellationToken)
+        {
+            foreach (var path in _owned.Except(_written, StringComparer.Ordinal).ToArray())
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                RemoveOwnedFile(path, cancellationToken);
+            }
+            SaveManifest();
+        }
+
+        private bool PrepareForWrite(string outputPath, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(outputPath);
+            var changed = false;
+            foreach (var stale in _owned.Where(path => path != outputPath && PathsConflict(path, outputPath)).ToArray())
+            {
+                if (_written.Contains(stale))
+                {
+                    throw new InvalidDataException($"Output collision at '{outputPath}': '{stale}' was already written.");
+                }
+                RemoveOwnedFile(stale, cancellationToken);
+                changed = true;
+            }
+
+            for (var path = outputPath; path is not null && path != _root; path = Path.GetDirectoryName(path))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(path);
+                if (fileSystem.File.Exists(path) && (path != outputPath || !_owned.Contains(path)))
+                {
+                    throw new InvalidDataException(
+                        $"Cannot generate '{outputPath}': unmanaged output file '{path}' blocks the destination. Move or remove that file explicitly.");
+                }
+            }
+
+            if (fileSystem.Directory.Exists(outputPath))
+            {
+                var directories = new List<string>();
+                CollectEmptyDirectories(outputPath, directories, cancellationToken);
+                foreach (var directory in directories)
+                {
+                    cancellationToken.ThrowIfCancellationRequested();
+                    ValidateLinks(directory);
+                    fileSystem.Directory.Delete(directory, recursive: false);
+                }
+            }
+            return changed;
+        }
+
+        private void CollectEmptyDirectories(string path, List<string> directories, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(path);
+            foreach (var entry in fileSystem.Directory.EnumerateFileSystemEntries(path))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(entry);
+                if (!fileSystem.Directory.Exists(entry))
+                {
+                    throw new InvalidDataException(
+                        $"Cannot replace output directory '{path}': it contains unmanaged entry '{entry}'. Move or remove that entry explicitly.");
+                }
+                CollectEmptyDirectories(entry, directories, cancellationToken);
+            }
+            directories.Add(path);
+        }
+
+        private void RemoveOwnedFile(string path, CancellationToken cancellationToken)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            ValidateLinks(path);
+            if (fileSystem.File.Exists(path))
+            {
+                fileSystem.File.Delete(path);
+            }
+            _owned.Remove(path);
+
+            for (var parent = Path.GetDirectoryName(path); parent is not null && parent != _root; parent = Path.GetDirectoryName(parent))
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                ValidateLinks(parent);
+                if (!fileSystem.Directory.Exists(parent) || fileSystem.Directory.EnumerateFileSystemEntries(parent).Any())
+                {
+                    break;
+                }
+                fileSystem.Directory.Delete(parent, recursive: false);
+            }
+        }
+
+        private static bool PathsConflict(string left, string right)
+            => left.Equals(right, StringComparison.OrdinalIgnoreCase)
+                || left.StartsWith(right + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase)
+                || right.StartsWith(left + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase);
+
+        private void SaveManifest()
+        {
+            ValidateLinks(_manifestPath);
+            fileSystem.File.WriteAllText(_manifestPath,
+                JsonSerializer.Serialize(_owned.Select(path => Path.GetRelativePath(_root, path).Replace('\\', '/')).Order(StringComparer.Ordinal)));
         }
 
         private void Register(string outputPath, object owner, string description, bool existingClaim)
         {
             var fullPath = Path.GetFullPath(outputPath);
             ValidateLinks(fullPath);
+            if (fullPath.Equals(_manifestPath, StringComparison.OrdinalIgnoreCase)
+                || fullPath.StartsWith(_manifestPath + Path.DirectorySeparatorChar, StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException($"Output collision: '{description}' uses the reserved generated-output manifest path.");
+            }
             if (_routes.TryGetValue(fullPath, out var existing))
             {
                 if (existingClaim && ReferenceEquals(owner, existing.Owner))
@@ -703,10 +1011,7 @@ public sealed class StaticSiteGenerator(
                     $"Output collision at '{fullPath}' between '{existing.Description}' and '{description}'.");
             }
 
-            var separator = Path.DirectorySeparatorChar.ToString();
-            var conflictingRoute = _routes.FirstOrDefault(route =>
-                fullPath.StartsWith(route.Key + separator, StringComparison.OrdinalIgnoreCase)
-                || route.Key.StartsWith(fullPath + separator, StringComparison.OrdinalIgnoreCase));
+            var conflictingRoute = _routes.FirstOrDefault(route => PathsConflict(fullPath, route.Key));
             if (!string.IsNullOrEmpty(conflictingRoute.Key))
             {
                 throw new InvalidDataException(
@@ -718,11 +1023,11 @@ public sealed class StaticSiteGenerator(
 
         public void ValidateLinks(string outputPath)
         {
-            if (!validateLinks)
-            {
-                return;
-            }
             var path = Path.GetFullPath(outputPath);
+            if (path != _root && !path.StartsWith(_root.TrimEnd(Path.DirectorySeparatorChar) + Path.DirectorySeparatorChar, StringComparison.Ordinal))
+            {
+                throw new InvalidDataException($"Generated output path '{outputPath}' is outside its output root.");
+            }
             while (true)
             {
                 if ((fileSystem.File.Exists(path) || fileSystem.Directory.Exists(path))

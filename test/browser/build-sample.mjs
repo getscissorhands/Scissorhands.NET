@@ -12,7 +12,6 @@ const options = {
   env: {
     ...process.env,
     Site__BaseUrl: "/",
-    Site__UseLocaleInUrl: "false",
     Site__Locale: "en-US",
     Site__Theme: "default",
     Logging__LogLevel__Default: "Warning",
@@ -26,20 +25,26 @@ mkdirSync(localizedSource, { recursive: true });
 cpSync(path.join(sample, "contents"), path.join(localizedSource, "contents"), { recursive: true });
 cpSync(path.join(sample, "appsettings.json"), path.join(localizedSource, "appsettings.json"));
 const fixtures = [
-  ["pages", "english-about.md", "title: English about\nlocale: en-US\nslug: about\nshow_in_navigation: true"],
-  ["pages", "english-next.md", "title: English next\nlocale: en-US\nslug: next\nshow_in_navigation: true"],
-  ["pages", "japanese.md", "title: Japanese page\nlocale: ja-JP\nslug: hidden"],
-  ["posts", "english-post.md", "title: English post\nlocale: en_US\nslug: welcome\npublished: 2026-09-16\ntags: [dotnet, english-only]"],
-  ["posts", "draft.md", "title: Draft\nlocale: de-DE\nslug: draft\ndraft: true"],
+  ["posts", "english-post.md", "title: English post\nslug: welcome\npublished: 2026-09-16\ntags: [dotnet, english-only]"],
+  ["posts", "ko-kr/english-post.md", "title: Korean post\nslug: welcome\npublished: 2026-09-16\ntags: [dotnet, korean-only]"],
+  ["pages", "draft.md", "title: Draft primary\ndraft: true"],
+  ["pages", "ko-kr/draft.md", "title: Ready translation of a draft"],
+  ["pages", "ja-jp/orphan.md", "title: Orphan translation"],
 ];
 for (const [kind, filename, metadata] of fixtures) {
-  writeFileSync(path.join(localizedSource, "contents", kind, filename), `---\n${metadata}\n---\n# Locale fixture\n`);
+  const destination = path.join(localizedSource, "contents", kind, filename);
+  mkdirSync(path.dirname(destination), { recursive: true });
+  writeFileSync(destination, `---\n${metadata}\n---\n# Locale fixture\n`);
 }
 function buildLocalized(baseUrl) {
   execFileSync("dotnet", [path.join(sample, "bin", "Release", "net10.0", "ScissorHands.Sample.dll"), "--build"], {
     ...options,
     cwd: localizedSource,
-    env: { ...options.env, Site__BaseUrl: baseUrl, Site__UseLocaleInUrl: "true", Site__Locale: "ko-KR" },
+    env: {
+      ...options.env,
+      Site__BaseUrl: baseUrl,
+      "Site__LocalizationFallbackMessages__ja-jp": "このページは現在日本語翻訳を提供していません",
+    },
   });
 }
 

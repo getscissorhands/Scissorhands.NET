@@ -19,6 +19,7 @@ public class LocaleContextTests
         context.Route.ShouldBeEmpty();
         context.HomeUrl.ShouldBe(".");
         context.TagIndexUrl.ShouldBeNull();
+        context.SwitchLanguageUrls.ShouldBeEmpty();
         context.ShouldBe(new LocaleContext());
     }
 

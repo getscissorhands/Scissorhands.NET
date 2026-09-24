@@ -65,12 +65,11 @@ public static class NavigationTreeBuilder
             }
         }
 
-        if (site?.UseLocaleInUrl == true)
+        if (site?.IsLocalizationEnabled == true)
         {
-            foreach (var document in navigationPages)
+            foreach (var locale in site.LocalizationFallbackMessages.Keys)
             {
                 cancellationToken.ThrowIfCancellationRequested();
-                var locale = string.IsNullOrWhiteSpace(document.Metadata.Locale) ? site.Locale : document.Metadata.Locale;
                 var localeSegment = ContentUrlHelper.GetLocaleSegment(locale);
                 if (localeSegment.Length == 0)
                 {

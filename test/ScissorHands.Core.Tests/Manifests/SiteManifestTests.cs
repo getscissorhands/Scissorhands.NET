@@ -52,7 +52,9 @@ public class SiteManifestTests
         manifest.Generator.ShouldNotBeNullOrWhiteSpace();
         manifest.Title.ShouldNotBeNullOrWhiteSpace();
         manifest.Description.ShouldNotBeNullOrWhiteSpace();
-        manifest.Locale.ShouldNotBeNullOrWhiteSpace();
+        manifest.Locale.ShouldBeNull();
+        manifest.IsLocalizationEnabled.ShouldBeFalse();
+        manifest.LocalizationFallbackMessages.ShouldBeEmpty();
         manifest.Author.ShouldNotBeNullOrWhiteSpace();
 
         manifest.BaseUrl.ShouldNotBeNullOrWhiteSpace();

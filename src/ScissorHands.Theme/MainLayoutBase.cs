@@ -195,23 +195,27 @@ public abstract class MainLayoutBase : LayoutComponentBase
     }
 
     /// <summary>
-    /// Calculates the page locale from the render context, falling back to the site and document locale.
+    /// Calculates the page locale only when a site locale is explicitly configured.
     /// </summary>
     /// <returns>Returns the page locale calculated.</returns>
     protected virtual string CalculatePageLocale()
     {
+        var locale = Site?.Locale;
+        if (string.IsNullOrWhiteSpace(locale))
+        {
+            return string.Empty;
+        }
+
         if (LocaleContext is not null)
         {
             return LocaleContext.Locale;
         }
-
-        var locale = Site?.Locale ?? string.Empty;
 
         if (Document is not null && string.IsNullOrWhiteSpace(Document.Metadata.Locale) == false)
         {
             locale = Document.Metadata.Locale;
         }
 
-        return locale.ToLowerInvariant() ?? string.Empty;
+        return locale.ToLowerInvariant();
     }
 }

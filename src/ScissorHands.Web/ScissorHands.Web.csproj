@@ -11,6 +11,7 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
 
+    <PackageReference Include="AngleSharp" />
     <PackageReference Include="Markdig" />
     <PackageReference Include="Scrutor" />
     <PackageReference Include="System.Reactive" />

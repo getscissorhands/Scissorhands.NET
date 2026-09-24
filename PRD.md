@@ -1,5 +1,27 @@
 # ScissorHands.NET - Product requirements document
 
+## Current scope amendment: directory locales and fallback
+
+The consolidated [#104 contract](https://github.com/getscissorhands/Scissorhands.NET/issues/104) supersedes the locale portions of FR-002/003/004/012 and Q-006 through Q-012 below. The existing document-control, approval, and execution records remain historical baselines, not approval or verification of this amendment.
+
+Primary content and URLs stay unprefixed. Explicit `Site:Locale` enables localization; `LocalizationFallbackMessages` keys declare additional locales and their values supply required notices. Undeclared folders remain ordinary content; declared locale formats must match the primary format. Same-kind, same-relative-path/filename pairs require matching slugs and required matching written calendar dates for paired posts. The primary publication state gates every translation/fallback. Missing/draft translations use labelled primary content, while withdrawn primary content removes all active variants and collection entries.
+
+Collections select translation or fallback once per primary identity; generated navigation stays in the requested locale. The [scope expansion](https://github.com/getscissorhands/Scissorhands.NET/issues/104#issuecomment-5810010309) adds automatic authored internal document-link localization with Markdown `{data-localize="false"}` opt-out, preserving explicit locale targets, shared resources, external URLs, queries and fragments. The shared language switcher uses engine-prepared destinations and theme-owned native labels; generated tag pages switch to the corresponding collection or locale homepage, and the shared 404 switches to locale homepages. Individual documents retain canonical/real-translation alternate metadata and required banners with distinct requested/content languages. Generated home/tag collections and the one shared 404 do not acquire document fallback/SEO semantics. See the [current behavior and migration reference](docs/website-documentation.md#locale-specific-sites) for the complete contract and exceptions.
+
+Verification for this amendment belongs to the updated locale loader/generator tests, actual preview integration, and browser fixtures. Earlier V-009 counts below must not be cited as evidence for #104; release authorization and broader gaps are unchanged.
+
+The default and custom themes own all localization markup. `ScissorHands.Theme.Components` provides abstract switcher, metadata, and fallback-banner base classes with prepared data and reusable behavior, not fixed Razor templates. The required notice uses the base's encoded text fragment and marker/language attributes so validation remains independent of the theme's wrapper and formatting.
+
+Initial directory-locale implementation evidence for #104: the Release solution build and all 714 .NET tests passed, including real root/subpath preview and withdrawal. Sample root/subpath generation, slash-variant byte equivalence, four contrast-math cases, and 48 Chromium/WebKit desktop/mobile cases passed. The 24 Firefox cases were blocked before test execution by the installed browser reporting `Could not find profile folder`, including a retry with a session-local temporary profile directory.
+
+Expanded switcher/link-localization evidence: the Release build and all 766 .NET tests pass, including native labels/overrides, generated-page switch targets, rewritten/opted-out links, and actual preview requests. Sample generation and four contrast-math checks pass; all 72 Chromium/WebKit desktop/mobile cases pass, including no-JavaScript, keyboard, and switcher contrast checks. Firefox still fails at browser startup with the same profile-folder error, so its 36 cases remain unverified. This is not a three-engine acceptance pass or release authorization.
+
+Theme-owned markup follow-up: the Release build and all 790 .NET tests pass, including custom derived components, encoded nested notice markup, and missing/hidden notice rejection. Regenerated sample artifacts, four contrast-math checks, and all 72 Chromium/WebKit cases pass. Firefox was not rerun for this extraction; the earlier startup blocker remains an outstanding verification limitation.
+
+Firefox startup follow-up: the existing Playwright Firefox 155.0 build launches with explicit `MOZ_APP_DATA` and `MOZ_LOCAL_APP_DATA` directories. The test configuration now supplies isolated roots under ignored browser artifacts without changing browser security settings or personal profiles. The normal `npm test` command passes all 108 Chromium/Firefox/WebKit desktop/mobile cases and four contrast-math checks, clearing the browser-startup blocker. This does not resolve the separate regeneration and hidden-message defects recorded in the [acceptance audit](https://github.com/getscissorhands/Scissorhands.NET/issues/104#issuecomment-5812385148), or imply complete issue acceptance.
+
+Acceptance-gap closure: `db222cb` repairs output ownership and pre-write reconciliation; `3ebf901` validates exposed fallback-message text. The original audit reproductions now retain renamed output ownership, remove both variants after withdrawal, complete real-file directory transitions, and reject hidden message children. Fifteen regeneration cases and eleven additional notice cases cover these failures, unmanaged blockers, retry recovery, and permitted custom formatting. The Release solution build and all 816 .NET tests pass; sample root/subpath generation, four contrast-math checks, and all 108 three-engine desktop/mobile browser cases pass without skips or retries. This closes the reproduced AC 9/18 gaps and their coverage follow-up under the agreed contract; it does not claim transactional output rollback, arbitrary CSS visibility analysis, or broader security/release certification.
+
 ## Document control
 
 | Field | Value |
@@ -23,7 +45,7 @@
 
 **Readiness:** v0.13 remains Review-ready overall, retaining locale-only and historical approvals. V-009's scoped acceptance is complete after integrating #89 and verifying the combined implementation: 678 .NET tests, 60 browser cases, four contrast-math cases and actual prefixed preview/browser/regeneration checks pass. Earlier failures remain historical; broader programs and release authorization are not implied.
 
-**Current behavior:** FR-001 through FR-011 retain their baseline except for the explicit FR-012 locale-enabled qualifications. FR-012 is implemented in this revision, not published as a package. `UseLocaleInUrl: false` retains existing routes and presentation; acceptance gaps are recorded separately from code delivery.
+**Historical behavior before #104:** FR-001 through FR-011 retained their baseline except for the explicit FR-012 locale-enabled qualifications. The amendment above supersedes that locale contract; historical acceptance gaps and approvals below are retained.
 
 ## 1. Overview and evidence
 

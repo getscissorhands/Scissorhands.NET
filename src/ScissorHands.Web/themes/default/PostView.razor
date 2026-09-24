@@ -1,9 +1,9 @@
-@inherits ScissorHands.Theme.PostViewBase
+@inherits PostViewBase
 @layout MainLayout
 
 <section class="post">
     <a class="back-link" href="@(LocaleContext?.HomeUrl ?? ".")">&larr; Back to posts</a>
-    <article class="prose">
+    <article class="prose" lang="@LocaleContext?.ContentLocale">
         @if (!string.IsNullOrWhiteSpace(Document?.Metadata.HeroImage))
         {
             <img class="hero-image" src="@GetImageUrl(Document.Metadata.HeroImage)" alt="" />

@@ -58,43 +58,38 @@ public class ContentLoaderDirectoryIndexTests
     }
 
     [Theory]
-    [InlineData("pages", "parent/index.md", "", "ko-kr/parent")]
-    [InlineData("pages", "ko-kr/parent/index.md", "", "ko-kr/parent")]
-    [InlineData("pages", "index.md", "", "ko-kr/index")]
-    [InlineData("pages", "parent/index.md", "slug: custom", "ko-kr/custom")]
+    [InlineData("pages", "parent/index.md", "", "parent")]
+    [InlineData("pages", "index.md", "", "index")]
+    [InlineData("pages", "parent/index.md", "slug: custom", "custom")]
     [InlineData("pages", "parent/index.md", "slug: 404.html", "404.html")]
-    [InlineData("posts", "parent/index.md", "", "ko-kr/2026/09/13/parent/index")]
-    [InlineData("posts", "ko-kr/hello.md", "", "ko-kr/2026/09/13/hello")]
-    [InlineData("posts", "hello.md", "slug: ko-kr/hello", "ko-kr/2026/09/13/hello")]
-    [InlineData("posts", "hello.md", "slug: KO-KR/hello", "ko-kr/2026/09/13/hello")]
-    [InlineData("posts", "en-us/hello.md", "slug: hello", "ko-kr/2026/09/13/hello")]
-    [InlineData("pages", "en-us/hello.md", "", "ko-kr/en-us/hello")]
-    [InlineData("pages", "en-us/hello.md", "slug: hello", "ko-kr/hello")]
+    [InlineData("posts", "parent/index.md", "", "2026/09/13/parent/index")]
+    [InlineData("posts", "hello.md", "slug: custom", "2026/09/13/custom")]
+    [InlineData("pages", "it/hello.md", "", "it/hello")]
     public async Task Given_LocaleAndDateOptions_When_IndexLoaded_Then_It_Should_PreserveUrlConventions(
         string directory,
         string relativePath,
         string slugField,
         string expectedSlug)
     {
-        var site = new SiteManifest { BaseUrl = "/site/", UseLocaleInUrl = true, UseDateInPostUrl = true };
-        var (loader, _) = CreateLoader(directory, relativePath, $"locale: ko_KR\npublished: 2026-09-13\n{slugField}", site);
+        var site = new SiteManifest { BaseUrl = "/site/", Locale = "ko_KR", UseDateInPostUrl = true };
+        var (loader, _) = CreateLoader(directory, relativePath, $"published: 2026-09-13\n{slugField}", site);
 
         var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
 
         document.Metadata.Slug.ShouldBe(expectedSlug);
-        document.Metadata.Locale.ShouldBe("ko_KR");
+        document.Metadata.Locale.ShouldBe("ko-kr");
     }
 
     [Fact]
     public async Task Given_LocaleFolderWithoutLocaleMetadata_When_Loaded_Then_It_Should_UseSiteLocaleWithoutStrippingTheFolder()
     {
-        var site = new SiteManifest { Locale = "en-US", UseLocaleInUrl = true };
+        var site = new SiteManifest { Locale = "en-US" };
         var (loader, _) = CreateLoader("pages", "ko-kr/about.md", null, site);
 
         var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
 
-        document.Metadata.Locale.ShouldBe("en-US");
-        document.Metadata.Slug.ShouldBe("en-us/ko-kr/about");
+        document.Metadata.Locale.ShouldBe("en-us");
+        document.Metadata.Slug.ShouldBe("ko-kr/about");
     }
 
     private static (ContentLoader Loader, string SourcePath) CreateLoader(

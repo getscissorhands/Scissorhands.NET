@@ -162,7 +162,7 @@ public class MainLayoutBaseTests
         // Assert
         cut.Instance.ExposedPageTitle.ShouldBe("My Site");
         cut.Instance.ExposedPageDescription.ShouldBe("My Description");
-        cut.Instance.ExposedPageLocale.ShouldBe("en-us");
+        cut.Instance.ExposedPageLocale.ShouldBeEmpty();
         cut.Instance.Theme.ShouldBeSameAs(expectedTheme);
         themeService.DidNotReceiveWithAnyArgs().LoadManifestAsync(default!, Xunit.TestContext.Current.CancellationToken);
     }
@@ -173,7 +173,7 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
 
-        var site = new SiteManifest { Title = "My Site", Description = "Site Description" };
+        var site = new SiteManifest { Title = "My Site", Description = "Site Description", Locale = "en-US" };
         var first = new ContentDocument
         {
             Metadata = new ContentMetadata { Title = "First", Description = "First Description", Locale = "en-US" }

@@ -1,9 +1,9 @@
 @using ScissorHands.Core.Models
-@inherits ScissorHands.Theme.MainLayoutBase
+@inherits MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" Site="@Site">
     <!DOCTYPE html>
-    <html lang="@PageLocale">
+    <html lang="@(string.IsNullOrWhiteSpace(PageLocale) ? null : PageLocale)">
     <head>
         <base href="@Site!.BaseUrl" />
 
@@ -16,6 +16,7 @@
         <title>@PageTitle</title>
         <meta name="title" content="@PageTitle" />
         <meta name="description" content="@PageDescription" />
+        <LocalizationMetadata />
         <script>
             (() => {
                 const stored = localStorage.getItem("theme");
@@ -52,7 +53,10 @@
             </nav>
         </header>
 
+        <LanguageSwitcher />
+
         <main>
+            <LocalizationFallbackBanner />
             @Body
         </main>
 

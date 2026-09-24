@@ -1,0 +1,10 @@
+@inherits LocalizationMetadataBase
+
+@if (CanonicalUrl is { } canonicalUrl)
+{
+    <link rel="canonical" href="@canonicalUrl" />
+    @foreach (var (locale, url) in AlternateLanguageUrls)
+    {
+        <link rel="alternate" hreflang="@locale" href="@url" />
+    }
+}

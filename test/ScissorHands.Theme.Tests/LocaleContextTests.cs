@@ -136,9 +136,14 @@ public class LocaleContextTests
     [InlineData(null, " ", "en-US", "en-us")]
     [InlineData(null, null, "en-US", "en-us")]
     [InlineData(null, null, null, "")]
+    [InlineData(null, "ko-KR", null, "")]
+    [InlineData(null, "ko-KR", "", "")]
+    [InlineData(null, null, "   ", "")]
+    [InlineData("fr-ca", "ko-KR", null, "")]
+    [InlineData("fr-ca", "ko-KR", "   ", "")]
     [InlineData("fr-ca", "ko-KR", "en-US", "fr-ca")]
     [InlineData("", "ko-KR", "en-US", "")]
-    public void Given_LocaleSources_When_CalculatePageLocale_Invoked_Then_It_Should_PreferContextAndPreserveLegacyFallback(
+    public void Given_LocaleSources_When_CalculatePageLocale_Invoked_Then_It_Should_RequireConfiguredSiteLocale(
         string? locale, string? documentLocale, string? siteLocale, string expected)
     {
         // Arrange

@@ -1,0 +1,16 @@
+@inherits LanguageSwitcherBase
+
+@if (Links.Count > 1)
+{
+    <nav class="@($"language-switcher {Class}".TrimEnd())" aria-label="@AriaLabel">
+        <ul>
+            @foreach (var link in Links)
+            {
+                <li>
+                    @* Explicit tabindex preserves link tabbing across WebKit keyboard modes. *@
+                    <a href="@link.Url" lang="@link.Locale" hreflang="@link.Locale" tabindex="0" aria-current="@(link.IsCurrent ? "true" : null)">@link.Label</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}
