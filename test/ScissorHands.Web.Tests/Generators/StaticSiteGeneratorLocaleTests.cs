@@ -12,6 +12,7 @@ using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 using ScissorHands.Core.Services;
 using ScissorHands.Theme;
+using ScissorHands.Theme.Components;
 using ScissorHands.Web.Generators;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Renderers;
@@ -187,6 +188,39 @@ public class StaticSiteGeneratorLocaleTests
     }
 
     [Fact]
+    public async Task Given_ThemeOwnedLocalizationMarkup_When_Generated_Then_It_Should_PreserveDataAndValidateItsCustomBanner()
+    {
+        using var fixture = new Fixture(message: "<b>Not translated</b>");
+        fixture.Add("pages/about.md");
+
+        await fixture.BuildWithCustomTheme<CustomBanner>();
+
+        using var fallback = fixture.Html("ko-kr/about/index.html");
+        var banner = fallback.QuerySelector("section[data-localization-fallback]")!;
+        banner.TextContent.Trim().ShouldBe("<b>Not translated</b>");
+        banner.GetAttribute("lang").ShouldBe("ko-kr");
+        banner.QuerySelector("strong").ShouldNotBeNull();
+        banner.QuerySelector("b").ShouldBeNull();
+        fallback.QuerySelector(".localization-fallback").ShouldBeNull();
+        fallback.QuerySelectorAll(".custom-switcher a").Select(a => a.GetAttribute("href")).ShouldBe(["about/", "ko-kr/about/"]);
+        fallback.QuerySelector("head link[data-custom-metadata]")!.GetAttribute("href").ShouldBe("https://example.test/about/");
+        using var primary = fixture.Html("about/index.html");
+        primary.QuerySelector("[data-localization-fallback]").ShouldBeNull();
+    }
+
+    [Fact]
+    public async Task Given_DerivedBannerWithoutMessageFragment_When_Generated_Then_It_Should_NotSatisfyTheReceipt()
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md");
+
+        var error = await Should.ThrowAsync<InvalidDataException>(() => fixture.BuildWithCustomTheme<LookalikeBanner>());
+
+        error.Message.ShouldContain("FallbackMessageContent");
+        fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
+    }
+
+    [Fact]
     public async Task Given_PostHtmlPluginRemovesBanner_When_Generated_Then_It_Should_Fail()
     {
         using var fixture = new Fixture();
@@ -200,6 +234,38 @@ public class StaticSiteGeneratorLocaleTests
             });
         var error = await Should.ThrowAsync<InvalidDataException>(() => fixture.Build());
         error.Message.ShouldContain("LocalizationFallbackBanner");
+    }
+
+    [Theory]
+    [InlineData("hidden")]
+    [InlineData("aria-hidden")]
+    [InlineData("script")]
+    [InlineData("style")]
+    [InlineData("template")]
+    public async Task Given_NonVisibleBannerMarkup_When_Generated_Then_It_Should_RejectTheNotice(string mode)
+    {
+        using var fixture = new Fixture();
+        fixture.Add("pages/about.md");
+        fixture.Plugins.RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>())
+            .Returns(call =>
+            {
+                using var html = new HtmlParser().ParseDocument(call.ArgAt<string>(0));
+                var banner = html.QuerySelector("[data-localization-fallback]");
+                if (banner is not null)
+                {
+                    if (mode is "hidden" or "aria-hidden")
+                    {
+                        banner.SetAttribute(mode, "true");
+                    }
+                    else
+                    {
+                        banner.InnerHtml = $"<{mode}>{Fixture.Notice}</{mode}>";
+                    }
+                }
+                return html.DocumentElement.OuterHtml;
+            });
+
+        await Should.ThrowAsync<InvalidDataException>(() => fixture.BuildWithCustomTheme<CustomBanner>());
     }
 
     [Theory]
@@ -496,6 +562,9 @@ public class StaticSiteGeneratorLocaleTests
         public Task BuildWithMissingBanner() =>
             _generator.BuildAsync<MissingBannerLayout, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(
                 Destination, false, Xunit.TestContext.Current.CancellationToken);
+        public Task BuildWithCustomTheme<TBanner>() where TBanner : ComponentBase =>
+            _generator.BuildAsync<CustomLayout<TBanner>, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(
+                Destination, false, Xunit.TestContext.Current.CancellationToken);
         public bool Exists(string path) => FileSystem.File.Exists(Path.Combine(Destination, path));
         public IHtmlDocument Html(string path) => new HtmlParser().ParseDocument(FileSystem.File.ReadAllText(Path.Combine(Destination, path)));
         public void Dispose() => _provider.Dispose();
@@ -509,6 +578,111 @@ public class StaticSiteGeneratorLocaleTests
             builder.AddAttribute(1, "data-localization-fallback", LocaleContext?.Locale);
             builder.AddAttribute(2, "lang", LocaleContext?.Locale);
             builder.AddContent(3, LocaleContext?.FallbackMessage);
+            builder.CloseElement();
+        }
+    }
+
+    public sealed class CustomLayout<TBanner> : MainLayoutBase where TBanner : ComponentBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.OpenComponent<CascadingMainLayoutBase>(0);
+            builder.AddAttribute(1, nameof(CascadingMainLayoutBase.LocaleContext), LocaleContext);
+            builder.AddAttribute(2, nameof(CascadingMainLayoutBase.Document), Document);
+            builder.AddAttribute(3, nameof(CascadingMainLayoutBase.Site), Site);
+            builder.AddAttribute(4, nameof(CascadingMainLayoutBase.Theme), Theme);
+            builder.AddAttribute(5, nameof(CascadingMainLayoutBase.ChildContent), (RenderFragment)(content =>
+            {
+                content.OpenElement(0, "html");
+                content.OpenElement(1, "head");
+                content.OpenComponent<CustomMetadata>(2);
+                content.CloseComponent();
+                content.CloseElement();
+                content.OpenElement(3, "body");
+                content.OpenComponent<CustomSwitcher>(4);
+                content.CloseComponent();
+                content.OpenComponent<TBanner>(5);
+                content.CloseComponent();
+                content.AddContent(6, Body);
+                content.CloseElement();
+                content.CloseElement();
+            }));
+            builder.CloseComponent();
+        }
+    }
+
+    public sealed class CustomBanner : LocalizationFallbackBannerBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            if (!IsFallback)
+            {
+                return;
+            }
+            builder.OpenElement(0, "section");
+            builder.AddMultipleAttributes(1, BannerAttributes);
+            builder.AddAttribute(2, "role", "note");
+            builder.AddContent(3, "\n  ");
+            builder.OpenElement(4, "strong");
+            builder.AddContent(5, FallbackMessageContent);
+            builder.CloseElement();
+            builder.AddContent(6, "\n");
+            builder.CloseElement();
+        }
+    }
+
+    public sealed class LookalikeBanner : LocalizationFallbackBannerBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            if (!IsFallback)
+            {
+                return;
+            }
+            builder.OpenElement(0, "section");
+            builder.AddMultipleAttributes(1, BannerAttributes);
+            builder.AddContent(2, FallbackMessage);
+            builder.CloseElement();
+        }
+    }
+
+    public sealed class CustomMetadata : LocalizationMetadataBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            if (CanonicalUrl is null)
+            {
+                return;
+            }
+            builder.OpenElement(0, "link");
+            builder.AddAttribute(1, "rel", "canonical");
+            builder.AddAttribute(2, "href", CanonicalUrl);
+            builder.AddAttribute(3, "data-custom-metadata", true);
+            builder.CloseElement();
+            foreach (var (locale, url) in AlternateLanguageUrls)
+            {
+                builder.OpenElement(4, "link");
+                builder.AddAttribute(5, "rel", "alternate");
+                builder.AddAttribute(6, "hreflang", locale);
+                builder.AddAttribute(7, "href", url);
+                builder.CloseElement();
+            }
+        }
+    }
+
+    public sealed class CustomSwitcher : LanguageSwitcherBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.OpenElement(0, "div");
+            builder.AddAttribute(1, "class", "custom-switcher");
+            foreach (var link in Links)
+            {
+                builder.OpenElement(2, "a");
+                builder.AddAttribute(3, "href", link.Url);
+                builder.AddContent(4, link.Label);
+                builder.CloseElement();
+            }
             builder.CloseElement();
         }
     }

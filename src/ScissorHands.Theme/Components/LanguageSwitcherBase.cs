@@ -1,23 +1,16 @@
-@using System.Globalization
+using System.Globalization;
 
-@namespace ScissorHands.Theme.Components
+using Microsoft.AspNetCore.Components;
 
-@if (_links.Count > 1)
+using ScissorHands.Core.Models;
+
+namespace ScissorHands.Theme.Components;
+
+/// <summary>
+/// Prepares language-switch data without prescribing theme markup.
+/// </summary>
+public abstract class LanguageSwitcherBase : ComponentBase
 {
-    <nav class="@($"language-switcher {Class}".TrimEnd())" aria-label="@AriaLabel">
-        <ul>
-            @foreach (var (locale, url, label) in _links)
-            {
-                <li>
-                    @* Explicit tabindex preserves link tabbing across WebKit keyboard modes. *@
-                    <a href="@url" lang="@locale" hreflang="@locale" tabindex="0" aria-current="@(locale == LocaleContext?.Locale ? "true" : null)">@label</a>
-                </li>
-            }
-        </ul>
-    </nav>
-}
-
-@code {
     /// <summary>
     /// Gets the current language and engine-prepared generated destinations.
     /// </summary>
@@ -43,16 +36,20 @@
     public string AriaLabel { get; set; } = "Language";
 
     /// <summary>
-    /// Gets additional theme CSS classes.
+    /// Gets optional theme CSS classes.
     /// </summary>
     [Parameter]
     public string? Class { get; set; }
 
-    private readonly List<(string Locale, string Url, string Label)> _links = [];
+    /// <summary>
+    /// Gets prepared destinations, labels, and requested-language selection.
+    /// </summary>
+    protected IReadOnlyList<LanguageLink> Links { get; private set; } = Array.Empty<LanguageLink>();
 
+    /// <inheritdoc />
     protected override void OnParametersSet()
     {
-        _links.Clear();
+        Links = Array.Empty<LanguageLink>();
         if (LocaleContext is null)
         {
             return;
@@ -65,6 +62,7 @@
         }
         var order = LocaleOrder?.Select((locale, index) => (locale, index))
             .ToDictionary(item => item.locale, item => item.index, StringComparer.Ordinal);
+        var links = new List<LanguageLink>(destinations.Count);
         foreach (var (locale, url) in destinations.OrderBy(link =>
             order is not null && order.TryGetValue(link.Key, out var rank) ? rank : int.MaxValue))
         {
@@ -75,14 +73,23 @@
             {
                 throw new InvalidOperationException($"LanguageSwitcher requires a nonblank label for '{locale}'.");
             }
-            _links.Add((locale, url, label));
+            links.Add(new LanguageLink(locale, url, label, locale == LocaleContext.Locale));
         }
+        Links = links.AsReadOnly();
     }
 
-    private static string GetNativeLabel(string locale, IEnumerable<string> locales)
+    /// <summary>
+    /// Resolves a default native label; themes may override this without changing destinations.
+    /// </summary>
+    protected virtual string GetNativeLabel(string locale, IEnumerable<string> locales)
     {
         var language = locale.Split('-')[0];
         var disambiguate = locales.Count(candidate => candidate.Split('-')[0] == language) > 1;
         return CultureInfo.GetCultureInfo(disambiguate ? locale : language).NativeName;
     }
+
+    /// <summary>
+    /// Represents one engine-prepared destination with theme-prepared display data.
+    /// </summary>
+    public sealed record LanguageLink(string Locale, string Url, string Label, bool IsCurrent);
 }

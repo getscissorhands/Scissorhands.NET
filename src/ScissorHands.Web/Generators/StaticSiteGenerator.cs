@@ -670,11 +670,12 @@ public sealed class StaticSiteGenerator(
             var banners = html.QuerySelectorAll("body [data-localization-fallback]");
             var banner = banners.Length == 1 ? banners[0] : null;
             if (banner is null || banner.GetAttribute("lang") != localeContext.Locale
-                || banner.TextContent != localeContext.FallbackMessage || banner.Children.Length != 0
-                || banner.Closest("[hidden], [aria-hidden='true']") is not null)
+                || banner.TextContent.Trim() != localeContext.FallbackMessage?.Trim()
+                || banner.QuerySelector("script, style, template") is not null
+                || banner.Closest("script, style, template, [hidden], [aria-hidden='true']") is not null)
             {
                 throw new InvalidDataException(
-                    $"Fallback route '{document.Metadata.Slug}' must render LocalizationFallbackBanner above the content with the configured '{localeContext.Locale}' notice. Update the theme and ensure post-HTML plugins preserve the banner.");
+                    $"Fallback route '{document.Metadata.Slug}' must render the notice from LocalizationFallbackBannerBase above the content with its BannerAttributes and configured '{localeContext.Locale}' message. Update the theme and ensure post-HTML plugins preserve the banner.");
             }
         }
         outputs.ValidateLinks(outputPath);

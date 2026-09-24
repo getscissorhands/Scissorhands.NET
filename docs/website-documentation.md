@@ -668,9 +668,30 @@ Both collections default to empty lists. They are layout-only parameters, not co
 
 Forward `LocaleContext` through `CascadingMainLayoutBase` for view and plugin components. The renderer keeps it out of ordinary view attributes. Full navigation remains layout-only and the seven required theme roles are unchanged.
 
-Inside that cascading layout, include `<LocalizationMetadata />` in `<head>` and `<LocalizationFallbackBanner />` above page/post content (the built-in layout puts it first in `<main>`). Mark the article container with `lang="@LocaleContext?.ContentLocale"`. The banner renders encoded text with the requested-language annotation and renders nothing for nonfallback documents. The metadata component emits document canonical/alternate links and nothing for collections. Both reusable components live under `src/ScissorHands.Theme/Components/` in the `ScissorHands.Theme.Components` namespace. Custom themes should add `@using ScissorHands.Theme.Components` to their `_Imports.razor`, alongside `@using ScissorHands.Theme` for the base types and cascading layout.
+The Theme package supplies **abstract base classes, not fixed localization markup**, in `ScissorHands.Theme.Components`. Each theme defines its own Razor components inheriting these classes. The built-in examples live in `src/ScissorHands.Web/themes/default/`; they are not a mandatory template for custom themes.
 
-The renderer verifies actual shared-banner component rendering using a per-render receipt; declaring support or embedding a lookalike in Markdown does not satisfy the contract. After post-HTML hooks, the generator also parses fallback HTML and requires exactly one correctly annotated, text-only notice with the configured message, not under `hidden`/`aria-hidden`. Missing or removed notices fail generation. Theme authors remain responsible for placement and CSS visibility/accessibility; this is not an arbitrary stylesheet audit.
+| Base class | Prepared data/behavior |
+| --- | --- |
+| `LanguageSwitcherBase` | Read-only `Links` containing `Locale`, `Url`, `Label`, and `IsCurrent`; label/order parameters, validation, and overridable `GetNativeLabel` |
+| `LocalizationMetadataBase` | `CanonicalUrl` and read-only `AlternateLanguageUrls` for theme-owned head markup |
+| `LocalizationFallbackBannerBase` | `IsFallback`, `FallbackMessage`, required `BannerAttributes`, and encoded `FallbackMessageContent` |
+
+Import `ScissorHands.Theme.Components` in the theme's `_Imports.razor`, alongside `ScissorHands.Theme`. Place the theme's metadata component in `<head>`, its switcher in the shared layout, and its banner above page/post content. Mark the article container with `lang="@LocaleContext?.ContentLocale"`. Metadata markup should be omitted when `CanonicalUrl` is null; the shared 404 and generated collections do not acquire paired-document SEO.
+
+For example, a theme can choose its own banner element, formatting, classes, and accessible role:
+
+```razor
+@inherits LocalizationFallbackBannerBase
+
+@if (IsFallback)
+{
+    <section class="my-notice" role="note" @attributes="BannerAttributes"><strong>@FallbackMessageContent</strong></section>
+}
+```
+
+Render `FallbackMessageContent` rather than raw HTML or only the message string. This fragment encodes the configured text and records actual message rendering; it emits no surrounding HTML. Apply `BannerAttributes` to the message-bearing element to provide the required marker and requested-language annotation. Merely inheriting the base, declaring support, or embedding a lookalike in Markdown does not satisfy the rendering receipt.
+
+After post-HTML hooks, the generator requires exactly one marked notice with matching configured text (ignoring surrounding formatting whitespace). Theme-owned formatting children are allowed; hidden/ARIA-hidden ancestors and script/style/template message content are rejected. Missing or removed notices fail generation. Themes remain responsible for placement and CSS visibility/accessibility; this is not an arbitrary stylesheet audit.
 
 Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags`; without context they retain those original values. Existing post/page/tag-list `GetTagUrl` wrappers become locale-aware when context exists. Core static helpers keep their context-free contracts. Context values are prepared rendering data, not a general URL sanitizer.
 
@@ -680,7 +701,7 @@ Normal generation supplies both navigation parameters automatically. For compati
 
 ### Language switcher
 
-Import `ScissorHands.Theme.Components` and place `<LanguageSwitcher />` in the shared cascading layout, outside the main content article. The built-in theme places it between the site header and `<main>` so every document and generated page has the same control. It uses ordinary links and needs no JavaScript. It renders nothing when localization is disabled or there is only one destination language.
+Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `LanguageSwitcher.razor` places ordinary accessible links between the site header and `<main>`, needs no JavaScript, and renders nothing when localization is disabled or only one destination language exists.
 
 The engine supplies supported locale identifiers, current requested locale, and valid targets through `LocaleContext.SwitchLanguageUrls`; themes must not reconstruct URLs or infer translation availability.
 
@@ -692,16 +713,16 @@ The engine supplies supported locale identifiers, current requested locale, and 
 | Tag page | Same tag in that locale if generated, otherwise its homepage |
 | Shared `404.html` | Selected locale homepage; there are no localized 404 copies |
 
-The current language is annotated with `aria-current="true"` and reflects the requested locale, not a fallback article's language. Links carry `lang` and `hreflang`, but are not SEO `rel="alternate"` declarations. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
+Each prepared link's `IsCurrent` reflects the requested locale, not a fallback article's language. The built-in markup maps it to `aria-current="true"` and includes `lang`, `hreflang`, and `tabindex="0"`; these links are not SEO `rel="alternate"` declarations. Custom themes should preserve accessible, no-JavaScript switching while choosing their own markup. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
 
-The component owns native-language label defaults using .NET culture names, for example English, 한국어 and 日本語. Multiple variants of the same language use full native culture names to distinguish their region/script. Themes can customize presentation without changing routing:
+`LanguageSwitcherBase` provides native-language label defaults using .NET culture names, for example English, 한국어 and 日本語. Multiple variants of the same language use full native culture names to distinguish their region/script. Themes may override `GetNativeLabel` or use these inherited parameters without changing routing:
 
 | Parameter | Type / behavior |
 | --- | --- |
-| `Labels` | Optional `IReadOnlyDictionary<string, string>` of normalized locale to plain-text label; blank labels fail, and labels are encoded |
+| `Labels` | Optional `IReadOnlyDictionary<string, string>` of normalized locale to plain-text label; blank labels fail; render labels using normal encoded Razor expressions |
 | `LocaleOrder` | Optional `IReadOnlyList<string>` of locales to display first, followed by remaining destinations in engine order |
 | `AriaLabel` | Accessible navigation name; defaults to `Language` and can be localized by the theme |
-| `Class` | Additional CSS classes alongside `language-switcher` |
+| `Class` | Optional theme CSS classes; the built-in markup adds them alongside `language-switcher` |
 
 These display settings neither enable locales nor change their identifiers, destinations, or publication eligibility. The default engine order is primary language followed by additional locales in ordinal order.
 
@@ -1135,7 +1156,7 @@ Remove every frontmatter `locale` field, including on the shared 404. Keep prima
 
 Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. Primary drafts/missing primary files suppress active translations; fallback never uses draft content.
 
-Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components` and integrate its shared banner, metadata, and language-switcher components, annotate actual content language, and retain Home/Tags helpers. Missing fallback banners fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
+Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components`, and provide their own components derived from `LanguageSwitcherBase`, `LocalizationMetadataBase`, and `LocalizationFallbackBannerBase`. The former concrete localization components in the Theme package are replaced by these bases; Razor implementations now belong to the default theme or the consuming theme. No new required view-discovery role is added. Render the banner's encoded `FallbackMessageContent` with `BannerAttributes`, annotate actual content language, and retain Home/Tags helpers. Missing fallback notices fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
 
 Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. The switcher supplies native language labels, but other site/theme UI text is not automatically translated. Future-date scheduling remains unchanged.
 

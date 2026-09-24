@@ -1,9 +1,7 @@
 using System.Globalization;
 
 using ScissorHands.Core.Models;
-using ScissorHands.Theme.Components;
-
-namespace ScissorHands.Theme.Tests;
+namespace ScissorHands.Web.Tests.Themes;
 
 public class LanguageSwitcherTests
 {

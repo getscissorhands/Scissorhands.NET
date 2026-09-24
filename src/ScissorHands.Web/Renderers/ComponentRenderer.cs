@@ -98,7 +98,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
         }
 
         var parameterView = ParameterView.FromDictionary(layoutParams);
-        var receipt = new LocalizationFallbackBanner.RenderReceipt();
+        var receipt = new LocalizationFallbackBannerBase.RenderReceipt();
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
             var wrapper = ParameterView.FromDictionary(new Dictionary<string, object?>
@@ -115,7 +115,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
                     builder.CloseComponent();
                 }),
             });
-            var root = await renderer.RenderComponentAsync<CascadingValue<LocalizationFallbackBanner.RenderReceipt>>(wrapper);
+            var root = await renderer.RenderComponentAsync<CascadingValue<LocalizationFallbackBannerBase.RenderReceipt>>(wrapper);
             return root.ToHtmlString();
         });
 
@@ -123,7 +123,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             && context is LocaleContext { IsFallback: true } locale && !receipt.Rendered)
         {
             throw new InvalidDataException(
-                $"Theme '{layoutType.FullName}' must render LocalizationFallbackBanner above fallback content for route '{locale.Route}'.");
+                $"Theme '{layoutType.FullName}' must render FallbackMessageContent from LocalizationFallbackBannerBase above fallback content for route '{locale.Route}'.");
         }
         return html;
     }
