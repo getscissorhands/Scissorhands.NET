@@ -222,7 +222,7 @@ Both authored files in a post pair must declare valid `published` values. Compar
 
 **Production publication:** the primary document must exist and not be draft; posts must also have reached their publication instant. An eligible translation then replaces primary content at its localized URL; a missing/draft/future-scheduled translation uses eligible primary content with the configured destination-language banner. An ineligible primary suppresses all its variants, even ready translations. Additional-language-only files never publish independently while they are classified as translations. Pair validation does not silently override conflicting metadata.
 
-**Preview selection:** authored translations are shown even when draft or future-scheduled, without substituting primary fallback or showing a fallback notice for the authored translation. A translation receives a `Draft` badge when either member of its pair is draft, and posts receive `Scheduled on yyyy-mm-dd` when either publication instant is future. Both badges appear when applicable, even if the statuses originate from different members of the pair. Authored draft flags are not modified. A missing translation still uses primary-content fallback with the normal notice and applicable status badges. A missing primary still suppresses translations in preview.
+**Preview selection:** authored translations are shown even when draft or future-scheduled, without substituting primary fallback or showing a fallback notice for the authored translation. A translation receives a draft-status badge when either member of its pair is draft, and posts receive a scheduled-status badge when either publication instant is future. The default theme labels them `Draft` and `Scheduled on yyyy-mm-dd`; custom themes own the wording and date format. Both badges appear when applicable, even if the statuses originate from different members of the pair. Authored draft flags are not modified. A missing translation still uses primary-content fallback with the normal notice and applicable status badges. A missing primary still suppresses translations in preview.
 
 For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and displays the English About document with its Korean notice; it does not redirect. A blank notice fails only when fallback is needed. Requested locale and actual content language remain distinct in rendering context. Translated-or-fallback collections have one entry per primary identity and use the selected document's title/tags. Navigation preserves visibility and hierarchy, ordering all variants by the primary source path.
 
@@ -466,7 +466,7 @@ dotnet run -- --build
 
 Generation captures one reference instant before content loading. A post is future-scheduled only when its resolved publication instant is strictly later than that reference. Equality is eligible; a future date alone skips a post rather than failing generation. The same snapshot controls all preview badges during that generation, even if time advances while rendering.
 
-Preview badges appear at the beginning of affected post/page main content and beside their entries in home/tag listings. The text is `Draft`, `Scheduled on yyyy-mm-dd`, or both, preserving the authored calendar date. Pages can have Draft but not Scheduled badges. Unaffected content and production output have no status badges. These are required for custom themes too; see the [publication status theme contract](#publication-status-theme-contract).
+Preview badges appear at the beginning of affected post/page main content and beside their entries in home/tag listings. The default theme uses `Draft`, `Scheduled on yyyy-mm-dd`, or both. Custom themes may translate the labels and format the authored calendar date for an explicit culture, without changing that date or publication eligibility. Pages can have draft but not scheduled badges. Unaffected content and production output have no status badges. These statuses are required for custom themes too; see the [publication status theme contract](#publication-status-theme-contract).
 
 Never deploy `preview/`: it intentionally contains unpublished content. Build and deploy at or after publication time; there is no automatic scheduler or timer-driven preview regeneration. Refresh or trigger regeneration to obtain a new status snapshot. For in-place output, retain the ownership ledger and deploy with removals so rescheduling, draft changes, or switching preview output to build mode withdraw stale pages and generated references.
 
@@ -717,20 +717,24 @@ Normal generation supplies both navigation parameters automatically. For compati
 
 All themes must render prepared preview status for affected posts/pages and their homepage/tag-list entries. `ContentDocument.PublicationStatus` is an immutable pre-hook snapshot: `Route` identifies the generated document, `IsDraft` includes inherited primary draft status, and nullable `ScheduledDate` is the authored date when this post or its primary is future-scheduled. `IsScheduled` and `HasBadges` are derived flags. Production, custom 404, and unaffected content have no required badges. Do not infer status from wall-clock time, `Metadata.Draft` alone, or converted dates in theme code.
 
-Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind`, exact `Text`, required `Attributes`, and an encoded `Content` fragment:
+Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind` (`draft` or `scheduled`), nullable `ScheduledDate`, required machine-readable `Attributes`, and `RenderContent(themeLabel)` for encoded delivery. The base does not supply human-readable wording or a display date format. For example, a theme can choose:
 
 ```razor
+@using System.Globalization
 @inherits PublicationBadgeBase
 
 @foreach (var badge in Badges)
 {
-    <span class="my-status" @attributes="badge.Attributes">@badge.Content</span>
+    var label = badge.ScheduledDate is { } date
+        ? $"Planned for {date.ToString("MMM dd, yyyy", CultureInfo.GetCultureInfo("en-US"))}"
+        : "Draft";
+    <span class="my-status" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
 }
 ```
 
 The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
 
-Render `Content`, not raw HTML or just `Text`: delivery receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The base produces `Draft` and/or `Scheduled on yyyy-mm-dd` with invariant formatting. Both badges are required when both flags apply.
+Render `RenderContent(label)`, not raw HTML or only a plain label expression: it encodes the theme's nonempty text and records delivery of that text. Receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The default Razor component chooses `Draft` and `Scheduled on yyyy-MM-dd` with invariant culture; another theme can use localized wording, `MMM dd, yyyy`, `dd/MM/yyyy`, or another explicit cultural format. Do not implicitly depend on the build machine's culture or convert the authored date to another timezone. Both statuses remain required when both flags apply.
 
 In post/page views, apply `PublicationBadgeBase.GetRegionAttributes(Document, PublicationBadgePlacement.Detail)` to the content `article` inside `<main>` (or a `role="main"` container), and place the badge component first, before headings, hero images, publication dates, and authored content. In home/tag views, apply `GetRegionAttributes(entry, PublicationBadgePlacement.Listing)` to each corresponding listing-entry wrapper inside main content, and render the badge component beside that entry's link. For example:
 
@@ -741,9 +745,9 @@ In post/page views, apply `PublicationBadgeBase.GetRegionAttributes(Document, Pu
 </li>
 ```
 
-Regions use `data-publication-content` or `data-publication-entry` with the stable route. Badges use `data-publication-badge`, `data-publication-route`, and `data-publication-placement`. Preserve these attributes through post-HTML hooks. Each affected route must have its own unique region; badges in navigation, unrelated entries, or outside main content do not satisfy the contract. No additional discovered theme role or cascading layout parameter is required.
+Regions use `data-publication-content` or `data-publication-entry` with the stable route. Badges use `data-publication-badge`, `data-publication-route`, and `data-publication-placement`. Scheduled badges additionally carry `data-publication-date` as invariant ISO `yyyy-MM-dd`, independent of the visible date format; draft badges have no date attribute. Preserve these attributes through post-HTML hooks. Each affected route must have its own unique region; badges in navigation, unrelated entries, or outside main content do not satisfy the contract. No additional discovered theme role or cascading layout parameter is required.
 
-Renderer receipts and final-HTML validation reject missing, duplicate, wrong-route, altered, hidden/inert, or incorrectly placed badges, including omission of one of two required labels. Required text must remain exposed; hidden decorative children are permitted only when the complete label is still present. Detail badges must precede actual article content. Production output and unaffected renders must not contain publication badge markers. Themes own their CSS and accessible styling; structural validation is not an arbitrary stylesheet audit.
+Renderer receipts and final-HTML validation enforce the required statuses, correct machine-readable dates, and complete visible theme-provided labels, not a fixed English sentence or display format. They reject missing, duplicate, wrong-route/date, altered, hidden/inert, or incorrectly placed badges, including omission of one of two required labels. Post-HTML hooks must preserve the labels actually rendered by the theme; hidden decorative children are permitted only when the complete label remains exposed. Detail badges must precede actual article content. Production output and unaffected renders must not contain publication badge markers. Themes own the correctness of translations/formatting, CSS, and accessible styling; structural validation cannot interpret arbitrary human languages or audit stylesheets.
 
 Generation prepares collections, effective statuses, and locale contexts before hooks. A replacement document from a Markdown hook retains its original status snapshot rather than resetting eligibility or recomputing collections. Custom loaders supplying typed `Published` values must supply the intended `DateTimeOffset` instants; `Site.TimeZone` interprets raw frontmatter in the built-in loader, not already typed offsets.
 
@@ -1215,6 +1219,8 @@ Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query
 Future-dated posts previously appeared immediately; production builds now withhold them until their publication instant. Set `Site.TimeZone` explicitly when date-only or offset-free post values should use a timezone other than the UTC default. Explicit offsets remain authoritative, and authored dates in URLs and translation pairs do not move.
 
 Draft posts and ordinary pages are now visible in preview, including applicable lists and opted-in navigation. Never deploy preview output. Custom themes must implement the [publication status contract](#publication-status-theme-contract), including both badges for combined/inherited states and per-entry listing indicators; a missing required badge fails preview generation. Custom 404 behavior is unchanged. Existing generator constructor calls still use the system clock; dependency-injected hosts may supply a `TimeProvider` for deterministic generation.
+
+Themes using the initial fixed-label badge API must replace `badge.Text`/`badge.Content` with theme-owned text generated from `badge.Kind` and `badge.ScheduledDate`, rendered through `badge.RenderContent(label)`. Keep `badge.Attributes` on the badge element, including the new machine-readable scheduled date. The default component retains its previous visible wording and format; no publication or timezone rules change.
 
 ## Browser acceptance
 

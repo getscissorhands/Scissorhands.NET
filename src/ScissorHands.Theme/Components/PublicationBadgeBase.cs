@@ -41,7 +41,7 @@ public abstract class PublicationBadgeBase : ComponentBase
     public PublicationBadgePlacement Placement { get; set; }
 
     /// <summary>
-    /// Gets the prepared badges. Render each badge's Attributes and encoded Content fragment.
+    /// Gets the prepared status data. Supply theme-owned text to each badge's RenderContent helper.
     /// </summary>
     protected IReadOnlyList<Badge> Badges { get; private set; } = [];
 
@@ -77,48 +77,67 @@ public abstract class PublicationBadgeBase : ComponentBase
         var badges = new List<Badge>(2);
         if (status.IsDraft)
         {
-            badges.Add(CreateBadge("draft", "Draft", status.Route));
+            badges.Add(CreateBadge("draft", status.Route));
         }
         if (status.ScheduledDate is { } date)
         {
-            badges.Add(CreateBadge("scheduled", $"Scheduled on {date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}", status.Route));
+            badges.Add(CreateBadge("scheduled", status.Route, date));
         }
         Badges = badges.AsReadOnly();
     }
 
-    private Badge CreateBadge(string kind, string text, string route)
+    private Badge CreateBadge(string kind, string route, DateOnly? scheduledDate = null)
     {
         var placement = Placement;
         var receipt = Receipt;
-        return new Badge(kind, text, new ReadOnlyDictionary<string, object>(new Dictionary<string, object>
+        var attributes = new Dictionary<string, object>
         {
             ["data-publication-badge"] = kind,
             ["data-publication-route"] = route,
             ["data-publication-placement"] = placement == PublicationBadgePlacement.Listing ? "listing" : "detail",
-        }), builder =>
+        };
+        if (scheduledDate is { } date)
+        {
+            attributes["data-publication-date"] = date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture);
+        }
+        return new Badge(kind, scheduledDate, new ReadOnlyDictionary<string, object>(attributes), text => builder =>
         {
             builder.AddContent(0, text);
-            receipt?.Record(route, placement, kind);
+            receipt?.Record(route, placement, kind, text);
         });
     }
 
     /// <summary>
-    /// Describes one encoded status label and its required structural attributes.
+    /// Describes one status, its authored date, and its required machine-readable attributes.
     /// </summary>
     public sealed class Badge
     {
-        internal Badge(string kind, string text, IReadOnlyDictionary<string, object> attributes, RenderFragment content)
+        private readonly Func<string, RenderFragment> _renderContent;
+
+        internal Badge(string kind, DateOnly? scheduledDate, IReadOnlyDictionary<string, object> attributes,
+            Func<string, RenderFragment> renderContent)
         {
             Kind = kind;
-            Text = text;
+            ScheduledDate = scheduledDate;
             Attributes = attributes;
-            Content = content;
+            _renderContent = renderContent;
         }
 
         public string Kind { get; }
-        public string Text { get; }
+        public DateOnly? ScheduledDate { get; }
         public IReadOnlyDictionary<string, object> Attributes { get; }
-        public RenderFragment Content { get; }
+
+        /// <summary>
+        /// Encodes a theme-owned label and records its delivery without prescribing wording or culture.
+        /// </summary>
+        public RenderFragment RenderContent(string text)
+        {
+            if (string.IsNullOrWhiteSpace(text))
+            {
+                throw new ArgumentException($"A nonempty theme label is required for the '{Kind}' publication badge.", nameof(text));
+            }
+            return _renderContent(text);
+        }
     }
 
     /// <summary>
@@ -126,12 +145,15 @@ public abstract class PublicationBadgeBase : ComponentBase
     /// </summary>
     public sealed class RenderReceipt
     {
-        private readonly HashSet<(string Route, PublicationBadgePlacement Placement, string Kind)> _rendered = [];
+        private readonly Dictionary<(string Route, PublicationBadgePlacement Placement, string Kind), string> _rendered = [];
 
         public bool WasRendered(string route, PublicationBadgePlacement placement, string kind) =>
-            _rendered.Contains((route, placement, kind));
+            _rendered.ContainsKey((route, placement, kind));
 
-        internal void Record(string route, PublicationBadgePlacement placement, string kind) =>
-            _rendered.Add((route, placement, kind));
+        public string? GetRenderedText(string route, PublicationBadgePlacement placement, string kind) =>
+            _rendered.GetValueOrDefault((route, placement, kind));
+
+        internal void Record(string route, PublicationBadgePlacement placement, string kind, string text) =>
+            _rendered[(route, placement, kind)] = text;
     }
 }

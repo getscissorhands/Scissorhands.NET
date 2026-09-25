@@ -140,6 +140,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             || typeof(TagViewBase).IsAssignableFrom(typeof(TComponent));
         var documents = GetPublicationDocuments<TComponent>(parameters).ToArray();
         var placement = isListing ? PublicationBadgePlacement.Listing : PublicationBadgePlacement.Detail;
+        var labels = new Dictionary<(string Route, string Kind), string>();
         if (preview)
         {
             foreach (var document in documents)
@@ -151,12 +152,18 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
                 void RequireReceipt(bool required, string kind)
                 {
-                    if (required && !publicationReceipt.WasRendered(status.Route, placement, kind))
+                    if (!required)
+                    {
+                        return;
+                    }
+                    var text = publicationReceipt.GetRenderedText(status.Route, placement, kind);
+                    if (text is null)
                     {
                         throw new InvalidDataException(
-                            $"Theme '{layoutType.FullName}' must render the '{kind}' badge's encoded Content from PublicationBadgeBase "
+                            $"Theme '{layoutType.FullName}' must render the '{kind}' badge using RenderContent(themeLabel) from PublicationBadgeBase "
                             + $"for document '{status.Route}' with {placement} placement. Inheritance and lookalike HTML do not deliver a badge.");
                     }
+                    labels[(status.Route, kind)] = text;
                 }
             }
         }
@@ -164,7 +171,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             && localeValue is LocaleContext routeContext ? routeContext.Route
             : parameters.TryGetValue(nameof(MainLayoutBase.Document), out var documentValue)
                 && documentValue is ContentDocument current ? current.Metadata.Slug : typeof(TComponent).Name;
-        PublicationBadgeValidator.Validate(html, documents, isListing, preview, route, cancellationToken);
+        PublicationBadgeValidator.Validate(html, documents, isListing, preview, route, cancellationToken, labels);
         return html;
     }
 

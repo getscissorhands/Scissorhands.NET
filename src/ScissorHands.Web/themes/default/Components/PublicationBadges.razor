@@ -1,4 +1,5 @@
 @namespace ScissorHands.Web
+@using System.Globalization
 @inherits PublicationBadgeBase
 
 @if (Badges.Count > 0)
@@ -6,7 +7,10 @@
     <span class="publication-badges">
         @foreach (var badge in Badges)
         {
-            <span class="publication-badge" @attributes="badge.Attributes">@badge.Content</span>
+            var label = badge.ScheduledDate is { } date
+                ? $"Scheduled on {date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}"
+                : "Draft";
+            <span class="publication-badge" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
         }
     </span>
 }

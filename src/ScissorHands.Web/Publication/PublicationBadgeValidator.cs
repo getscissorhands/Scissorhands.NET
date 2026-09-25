@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Text;
 
@@ -17,12 +18,12 @@ internal static class PublicationBadgeValidator
     private const string RegionSelector = "[data-publication-content], [data-publication-entry]";
     private const string ForbiddenSelector = "nav, header, footer, aside, [role='navigation'], script, style, template, noscript";
 
-    internal static void Validate(
+    internal static IReadOnlyDictionary<(string Route, string Kind), string> Validate(
         string html, IEnumerable<ContentDocument> documents, bool isListing, bool preview, string route,
-        CancellationToken cancellationToken)
+        CancellationToken cancellationToken, IReadOnlyDictionary<(string Route, string Kind), string>? expectedLabels = null)
     {
         cancellationToken.ThrowIfCancellationRequested();
-        var expected = new Dictionary<(string Route, string Kind), string>();
+        var expected = new Dictionary<(string Route, string Kind), DateOnly?>();
         foreach (var document in documents)
         {
             cancellationToken.ThrowIfCancellationRequested();
@@ -37,11 +38,11 @@ internal static class PublicationBadgeValidator
             }
             if (status.IsDraft)
             {
-                expected[(status.Route, "draft")] = "Draft";
+                expected[(status.Route, "draft")] = null;
             }
             if (status.ScheduledDate is { } date)
             {
-                expected[(status.Route, "scheduled")] = $"Scheduled on {date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}";
+                expected[(status.Route, "scheduled")] = date;
             }
         }
 
@@ -51,19 +52,24 @@ internal static class PublicationBadgeValidator
         var placement = isListing ? "listing" : "detail";
         var regionAttribute = isListing ? "data-publication-entry" : "data-publication-content";
         var seen = new HashSet<(string Route, string Kind)>();
+        var labels = new Dictionary<(string Route, string Kind), string>();
         foreach (var badge in badges)
         {
             cancellationToken.ThrowIfCancellationRequested();
             var badgeRoute = badge.GetAttribute("data-publication-route") ?? string.Empty;
             var kind = badge.GetAttribute("data-publication-badge") ?? string.Empty;
             var key = (badgeRoute, kind);
-            if (!expected.TryGetValue(key, out var text) || !seen.Add(key))
+            if (!expected.TryGetValue(key, out var date) || !seen.Add(key))
             {
                 throw Failure(route, $"Unexpected or duplicate '{kind}' badge for document '{badgeRoute}'.");
             }
             if (badge.GetAttribute("data-publication-placement") != placement)
             {
                 throw Failure(route, $"The '{kind}' badge for document '{badgeRoute}' has the wrong placement; expected '{placement}'.");
+            }
+            if (badge.GetAttribute("data-publication-date") != date?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+            {
+                throw Failure(route, $"The '{kind}' badge for document '{badgeRoute}' has missing or incorrect machine-readable publication date metadata.");
             }
 
             var matchingRegions = regions.Where(region => region.GetAttribute(regionAttribute) == badgeRoute).ToArray();
@@ -80,18 +86,21 @@ internal static class PublicationBadgeValidator
             {
                 throw Failure(route, $"The '{kind}' badge for document '{badgeRoute}' must belong to its unique '{regionAttribute}' region inside main content, outside navigation.");
             }
-            if (GetExposedText(badge, cancellationToken).Trim() != text)
+            var text = GetExposedText(badge, cancellationToken).Trim();
+            if (text.Length == 0 || (expectedLabels is not null
+                && (!expectedLabels.TryGetValue(key, out var label) || text != label.Trim())))
             {
-                throw Failure(route, $"The '{kind}' badge for document '{badgeRoute}' must expose exactly '{text}' without hidden or altered required text.");
+                throw Failure(route, $"The '{kind}' badge for document '{badgeRoute}' must expose the complete nonempty theme-provided label without hidden or altered required text.");
             }
+            labels.Add(key, text);
         }
 
-        foreach (var (key, text) in expected)
+        foreach (var key in expected.Keys)
         {
             cancellationToken.ThrowIfCancellationRequested();
             if (!seen.Contains(key))
             {
-                throw Failure(route, $"Missing '{text}' badge for document '{key.Route}'.");
+                throw Failure(route, $"Missing '{key.Kind}' badge for document '{key.Route}'.");
             }
         }
         if (!isListing && expected.Count > 0)
@@ -107,6 +116,7 @@ internal static class PublicationBadgeValidator
                 }
             }
         }
+        return new ReadOnlyDictionary<(string Route, string Kind), string>(labels);
     }
 
     private static bool BeginsWithBadges(IElement region, int requiredCount, CancellationToken cancellationToken)
@@ -187,6 +197,6 @@ internal static class PublicationBadgeValidator
 
     private static InvalidDataException Failure(string route, string reason) => new(
         $"Publication badge validation failed for rendered route '{route}': {reason} "
-        + "Update the theme to render every PublicationBadgeBase badge's encoded Content and Attributes "
+        + "Update the theme to render every PublicationBadgeBase badge using RenderContent(themeLabel) and its Attributes "
         + "inside GetRegionAttributes(document, placement), and ensure post-HTML plugins preserve the badges and their placement.");
 }

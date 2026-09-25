@@ -729,11 +729,14 @@ public sealed class StaticSiteGenerator(
         cancellationToken.ThrowIfCancellationRequested();
         outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'",
             generatedDocument: true, cancellationToken: cancellationToken);
+        var publicationSources = (publicationDocuments ?? [document]).ToArray();
+        var labels = PublicationBadgeValidator.Validate(renderedHtml, publicationSources, isListing, _options.IsPreview,
+            document.Metadata.Slug, cancellationToken);
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
-        PublicationBadgeValidator.Validate(finalHtml, publicationDocuments ?? [document], isListing, _options.IsPreview,
-            document.Metadata.Slug, cancellationToken);
+        PublicationBadgeValidator.Validate(finalHtml, publicationSources, isListing, _options.IsPreview,
+            document.Metadata.Slug, cancellationToken, labels);
         if (localeContext?.IsFallback == true)
         {
             using var html = new HtmlParser().ParseDocument(finalHtml);

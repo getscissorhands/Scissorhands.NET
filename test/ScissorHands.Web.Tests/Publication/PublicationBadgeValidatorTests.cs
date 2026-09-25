@@ -130,7 +130,7 @@ public class PublicationBadgeValidatorTests
             html, [document], false, true, "rendered", Xunit.TestContext.Current.CancellationToken));
 
         // Assert
-        exception.Message.ShouldContain(draft ? "Scheduled on 2099-01-02" : "Draft");
+        exception.Message.ShouldContain(draft ? "scheduled" : "draft");
     }
 
     [Theory]
@@ -191,6 +191,41 @@ public class PublicationBadgeValidatorTests
         exception.ShouldBeOfType<OperationCanceledException>();
     }
 
+    [Theory]
+    [InlineData("Publication le 26 septembre 2026")]
+    [InlineData("Scheduled on Sep 26, 2026")]
+    [InlineData("Scheduled on 26/09/2026")]
+    public void Given_ThemeFormattedDate_When_Validated_Then_It_Should_UseMachineMetadataAndPreserveTheLabel(string label)
+    {
+        var document = new ContentDocument
+        {
+            PublicationStatus = new PublicationStatus { Route = "post", ScheduledDate = new DateOnly(2026, 9, 26) },
+        };
+        var markup = Detail(Badge(label, "scheduled", date: "2026-09-26"));
+
+        var labels = PublicationBadgeValidator.Validate(markup, [document], false, true, "post", Xunit.TestContext.Current.CancellationToken);
+
+        labels[("post", "scheduled")].ShouldBe(label);
+        Should.Throw<InvalidDataException>(() => PublicationBadgeValidator.Validate(
+            Detail(Badge("Changed label", "scheduled", date: "2026-09-26")), [document], false, true, "post",
+            Xunit.TestContext.Current.CancellationToken, labels));
+    }
+
+    [Theory]
+    [InlineData(null)]
+    [InlineData("2099-01-03")]
+    [InlineData("02/01/2099")]
+    [InlineData("2099-01-02T00:00:00Z")]
+    public void Given_MissingOrIncorrectMachineDate_When_Validated_Then_It_Should_RejectEvenIfDisplayTextLooksCorrect(string? date)
+    {
+        var markup = Detail(Badge() + Badge("Scheduled on 2099-01-02", "scheduled", date: date));
+
+        var error = Should.Throw<InvalidDataException>(() => PublicationBadgeValidator.Validate(
+            markup, [Document("post", scheduled: true)], false, true, "post", Xunit.TestContext.Current.CancellationToken));
+
+        error.Message.ShouldContain("machine-readable");
+    }
+
     private static ContentDocument Document(string route, bool scheduled = false) => new()
     {
         PublicationStatus = new PublicationStatus
@@ -204,9 +239,13 @@ public class PublicationBadgeValidatorTests
     private static string Detail(string badges) =>
         $"<main><article data-publication-content='post'><div>{badges}</div><h1>Post content</h1></article></main>";
 
-    private static string Badge(string text = "Draft", string kind = "draft", string route = "post", string placement = "detail") =>
-        $"<span data-publication-badge='{kind}' data-publication-route='{route}' data-publication-placement='{placement}'>{text}</span>";
+    private static string Badge(string text = "Draft", string kind = "draft", string route = "post", string placement = "detail",
+        string? date = "2099-01-02") =>
+        $"<span data-publication-badge='{kind}' data-publication-route='{route}' data-publication-placement='{placement}'"
+        + (kind == "scheduled" && date is not null ? $" data-publication-date='{date}'" : "")
+        + $">{text}</span>";
 
     private static void Validate(string html) => PublicationBadgeValidator.Validate(
-        html, [Document("post")], false, true, "rendered", Xunit.TestContext.Current.CancellationToken);
+        html, [Document("post")], false, true, "rendered", Xunit.TestContext.Current.CancellationToken,
+        new Dictionary<(string Route, string Kind), string> { [("post", "draft")] = "Draft" });
 }

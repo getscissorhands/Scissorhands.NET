@@ -247,6 +247,7 @@ public class StaticSiteGeneratorPublicationTests
     [InlineData("alter")]
     [InlineData("hide")]
     [InlineData("move")]
+    [InlineData("date")]
     public async Task Given_PostHtmlPluginChangesBadge_When_Previewed_Then_It_Should_FailBeforeWritingTheDocument(string change)
     {
         using var fixture = new Fixture();
@@ -273,6 +274,9 @@ public class StaticSiteGeneratorPublicationTests
                     break;
                 case "move":
                     html.QuerySelector("article")!.AppendChild(badge);
+                    break;
+                case "date":
+                    html.QuerySelector("[data-publication-badge='scheduled']")!.SetAttribute("data-publication-date", "2099-01-02");
                     break;
             }
             return html.DocumentElement.OuterHtml;

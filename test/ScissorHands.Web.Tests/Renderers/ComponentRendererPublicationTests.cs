@@ -1,3 +1,5 @@
+using System.Globalization;
+
 using AngleSharp.Html.Parser;
 
 using Microsoft.AspNetCore.Components;
@@ -28,7 +30,8 @@ public class ComponentRendererPublicationTests
 
         using var html = new HtmlParser().ParseDocument(rendered);
         html.QuerySelectorAll("article .custom-status em").Select(badge => badge.TextContent)
-            .ShouldBe(["Draft", "Scheduled on 2099-01-02"]);
+            .ShouldBe(["Entwurf", "Geplant am 02.01.2099"]);
+        html.QuerySelector("[data-publication-badge='scheduled']")!.GetAttribute("data-publication-date").ShouldBe("2099-01-02");
         html.QuerySelector("article > :first-child")!.ClassName.ShouldBe("custom-status");
         html.QuerySelector("article h1")!.TextContent.ShouldBe("Content");
     }
@@ -134,7 +137,7 @@ public class ComponentRendererPublicationTests
             postHookHtml, [document], listing, true, "output", Xunit.TestContext.Current.CancellationToken));
 
         // Assert
-        exception.Message.ShouldContain("Scheduled on 2099-01-02");
+        exception.Message.ShouldContain("scheduled");
         exception.Message.ShouldContain("post-HTML plugins");
     }
 
@@ -226,9 +229,12 @@ public class ComponentRendererPublicationTests
             builder.AddAttribute(1, "class", "custom-status");
             foreach (var badge in Badges)
             {
+                var label = badge.ScheduledDate is { } date
+                    ? $"Geplant am {date.ToString("dd/MM/yyyy", CultureInfo.GetCultureInfo("de-DE"))}"
+                    : "Entwurf";
                 builder.OpenElement(2, "em");
                 builder.AddMultipleAttributes(3, badge.Attributes);
-                builder.AddContent(4, badge.Content);
+                builder.AddContent(4, badge.RenderContent(label));
                 builder.CloseElement();
             }
             builder.CloseElement();
@@ -252,7 +258,7 @@ public class ComponentRendererPublicationTests
             {
                 builder.OpenElement(0, "span");
                 builder.AddMultipleAttributes(1, badge.Attributes);
-                builder.AddContent(2, badge.Content);
+                builder.AddContent(2, badge.RenderContent("Draft"));
                 builder.CloseElement();
             }
         }
