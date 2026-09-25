@@ -728,6 +728,8 @@ Define a theme-owned component derived from `ScissorHands.Theme.Components.Publi
 }
 ```
 
+The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
+
 Render `Content`, not raw HTML or just `Text`: delivery receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The base produces `Draft` and/or `Scheduled on yyyy-mm-dd` with invariant formatting. Both badges are required when both flags apply.
 
 In post/page views, apply `PublicationBadgeBase.GetRegionAttributes(Document, PublicationBadgePlacement.Detail)` to the content `article` inside `<main>` (or a `role="main"` container), and place the badge component first, before headings, hero images, publication dates, and authored content. In home/tag views, apply `GetRegionAttributes(entry, PublicationBadgePlacement.Listing)` to each corresponding listing-entry wrapper inside main content, and render the badge component beside that entry's link. For example:
