@@ -68,7 +68,6 @@ Add the following sections to `appsettings.json`:
   "Site": {
     "Title": "My site",
     "Description": "Notes about .NET, software, and the web.",
-    "Locale": "en-US",
     "Author": "Your name",
     "Theme": "default",
     "SiteUrl": "https://example.com",
@@ -81,6 +80,8 @@ Add the following sections to `appsettings.json`:
 ```
 
 No theme component types need to be registered in `Program.cs`. Setting `Site:Theme` to `default` selects the built-in theme.
+
+This minimal configuration declares no locales and uses English message defaults. To enable localized routes and messages, configure `Site.Locales` and the complete [theme localization catalog](#locale-specific-sites).
 
 ### Add the first post
 
@@ -128,8 +129,7 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | --- | --- |
 | `Title` | Site title used by the theme |
 | `Description` | Site description; the engine also makes its rendered HTML available |
-| `Locale` | Explicit primary language; omitted/null/blank disables localization without changing primary URLs |
-| `LocalizationFallbackMessages` | Additional-locale keys and plain-text notices for missing translations; ignored when `Locale` is blank |
+| `Locales` | Ordered locale array; the first is primary, and omitted/null/empty disables localization without declaring an implicit locale |
 | `Author` | Site-level author information available to themes |
 | `HeroImage` | Site-level hero image reference available to themes and plugins |
 | `Theme` | Theme slug; use `default` for the built-in theme |
@@ -173,16 +173,32 @@ The `Plugins` array selects installed plugins by ID:
 
 ### Locale-specific sites
 
-Primary content stays in its existing `contents/pages/` and `contents/posts/` structure, with unprefixed URLs. An explicitly configured, nonblank `Site.Locale` enables localization. `LocalizationFallbackMessages` declares each additional locale and its missing-translation notice; no separate locale inventory is needed.
+Primary content stays in its existing `contents/pages/` and `contents/posts/` structure, with unprefixed URLs. `Site.Locales` is the only locale inventory: its first item is primary and subsequent items enable additional locales. Top-level `Theme.Localization` supplies application-owned messages without enabling routes. `Site.Theme` remains the selected theme's slug string.
 
 ```json
 {
   "Site": {
-    "Locale": "en-us",
-    "BaseUrl": "/blog/",
-    "LocalizationFallbackMessages": {
-      "ko-kr": "이 페이지는 현재 한국어 번역을 제공하지 않습니다",
-      "ja-jp": "このページは現在日本語翻訳を提供していません"
+    "Locales": ["en-us", "ko-kr", "ja-jp"],
+    "Theme": "default",
+    "BaseUrl": "/blog/"
+  },
+  "Theme": {
+    "Localization": {
+      "en-us": {
+        "TranslationUnavailable": "This page is not currently available in English. Showing the original content.",
+        "Draft": "Draft",
+        "ScheduledOn": "Scheduled on {0}"
+      },
+      "ko-kr": {
+        "TranslationUnavailable": "이 페이지는 현재 한국어 번역을 제공하지 않습니다",
+        "Draft": "초안",
+        "ScheduledOn": "{0} 공개 예정"
+      },
+      "ja-jp": {
+        "TranslationUnavailable": "このページは現在日本語翻訳を提供していません",
+        "Draft": "下書き",
+        "ScheduledOn": "{0}に公開予定"
+      }
     }
   }
 }
@@ -212,9 +228,15 @@ contents/
     not-found.md
 ```
 
-**Recognition and validation:** only a matching configured key makes the directory immediately below `pages/` or `posts/` an additional locale. An undeclared `pages/it/` is ordinary primary content, not automatically Italian. When `Locale` is omitted/null/blank, the entire dictionary is ignored and all such folders are ordinary content. Removing a locale entry therefore does not exclude files left in its folder: remove, relocate, or mark them draft if they should not publish.
+**Recognition and validation:** only a matching additional `Site.Locales` item makes the directory immediately below `pages/` or `posts/` a translation directory. An undeclared `pages/it/` is ordinary primary content, not automatically Italian. When `Locales` is omitted, null, or empty, localization is disabled, the catalog is not needed, and locale-looking folders remain ordinary content. English message defaults do not create an implicit language or fallback banners. Removing a locale declaration therefore does not exclude files left in its folder: remove, relocate, or mark them draft if they should not publish. Catalog entries alone never enable locales.
 
-Locale keys normalize case and underscores/forward slashes to hyphens. Reject duplicate normalized declarations and keys equal to the primary locale. Locale identifiers must be safe language tags; the implementation accepts two/three-letter languages, optional four-letter scripts, and optional two-letter or three-digit regions. Additional locales must have the same script/region structure as the primary: `en-us` with `ko-kr` is valid, `en-us` with `ko` is not. This validates declarations, not ordinary folder names. Content under an explicitly declared primary-locale directory, such as `pages/en-us/`, fails with migration guidance to move it to the primary root. Frontmatter `locale` is removed and always produces a migration error.
+Locale identifiers normalize case and underscores/forward slashes to hyphens. Reject invalid/blank array items and duplicate normalized declarations; never skip an invalid first element or sort before selecting primary. Identifiers must be safe language tags; the implementation accepts two/three-letter languages, optional four-letter scripts, and optional two-letter or three-digit regions. Additional locales must have the same script/region structure as the primary: `en-us` with `ko-kr` is valid, `en-us` with `ko` is not. This validates declarations, not ordinary folder names. Content under an explicitly declared primary-locale directory, such as `pages/en-us/`, fails with migration guidance to move it to the primary root. Frontmatter `locale` is removed and always produces a migration error.
+
+**Message completeness:** every declared locale, including a sole primary locale, requires nonblank `TranslationUnavailable`, `Draft`, and `ScheduledOn` strings under `Theme.Localization`. Validate these before rendering in both modes, even on empty sites or when no notice/badge is currently needed. `ScheduledOn` must be a valid complete template with a real date argument `{0}`; escaped `{{0}}` alone is not a date argument, and unsupported argument indexes fail. Missing/blank messages or invalid templates fail with the locale and configuration path. Declared locales never silently borrow missing values from English, parent cultures, or package messages.
+
+Use actual arrays/objects in JSON. Some configuration providers flatten empty arrays/objects to a childless empty-string marker; that marker is accepted as empty because `IConfiguration` cannot distinguish it from an authored `""`. Nonempty scalars, invalid array elements, and mixed scalar/child shapes are rejected. This is a provider representation limitation, not a recommendation to use strings for collections.
+
+**Manifest composition:** the selected theme's `theme.json` remains authoritative for identity, version, slug, stylesheets, and scripts. Application `Theme.Localization` is composed into a fresh effective `ThemeManifest.Localization` read-only snapshot; it does not replace package metadata/assets or mutate input collections. Localization in a package manifest cannot mask missing required application configuration. With no locales declared, effective messages use the English defaults under the `en` catalog key without enabling an `en` route.
 
 **Pairing:** match the content kind and complete locale-relative filename/path: `pages/guides/start.md` pairs with `pages/ko-kr/guides/start.md`, not a differently named file with the same slug. Both resolved slugs must match without the additional prefix. Explicit slugs remain supported, including a matching additional prefix that is stripped before date composition. Nested page `index.md` inference is relative to the locale root; root-level `index.md` remains route `index`. Documents cannot claim generated destinations or primary routes under an active additional-locale prefix.
 
@@ -222,15 +244,15 @@ Both authored files in a post pair must declare valid `published` values. Compar
 
 **Production publication:** the primary document must exist and not be draft; posts must also have reached their publication instant. An eligible translation then replaces primary content at its localized URL; a missing/draft/future-scheduled translation uses eligible primary content with the configured destination-language banner. An ineligible primary suppresses all its variants, even ready translations. Additional-language-only files never publish independently while they are classified as translations. Pair validation does not silently override conflicting metadata.
 
-**Preview selection:** authored translations are shown even when draft or future-scheduled, without substituting primary fallback or showing a fallback notice for the authored translation. A translation receives a draft-status badge when either member of its pair is draft, and posts receive a scheduled-status badge when either publication instant is future. The default theme labels them `Draft` and `Scheduled on yyyy-mm-dd`; custom themes own the wording and date format. Both badges appear when applicable, even if the statuses originate from different members of the pair. Authored draft flags are not modified. A missing translation still uses primary-content fallback with the normal notice and applicable status badges. A missing primary still suppresses translations in preview.
+**Preview selection:** authored translations are shown even when draft or future-scheduled, without substituting primary fallback or showing a fallback notice for the authored translation. A translation receives a draft-status badge when either member of its pair is draft, and posts receive a scheduled-status badge when either publication instant is future. The default theme selects configured `Draft`/`ScheduledOn` messages for the requested render locale, not the article's content language, and formats the authored date as ISO. With no locales it uses `Draft` and `Scheduled on yyyy-mm-dd`. Custom themes own their display formatting. Both badges appear when applicable, even if the statuses originate from different members of the pair. Authored draft flags are not modified. A missing translation still uses primary-content fallback with the normal notice and applicable status badges. A missing primary still suppresses translations in preview.
 
-For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and displays the English About document with its Korean notice; it does not redirect. A blank notice fails only when fallback is needed. Requested locale and actual content language remain distinct in rendering context. Translated-or-fallback collections have one entry per primary identity and use the selected document's title/tags. Navigation preserves visibility and hierarchy, ordering all variants by the primary source path.
+For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and displays the English About document with its Korean `TranslationUnavailable` notice; it does not redirect. That key describes unavailable content translations, not dictionary-key fallback. Requested locale and actual content language remain distinct in rendering context. Translated-or-fallback collections have one entry per primary identity and use the selected document's title/tags. Navigation preserves visibility and hierarchy, ordering all variants by the primary source path.
 
 **Regeneration and output ownership:** `.scissorhands-output.json` records generated HTML paths inside the output root, preserving their written spelling independently of case-insensitive route-collision checks. After validating the route plan and prior ledger, regeneration removes only stale owned files that obstruct new writes, including case-only replacements and file/directory shape changes. Empty output directories may be pruned; unrelated files are not deleted or silently adopted. An unmanaged blocking file or nonempty directory fails with an actionable error. Other obsolete owned files are removed after successful generation. Planned and newly claimed destinations are recorded before writing so a later run can clean incomplete output after failure. This works across generator instances and retains root/link checks. Keep the ledger for in-place regeneration; initial application preview/build still starts with a clean output directory. Deploy with deletion of withdrawn files rather than merely copying new files. Content source links and generated output links are rejected; this does not certify arbitrary executable theme/plugin behavior.
 
 **SEO and rendering:** primary documents and real translations are self-canonical; a fallback's canonical points to its primary document. Reciprocal `hreflang` alternatives list actual published versions, never fallback copies. Absolute URLs use `SiteUrl` and `BaseUrl`. These document-specific rules and the banner do not apply to home/tag collections or the shared 404. Themes must implement the [locale render context](#locale-render-context) contract.
 
-The shared layout includes a [language switcher](#language-switcher) with engine-prepared document, home, tag, and shared-404 destinations. It can offer primary-content fallbacks, unlike SEO alternatives. `Site.Locale` is not mutated between renders. Shared resources and site/theme UI text are not automatically translated.
+The shared layout includes a [language switcher](#language-switcher) with engine-prepared document, home, tag, and shared-404 destinations. It can offer primary-content fallbacks, unlike SEO alternatives. `Site.Locales` and global culture are not mutated between renders. Shared resources and other site/theme UI text are not automatically translated; the configured catalog supplies the notice and publication labels.
 
 **Authored content links:** on additional-locale documents, including fallbacks, links to a known primary page/post route are rewritten to that locale's generated equivalent. This runs on the converted document HTML after post-Markdown hooks and before Razor rendering; it does not rewrite the surrounding theme or run another plugin pass. Primary/disabled generation leaves authored URLs unchanged.
 
@@ -492,7 +514,7 @@ The [repository sample](../sample/README.md) uses local project references and t
 
 The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
 
-The sample starts with an empty `Plugins` array, primary `en-US`, and a Korean `LocalizationFallbackMessages` entry. Its primary sequence stays unprefixed. `/ko-kr/about/` uses the [Korean translation](../sample/contents/pages/ko-kr/about.md); `/ko-kr/parent/` and other untranslated documents demonstrate the notice and English fallback. Set `Site.BaseUrl` to `/docs` or `/docs/` to explore subpath hosting. See [site configuration](#site-configuration) and [locale-specific sites](#locale-specific-sites). Clearing `Site.Locale` disables localization, but leaves locale-looking directories as ordinary content rather than excluding them.
+The sample starts with an empty `Plugins` array, `Site.Locales: ["en-US", "ko-KR"]`, and complete English/Korean `Theme.Localization` entries. Its primary sequence stays unprefixed. `/ko-kr/about/` uses the [Korean translation](../sample/contents/pages/ko-kr/about.md); `/ko-kr/parent/` and other untranslated documents demonstrate the notice and English fallback. Set `Site.BaseUrl` to `/docs` or `/docs/` to explore subpath hosting. See [site configuration](#site-configuration) and [locale-specific sites](#locale-specific-sites). Emptying `Site.Locales` disables localization, but leaves locale-looking directories as ordinary content rather than excluding them.
 
 The custom 404 follows the primary language and offers switcher links to locale homepages without a fallback banner. The About pages demonstrate a localized Parent link with a query/fragment, a primary-language opt-out, and an unchanged shared image. The [browser acceptance fixtures](#browser-acceptance) exercise additional locales in an isolated copy rather than altering the normal sample's sources.
 
@@ -609,7 +631,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
 </CascadingMainLayoutBase>
 ```
 
-`MainLayoutBase` calculates page title and description from the site/document. When `Site.Locale` is absent or blank, `CalculatePageLocale()` returns an empty string without assuming a language from defaults, document metadata, or render context; the built-in layout omits the HTML `lang` attribute. When a site locale is explicitly configured, the active `LocaleContext` takes precedence, otherwise explicit document metadata falls back to the site locale. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
+`MainLayoutBase` calculates page title and description from the site/document. When `Site.Locales` is empty, `CalculatePageLocale()` returns an empty string without assuming a language from English message defaults, document metadata, or render context; the built-in layout omits the HTML `lang` attribute. When locales are declared, the active `LocaleContext` takes precedence, otherwise explicit document metadata falls back to the first site locale. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
 
 Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `MarkupString` is an explicit raw-HTML trust boundary; render metadata through ordinary Razor expressions so it remains encoded.
 
@@ -669,9 +691,9 @@ Both collections default to empty lists. They are layout-only parameters, not co
 
 | Member | Meaning |
 | --- | --- |
-| `Locale` | Normalized active locale, independent of the unchanged `Site.Locale` default |
+| `Locale` | Normalized active locale, independent of the unchanged `Site.Locales` inventory |
 | `ContentLocale` | Actual document language, primary for a fallback and requested locale for a translation |
-| `IsFallback`, `FallbackMessage` | Whether this individual document needs the configured plain-text notice |
+| `IsFallback`, `FallbackMessage` | Whether this document needs the requested locale's configured `TranslationUnavailable` notice; render-context member names remain supported |
 | `CanonicalUrl` | Absolute document canonical URL; null for generated home/tag/404 pages |
 | `AlternateLanguageUrls` | Read-only engine snapshot of absolute primary/real-translation URLs, keyed by locale |
 | `SwitchLanguageUrls` | Read-only engine snapshot of base-relative switch destinations, including generated fallback documents; separate from SEO alternatives |
@@ -733,6 +755,8 @@ Define a theme-owned component derived from `ScissorHands.Theme.Components.Publi
 ```
 
 The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
+
+The effective `ThemeManifest.Localization` catalog is already available through the existing theme cascade. Select messages using `LocaleContext.Locale` for requested-language UI, falling back to the first declared site locale when no render context exists; never select the fallback document's content language. The default component uses the configured `Draft` and complete `ScheduledOn` template and keeps its explicit invariant ISO display date. If `Site.Locales` is empty, it uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
 
 Render `RenderContent(label)`, not raw HTML or only a plain label expression: it encodes the theme's nonempty text and records delivery of that text. Receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The default Razor component chooses `Draft` and `Scheduled on yyyy-MM-dd` with invariant culture; another theme can use localized wording, `MMM dd, yyyy`, `dd/MM/yyyy`, or another explicit cultural format. Do not implicitly depend on the build machine's culture or convert the authored date to another timezone. Both statuses remain required when both flags apply.
 
@@ -1062,7 +1086,7 @@ var site = new SiteManifest
 {
     Title = "My site",
     Description = "A statically generated site.",
-    Locale = "en-US",
+    Locales = ["en-US"],
     Theme = "default",
     SiteUrl = "https://example.com",
     BaseUrl = "/",
@@ -1070,7 +1094,9 @@ var site = new SiteManifest
 };
 ```
 
-`ThemeManifest` describes the selected theme and its assets:
+`SiteManifest.Locales` snapshots its input, treats null as empty, and enables localization only when nonempty. Validation rejects invalid members; the model does not silently skip them.
+
+`ThemeManifest` describes the selected theme, its assets, and the effective application localization snapshot:
 
 ```csharp
 var theme = new ThemeManifest
@@ -1079,10 +1105,14 @@ var theme = new ThemeManifest
     Slug = "my-theme",
     Stylesheets = ["/assets/theme.css"],
     Scripts = ["/assets/theme.js"],
+    Localization = new Dictionary<string, ThemeLocalization?>
+    {
+        ["en-us"] = ThemeLocalization.English,
+    },
 };
 ```
 
-`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization.
+`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization. `Localization` is a defensive read-only dictionary snapshot of immutable `ThemeLocalization` records. Configured records have nullable `TranslationUnavailable`, `Draft`, and `ScheduledOn` fields so omitted values can be diagnosed rather than silently defaulted. `ThemeLocalization.English` supplies the explicit English default record. Application configuration binds only the catalog, then `ThemeService` composes it with the package's metadata; custom `IThemeService` implementations must return complete effective messages for declared locales.
 
 `PluginManifest` describes configured plugin options:
 
@@ -1204,11 +1234,13 @@ Existing public URL-helper signatures remain supported. Shared helpers also make
 
 ### Locale routing migration
 
-`UseLocaleInUrl` has been removed from configuration and the public manifest. `Site.Locale` is nullable and has no implicit language default for routing or rendering. Set it explicitly to enable localization and language annotations; omit or clear it to disable localization and leave the page language unspecified. The built-in layout omits `lang` rather than assuming English.
+`UseLocaleInUrl` was removed previously. `Site.Locale` and `Site.LocalizationFallbackMessages` are now replaced by ordered `Site.Locales` and top-level `Theme.Localization`. Legacy configuration keys fail with migration guidance rather than silently disabling localization. Declare the former primary first, followed by the desired additional locales; changing the first item changes which language has unprefixed routes. Omitted/null/empty `Locales` disables localization and leaves the HTML language unspecified, even though presentation messages default to English. `Site.Theme` remains a slug string, not an object.
 
 Remove every frontmatter `locale` field, including on the shared 404. Keep primary files at their original unprefixed locations, moving old primary-locale-directory files back there and preserving intended slugs. Put translations in configured additional-locale directories with matching filenames/relative paths, matching slugs, and required matching calendar dates for paired posts. Primary home/tag URLs no longer redirect. Hosts migrating from the former prefixed-primary contract must supply any desired redirects from old published primary URLs; this feature does not infer historical URLs.
 
-Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. In builds, draft/scheduled primaries suppress active translations and fallback never uses ineligible primary content. Preview includes drafts and scheduled posts with inherited status badges; a missing primary still suppresses translations.
+Move old fallback-message values into `Theme.Localization[locale].TranslationUnavailable`, then supply `Draft` and a valid `ScheduledOn` template for every declared locale, including primary. Blank/missing messages fail before rendering even when fallback or badges are not currently needed; package/English/parent-culture defaults do not fill gaps for declared locales. Additional locale routes exist even before translations do, but only `Site.Locales` enables them. Removing a declaration leaves files in that folder as ordinary nested content, so remove or mark them draft if they should not publish. In builds, draft/scheduled primaries suppress active translations and fallback never uses ineligible primary content. Preview includes drafts and scheduled posts with inherited status badges; a missing primary still suppresses translations.
+
+In C#, replace `SiteManifest.Locale` initializers with `Locales = [...]` and use its first element for primary-language selection. Remove `LocalizationFallbackMessages` initializers and supply complete `ThemeManifest.Localization` data. The effective manifest composes application messages with package identity/assets without changing theme discovery or explicit `AddLayouts` overrides. The existing `LocaleContext.FallbackMessage` and fallback-banner fragment remain rendering APIs; their value now comes from `TranslationUnavailable`.
 
 Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components`, and provide their own components derived from `LanguageSwitcherBase`, `LocalizationMetadataBase`, and `LocalizationFallbackBannerBase`. The former concrete localization components in the Theme package are replaced by these bases; Razor implementations now belong to the default theme or the consuming theme. No new required view-discovery role is added. Render the banner's encoded `FallbackMessageContent` with `BannerAttributes`, annotate actual content language, and retain Home/Tags helpers. Missing fallback notices fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
 

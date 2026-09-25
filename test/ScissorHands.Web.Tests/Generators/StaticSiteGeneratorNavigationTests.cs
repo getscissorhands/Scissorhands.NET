@@ -41,7 +41,7 @@ public class StaticSiteGeneratorNavigationTests
         var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
         var destination = fileSystem.Path.Combine(baseRoot, preview ? "preview" : "dist");
         var paths = new TestAppPaths(baseRoot, contentsRoot, themesRoot);
-        var site = new SiteManifest { BaseUrl = baseUrl, Locale = "en-us", UseDateInPostUrl = false };
+        var site = new SiteManifest { BaseUrl = baseUrl, Locales = ["en-us"], UseDateInPostUrl = false };
         const string aboutTitle = "About <script>alert(1)</script> & team";
         AddContent("pages", "zebra.md", "title: Zebra\nshow_in_navigation: true");
         AddContent("pages", "about.md", $"title: '{aboutTitle}'\nslug: guides/about & team\nshow_in_navigation: true");
@@ -64,7 +64,7 @@ public class StaticSiteGeneratorNavigationTests
         }
 
         var themeService = Substitute.For<IThemeService>();
-        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(themeService);

@@ -1,4 +1,5 @@
 using System.IO.Abstractions.TestingHelpers;
+using System.Text;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -47,8 +48,7 @@ public class ContentLoaderLocaleTests
     {
         var fixture = new Fixture(new SiteManifest
         {
-            Locale = primary,
-            LocalizationFallbackMessages = new Dictionary<string, string?> { [additional] = "Unavailable" },
+            Locales = [primary, additional],
         });
         if (valid)
         {
@@ -65,24 +65,27 @@ public class ContentLoaderLocaleTests
     {
         var fixture = new Fixture(new SiteManifest
         {
-            Locale = "en-us",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "One", ["ko_KR"] = "Two" },
+            Locales = ["en-us", "ko-kr", "ko_KR"],
         });
         var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
         error.Message.ShouldContain("Duplicate locale");
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task Given_DisabledLocalization_When_Loaded_Then_It_Should_IgnoreDictionaryAndTreatFoldersAsOrdinary(string? locale)
+    [InlineData("{}")]
+    [InlineData("""{"Site":{"Locales":null}}""")]
+    [InlineData("""{"Site":{"Locales":[]}}""")]
+    public async Task Given_DisabledLocalization_When_LoadAsync_Invoked_Then_It_Should_IgnoreThemeCatalogAndTreatFoldersAsOrdinary(string siteConfiguration)
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        // Arrange
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(siteConfiguration));
+        var configuration = new ConfigurationBuilder().AddJsonStream(stream).AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Site:Locale"] = locale,
-            ["Site:LocalizationFallbackMessages:../invalid"] = null,
-            ["Site:LocalizationFallbackMessages:ko-kr"] = "Unavailable",
+            ["Site:Title"] = "Nonlocalized site",
+            ["Theme:Localization:../invalid:TranslationUnavailable"] = null,
+            ["Theme:Localization:ko-kr:TranslationUnavailable"] = "Unavailable",
+            ["Theme:Localization:ko-kr:Draft"] = "Draft",
+            ["Theme:Localization:ko-kr:ScheduledOn"] = "Scheduled on {0}",
         }).Build();
         var site = configuration.GetSection("Site").Get<SiteManifest>()!;
         site.IsLocalizationEnabled.ShouldBeFalse();
@@ -90,8 +93,10 @@ public class ContentLoaderLocaleTests
         fixture.Add("pages/ko-kr/about.md");
         fixture.Add("pages/it/about.md");
 
+        // Act
         var documents = await fixture.Load();
 
+        // Assert
         documents.Select(d => d.Metadata.Slug).ShouldBe(["it/about", "ko-kr/about"], ignoreOrder: true);
         documents.ShouldAllBe(d => d.Metadata.Locale == null);
     }
@@ -135,8 +140,7 @@ public class ContentLoaderLocaleTests
         var fixture = new Fixture(new SiteManifest
         {
             IsPreview = preview,
-            Locale = "en-us",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Unavailable" },
+            Locales = ["en-us", "ko-kr"],
         });
         fixture.Add("pages/about.md", $"draft: {primaryDraft}");
         fixture.Add("pages/ko-kr/about.md", $"draft: {translatedDraft}");
@@ -292,9 +296,8 @@ public class ContentLoaderLocaleTests
             Loader = new ContentLoader(new TestAppPaths(root, Contents, Path.Combine(root, "themes")), FileSystem,
                 site ?? new SiteManifest
                 {
-                    Locale = "en-us",
+                    Locales = ["en-us", "ko-kr"],
                     UseDateInPostUrl = true,
-                    LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Unavailable" },
                 }, Substitute.For<ILogger<ContentLoader>>());
         }
 

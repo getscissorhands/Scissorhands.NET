@@ -79,11 +79,23 @@ public class ScissorHandsApplicationLocaleTests
             {
                 ["Site:Title"] = "Locale integration",
                 ["Site:BaseUrl"] = configuredBaseUrl,
-                ["Site:Locale"] = useLocale ? "en-US" : null,
                 ["Site:Theme"] = "default",
-                ["Site:LocalizationFallbackMessages:ko-kr"] = "Korean translation unavailable.",
+                ["Theme:Localization:en-us:TranslationUnavailable"] = "Translation unavailable.",
+                ["Theme:Localization:en-us:Draft"] = "Draft",
+                ["Theme:Localization:en-us:ScheduledOn"] = "Scheduled on {0}",
+                ["Theme:Localization:ko-kr:TranslationUnavailable"] = "Korean translation unavailable.",
+                ["Theme:Localization:ko-kr:Draft"] = "Draft",
+                ["Theme:Localization:ko-kr:ScheduledOn"] = "Scheduled on {0}",
                 ["Site:UseDateInPostUrl"] = "true",
             });
+            if (useLocale)
+            {
+                builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+                {
+                    ["Site:Locales:0"] = "en-US",
+                    ["Site:Locales:1"] = "ko-kr",
+                });
+            }
             builder.WebHost.UseUrls("http://127.0.0.1:0");
             builder.Logging.ClearProviders();
             builder.Services.AddConfigurations(builder.Configuration)
@@ -109,7 +121,7 @@ public class ScissorHandsApplicationLocaleTests
                 var site = app.Services.GetRequiredService<SiteManifest>();
                 var baseUrl = configuredBaseUrl.EndsWith('/') ? configuredBaseUrl : configuredBaseUrl + "/";
                 site.BaseUrl.ShouldBe(baseUrl);
-                site.Locale.ShouldBe(useLocale ? "en-US" : null);
+                site.Locales.ShouldBe(useLocale ? ["en-US", "ko-kr"] : []);
                 builder.Configuration["Site:BaseUrl"].ShouldBe(configuredBaseUrl);
                 using var handler = new HttpClientHandler { AllowAutoRedirect = false };
                 using var client = new HttpClient(handler) { BaseAddress = new Uri(address), Timeout = TimeSpan.FromSeconds(10) };

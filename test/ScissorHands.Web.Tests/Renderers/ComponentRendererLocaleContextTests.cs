@@ -30,7 +30,7 @@ public class ComponentRendererLocaleContextTests
         var renderer = new ComponentRenderer(
             provider.GetRequiredService<IServiceScopeFactory>(),
             provider.GetRequiredService<ILoggerFactory>());
-        var site = new SiteManifest { Title = "My site", BaseUrl = "/docs/", Locale = "en-US" };
+        var site = new SiteManifest { Title = "My site", BaseUrl = "/docs/", Locales = ["en-US"] };
         var locale = supplyContext
             ? new LocaleContext { Locale = "fr-ca", Route = "fr-ca/about", HomeUrl = "fr-ca/", TagIndexUrl = "fr-ca/tags" }
             : null;
@@ -75,7 +75,7 @@ public class ComponentRendererLocaleContextTests
         parameters.ContainsKey("LocaleContext").ShouldBe(supplyParameter);
         document.SourcePath.ShouldBeEmpty();
         document.Metadata.Locale.ShouldBe(documentLocale);
-        site.Locale.ShouldBe("en-US");
+        site.Locales.ShouldBe(["en-US"]);
     }
 
     [Theory]
@@ -134,7 +134,7 @@ public class ComponentRendererLocaleContextTests
         var document = new ContentDocument { Metadata = new ContentMetadata { Title = "Tags", Slug = locale.Route } };
         var parameters = new Dictionary<string, object?>
         {
-            ["Site"] = new SiteManifest { Title = "My site", Locale = "en-US" },
+            ["Site"] = new SiteManifest { Title = "My site", Locales = ["en-US"] },
             ["Theme"] = new ThemeManifest(),
             ["Document"] = document,
             ["LocaleContext"] = locale,

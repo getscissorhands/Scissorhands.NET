@@ -39,7 +39,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(pagePath, new MockFileData(markdown));
 
-        var options = new SiteManifest { Locale = "en-US" };
+        var options = new SiteManifest { Locales = ["en-US"] };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -80,7 +80,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(pagePath, new MockFileData(markdown));
 
-        var options = new SiteManifest { Locale = "en-US" };
+        var options = new SiteManifest { Locales = ["en-US"] };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -116,7 +116,7 @@ public class ContentLoaderTests
         var pagePath = fileSystem.Path.Combine(pagesRoot, "about.md");
         fileSystem.AddFile(pagePath, new MockFileData("# About\n\nBody"));
 
-        var options = new SiteManifest { Locale = "en-US" };
+        var options = new SiteManifest { Locales = ["en-US"] };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -161,7 +161,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(pagePath, new MockFileData(markdown));
 
-        var options = new SiteManifest { Locale = "en-US" };
+        var options = new SiteManifest { Locales = ["en-US"] };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -206,7 +206,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(pagePath, new MockFileData(markdown));
 
-        var options = new SiteManifest { Locale = "en-US" };
+        var options = new SiteManifest { Locales = ["en-US"] };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -245,7 +245,7 @@ public class ContentLoaderTests
         var pagePath = fileSystem.Path.Combine(pagesRoot, "about.md");
         fileSystem.AddFile(pagePath, new MockFileData("# About\n\nBody"));
 
-        var options = new SiteManifest { Locale = "en-US", UseDateInPostUrl = false };
+        var options = new SiteManifest { Locales = ["en-US"], UseDateInPostUrl = false };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -296,7 +296,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(postPath, new MockFileData(markdown));
 
-        var options = new SiteManifest { Locale = "en-US", UseDateInPostUrl = true };
+        var options = new SiteManifest { Locales = ["en-US"], UseDateInPostUrl = true };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -462,7 +462,7 @@ public class ContentLoaderTests
         var loader = new ContentLoader(
             new TestAppPaths(baseRoot, contentsRoot, themesRoot),
             fileSystem,
-            new SiteManifest { Locale = "en-us" },
+            new SiteManifest { Locales = ["en-us"] },
             Substitute.For<ILogger<ContentLoader>>());
 
         var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();

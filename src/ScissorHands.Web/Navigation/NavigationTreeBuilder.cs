@@ -67,7 +67,7 @@ public static class NavigationTreeBuilder
 
         if (site?.IsLocalizationEnabled == true)
         {
-            foreach (var locale in site.LocalizationFallbackMessages.Keys)
+            foreach (var locale in site.Locales.Skip(1))
             {
                 cancellationToken.ThrowIfCancellationRequested();
                 var localeSegment = ContentUrlHelper.GetLocaleSegment(locale);

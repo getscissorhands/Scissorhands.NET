@@ -90,7 +90,8 @@ public sealed class StaticSiteGenerator(
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
-        var locales = LocaleConfiguration.Create(_options);
+        var locales = LocaleConfiguration.Create(_options, theme);
+        theme = locales.ApplyTo(theme);
         if (locales.Primary is not null)
         {
             ValidateBaseUrl();
@@ -107,7 +108,7 @@ public sealed class StaticSiteGenerator(
             && ContentUrlHelper.GetLocaleSegment(notFoundDocument.Metadata.Locale) != locales.Primary)
         {
             throw new InvalidDataException(
-                $"The locale in '{notFoundDocument.SourcePath}' for the shared 404.html must match Site.Locale.");
+                $"The locale in '{notFoundDocument.SourcePath}' for the shared 404.html must match the first Site:Locales item.");
         }
 
         ValidateOutputRoutes(destination, scopes, notFoundOwner);
@@ -151,9 +152,9 @@ public sealed class StaticSiteGenerator(
             foreach (var document in published)
             {
                 var locale = ContentUrlHelper.GetLocaleSegment(document.Metadata.Locale);
-                if (locale.Length > 0 && locale != locales.Primary && !locales.Messages.ContainsKey(locale))
+                if (locale.Length > 0 && locale != locales.Primary && !locales.AdditionalLocales.Contains(locale, StringComparer.Ordinal))
                 {
-                    throw new InvalidDataException($"Document '{document.SourcePath}' has undeclared locale '{locale}'. Configure Site:LocalizationFallbackMessages or correct the content loader.");
+                    throw new InvalidDataException($"Document '{document.SourcePath}' has undeclared locale '{locale}'. Configure Site:Locales or correct the content loader.");
                 }
             }
         }
@@ -165,7 +166,7 @@ public sealed class StaticSiteGenerator(
         foreach (var document in primary)
         {
             var leadingSegment = NormalizeRoute(document.Metadata.Slug).Split('/')[0];
-            if (locales.Messages.ContainsKey(ContentUrlHelper.GetLocaleSegment(leadingSegment)))
+            if (locales.AdditionalLocales.Contains(ContentUrlHelper.GetLocaleSegment(leadingSegment), StringComparer.Ordinal))
             {
                 throw new InvalidDataException($"Output collision: primary route '{document.Metadata.Slug}' uses a reserved additional-locale prefix.");
             }
@@ -175,7 +176,7 @@ public sealed class StaticSiteGenerator(
         {
             CreateScope(locales.Primary, string.Empty, primary, primarySources, [], outputs, cancellationToken),
         };
-        foreach (var locale in locales.Messages.Keys.Order(StringComparer.Ordinal))
+        foreach (var locale in locales.AdditionalLocales.Order(StringComparer.Ordinal))
         {
             var selected = new List<ContentDocument>();
             var originals = new Dictionary<ContentDocument, ContentDocument>(ReferenceEqualityComparer.Instance);

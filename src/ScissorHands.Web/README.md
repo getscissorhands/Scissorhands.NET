@@ -45,6 +45,8 @@ Open the logged URL and refresh after edits. Stop preview with Ctrl+C, then run 
 
 Preview includes drafts and scheduled posts; do not deploy `preview/`. Builds exclude drafts and future-scheduled posts using the configured publication timezone (UTC by default).
 
+Declaring `Site.Locales` requires complete messages in `Theme.Localization`; review the [locale configuration and migration guidance](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-routing-migration) when upgrading.
+
 ## Documentation
 
 - [Configuration, content and authoring guides](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md)

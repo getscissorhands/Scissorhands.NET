@@ -34,11 +34,11 @@ test("preview shows draft and scheduled badges on documents and collection entri
     await page.goto(`${previewSite}/ko-kr/2099/01/01/scheduled-preview/`);
     await page.evaluate(value => { document.documentElement.dataset.theme = value; }, palette);
     const article = page.locator("article");
-    await expect(article.getByText("Draft", { exact: true })).toBeVisible();
-    await expect(article.getByText("Scheduled on 2099-01-01", { exact: true })).toBeVisible();
+    await expect(article.getByText("초안", { exact: true })).toBeVisible();
+    await expect(article.getByText("2099-01-01 공개 예정", { exact: true })).toBeVisible();
     await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
     const headingTop = await article.locator("h1").evaluate(element => element.getBoundingClientRect().top);
-    const badgeBottom = await article.getByText("Scheduled on 2099-01-01", { exact: true })
+    const badgeBottom = await article.getByText("2099-01-01 공개 예정", { exact: true })
       .evaluate(element => element.getBoundingClientRect().bottom);
     expect(badgeBottom).toBeLessThanOrEqual(headingTop);
   }
@@ -55,8 +55,13 @@ test("preview shows draft and scheduled badges on documents and collection entri
   await expect(page.locator(".site-header nav").getByRole("link", { name: "Draft primary", exact: true })).toBeVisible();
   await expect(page.locator(".page-navigation")).toBeVisible();
   await page.goto(`${previewSite}/ko-kr/draft/`);
-  await expect(page.locator("article").getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.locator("article").getByText("초안", { exact: true })).toBeVisible();
   await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
+  await page.goto(`${previewSite}/ja-jp/2099/01/01/scheduled-preview/`);
+  await expect(page.locator("article").getByText("下書き", { exact: true })).toBeVisible();
+  await expect(page.locator("article").getByText("2099-01-01に公開予定", { exact: true })).toBeVisible();
+  await expect(page.locator("article")).toHaveAttribute("lang", "en-us");
+  await expect(page.locator("[data-localization-fallback]")).toHaveText("このページは現在日本語翻訳を提供していません");
 });
 
 const sequence = [

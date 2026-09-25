@@ -173,9 +173,8 @@ public class StaticSiteGeneratorPublicationTests
         using var fixture = new Fixture(new SiteManifest
         {
             TimeZone = "Asia/Seoul",
-            Locale = "en-us",
+            Locales = ["en-us", "ko-kr"],
             UseDateInPostUrl = true,
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Missing translation" },
         });
         fixture.Clock.UtcNow = new DateTimeOffset(2026, 9, 24, 14, 0, 0, TimeSpan.Zero);
         fixture.Add("posts/post.md", "published: 2026-09-25");
@@ -310,10 +309,9 @@ public class StaticSiteGeneratorPublicationTests
 
     private static SiteManifest Site(bool localized, string baseUrl) => new()
     {
-        Locale = localized ? "en-us" : null,
+        Locales = localized ? ["en-us", "ko-kr"] : [],
         SiteUrl = "https://example.test",
         BaseUrl = baseUrl,
-        LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Korean translation unavailable." },
     };
 
     private sealed class Fixture : IDisposable
@@ -329,7 +327,8 @@ public class StaticSiteGeneratorPublicationTests
             _paths = new TestAppPaths(root, Path.Combine(root, "contents"), Path.Combine(root, "themes"));
             var options = site ?? new SiteManifest();
             var theme = Substitute.For<ScissorHands.Core.Services.IThemeService>();
-            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(LocalizedThemeManifest.Create(options.Locales, "Korean translation unavailable."));
             _provider = new ServiceCollection().AddLogging().AddSingleton(theme).BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());
             Plugins.Manifests.Returns([]);

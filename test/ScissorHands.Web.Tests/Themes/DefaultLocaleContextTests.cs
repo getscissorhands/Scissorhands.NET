@@ -13,21 +13,25 @@ public class DefaultLocaleContextTests
 {
     [Theory]
     [InlineData(null, null)]
-    [InlineData("", null)]
-    [InlineData("   ", null)]
-    [InlineData("ja-JP", "ja-jp")]
-    public void Given_SiteLocale_When_Rendered_Then_It_Should_AnnotateLanguageOnlyWhenConfigured(
-        string? siteLocale, string? expectedLanguage)
+    [InlineData(new string[0], null)]
+    [InlineData(new[] { "ja-JP" }, "ja-jp")]
+    [InlineData(new[] { "ja-JP", "en-US" }, "ja-jp")]
+    public void Given_SiteLocales_When_Render_Invoked_Then_It_Should_AnnotateLanguageOnlyWhenConfigured(
+        string[]? siteLocales, string? expectedLanguage)
     {
+        // Arrange
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
-        var site = new SiteManifest { Locale = siteLocale };
+        var site = new SiteManifest { Locales = siteLocales! };
+
+        // Act
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, site)
             .Add(p => p.Theme, new ThemeManifest()));
 
+        // Assert
         cut.Find("html").GetAttribute("lang").ShouldBe(expectedLanguage);
-        site.Locale.ShouldBe(siteLocale);
+        site.Locales.ShouldBe(siteLocales ?? []);
     }
 
     [Theory]
@@ -44,7 +48,7 @@ public class DefaultLocaleContextTests
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
         var locale = supplyContext ? new LocaleContext { Locale = "ko-kr", HomeUrl = homeUrl, TagIndexUrl = tagIndexUrl } : null;
-        var site = new SiteManifest { Title = "My <site>", BaseUrl = "/docs/", Locale = "en-US" };
+        var site = new SiteManifest { Title = "My <site>", BaseUrl = "/docs/", Locales = ["en-US"] };
         RenderFragment body = builder =>
         {
             builder.OpenComponent<PageView>(0);
@@ -80,7 +84,7 @@ public class DefaultLocaleContextTests
         cut.Find("base").GetAttribute("href").ShouldBe("/docs/");
         cut.FindComponent<CascadingMainLayoutBase>().Instance.LocaleContext.ShouldBeSameAs(locale);
         cut.FindComponent<PageView>().Instance.LocaleContext.ShouldBeSameAs(locale);
-        site.Locale.ShouldBe("en-US");
+        site.Locales.ShouldBe(["en-US"]);
     }
 
     [Theory]

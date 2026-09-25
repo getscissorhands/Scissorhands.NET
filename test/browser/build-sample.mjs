@@ -12,10 +12,17 @@ const options = {
   env: {
     ...process.env,
     Site__BaseUrl: "/",
-    Site__Locale: "en-US",
+    Site__Locales__0: "en-US",
+    Site__Locales__1: "ko-KR",
     Site__Theme: "default",
     Logging__LogLevel__Default: "Warning",
   },
+};
+const japaneseLocalization = {
+  Site__Locales__2: "ja-JP",
+  "Theme__Localization__ja-jp__TranslationUnavailable": "このページは現在日本語翻訳を提供していません",
+  "Theme__Localization__ja-jp__Draft": "下書き",
+  "Theme__Localization__ja-jp__ScheduledOn": "{0}に公開予定",
 };
 
 execFileSync("dotnet", ["build", "-c", "Release", "--no-restore", "--verbosity", "minimal"], options);
@@ -45,7 +52,7 @@ function buildLocalized(baseUrl) {
     env: {
       ...options.env,
       Site__BaseUrl: baseUrl,
-      "Site__LocalizationFallbackMessages__ja-jp": "このページは現在日本語翻訳を提供していません",
+      ...japaneseLocalization,
     },
   });
 }
@@ -82,7 +89,7 @@ async function buildPreview() {
       Site__BaseUrl: "/docs/",
       ASPNETCORE_URLS: "http://127.0.0.1:0",
       "Logging__LogLevel__Microsoft.Hosting.Lifetime": "Information",
-      "Site__LocalizationFallbackMessages__ja-jp": "Translation not available.",
+      ...japaneseLocalization,
     },
     stdio: ["ignore", "pipe", "pipe"],
   });

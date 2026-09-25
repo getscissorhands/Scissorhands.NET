@@ -1,16 +1,44 @@
 @namespace ScissorHands.Web
 @using System.Globalization
+@using Microsoft.AspNetCore.Components
+@using ScissorHands.Core.Manifests
+@using ScissorHands.Core.Models
+@using ScissorHands.Core.Urls
 @inherits PublicationBadgeBase
 
 @if (Badges.Count > 0)
 {
+    var messages = GetMessages();
     <span class="publication-badges">
         @foreach (var badge in Badges)
         {
             var label = badge.ScheduledDate is { } date
-                ? $"Scheduled on {date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture)}"
-                : "Draft";
+                ? string.Format(CultureInfo.InvariantCulture, messages.ScheduledOn!, date.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture))
+                : messages.Draft!;
             <span class="publication-badge" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
         }
     </span>
+}
+
+@code {
+    [CascadingParameter]
+    public ThemeManifest? Theme { get; set; }
+
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
+    private ThemeLocalization GetMessages()
+    {
+        if (Site?.IsLocalizationEnabled != true)
+        {
+            return ThemeLocalization.English;
+        }
+        var locale = ContentUrlHelper.GetLocaleSegment(LocaleContext?.Locale ?? Site.Locales[0]);
+        if (Theme?.Localization.TryGetValue(locale, out var messages) != true || messages is null
+            || string.IsNullOrWhiteSpace(messages.Draft) || string.IsNullOrWhiteSpace(messages.ScheduledOn))
+        {
+            throw new InvalidOperationException($"Theme:Localization:{locale} must supply Draft and ScheduledOn messages before rendering publication badges.");
+        }
+        return messages;
+    }
 }

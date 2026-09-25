@@ -200,7 +200,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// <returns>Returns the page locale calculated.</returns>
     protected virtual string CalculatePageLocale()
     {
-        var locale = Site?.Locale;
+        var locale = Site?.Locales.FirstOrDefault();
         if (string.IsNullOrWhiteSpace(locale))
         {
             return string.Empty;

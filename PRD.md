@@ -1,5 +1,17 @@
 # ScissorHands.NET - Product requirements document
 
+## Current scope amendment: explicit locales and theme catalogs
+
+The latest [#109 settlement](https://github.com/getscissorhands/Scissorhands.NET/issues/109#issuecomment-5836161464) supersedes the earlier `Site.Locale` and `LocalizationFallbackMessages` configuration contracts below. Preserve historical IDs, approvals, evidence, and wider gaps rather than treating old results as verification of this migration.
+
+`Site.Locales` is the only locale inventory. Its first entry is primary with unprefixed routes; null/omitted/empty disables localization without inventing an English locale. Reject invalid/blank entries and normalized duplicates. Retain the existing locale format and source-pairing rules. Message-catalog entries alone never create routes.
+
+Keep `Site.Theme` as the selected slug. Top-level application `Theme.Localization` supplies required `TranslationUnavailable`, `Draft`, and `ScheduledOn` messages for every declared locale, including primary. Missing/blank messages and invalid date templates fail before rendering in both modes even on empty sites; declared locales do not borrow defaults from another culture or package. With no locales, use English presentation defaults only.
+
+Compose application messages into a read-only effective `ThemeManifest.Localization` while retaining package `theme.json` identity/assets and immutable source data. Theme components select messages by requested locale, not fallback content language, and retain ownership of date formatting. This introduces neither a separate `ThemeSettings` model nor a second `.resx` catalog. Existing publication eligibility, badges, fallback notices, and ownership safeguards remain required. The [migration reference](docs/website-documentation.md#locale-routing-migration) covers configuration and public-model changes.
+
+Migration evidence: the Release solution build completes with zero warnings/errors and all 1,192 .NET tests pass, including configuration binding, disabled/single/reordered locales, strict catalog/template errors, read-only package/application composition, and requested-language generation. Sample root/subpath generation and slash-variant parity, all 114 Chromium/Firefox/WebKit desktop/mobile cases, and four contrast checks pass without skips or flaky browser cases. Browser preview fixtures now exercise configured Korean and Japanese badge messages, including Japanese UI around primary English fallback content. These results validate this migration rather than extending historical acceptance claims below.
+
 ## Current scope amendment: scheduled publication and draft preview
 
 The settled [#109 contract](https://github.com/getscissorhands/Scissorhands.NET/issues/109) supersedes FR-002's metadata-only future dates and exclusion of drafts from preview, and the related draft exclusions in FR-004/010/011/012. Earlier approvals, evidence counts, and non-goals below remain historical baselines rather than evidence for this amendment.

@@ -71,7 +71,7 @@ public class ContentLoaderDirectoryIndexTests
         string slugField,
         string expectedSlug)
     {
-        var site = new SiteManifest { BaseUrl = "/site/", Locale = "ko_KR", UseDateInPostUrl = true };
+        var site = new SiteManifest { BaseUrl = "/site/", Locales = ["ko_KR"], UseDateInPostUrl = true };
         var (loader, _) = CreateLoader(directory, relativePath, $"published: 2026-09-13\n{slugField}", site);
 
         var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();
@@ -83,7 +83,7 @@ public class ContentLoaderDirectoryIndexTests
     [Fact]
     public async Task Given_LocaleFolderWithoutLocaleMetadata_When_Loaded_Then_It_Should_UseSiteLocaleWithoutStrippingTheFolder()
     {
-        var site = new SiteManifest { Locale = "en-US" };
+        var site = new SiteManifest { Locales = ["en-US"] };
         var (loader, _) = CreateLoader("pages", "ko-kr/about.md", null, site);
 
         var document = (await loader.LoadAsync(Xunit.TestContext.Current.CancellationToken)).ShouldHaveSingleItem();

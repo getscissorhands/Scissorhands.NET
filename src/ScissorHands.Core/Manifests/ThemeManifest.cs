@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+
 namespace ScissorHands.Core.Manifests;
 
 /// <summary>
@@ -7,6 +9,8 @@ public sealed class ThemeManifest
 {
     private IReadOnlyList<string> _stylesheets = Array.Empty<string>();
     private IReadOnlyList<string> _scripts = Array.Empty<string>();
+    private IReadOnlyDictionary<string, ThemeLocalization?> _localization
+        = ReadOnlyDictionary<string, ThemeLocalization?>.Empty;
 
     /// <summary>
     /// Defines the theme directory name.
@@ -49,5 +53,18 @@ public sealed class ThemeManifest
     {
         get => _scripts;
         init => _scripts = Array.AsReadOnly((value ?? Array.Empty<string>()).ToArray());
+    }
+
+    /// <summary>
+    /// Gets the application-supplied theme messages, keyed by locale.
+    /// The collection is snapshotted; null entries are retained for contextual validation.
+    /// </summary>
+    public IReadOnlyDictionary<string, ThemeLocalization?> Localization
+    {
+        get => _localization;
+        init => _localization = value is null
+            ? ReadOnlyDictionary<string, ThemeLocalization?>.Empty
+            : new ReadOnlyDictionary<string, ThemeLocalization?>(
+                new Dictionary<string, ThemeLocalization?>(value, StringComparer.Ordinal));
     }
 }

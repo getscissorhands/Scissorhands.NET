@@ -173,7 +173,7 @@ public class MainLayoutBaseTests
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
 
-        var site = new SiteManifest { Title = "My Site", Description = "Site Description", Locale = "en-US" };
+        var site = new SiteManifest { Title = "My Site", Description = "Site Description", Locales = ["en-US"] };
         var first = new ContentDocument
         {
             Metadata = new ContentMetadata { Title = "First", Description = "First Description", Locale = "en-US" }

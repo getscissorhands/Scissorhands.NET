@@ -185,11 +185,10 @@ public class StaticSiteGeneratorRegenerationTests
             var paths = new TestAppPaths(Root, Path.Combine(Root, "contents"), Path.Combine(Root, "themes"));
             var site = new SiteManifest
             {
-                Locale = "en-us",
-                LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Translation unavailable." },
+                Locales = ["en-us", "ko-kr"],
             };
             var theme = Substitute.For<IThemeService>();
-            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
             var services = new ServiceCollection().AddLogging().AddSingleton(theme);
             _provider = services.BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());

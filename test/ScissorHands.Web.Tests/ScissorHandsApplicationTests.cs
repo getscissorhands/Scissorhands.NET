@@ -39,8 +39,7 @@ public class ScissorHandsApplicationTests
             var site = new SiteManifest
             {
                 BaseUrl = configuredBaseUrl,
-                Locale = useLocale ? "en-us" : null,
-                LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Korean unavailable" }
+                Locales = useLocale ? ["en-us", "ko-kr"] : [],
             };
             site.BaseUrl.ShouldBe(baseUrl);
             var route = useLocale ? "ko-kr/parent/child" : "parent/child";

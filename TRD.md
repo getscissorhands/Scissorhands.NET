@@ -1,5 +1,13 @@
 # ScissorHands.NET - Technical requirements document
 
+## Current scope amendment: explicit locales and theme catalogs
+
+[PRD's explicit-locale amendment](PRD.md#current-scope-amendment-explicit-locales-and-theme-catalogs) supersedes earlier locale inventory and message-validation requirements. `SiteManifest.Locales` snapshots the ordered array; primary is the first validated normalized item and additional locales come only from the remainder. Preserve format/safety checks, disabled-mode source treatment, URL stability, and nonmutating generation.
+
+Bind application `Theme.Localization` into localization data, not a replacement package manifest. `ThemeService` composes that data with package identity/assets and returns a fresh effective `ThemeManifest` with read-only localization. Generator-side validation also applies to custom theme-service results. Require complete messages for every declared locale, with contextual errors for missing/blank values, malformed templates, absent real `{0}` arguments, and unsupported indexes. Empty locale arrays use English defaults without extra routes or language annotations.
+
+Default-theme badges select the requested render locale's messages; fallback notices use its `TranslationUnavailable`. Do not change global culture, reinterpret the authored scheduled date, alter seven-role theme discovery, or let catalog keys enable locales. Cover binding, disabled mode, primary reversal, normalized duplicates, unused catalog entries, strict validation before rendering, immutable composition, and English/Japanese/Korean output in build/preview.
+
 ## Current scope amendment: scheduled publication and draft preview
 
 [PRD's #109 amendment](PRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) supersedes the prior draft/future-date obligations in TR-002/006/023. Preserve historical IDs, approvals, and outstanding wider gaps.
