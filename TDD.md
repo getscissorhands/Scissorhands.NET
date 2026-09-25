@@ -1,5 +1,13 @@
 # ScissorHands.NET - Technical design document
 
+## Current scope amendment: scheduled publication and draft preview
+
+The [PRD](PRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) and [TRD](TRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) amendments for #109 supersede DES-002's metadata-only scheduling and unconditional preview draft removal, plus related navigation and locale-selection assumptions. Earlier design/approval/evidence records remain historical.
+
+`PublicationDateParser` resolves post timestamps into `DateTimeOffset` values using `SiteManifest.TimeZone` for offset-free input, rejecting DST gaps/ambiguities and preserving written calendar dates. Ordinary-page parsing is unchanged. `ContentLoader` validates pairs before mode-dependent draft filtering; future-post selection occurs in `StaticSiteGenerator` against a single injected `TimeProvider` reading. The previous constructor remains available with `TimeProvider.System`.
+
+The generator filters before preparing locale scopes, navigation, tags, and owned routes. In preview it attaches immutable `ContentDocument.PublicationStatus` snapshots with independent inherited draft/scheduled flags and the authored scheduled date, without rewriting authored `ContentMetadata`. Unaffected documents retain their identity; hook replacements retain the original prepared status. Themes render encoded badges through the required shared contract; renderer receipts and final-HTML validation enforce delivery and reject missing/altered/hidden badges. The existing output ledger removes stale ineligible output during successful regeneration; no new transactional rollback or automatic publishing service is introduced.
+
 ## Current scope amendment: directory locales and fallback
 
 The [PRD](PRD.md#current-scope-amendment-directory-locales-and-fallback) and [TRD](TRD.md#current-scope-amendment-directory-locales-and-fallback) amendments for #104 supersede DES-013/DEC-004's earlier locale inventory, redirects, and no-fallback assumptions. The document-control and approval/evidence records below remain historical and are not retroactively extended.

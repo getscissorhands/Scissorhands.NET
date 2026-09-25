@@ -8,6 +8,7 @@ using ScissorHands.Core.Models;
 using ScissorHands.Core.Urls;
 using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Localization;
+using ScissorHands.Web.Publication;
 
 using YamlDotNet.Core;
 using YamlDotNet.Serialization;
@@ -53,15 +54,16 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
     public async Task<IEnumerable<ContentDocument>> LoadAsync(CancellationToken cancellationToken)
     {
         cancellationToken.ThrowIfCancellationRequested();
+        var timeZone = PublicationDateParser.ResolveTimeZone(_options.TimeZone);
         var locales = LocaleConfiguration.Create(_options);
         var documents = new List<ContentDocument>();
-        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Post, POST_DIRECTORY, locales, cancellationToken));
-        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Page, PAGE_DIRECTORY, locales, cancellationToken));
+        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Post, POST_DIRECTORY, locales, timeZone, cancellationToken));
+        documents.AddRange(await LoadFromDirectoryAsync(ContentKind.Page, PAGE_DIRECTORY, locales, timeZone, cancellationToken));
         return documents;
     }
 
     private async Task<IReadOnlyList<ContentDocument>> LoadFromDirectoryAsync(
-        ContentKind kind, string directory, LocaleConfiguration locales, CancellationToken cancellationToken)
+        ContentKind kind, string directory, LocaleConfiguration locales, TimeZoneInfo timeZone, CancellationToken cancellationToken)
     {
         var entries = new List<(string Identity, string? Locale, string Slug, ContentDocument Document)>();
         var identities = new HashSet<(string Identity, string? Locale)>();
@@ -88,7 +90,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
             }
             var identity = locale is null ? relative : relative[(separator + 1)..];
             var text = await _fileSystem.File.ReadAllTextAsync(file, cancellationToken);
-            var (metadata, markdown) = ParseFrontMatter(text, file);
+            var (metadata, markdown) = ParseFrontMatter(text, file, kind, timeZone);
             var slug = string.IsNullOrWhiteSpace(metadata.Slug)
                 ? InferSlugFromFile(kind, identity)
                 : metadata.Slug.Trim().Trim('/');
@@ -154,12 +156,14 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
                     throw new InvalidDataException(
                         $"Paired posts '{original.Document.SourcePath}' (published: {original.Document.Metadata.Published:O}) and '{entry.Document.SourcePath}' (published: {entry.Document.Metadata.Published:O}) must both declare published values with the same written calendar date.");
                 }
-                if (original.Document.Metadata.Draft || original.Slug.Equals("404.html", StringComparison.OrdinalIgnoreCase))
+                if ((!_options.IsPreview && original.Document.Metadata.Draft)
+                    || original.Slug.Equals("404.html", StringComparison.OrdinalIgnoreCase))
                 {
                     continue;
                 }
             }
-            if (entry.Document.Metadata.Draft)
+            if (entry.Document.Metadata.Draft
+                && (!_options.IsPreview || (kind == ContentKind.Page && entry.Slug.Equals("404.html", StringComparison.OrdinalIgnoreCase))))
             {
                 _logger.LogInformation("Skipping draft content at {Path}", entry.Document.SourcePath);
                 continue;
@@ -205,7 +209,7 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
         }
     }
 
-    private (ContentMetadata metadata, string markdown) ParseFrontMatter(string text, string sourcePath)
+    private (ContentMetadata metadata, string markdown) ParseFrontMatter(string text, string sourcePath, ContentKind kind, TimeZoneInfo timeZone)
     {
         using var reader = new StringReader(text);
         var firstLine = reader.ReadLine();
@@ -262,17 +266,24 @@ public sealed class ContentLoader(IAppPaths paths, IFileSystem fileSystem, SiteM
 
             if (map.TryGetValue("published", out var publishedValue))
             {
-                if (!DateTimeOffset.TryParse(
-                        Convert.ToString(publishedValue, CultureInfo.InvariantCulture),
+                var value = Convert.ToString(publishedValue, CultureInfo.InvariantCulture);
+                if (kind == ContentKind.Post)
+                {
+                    published = PublicationDateParser.Parse(value, timeZone, sourcePath);
+                }
+                else if (DateTimeOffset.TryParse(
+                        value,
                         CultureInfo.InvariantCulture,
                         DateTimeStyles.AllowWhiteSpaces | DateTimeStyles.AssumeUniversal,
                         out var parsedPublished))
                 {
+                    published = parsedPublished;
+                }
+                else
+                {
                     throw new InvalidDataException(
                         $"Frontmatter field 'published' in '{sourcePath}' must be a valid date and time.");
                 }
-
-                published = parsedPublished;
             }
 
             return (new ContentMetadata

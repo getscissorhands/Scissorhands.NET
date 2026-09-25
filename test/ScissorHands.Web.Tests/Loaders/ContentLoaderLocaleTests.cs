@@ -121,14 +121,23 @@ public class ContentLoaderLocaleTests
     }
 
     [Theory]
-    [InlineData(false, false, 2)]
-    [InlineData(false, true, 1)]
-    [InlineData(true, false, 0)]
-    [InlineData(true, true, 0)]
+    [InlineData(false, false, false, 2)]
+    [InlineData(false, false, true, 1)]
+    [InlineData(false, true, false, 0)]
+    [InlineData(false, true, true, 0)]
+    [InlineData(true, false, false, 2)]
+    [InlineData(true, false, true, 2)]
+    [InlineData(true, true, false, 2)]
+    [InlineData(true, true, true, 2)]
     public async Task Given_PrimaryAndTranslationDrafts_When_Loaded_Then_It_Should_ApplyThePrimaryGate(
-        bool primaryDraft, bool translatedDraft, int count)
+        bool preview, bool primaryDraft, bool translatedDraft, int count)
     {
-        var fixture = new Fixture();
+        var fixture = new Fixture(new SiteManifest
+        {
+            IsPreview = preview,
+            Locale = "en-us",
+            LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Unavailable" },
+        });
         fixture.Add("pages/about.md", $"draft: {primaryDraft}");
         fixture.Add("pages/ko-kr/about.md", $"draft: {translatedDraft}");
         (await fixture.Load()).Count.ShouldBe(count);
@@ -207,6 +216,64 @@ public class ContentLoaderLocaleTests
         fixture.FileSystem.File.SetAttributes(path, fixture.FileSystem.File.GetAttributes(path) | FileAttributes.ReparsePoint);
         var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
         error.Message.ShouldContain("filesystem link");
+    }
+
+    [Theory]
+    [InlineData("2026-09-25", 9)]
+    [InlineData("2026-09-25T09:00:00", 9)]
+    [InlineData("2026-09-25T09:00:00Z", 0)]
+    [InlineData("2026-09-25T09:00:00-04:00", -4)]
+    public async Task Given_PostFrontmatter_When_Loaded_Then_It_Should_ResolveTheZoneWithoutShiftingTheWrittenDate(
+        string published, int offsetHours)
+    {
+        var fixture = new Fixture(new SiteManifest { TimeZone = "Asia/Seoul", UseDateInPostUrl = true });
+        fixture.Add("posts/post.md", $"published: {published}");
+
+        var document = (await fixture.Load()).ShouldHaveSingleItem();
+
+        document.Metadata.Published.ShouldNotBeNull();
+        document.Metadata.Published.Value.Offset.ShouldBe(TimeSpan.FromHours(offsetHours));
+        document.Metadata.Slug.ShouldBe("2026/09/25/post");
+    }
+
+    [Theory]
+    [InlineData(false, "2026-03-08T02:30:00")]
+    [InlineData(true, "2026-03-08T02:30:00")]
+    [InlineData(false, "2026-11-01T01:30:00")]
+    [InlineData(true, "2026-11-01T01:30:00")]
+    public async Task Given_UnresolvedDaylightSavingTime_When_Loaded_Then_It_Should_ReportTheFieldAndSource(
+        bool preview, string published)
+    {
+        var fixture = new Fixture(new SiteManifest { IsPreview = preview, TimeZone = "America/New_York" });
+        fixture.Add("posts/post.md", $"published: {published}");
+
+        var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
+
+        error.Message.ShouldContain("published");
+        error.Message.ShouldContain("post.md");
+    }
+
+    [Fact]
+    public async Task Given_PageInDaylightSavingGap_When_Loaded_Then_It_Should_PreserveUnschedulingPageBehavior()
+    {
+        var fixture = new Fixture(new SiteManifest { TimeZone = "America/New_York" });
+        fixture.Add("pages/page.md", "published: 2026-03-08T02:30:00");
+
+        var document = (await fixture.Load()).ShouldHaveSingleItem();
+
+        document.Metadata.Published!.Value.Offset.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Given_InvalidTimeZoneWithoutContent_When_Loaded_Then_It_Should_FailConfigurationValidation(bool preview)
+    {
+        var fixture = new Fixture(new SiteManifest { IsPreview = preview, TimeZone = "not-a-time-zone" });
+
+        var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
+
+        error.Message.ShouldContain("Site:TimeZone");
     }
 
     [Fact]

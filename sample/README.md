@@ -18,6 +18,8 @@ dotnet run -- --build
 
 Generated preview and build outputs are written to `preview/` and `dist/` respectively.
 
+Preview includes draft posts/pages and future-scheduled posts. Deploy only `dist/`, generated at or after the intended publication time.
+
 Open the logged preview URL, refresh after edits, and stop with Ctrl+C.
 
 ## Documentation

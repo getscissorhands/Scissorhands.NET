@@ -45,7 +45,7 @@ public class StaticSiteGeneratorRegenerationTests
         fixture.Manifest().ShouldNotContain("about/index.html");
 
         fixture.Source("ABOUT", draft: true);
-        await fixture.Build(preview);
+        await fixture.Build(false);
 
         fixture.Exists("ABOUT/index.html").ShouldBeFalse();
         fixture.Exists("about/index.html").ShouldBeFalse();
@@ -136,7 +136,7 @@ public class StaticSiteGeneratorRegenerationTests
 
         fixture.FailRoute = null;
         fixture.Source(route, draft: true);
-        await fixture.Build();
+        await fixture.Build(false);
 
         fixture.Exists(route + "/index.html").ShouldBeFalse();
         fixture.Exists("about/index.html").ShouldBeFalse();

@@ -1,0 +1,11 @@
+@inherits PublicationBadgeBase
+
+@if (Badges.Count > 0)
+{
+    <span class="publication-badges">
+        @foreach (var badge in Badges)
+        {
+            <span class="publication-badge" @attributes="badge.Attributes">@badge.Content</span>
+        }
+    </span>
+}

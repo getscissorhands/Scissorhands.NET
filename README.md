@@ -17,6 +17,8 @@ dotnet run -- --preview
 
 Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
 
+Preview includes draft and scheduled content; deploy only production build output.
+
 ## Packages
 
 | Package                                     | Purpose                                                              |

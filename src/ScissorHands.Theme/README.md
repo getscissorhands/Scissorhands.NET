@@ -16,6 +16,7 @@ dotnet add package ScissorHands.Theme --prerelease
 ## Documentation
 
 - [Theme authoring and examples](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)
+- [Publication status contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#publication-status-theme-contract) - required Draft/Scheduled badges; missing badges fail preview generation
 - [Locale rendering contract](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#locale-render-context) - required for fallback notices and theme-owned localization markup
 - [vNext migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; custom themes must supply all seven theme roles
 - [Theme template](https://github.com/getscissorhands/theme-template)

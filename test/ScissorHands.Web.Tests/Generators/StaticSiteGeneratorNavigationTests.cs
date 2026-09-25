@@ -118,8 +118,12 @@ public class StaticSiteGeneratorNavigationTests
         {
             expectedPaths.Add("docs/deployment/index.html");
         }
+        if (preview)
+        {
+            expectedPaths.Add("draft/index.html");
+        }
         renderer.Navigations.Count.ShouldBe(expectedPaths.Count);
-        renderer.Navigations[0].Pages.Count.ShouldBe(missingDeployment ? 6 : 7);
+        renderer.Navigations[0].Pages.Count.ShouldBe((missingDeployment ? 6 : 7) + (preview ? 1 : 0));
 
         var parser = new HtmlParser();
         foreach (var path in expectedPaths)
@@ -142,6 +146,12 @@ public class StaticSiteGeneratorNavigationTests
                     "docs/deployment/github-pages", "docs/quickstart", "docs-other", "zebra", "tags",
                 ];
             }
+            if (preview)
+            {
+                var position = expectedTitles.IndexOf("Zebra");
+                expectedTitles.Insert(position, "Draft");
+                expectedUrls.Insert(position, "draft");
+            }
             links.Select(link => link.TextContent).ShouldBe(expectedTitles);
             links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
             var docsItem = html.QuerySelector("nav a[href='docs']")!.Closest("li")!;
@@ -163,7 +173,7 @@ public class StaticSiteGeneratorNavigationTests
                 $"https://example.com{baseUrl}guides/about%20%26%20team");
         }
 
-        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "draft", "index.html")).ShouldBeFalse();
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "draft", "index.html")).ShouldBe(preview);
         using var index = parser.ParseDocument(fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "index.html")));
         index.QuerySelectorAll(".post-list .post-link").Select(link => link.TextContent).ShouldBe(["Post"]);
         site.IsPreview.ShouldBe(preview);
@@ -212,6 +222,12 @@ public class StaticSiteGeneratorNavigationTests
 
         void AssertNavigationTitles(string[] expected)
         {
+            if (preview)
+            {
+                var position = Array.IndexOf(expected, "Zebra");
+                position = position < 0 ? expected.Length - 1 : position;
+                expected = [.. expected[..position], "Draft", .. expected[position..]];
+            }
             foreach (var path in expectedPaths)
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));

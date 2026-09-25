@@ -242,6 +242,43 @@ public class ScissorHandsApplicationLocaleTests
                 removed.StatusCode.ShouldBe(HttpStatusCode.NotFound);
                 using var removedTranslation = await client.GetAsync($"{baseUrl}ko-kr/third/", cancellationToken);
                 removedTranslation.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+
+                await AddContent("posts", "scheduled.md",
+                    "title: Scheduled draft\npublished: 2099-01-01\ndraft: true\ntags: [preview-only]");
+                await AddContent("pages", "03-draft.md",
+                    "title: Draft page\nslug: draft\ndraft: true\nshow_in_navigation: true\ntags: [preview-only]");
+                if (useLocale)
+                {
+                    await AddContent("posts", "ko-kr/scheduled.md",
+                        "title: Korean scheduled draft\npublished: 2099-01-01\ntags: [preview-only]");
+                }
+                await rebuild!();
+                foreach (var prefix in useLocale ? new[] { "", "ko-kr/" } : [""])
+                {
+                    using var scheduled = parser.ParseDocument(await client.GetStringAsync(
+                        $"{baseUrl}{prefix}2099/01/01/scheduled/", cancellationToken));
+                    scheduled.QuerySelector("article")!.TextContent.ShouldContain("Draft");
+                    scheduled.QuerySelector("article")!.TextContent.ShouldContain("Scheduled on 2099-01-01");
+                    scheduled.QuerySelector("[data-localization-fallback]").ShouldBeNull();
+                    using var draftPage = parser.ParseDocument(await client.GetStringAsync($"{baseUrl}{prefix}draft/", cancellationToken));
+                    draftPage.QuerySelector("article")!.TextContent.ShouldContain("Draft");
+                    draftPage.QuerySelector(".page-navigation-previous")!.GetAttribute("href").ShouldBe(prefix + "next");
+                    using var previewTag = parser.ParseDocument(await client.GetStringAsync(
+                        $"{baseUrl}{prefix}tags/preview-only/", cancellationToken));
+                    previewTag.QuerySelector(".post-list li")!.TextContent.ShouldContain("Scheduled on 2099-01-01");
+                    previewTag.QuerySelector(".page-list li")!.TextContent.ShouldContain("Draft");
+                }
+
+                await generator.BuildAsync<MainLayout, IndexView, PostView, PageView, NotFoundView, TagListView, TagView>(
+                    preview, false, cancellationToken);
+                foreach (var route in new[] { "2099/01/01/scheduled/", "ko-kr/2099/01/01/scheduled/", "draft/", "ko-kr/draft/", "tags/preview-only/" })
+                {
+                    using var withdrawn = await client.GetAsync(baseUrl + route, cancellationToken);
+                    withdrawn.StatusCode.ShouldBe(HttpStatusCode.NotFound);
+                }
+                using var production = parser.ParseDocument(await client.GetStringAsync(baseUrl, cancellationToken));
+                production.QuerySelectorAll(".post-link").Select(link => link.TextContent).ShouldBe(["English post"]);
+                production.QuerySelector("a[href='draft']").ShouldBeNull();
             }
             finally
             {

@@ -3,6 +3,7 @@ using System.Reflection;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Services;
@@ -59,6 +60,7 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IAppPaths, CurrentDirectoryAppPaths>();
         services.AddSingleton<IAssemblyCatalog, DefaultAssemblyCatalog>();
         services.AddSingleton<IContentWatcherFactory, ContentWatcherFactory>();
+        services.TryAddSingleton(TimeProvider.System);
 
         services.AddSingleton<IContentLoader, ContentLoader>();
         services.AddSingleton<IMarkdownService, MarkdownService>();

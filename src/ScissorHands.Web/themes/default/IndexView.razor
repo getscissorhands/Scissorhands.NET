@@ -17,12 +17,13 @@
         <ul class="post-list">
             @foreach (var post in Documents)
             {
-                <li>
+                <li @attributes="PublicationBadgeBase.GetRegionAttributes(post, PublicationBadgePlacement.Listing)">
                     <time datetime="@post.Metadata.Published?.ToString("O")">
                         @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
                     </time>
                     <div>
                         <a class="post-link" href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a>
+                        <PublicationBadges Content="@post" Placement="PublicationBadgePlacement.Listing" />
                         @if (!string.IsNullOrWhiteSpace(post.Metadata.Description))
                         {
                             <p>@post.Metadata.Description</p>

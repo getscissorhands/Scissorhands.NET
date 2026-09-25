@@ -19,6 +19,44 @@ const test = base.extend({
       await server.close();
     }
   }, { scope: "worker" }],
+  previewSite: [async ({}, use) => {
+    const server = await startSampleServer({ prefix: "/docs", preview: true });
+    try {
+      await use(`${server.origin}/docs`);
+    } finally {
+      await server.close();
+    }
+  }, { scope: "worker" }],
+});
+
+test("preview shows draft and scheduled badges on documents and collection entries", async ({ page, previewSite }) => {
+  for (const palette of ["light", "dark"]) {
+    await page.goto(`${previewSite}/ko-kr/2099/01/01/scheduled-preview/`);
+    await page.evaluate(value => { document.documentElement.dataset.theme = value; }, palette);
+    const article = page.locator("article");
+    await expect(article.getByText("Draft", { exact: true })).toBeVisible();
+    await expect(article.getByText("Scheduled on 2099-01-01", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
+    const headingTop = await article.locator("h1").evaluate(element => element.getBoundingClientRect().top);
+    const badgeBottom = await article.getByText("Scheduled on 2099-01-01", { exact: true })
+      .evaluate(element => element.getBoundingClientRect().bottom);
+    expect(badgeBottom).toBeLessThanOrEqual(headingTop);
+  }
+  for (const route of ["", "tags/preview-only/"]) {
+    await page.goto(`${previewSite}/${route}`);
+    const post = page.locator(".post-list li").filter({ has: page.getByRole("link", { name: "Scheduled preview", exact: true }) });
+    await expect(post.getByText("Draft", { exact: true })).toBeVisible();
+    await expect(post.getByText("Scheduled on 2099-01-01", { exact: true })).toBeVisible();
+  }
+  const taggedPage = page.locator(".page-list li").filter({ has: page.getByRole("link", { name: "Draft primary", exact: true }) });
+  await expect(taggedPage.getByText("Draft", { exact: true })).toBeVisible();
+  await page.goto(`${previewSite}/draft/`);
+  await expect(page.locator("article").getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.locator(".site-header nav").getByRole("link", { name: "Draft primary", exact: true })).toBeVisible();
+  await expect(page.locator(".page-navigation")).toBeVisible();
+  await page.goto(`${previewSite}/ko-kr/draft/`);
+  await expect(page.locator("article").getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
 });
 
 const sequence = [

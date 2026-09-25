@@ -53,6 +53,26 @@
   overflow-wrap: anywhere;
 }
 
+.publication-badges {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+  vertical-align: middle;
+}
+
+.publication-badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  color: var(--text);
+  background: var(--surface);
+  font-size: 0.85rem;
+  font-weight: bold;
+  overflow-wrap: anywhere;
+}
+
 .language-switcher ul {
   display: flex;
   flex-wrap: wrap;

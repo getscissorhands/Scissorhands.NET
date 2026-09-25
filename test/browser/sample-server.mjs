@@ -13,9 +13,11 @@ const contentTypes = {
   ".jpg": "image/jpeg",
 };
 
-export async function startSampleServer({ prefix = "" } = {}) {
+export async function startSampleServer({ prefix = "", preview = false } = {}) {
   const directory = path.dirname(fileURLToPath(import.meta.url));
-  const root = await realpath(prefix
+  const root = await realpath(preview
+    ? path.join(directory, "artifacts", "preview")
+    : prefix
     ? path.join(directory, "artifacts", "prefix")
     : path.resolve(directory, "..", "..", "sample", "dist"));
   const isWithinRoot = candidate => {

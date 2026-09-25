@@ -16,6 +16,7 @@ using ScissorHands.Web.Abstractions;
 using ScissorHands.Web.Loaders;
 using ScissorHands.Web.Localization;
 using ScissorHands.Web.Navigation;
+using ScissorHands.Web.Publication;
 using ScissorHands.Web.Renderers;
 using ScissorHands.Web.Runners;
 
@@ -31,6 +32,7 @@ namespace ScissorHands.Web.Generators;
 /// <param name="renderer"><see cref="IComponentRenderer"/> instance.</param>
 /// <param name="options"><see cref="SiteManifest"/> instance.</param>
 /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
+/// <param name="timeProvider">Clock supplying the generation's single publication reference instant.</param>
 public sealed class StaticSiteGenerator(
         IContentLoader contentLoader,
         IMarkdownService markdownService,
@@ -40,7 +42,8 @@ public sealed class StaticSiteGenerator(
         IAppPaths paths,
         IFileSystem fileSystem,
         SiteManifest options,
-        ILogger<StaticSiteGenerator> logger) : IStaticSiteGenerator
+        ILogger<StaticSiteGenerator> logger,
+        TimeProvider timeProvider) : IStaticSiteGenerator
 {
     private const string PAGE_NOT_FOUND_SLUG = "404.html";
 
@@ -54,6 +57,18 @@ public sealed class StaticSiteGenerator(
     private readonly SiteManifest _options = options ?? throw new ArgumentNullException(nameof(options));
     private readonly string _configuredSiteUrl = options.SiteUrl;
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+    private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+
+    /// <summary>
+    /// Creates a generator using the system clock.
+    /// </summary>
+    public StaticSiteGenerator(
+        IContentLoader contentLoader, IMarkdownService markdownService, IPluginRunner pluginRunner,
+        IThemeService themeService, IComponentRenderer renderer, IAppPaths paths, IFileSystem fileSystem,
+        SiteManifest options, ILogger<StaticSiteGenerator> logger)
+        : this(contentLoader, markdownService, pluginRunner, themeService, renderer, paths, fileSystem, options, logger, TimeProvider.System)
+    {
+    }
 
     /// <inheritdoc />
     public async Task BuildAsync<TMainLayout, TIndexView, TPostView, TPageView, TNotFoundView, TTagListView, TTagView>(string destination, bool preview, CancellationToken cancellationToken)
@@ -66,6 +81,8 @@ public sealed class StaticSiteGenerator(
         where TTagView : ScissorHands.Theme.TagViewBase
     {
         cancellationToken.ThrowIfCancellationRequested();
+        var referenceTime = _timeProvider.GetUtcNow();
+        _ = PublicationDateParser.ResolveTimeZone(_options.TimeZone);
         _fileSystem.Directory.CreateDirectory(destination);
         _logger.LogInformation("Starting static site build to {Destination} (preview: {Preview})", destination, preview);
 
@@ -81,7 +98,7 @@ public sealed class StaticSiteGenerator(
         var documents = (await _contentLoader.LoadAsync(cancellationToken)).ToList();
         cancellationToken.ThrowIfCancellationRequested();
         var outputs = new OutputRoutes(destination, _fileSystem);
-        var scopes = CreateScopes(documents, locales, outputs, cancellationToken);
+        var scopes = CreateScopes(documents, locales, outputs, referenceTime, cancellationToken);
         var defaultScope = scopes[0];
         var notFoundDocument = documents.Where(d => !d.Metadata.Draft).SingleOrDefault(IsNotFoundPage);
         var notFoundOwner = (object?)notFoundDocument ?? new object();
@@ -125,9 +142,10 @@ public sealed class StaticSiteGenerator(
     }
 
     private IReadOnlyList<GenerationScope> CreateScopes(
-        IReadOnlyList<ContentDocument> documents, LocaleConfiguration locales, OutputRoutes outputs, CancellationToken cancellationToken)
+        IReadOnlyList<ContentDocument> documents, LocaleConfiguration locales, OutputRoutes outputs,
+        DateTimeOffset referenceTime, CancellationToken cancellationToken)
     {
-        var published = documents.Where(d => !d.Metadata.Draft && !IsNotFoundPage(d)).ToList();
+        var published = documents.Where(d => IsEligible(d, referenceTime) && !IsNotFoundPage(d)).ToList();
         if (locales.Primary is not null)
         {
             foreach (var document in published)
@@ -141,7 +159,8 @@ public sealed class StaticSiteGenerator(
         }
         var primary = published.Where(d => locales.Primary is null
             || string.IsNullOrWhiteSpace(d.Metadata.Locale)
-            || ContentUrlHelper.GetLocaleSegment(d.Metadata.Locale) == locales.Primary).ToList();
+            || ContentUrlHelper.GetLocaleSegment(d.Metadata.Locale) == locales.Primary)
+            .Select(d => PreparePublicationStatus(d, d, referenceTime)).ToList();
         var primarySources = new Dictionary<ContentDocument, ContentDocument>(ReferenceEqualityComparer.Instance);
         foreach (var document in primary)
         {
@@ -173,6 +192,7 @@ public sealed class StaticSiteGenerator(
                     throw new InvalidDataException($"Output collision for translated route '{route}'.");
                 }
                 var document = candidates.SingleOrDefault();
+                var isFallback = document is null;
                 if (document is null)
                 {
                     _ = locales.GetFallbackMessage(locale);
@@ -184,6 +204,10 @@ public sealed class StaticSiteGenerator(
                         Markdown = original.Markdown,
                         Html = original.Html,
                     };
+                }
+                document = PreparePublicationStatus(document, original, referenceTime);
+                if (isFallback)
+                {
                     fallbacks.Add(document);
                 }
                 selected.Add(document);
@@ -194,6 +218,43 @@ public sealed class StaticSiteGenerator(
         return scopes;
     }
 
+    private bool IsEligible(ContentDocument document, DateTimeOffset referenceTime)
+        => _options.IsPreview || (!document.Metadata.Draft && !IsScheduled(document, referenceTime));
+
+    private static bool IsScheduled(ContentDocument document, DateTimeOffset referenceTime)
+        => document.Kind == ContentKind.Post && document.Metadata.Published > referenceTime;
+
+    private ContentDocument PreparePublicationStatus(ContentDocument document, ContentDocument primary, DateTimeOffset referenceTime)
+    {
+        var status = new PublicationStatus();
+        if (_options.IsPreview)
+        {
+            var scheduled = IsScheduled(document, referenceTime) || IsScheduled(primary, referenceTime);
+            status = new PublicationStatus
+            {
+                Route = document.Metadata.Slug,
+                IsDraft = document.Metadata.Draft || primary.Metadata.Draft,
+                ScheduledDate = scheduled && (document.Metadata.Published ?? primary.Metadata.Published) is { } date
+                    ? DateOnly.FromDateTime(date.Date)
+                    : null,
+            };
+        }
+        return WithPublicationStatus(document, status);
+    }
+
+    private static ContentDocument WithPublicationStatus(ContentDocument document, PublicationStatus status)
+        => document.PublicationStatus == status || (!document.PublicationStatus.HasBadges && !status.HasBadges)
+            ? document
+            : new ContentDocument
+            {
+                SourcePath = document.SourcePath,
+                Kind = document.Kind,
+                Metadata = document.Metadata,
+                PublicationStatus = status,
+                Markdown = document.Markdown,
+                Html = document.Html,
+            };
+
     private GenerationScope CreateScope(
         string? locale, string prefix, IReadOnlyList<ContentDocument> documents,
         IReadOnlyDictionary<ContentDocument, ContentDocument> originals, HashSet<ContentDocument> fallbacks,
@@ -201,11 +262,11 @@ public sealed class StaticSiteGenerator(
     {
         cancellationToken.ThrowIfCancellationRequested();
         var hiddenPageRoutes = documents
-            .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || d.Metadata.Draft || IsNotFoundPage(d)))
+            .Where(d => d.Kind == ContentKind.Page && (!d.Metadata.ShowInNavigation || IsNotFoundPage(d)))
             .Select(d => NormalizeRoute(d.Metadata.Slug))
             .ToHashSet(StringComparer.Ordinal);
         var visiblePages = documents
-            .Where(d => d.Kind == ContentKind.Page && d.Metadata.ShowInNavigation && !d.Metadata.Draft && !IsNotFoundPage(d))
+            .Where(d => d.Kind == ContentKind.Page && d.Metadata.ShowInNavigation && !IsNotFoundPage(d))
             .Where(d => !HasHiddenNavigationAncestor(d.Metadata.Slug, hiddenPageRoutes))
             .ToList();
         var navigationPages = PageReadingOrder.Order(
@@ -425,7 +486,8 @@ public sealed class StaticSiteGenerator(
         };
 
         var outputPath = ResolveOutputPath(destination, scope.IndexDocument.Metadata.Slug);
-        await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, scope.Outputs, scope.IndexDocument, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, indexDocument, scope.Outputs, scope.IndexDocument, cancellationToken,
+            publicationDocuments: posts, isListing: true);
     }
 
     private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, object owner, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
@@ -475,7 +537,7 @@ public sealed class StaticSiteGenerator(
         cancellationToken.ThrowIfCancellationRequested();
         scope.Navigation.AdjacentPages.TryGetValue(document, out var pageNavigation);
 
-        var postMarkdown = await ConvertMarkdownToHtmlAsync(document, cancellationToken);
+        var postMarkdown = WithPublicationStatus(await ConvertMarkdownToHtmlAsync(document, cancellationToken), document.PublicationStatus);
         if (scope.LinkLocalizer is not null)
         {
             postMarkdown.Html = scope.LinkLocalizer.Localize(postMarkdown.Html, cancellationToken);
@@ -564,7 +626,8 @@ public sealed class StaticSiteGenerator(
             Html = rendered
         };
         var outputPath = ResolveOutputPath(destination, tagRoute);
-        await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, scope.Outputs, routeDocument, cancellationToken);
+        await WriteRenderedHtmlAsync(outputPath, rendered, tagDocument, scope.Outputs, routeDocument, cancellationToken,
+            publicationDocuments: tag.Posts.Concat(tag.Pages), isListing: true);
     }
 
     private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, GenerationScope scope, string route)
@@ -658,7 +721,10 @@ public sealed class StaticSiteGenerator(
         }
     }
 
-    private async Task WriteRenderedHtmlAsync(string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner, CancellationToken cancellationToken, LocaleContext? localeContext = null)
+    private async Task WriteRenderedHtmlAsync(
+        string outputPath, string renderedHtml, ContentDocument document, OutputRoutes outputs, object owner,
+        CancellationToken cancellationToken, LocaleContext? localeContext = null,
+        IEnumerable<ContentDocument>? publicationDocuments = null, bool isListing = false)
     {
         cancellationToken.ThrowIfCancellationRequested();
         outputs.Claim(outputPath, owner, $"rendered route '{document.Metadata.Slug}'",
@@ -666,6 +732,8 @@ public sealed class StaticSiteGenerator(
         var finalHtml = await _pluginRunner.RunPostHtmlAsync(renderedHtml, document, cancellationToken);
 
         cancellationToken.ThrowIfCancellationRequested();
+        PublicationBadgeValidator.Validate(finalHtml, publicationDocuments ?? [document], isListing, _options.IsPreview,
+            document.Metadata.Slug, cancellationToken);
         if (localeContext?.IsFallback == true)
         {
             using var html = new HtmlParser().ParseDocument(finalHtml);

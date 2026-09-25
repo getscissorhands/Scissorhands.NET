@@ -55,6 +55,11 @@ public sealed class SiteManifest
     public string? Locale { get; init; }
 
     /// <summary>
+    /// Gets the time zone used for publication dates without an explicit offset.
+    /// </summary>
+    public string TimeZone { get; init; } = "UTC";
+
+    /// <summary>
     /// Gets additional locales and their plain-text missing-translation notices.
     /// Ignored when <see cref="Locale"/> is blank.
     /// </summary>

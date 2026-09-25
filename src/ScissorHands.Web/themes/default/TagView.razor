@@ -19,11 +19,14 @@
             <ul class="post-list">
                 @foreach (var post in TaggedPosts)
                 {
-                    <li>
+                    <li @attributes="PublicationBadgeBase.GetRegionAttributes(post, PublicationBadgePlacement.Listing)">
                         <time datetime="@post.Metadata.Published?.ToString("O")">
                             @(post.Metadata.Published?.ToString("yyyy-MM-dd") ?? "Undated")
                         </time>
-                        <div><a class="post-link" href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a></div>
+                        <div>
+                            <a class="post-link" href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a>
+                            <PublicationBadges Content="@post" Placement="PublicationBadgePlacement.Listing" />
+                        </div>
                     </li>
                 }
             </ul>
@@ -34,7 +37,10 @@
             <ul class="page-list">
                 @foreach (var pageDocument in TaggedPages)
                 {
-                    <li><a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a></li>
+                    <li @attributes="PublicationBadgeBase.GetRegionAttributes(pageDocument, PublicationBadgePlacement.Listing)">
+                        <a href="@GetContentUrl(pageDocument.Metadata.Slug)">@pageDocument.Metadata.Title</a>
+                        <PublicationBadges Content="@pageDocument" Placement="PublicationBadgePlacement.Listing" />
+                    </li>
                 }
             </ul>
         }

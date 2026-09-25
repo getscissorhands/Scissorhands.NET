@@ -21,6 +21,11 @@ public sealed class ContentDocument
     public ContentMetadata Metadata { get; init; } = new();
 
     /// <summary>
+    /// Gets the engine-prepared preview status, including inherited primary status.
+    /// </summary>
+    public PublicationStatus PublicationStatus { get; init; } = new();
+
+    /// <summary>
     /// Gets the markdown content.
     /// </summary>
     public string Markdown { get; init; } = string.Empty;

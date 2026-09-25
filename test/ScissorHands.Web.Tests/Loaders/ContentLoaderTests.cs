@@ -397,8 +397,10 @@ public class ContentLoaderTests
         doc.Metadata.Slug.ShouldBe("2024/01/02/my-post");
     }
 
-    [Fact]
-    public async Task Given_DraftFrontMatter_When_LoadAsync_Invoked_Then_It_Should_SkipDraftDocuments()
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Given_DraftFrontMatter_When_LoadAsync_Invoked_Then_It_Should_IncludeDraftsOnlyInPreview(bool preview)
     {
         // Arrange
         var fileSystem = new MockFileSystem();
@@ -425,7 +427,7 @@ public class ContentLoaderTests
 
         fileSystem.AddFile(postPath, new MockFileData(markdown));
 
-        var options = new SiteManifest();
+        var options = new SiteManifest { IsPreview = preview };
         var paths = new TestAppPaths(basePath: baseRoot, contentsRoot, themesRoot);
         var logger = Substitute.For<ILogger<ContentLoader>>();
 
@@ -435,7 +437,8 @@ public class ContentLoaderTests
         var docs = (await loader.LoadAsync(CancellationToken.None)).ToList();
 
         // Assert
-        docs.ShouldBeEmpty();
+        docs.Count.ShouldBe(preview ? 1 : 0);
+        docs.ShouldAllBe(document => document.Metadata.Draft);
     }
 
     [Theory]

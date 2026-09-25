@@ -10,6 +10,7 @@ using ScissorHands.Core.Models;
 using ScissorHands.Theme;
 using ScissorHands.Theme.Components;
 using ScissorHands.Web.Navigation;
+using ScissorHands.Web.Publication;
 
 namespace ScissorHands.Web.Renderers;
 
@@ -99,6 +100,7 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
 
         var parameterView = ParameterView.FromDictionary(layoutParams);
         var receipt = new LocalizationFallbackBannerBase.RenderReceipt();
+        var publicationReceipt = new PublicationBadgeBase.RenderReceipt();
         var html = await renderer.Dispatcher.InvokeAsync(async () =>
         {
             var wrapper = ParameterView.FromDictionary(new Dictionary<string, object?>
@@ -107,11 +109,18 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
                 ["IsFixed"] = true,
                 ["ChildContent"] = (RenderFragment)(builder =>
                 {
-                    builder.OpenComponent(0, layoutType);
-                    foreach (var parameter in parameterView)
+                    builder.OpenComponent<CascadingValue<PublicationBadgeBase.RenderReceipt>>(0);
+                    builder.AddAttribute(1, "Value", publicationReceipt);
+                    builder.AddAttribute(2, "IsFixed", true);
+                    builder.AddAttribute(3, "ChildContent", (RenderFragment)(layoutBuilder =>
                     {
-                        builder.AddAttribute(1, parameter.Name, parameter.Value);
-                    }
+                        layoutBuilder.OpenComponent(0, layoutType);
+                        foreach (var parameter in parameterView)
+                        {
+                            layoutBuilder.AddAttribute(1, parameter.Name, parameter.Value);
+                        }
+                        layoutBuilder.CloseComponent();
+                    }));
                     builder.CloseComponent();
                 }),
             });
@@ -125,6 +134,58 @@ public sealed class ComponentRenderer(IServiceScopeFactory scopeFactory, ILogger
             throw new InvalidDataException(
                 $"Theme '{layoutType.FullName}' must render FallbackMessageContent from LocalizationFallbackBannerBase above fallback content for route '{locale.Route}'.");
         }
+        var preview = parameters.TryGetValue(nameof(MainLayoutBase.Site), out var manifest)
+            && manifest is SiteManifest { IsPreview: true };
+        var isListing = typeof(IndexViewBase).IsAssignableFrom(typeof(TComponent))
+            || typeof(TagViewBase).IsAssignableFrom(typeof(TComponent));
+        var documents = GetPublicationDocuments<TComponent>(parameters).ToArray();
+        var placement = isListing ? PublicationBadgePlacement.Listing : PublicationBadgePlacement.Detail;
+        if (preview)
+        {
+            foreach (var document in documents)
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+                var status = document.PublicationStatus;
+                RequireReceipt(status.IsDraft, "draft");
+                RequireReceipt(status.IsScheduled, "scheduled");
+
+                void RequireReceipt(bool required, string kind)
+                {
+                    if (required && !publicationReceipt.WasRendered(status.Route, placement, kind))
+                    {
+                        throw new InvalidDataException(
+                            $"Theme '{layoutType.FullName}' must render the '{kind}' badge's encoded Content from PublicationBadgeBase "
+                            + $"for document '{status.Route}' with {placement} placement. Inheritance and lookalike HTML do not deliver a badge.");
+                    }
+                }
+            }
+        }
+        var route = parameters.TryGetValue(nameof(MainLayoutBase.LocaleContext), out var localeValue)
+            && localeValue is LocaleContext routeContext ? routeContext.Route
+            : parameters.TryGetValue(nameof(MainLayoutBase.Document), out var documentValue)
+                && documentValue is ContentDocument current ? current.Metadata.Slug : typeof(TComponent).Name;
+        PublicationBadgeValidator.Validate(html, documents, isListing, preview, route, cancellationToken);
         return html;
+    }
+
+    private static IEnumerable<ContentDocument> GetPublicationDocuments<TComponent>(IDictionary<string, object?> parameters)
+    {
+        if (typeof(IndexViewBase).IsAssignableFrom(typeof(TComponent)))
+        {
+            return GetCollection(nameof(MainLayoutBase.Documents));
+        }
+        if (typeof(TagViewBase).IsAssignableFrom(typeof(TComponent)))
+        {
+            return GetCollection(nameof(MainLayoutBase.TaggedPosts)).Concat(GetCollection(nameof(MainLayoutBase.TaggedPages)));
+        }
+        if ((typeof(PostViewBase).IsAssignableFrom(typeof(TComponent)) || typeof(PageViewBase).IsAssignableFrom(typeof(TComponent)))
+            && parameters.TryGetValue(nameof(MainLayoutBase.Document), out var value) && value is ContentDocument document)
+        {
+            return [document];
+        }
+        return [];
+
+        IEnumerable<ContentDocument> GetCollection(string name) =>
+            parameters.TryGetValue(name, out var collectionValue) && collectionValue is IEnumerable<ContentDocument> documents ? documents : [];
     }
 }

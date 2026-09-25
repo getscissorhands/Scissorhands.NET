@@ -1,5 +1,17 @@
 # ScissorHands.NET - Product requirements document
 
+## Current scope amendment: scheduled publication and draft preview
+
+The settled [#109 contract](https://github.com/getscissorhands/Scissorhands.NET/issues/109) supersedes FR-002's metadata-only future dates and exclusion of drafts from preview, and the related draft exclusions in FR-004/010/011/012. Earlier approvals, evidence counts, and non-goals below remain historical baselines rather than evidence for this amendment.
+
+Production builds withhold strictly future-scheduled posts and draft posts/pages, using one reference instant per generation. `Site.TimeZone` defaults to UTC; offset-free post values use that zone, explicit offsets remain authoritative, and invalid/ambiguous/nonexistent inputs fail actionably. Authored calendar dates in routes, pairing, and badges remain unchanged. Ordinary pages are not date-scheduled, and custom-404 behavior is unchanged.
+
+Preview includes draft posts/pages and scheduled posts in applicable collections; opted-in draft pages participate in navigation and previous/next under existing visibility rules. All themes must show `Draft`, `Scheduled on yyyy-mm-dd`, or both at the beginning of affected document content and beside home/tag entries. Omission fails preview generation. Authored translations take precedence over fallback in preview and inherit each status from either pair member. Production requires an eligible primary and selects an eligible translation or primary fallback. Missing primaries still suppress all variants, and regeneration withdraws stale owned output/references.
+
+Publication still requires a build and deployment, including propagating removals; no automatic scheduler or timer-driven preview regeneration is added. See the [current behavior and migration reference](docs/website-documentation.md#scheduled-publication-and-draft-preview). Verification belongs to the publication loader/generator/theme regressions, sample generation, and relevant preview/browser coverage, not older counts below.
+
+Implementation evidence for #109: the Release solution build completes with zero warnings/errors and all 1,040 .NET tests pass, including controlled publication boundaries, timezone/DST validation, custom-theme contracts, real root/subpath preview requests, and preview-to-build withdrawal. Direct sample build, slash-variant artifact parity, preview fixture generation/readiness, repository browser-script syntax checks, and four dependency-free contrast checks pass. The Playwright browser suite remains unverified: NVM blocks `npm` with `NVM4306` because the delegated `npm-cli.js` identity changed, and this worktree has no installed Playwright dependency. That trust check was not bypassed or reset. Repair the trusted Node/npm installation and run the browser suite before claiming browser acceptance; earlier #104 browser results do not validate these new changes.
+
 ## Current scope amendment: directory locales and fallback
 
 The consolidated [#104 contract](https://github.com/getscissorhands/Scissorhands.NET/issues/104) supersedes the locale portions of FR-002/003/004/012 and Q-006 through Q-012 below. The existing document-control, approval, and execution records remain historical baselines, not approval or verification of this amendment.

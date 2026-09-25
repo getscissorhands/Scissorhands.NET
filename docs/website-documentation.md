@@ -136,6 +136,7 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | `SiteUrl` | Public site URL |
 | `BaseUrl` | Site base path, such as `/`, `/project` or `/project/`; path prefixes normalize to a trailing slash |
 | `UseDateInPostUrl` | Include the publication date in post routes |
+| `TimeZone` | Publication timezone for offset-free post dates/times; defaults to `UTC` |
 | `Debug` | Site debug setting |
 
 Use `BaseUrl` when publishing below a subpath. Generated navigation and shared URL helpers produce base-relative links rather than hardcoding the domain root.
@@ -147,6 +148,10 @@ Preview serves generated files only at the effective path prefix. With either `/
 For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
 
 During generation, the engine sets `SiteManifest.IsPreview` to indicate preview or production output. It also populates `DescriptionInHtml` from the site description.
+
+`Site.TimeZone` accepts system timezone identifiers such as `Asia/Seoul` and `America/New_York`. Omission selects UTC, never the machine's local timezone; an invalid or blank configured identifier fails generation. For post `published` values, date-only input means midnight at the start of that date in the site timezone, and an offset-free datetime uses the same timezone. Supply a complete calendar date with a four-digit year; partial dates, time-only values, and two-digit years are rejected rather than filled from the machine's date/calendar settings. Explicit `Z` or numeric offsets identify the instant directly and are not reinterpreted. Ambiguous or nonexistent offset-free daylight-saving times fail with source/field context; supply an explicit offset to disambiguate.
+
+For example, `published: 2026-10-01` with `Site.TimeZone: Asia/Seoul` becomes eligible at `2026-09-30T15:00:00Z`. The authored October 1 date remains unchanged in dated URLs, translation pairing, and preview badges. Ordinary-page dates retain their existing parsing behavior and never activate scheduling.
 
 The `Plugins` array selects installed plugins by ID:
 
@@ -213,9 +218,11 @@ Locale keys normalize case and underscores/forward slashes to hyphens. Reject du
 
 **Pairing:** match the content kind and complete locale-relative filename/path: `pages/guides/start.md` pairs with `pages/ko-kr/guides/start.md`, not a differently named file with the same slug. Both resolved slugs must match without the additional prefix. Explicit slugs remain supported, including a matching additional prefix that is stripped before date composition. Nested page `index.md` inference is relative to the locale root; root-level `index.md` remains route `index`. Documents cannot claim generated destinations or primary routes under an active additional-locale prefix.
 
-Both authored files in a post pair must declare valid `published` values. Compare their written year/month/day without timezone conversion; times and offsets may differ. `2026-09-01T09:00:00+09:00` matches `2026-09-01T12:00:00Z`, but a September 1 value does not match an August 31 value representing the same instant. Missing values on either/both sides or different dates fail build and preview with source context. Dated URLs use that same date. Dates remain optional for unpaired posts, and scheduling behavior is unchanged.
+Both authored files in a post pair must declare valid `published` values. Compare their written year/month/day without timezone conversion; times and offsets may differ. `2026-09-01T09:00:00+09:00` matches `2026-09-01T12:00:00Z`, but a September 1 value does not match an August 31 value representing the same instant. Missing values on either/both sides or different dates fail build and preview with source context. Dated URLs and scheduled badges use that same date. Dates remain optional for unpaired posts.
 
-**Publication:** the primary document must exist and not be draft. A ready translation then replaces primary content at its localized URL; a missing/draft translation uses primary content with the configured destination-language banner. Missing/draft primary content suppresses all its variants, even ready translations. Additional-language-only files never publish independently while they are classified as translations. Pair validation does not silently override conflicting metadata.
+**Production publication:** the primary document must exist and not be draft; posts must also have reached their publication instant. An eligible translation then replaces primary content at its localized URL; a missing/draft/future-scheduled translation uses eligible primary content with the configured destination-language banner. An ineligible primary suppresses all its variants, even ready translations. Additional-language-only files never publish independently while they are classified as translations. Pair validation does not silently override conflicting metadata.
+
+**Preview selection:** authored translations are shown even when draft or future-scheduled, without substituting primary fallback or showing a fallback notice for the authored translation. A translation receives a `Draft` badge when either member of its pair is draft, and posts receive `Scheduled on yyyy-mm-dd` when either publication instant is future. Both badges appear when applicable, even if the statuses originate from different members of the pair. Authored draft flags are not modified. A missing translation still uses primary-content fallback with the normal notice and applicable status badges. A missing primary still suppresses translations in preview.
 
 For missing `pages/ko-kr/about.md`, `/blog/ko-kr/about/` stays at that URL and displays the English About document with its Korean notice; it does not redirect. A blank notice fails only when fallback is needed. Requested locale and actual content language remain distinct in rendering context. Translated-or-fallback collections have one entry per primary identity and use the selected document's title/tags. Navigation preserves visibility and hierarchy, ordering all variants by the primary source path.
 
@@ -229,7 +236,7 @@ The shared layout includes a [language switcher](#language-switcher) with engine
 
 Relative links resolve against the site's HTML `<base>` (not the Markdown source directory). Root-relative URLs must include `BaseUrl` when the site is mounted below a subpath: for `/docs/`, `about/` and `/docs/about/` target site content, but `/about/` is outside the mount and stays unchanged. Same-origin absolute and scheme-relative links are recognized; preview also recognizes the originally configured publication origin. Internal links retain their root-relative, base-relative, or absolute form, trailing slash/index-file form, query string, and fragment. Existing explicit configured-locale links are not reprefixed.
 
-Only generated page/post destinations participate. Missing/draft targets, generated collection links, fragment-only/query-only links, external URLs and resources are not guessed or rewritten. Images, downloads, stylesheets and scripts stay shared; anchors with `download` are left alone. Mark an intentional primary-language link with the per-link opt-out:
+Only page/post destinations generated in the current mode participate. Missing or build-withheld targets, generated collection links, fragment-only/query-only links, external URLs and resources are not guessed or rewritten; preview includes its generated draft/scheduled targets. Images, downloads, stylesheets and scripts stay shared; anchors with `download` are left alone. Mark an intentional primary-language link with the per-link opt-out:
 
 ```markdown
 [Localized About](about/?source=docs#team)
@@ -271,12 +278,12 @@ Frontmatter is YAML between opening and closing `---` delimiters.
 | `author` | Document author metadata |
 | `twitter_handle` | Author's Twitter handle metadata |
 | `hero_image` | Hero image path or URL |
-| `published` | Publication date/time; required in both authored posts of a primary/translation pair |
+| `published` | Publication date/time; future posts are withheld from builds; required in both authored posts of a primary/translation pair |
 | `tags` | Optional tags associated with the document |
-| `draft` | Whether the document should be excluded from generation |
+| `draft` | Exclude the post/page from production builds; show it with a Draft badge in preview |
 | `show_in_navigation` | Whether a page opts into navigation; defaults to `false` |
 
-Drafts are skipped in both preview and build modes. `show_in_navigation` controls navigation membership, not whether a page is generated.
+Draft posts and ordinary pages are included in preview and excluded from builds. A publication timestamp never clears a draft flag. Future-dated posts are included in preview but excluded from builds until eligible; ordinary pages are not scheduled by date. The shared custom 404 retains its existing draft exclusion and receives no publication badges. `show_in_navigation` controls navigation membership, not whether a page is generated.
 
 Invalid frontmatter, unsupported fields, unsafe routes, and duplicate output paths fail generation with actionable context. Frontmatter parsing errors include the source file.
 
@@ -348,7 +355,7 @@ show_in_navigation: true
 # About
 ```
 
-The field accepts `true` or `false`, and defaults to `false`. Posts, drafts, and the custom 404 page never enter page navigation.
+The field accepts `true` or `false`, and defaults to `false`. Posts and the custom 404 page never enter page navigation. Draft pages participate in preview only, using the same opt-in, hierarchy, hidden-parent suppression, and reading-order rules as other pages.
 
 The engine derives the hierarchy from resolved slugs. No separate parent or section field is needed. Reading order comes from source filenames, independently of display titles and URLs.
 
@@ -372,7 +379,7 @@ For example, with these eligible sources:
 | `parent/02-group/visible-grandchild.md` | Visible Grandchild | Child | Child 2 |
 | `parent/03-child-2.md` | Child 2 | Visible Grandchild | None |
 
-The sequence continues across source directories and outside this example subtree when other eligible pages exist. The built-in page view displays the previous/next anchors automatically. The first page has no previous link, the last has no next link, and a zero- or one-page sequence has neither. Posts, drafts, hidden/suppressed pages, 404 content, and non-clickable groups are not targets. Group descendants can still participate.
+The sequence continues across source directories and outside this example subtree when other eligible pages exist. The built-in page view displays the previous/next anchors automatically. The first page has no previous link, the last has no next link, and a zero- or one-page sequence has neither. Posts, build-excluded drafts, hidden/suppressed pages, 404 content, and non-clickable groups are not targets. Opted-in draft pages and eligible group descendants participate in preview.
 
 A file named `01-abc.md` with `slug: zulu` precedes `02-pqr.md` with `slug: alpha`, regardless of their titles. Explicit slugs preserve public URLs when source names change; prefixes are not automatically stripped from inferred URLs. Root-level `index.md` still generates its ordinary `index` route, not the site homepage.
 
@@ -454,8 +461,14 @@ dotnet run -- --build
 
 | Mode | Output | Behavior |
 | --- | --- | --- |
-| Preview | `preview/` | Starts a local server and regenerates after content or theme-file changes |
-| Build | `dist/` | Generates the static site without starting the preview server |
+| Preview | `preview/` | Starts a local server and regenerates after content or theme-file changes; includes draft posts/pages and scheduled posts with status badges |
+| Build | `dist/` | Generates the static site without starting the preview server; excludes drafts and future-scheduled posts |
+
+Generation captures one reference instant before content loading. A post is future-scheduled only when its resolved publication instant is strictly later than that reference. Equality is eligible; a future date alone skips a post rather than failing generation. The same snapshot controls all preview badges during that generation, even if time advances while rendering.
+
+Preview badges appear at the beginning of affected post/page main content and beside their entries in home/tag listings. The text is `Draft`, `Scheduled on yyyy-mm-dd`, or both, preserving the authored calendar date. Pages can have Draft but not Scheduled badges. Unaffected content and production output have no status badges. These are required for custom themes too; see the [publication status theme contract](#publication-status-theme-contract).
+
+Never deploy `preview/`: it intentionally contains unpublished content. Build and deploy at or after publication time; there is no automatic scheduler or timer-driven preview regeneration. Refresh or trigger regeneration to obtain a new status snapshot. For in-place output, retain the ownership ledger and deploy with removals so rescheduling, draft changes, or switching preview output to build mode withdraw stale pages and generated references.
 
 Refresh the browser after preview regeneration. Razor and C# changes require recompilation, typically with `dotnet watch`.
 
@@ -699,6 +712,38 @@ Use layout `GetHomeUrl()` and `GetTagIndexUrl()` instead of hard-coded `.`/`tags
 Locale inventory, collections and navigation are prepared from loaded documents before hooks. They are not recomputed when plugins return replacement locale/slug/title metadata; per-document hook propagation is retained without promising cross-collection refresh or a second plugin pass.
 
 Normal generation supplies both navigation parameters automatically. For compatibility, `ComponentRenderer` prepares a tree when an older caller supplies only `NavigationPages` to a layout derived from `MainLayoutBase`. An explicitly supplied tree is used unchanged. Direct component rendering should supply `NavigationTree`.
+
+### Publication status theme contract
+
+All themes must render prepared preview status for affected posts/pages and their homepage/tag-list entries. `ContentDocument.PublicationStatus` is an immutable pre-hook snapshot: `Route` identifies the generated document, `IsDraft` includes inherited primary draft status, and nullable `ScheduledDate` is the authored date when this post or its primary is future-scheduled. `IsScheduled` and `HasBadges` are derived flags. Production, custom 404, and unaffected content have no required badges. Do not infer status from wall-clock time, `Metadata.Draft` alone, or converted dates in theme code.
+
+Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind`, exact `Text`, required `Attributes`, and an encoded `Content` fragment:
+
+```razor
+@inherits PublicationBadgeBase
+
+@foreach (var badge in Badges)
+{
+    <span class="my-status" @attributes="badge.Attributes">@badge.Content</span>
+}
+```
+
+Render `Content`, not raw HTML or just `Text`: delivery receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The base produces `Draft` and/or `Scheduled on yyyy-mm-dd` with invariant formatting. Both badges are required when both flags apply.
+
+In post/page views, apply `PublicationBadgeBase.GetRegionAttributes(Document, PublicationBadgePlacement.Detail)` to the content `article` inside `<main>` (or a `role="main"` container), and place the badge component first, before headings, hero images, publication dates, and authored content. In home/tag views, apply `GetRegionAttributes(entry, PublicationBadgePlacement.Listing)` to each corresponding listing-entry wrapper inside main content, and render the badge component beside that entry's link. For example:
+
+```razor
+<li @attributes="PublicationBadgeBase.GetRegionAttributes(post, PublicationBadgePlacement.Listing)">
+    <a href="@GetContentUrl(post.Metadata.Slug)">@post.Metadata.Title</a>
+    <MyPublicationBadges Content="@post" Placement="PublicationBadgePlacement.Listing" />
+</li>
+```
+
+Regions use `data-publication-content` or `data-publication-entry` with the stable route. Badges use `data-publication-badge`, `data-publication-route`, and `data-publication-placement`. Preserve these attributes through post-HTML hooks. Each affected route must have its own unique region; badges in navigation, unrelated entries, or outside main content do not satisfy the contract. No additional discovered theme role or cascading layout parameter is required.
+
+Renderer receipts and final-HTML validation reject missing, duplicate, wrong-route, altered, hidden/inert, or incorrectly placed badges, including omission of one of two required labels. Required text must remain exposed; hidden decorative children are permitted only when the complete label is still present. Detail badges must precede actual article content. Production output and unaffected renders must not contain publication badge markers. Themes own their CSS and accessible styling; structural validation is not an arbitrary stylesheet audit.
+
+Generation prepares collections, effective statuses, and locale contexts before hooks. A replacement document from a Markdown hook retains its original status snapshot rather than resetting eligibility or recomputing collections. Custom loaders supplying typed `Published` values must supply the intended `DateTimeOffset` instants; `Site.TimeZone` interprets raw frontmatter in the built-in loader, not already typed offsets.
 
 ### Language switcher
 
@@ -964,6 +1009,8 @@ var document = new ContentDocument
 
 `ContentMetadata.Tags` snapshots the supplied collection during initialization.
 
+`ContentDocument.PublicationStatus` carries the engine's immutable preview-only status snapshot, separate from authored metadata. See the [publication status theme contract](#publication-status-theme-contract) for its fields, inheritance, and required rendering behavior.
+
 `ShowInNavigation` defaults to `false`. The engine applies page eligibility and ancestor visibility before preparing navigation; consumers should not interpret that property alone as final membership.
 
 ### NavigationNode
@@ -1155,11 +1202,17 @@ Existing public URL-helper signatures remain supported. Shared helpers also make
 
 Remove every frontmatter `locale` field, including on the shared 404. Keep primary files at their original unprefixed locations, moving old primary-locale-directory files back there and preserving intended slugs. Put translations in configured additional-locale directories with matching filenames/relative paths, matching slugs, and required matching calendar dates for paired posts. Primary home/tag URLs no longer redirect. Hosts migrating from the former prefixed-primary contract must supply any desired redirects from old published primary URLs; this feature does not infer historical URLs.
 
-Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. Primary drafts/missing primary files suppress active translations; fallback never uses draft content.
+Add `LocalizationFallbackMessages` entries for each additional locale. They enable fallback even before any translations exist. Removing an entry leaves its files as ordinary nested content, so remove or mark them draft if they should not publish. In builds, draft/scheduled primaries suppress active translations and fallback never uses ineligible primary content. Preview includes drafts and scheduled posts with inherited status badges; a missing primary still suppresses translations.
 
 Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components`, and provide their own components derived from `LanguageSwitcherBase`, `LocalizationMetadataBase`, and `LocalizationFallbackBannerBase`. The former concrete localization components in the Theme package are replaced by these bases; Razor implementations now belong to the default theme or the consuming theme. No new required view-discovery role is added. Render the banner's encoded `FallbackMessageContent` with `BannerAttributes`, annotate actual content language, and retain Home/Tags helpers. Missing fallback notices fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
 
-Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. The switcher supplies native language labels, but other site/theme UI text is not automatically translated. Future-date scheduling remains unchanged.
+Use rooted `BaseUrl` and an absolute HTTP(S) `SiteUrl` without credentials/query/fragment for document SEO. In-place generation retains its owned-output ledger and deletes withdrawn pages; clean rebuild once when upgrading from versions without that ledger, and ensure deployment removes withdrawn files. The switcher supplies native language labels, but other site/theme UI text is not automatically translated.
+
+### Scheduled publication and draft preview
+
+Future-dated posts previously appeared immediately; production builds now withhold them until their publication instant. Set `Site.TimeZone` explicitly when date-only or offset-free post values should use a timezone other than the UTC default. Explicit offsets remain authoritative, and authored dates in URLs and translation pairs do not move.
+
+Draft posts and ordinary pages are now visible in preview, including applicable lists and opted-in navigation. Never deploy preview output. Custom themes must implement the [publication status contract](#publication-status-theme-contract), including both badges for combined/inherited states and per-entry listing indicators; a missing required badge fails preview generation. Custom 404 behavior is unchanged. Existing generator constructor calls still use the system clock; dependency-injected hosts may supply a `TimeProvider` for deterministic generation.
 
 ## Browser acceptance
 
@@ -1167,12 +1220,13 @@ This is repository contributor reference material for the [browser suite](../tes
 
 ### Fixtures and coverage
 
-The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds paired English/Korean post fixtures, a configured Japanese fallback-only locale, and unpublished content. It generates `/docs/` output with primary `en-us` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. Settings are process-local; normal sample source content is unchanged.
+The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds paired English/Korean post fixtures, a configured Japanese fallback-only locale, and unpublished content. It generates `/docs/` output with primary `en-us` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. It also starts a short-lived preview process, checks its HTTP readiness and scheduled output, copies the draft/scheduled artifact to `artifacts/preview`, and stops that process. Settings are process-local; normal sample source content is unchanged.
 
 Six projects combine Playwright-managed Chromium, Firefox and WebKit with desktop (1280x800) and mobile-width (375x812) viewports. Browsers run headlessly by default. The [browser cases](../test/browser/page-navigation.spec.mjs) cover:
 
 - Reading sequence, labelled previous/next targets, endpoint/exclusion behavior, keyboard access and horizontal layout.
 - Primary URL stability, translated/fallback collections and navigation, encoded language-annotated notices without JavaScript, document SEO, unpublished routes and shared assets.
+- Preview Draft/Scheduled badges on primary and translated documents, homepage/tag entries, combined/inherited status, draft-page navigation, and light/dark visible placement at desktop/mobile widths.
 - No-JavaScript and keyboard language switching on documents and generated pages, missing-tag homepage targets, authored-link localization/opt-out with query/fragment preservation, and switcher label/text/focus contrast.
 - Light/dark pager appearance in normal, hover and keyboard-focus states.
 

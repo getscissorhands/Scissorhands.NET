@@ -1,6 +1,6 @@
 # Page navigation browser acceptance
 
-Test-only Playwright coverage for the default-theme pager and locale navigation
+Test-only Playwright coverage for the default-theme pager, locale navigation, and preview publication badges
 in Chromium, Firefox and WebKit.
 
 ## Run
