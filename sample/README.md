@@ -2,27 +2,18 @@
 
 A runnable sample using the built-in `default` theme and local project references. Requires the [repository SDK](../global.json).
 
-Run from this directory and select the mode explicitly:
+Run from `sample/`:
 
 ```bash
 dotnet run -- --preview
 ```
 
-For IDE runs, supply `--preview` or `--build` as application arguments; the launch profile does not select a mode.
+Open the logged URL and refresh after edits. Stop with Ctrl+C, then run `dotnet run -- --build` to generate `dist/`.
 
-Generate static files without starting the preview server:
-
-```bash
-dotnet run -- --build
-```
-
-Generated preview and build outputs are written to `preview/` and `dist/` respectively.
-
-Preview includes draft posts/pages and future-scheduled posts. Deploy only `dist/`, generated at or after the intended publication time.
-
-Open the logged preview URL, refresh after edits, and stop with Ctrl+C.
+Preview includes unpublished content; deploy only `dist/`, not `preview/`.
 
 ## Documentation
 
-- [Sample walkthrough](../docs/website-documentation.md#sample-walkthrough): content examples, navigation, localization, and subpath settings
-- [vNext reference](../docs/website-documentation.md): full configuration and authoring guides
+- [Sample walkthrough](../docs/website-documentation.md#sample-walkthrough)
+- [Preview, builds, and IDE arguments](../docs/website-documentation.md#preview-and-build)
+- [Migration guide](../docs/website-documentation.md#upgrading-to-vnext)

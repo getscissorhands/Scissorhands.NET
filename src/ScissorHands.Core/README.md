@@ -3,9 +3,7 @@
 [![NuGet](https://img.shields.io/nuget/vpre/ScissorHands.Core.svg)](https://www.nuget.org/packages/ScissorHands.Core)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/getscissorhands/ScissorHands.NET/blob/vnext/LICENSE)
 
-`ScissorHands.Core` provides the shared models, manifests, URL helpers, and service contracts for the .NET 10 ScissorHands.NET static site generator.
-
-Install it for custom integrations. Applications normally use [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web), which includes Core.
+Shared models, manifests, URL helpers, and service contracts for .NET 10. Install this package for custom integrations; applications normally use [`ScissorHands.Web`](https://www.nuget.org/packages/ScissorHands.Web).
 
 ## Install
 
@@ -15,8 +13,8 @@ dotnet add package ScissorHands.Core --prerelease
 
 ## Documentation
 
-- [API reference and examples](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#core-api-reference)
-- [vNext migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; vNext includes breaking changes
+- [Core API reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#core-api-reference)
+- [Migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; vNext includes breaking changes
 
 ## License
 

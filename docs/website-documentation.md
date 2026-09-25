@@ -42,6 +42,8 @@ Website destination: `/docs/quickstart/`.
 
 ScissorHands.NET is a .NET 10 static site generator that combines Markdown, YAML frontmatter, Razor themes, and optional plugins.
 
+Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0) before running the examples. Repository contributors should use the SDK selection in [global.json](../global.json).
+
 ### Create an application
 
 Create an empty ASP.NET Core application and install the engine:
@@ -873,6 +875,8 @@ Install `ScissorHands.Plugin` when authoring plugins. Applications consuming plu
 dotnet add package ScissorHands.Plugin --prerelease
 ```
 
+Browse the [official plugins repository](https://github.com/getscissorhands/plugins) for available extensions.
+
 ### Create a content plugin
 
 Derive from `ContentPlugin`, provide a stable ID and display name, and override only the hooks needed:
@@ -1258,6 +1262,16 @@ Themes using the initial fixed-label badge API must replace `badge.Text`/`badge.
 
 This is repository contributor reference material for the [browser suite](../test/browser/README.md), whose README contains prerequisites and run commands. The suite provides V-008 pager and V-009 locale evidence, not a replacement for the .NET suite, actual preview-server coverage, or the broader V-005 real-device assessment.
 
+### Platform setup
+
+The suite requires the repository's .NET SDK, Node.js 24, and the browser builds installed by Playwright. Run the shared install/test commands in the suite README. On Linux, replace the browser-install command with:
+
+```bash
+npx playwright install --with-deps chromium firefox webkit
+```
+
+This also installs the browser system dependencies. Browsers run headlessly with Playwright-managed builds; no separately installed Firefox application is needed. `npm test` regenerates ignored sample/test output without modifying sample source. Reports, traces, and screenshots remain under ignored `test/browser/test-results`; see [contrast and evidence](#contrast-and-evidence) for interpretation.
+
 ### Fixtures and coverage
 
 The [fixture builder](../test/browser/build-sample.mjs) copies sample content/configuration into ignored `test/browser/artifacts/locale-source`, then adds paired English/Korean post fixtures, a configured Japanese fallback-only locale, and unpublished content. It generates `/docs/` output with primary `en-us` under `artifacts/prefix`, checks byte-identical artifacts for configured `/docs` and `/docs/`, and regenerates the normal root-site sample `dist`. It also starts a short-lived preview process, checks its HTTP readiness and scheduled output, copies the draft/scheduled artifact to `artifacts/preview`, and stops that process. Settings are process-local; normal sample source content is unchanged.
@@ -1296,10 +1310,10 @@ The following removed or shortened README material is preserved above:
 | --- | --- |
 | Repository root | Detailed page-navigation behavior; source/binary/configuration compatibility; plugin ordering and directory-index migration |
 | `ScissorHands.Core` | Content/navigation models, locale context, BaseUrl normalization, manifest/collection contracts, URL helpers, cancellation and obsolete service overloads |
-| `ScissorHands.Plugin` | Complete plugin example; ID rules; stages; dependencies and failures; configuration; Razor components; preview behavior; migration steps |
+| `ScissorHands.Plugin` | Complete plugin example; ID rules; stages; dependencies and failures; configuration; Razor components; preview behavior; migration steps; official plugin catalog link |
 | `ScissorHands.Theme` | Required view roles and tag-view migration; automatic discovery; manifest and assets; layout/cascading data; recursive navigation rendering; URL helpers; plugin selection |
 | `ScissorHands.Web` | Full application/configuration/content examples; frontmatter reference; routes; navigation; preview/build; theme and plugin integration; migration notes |
-| Sample | Fixture descriptions, navigation experiments and locale/subpath walkthrough; essential execution instructions and entry-point source links remain in the sample README |
-| Browser tests | Fixture lifecycle, viewport/engine coverage, contrast thresholds and measurement, reports and evidence limits; prerequisites and run commands remain in the suite README |
+| Sample | Fixture descriptions, IDE mode arguments, publication timing, navigation experiments and locale/subpath walkthrough; essential run commands and the deployment warning remain in the sample README |
+| Browser tests | Linux dependency setup, managed-browser behavior, fixture lifecycle, viewport/engine coverage, contrast thresholds and measurement, reports and evidence limits; prerequisites and shared run commands remain in the suite README |
 
 Keep repository-specific commands and sample file pointers in the repository. Keep package installation, supported framework, essential compatibility warnings, license links, and required third-party attribution in the corresponding READMEs.

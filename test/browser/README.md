@@ -1,7 +1,6 @@
 # Page navigation browser acceptance
 
-Test-only Playwright coverage for the default-theme pager, locale navigation, and preview publication badges
-in Chromium, Firefox and WebKit.
+Playwright acceptance tests for the default-theme navigation and preview badges in Chromium, Firefox, and WebKit.
 
 ## Run
 
@@ -16,14 +15,6 @@ npx playwright install chromium firefox webkit
 npm test
 ```
 
-On Linux, use `npx playwright install --with-deps chromium firefox webkit` to
-install the browser system dependencies as well.
+`npm test` regenerates ignored sample/test output without changing sample source.
 
-`npm test` regenerates sample `dist` and test fixtures without changing the
-sample's source content. Reports are written to ignored `test-results`.
-
-Browsers run headlessly using Playwright-managed builds; no separate Firefox
-application is needed.
-
-See [browser acceptance details](../../docs/website-documentation.md#browser-acceptance)
-for fixture setup, Firefox configuration, coverage, and evidence limits.
+See [browser acceptance](../../docs/website-documentation.md#browser-acceptance) for Linux setup, fixtures, reports, coverage, and evidence limits.

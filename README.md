@@ -9,32 +9,31 @@ A .NET 10 static site generator that turns Markdown into HTML using Razor themes
 
 ## Try the sample
 
-Install the [.NET 10 SDK](https://dotnet.microsoft.com/download/dotnet/10.0), clone this repository, and run from `sample`:
+Install the [repository's .NET SDK](global.json), clone this repository, and run from its root:
 
 ```bash
+cd sample
 dotnet run -- --preview
 ```
 
-Stop preview with Ctrl+C. Run `dotnet run -- --build` to generate `dist` for static hosting. See the [sample guide](sample/README.md), or use [ScissorHands.Web](src/ScissorHands.Web/README.md) to create your own application.
-
-Preview includes draft and scheduled content; deploy only production build output.
+Stop preview with Ctrl+C, then run `dotnet run -- --build` to generate `dist`. Preview includes unpublished content; deploy only build output.
 
 ## Packages
 
-| Package                                     | Purpose                                                              |
-| ------------------------------------------- | -------------------------------------------------------------------- |
-| [Web](src/ScissorHands.Web/README.md)       | Application composition, generation, preview, and the built-in theme |
-| [Core](src/ScissorHands.Core/README.md)     | Shared models, manifests, and contracts                              |
-| [Theme](src/ScissorHands.Theme/README.md)   | Base types for theme authors                                         |
-| [Plugin](src/ScissorHands.Plugin/README.md) | Content hooks and plugin component contracts                         |
+| Package | Purpose |
+| --- | --- |
+| [Web](src/ScissorHands.Web/README.md) | Site generation, preview, and the built-in theme |
+| [Core](src/ScissorHands.Core/README.md) | Shared models and contracts |
+| [Theme](src/ScissorHands.Theme/README.md) | Theme authoring |
+| [Plugin](src/ScissorHands.Plugin/README.md) | Plugin authoring |
 
 ## Documentation and compatibility
 
 - [Documentation website](https://getscissorhands.app/docs/)
-- [vNext reference](docs/website-documentation.md): configuration, content, locales, themes, plugins, and APIs
-- [Upgrading to vNext](docs/website-documentation.md#upgrading-to-vnext)
+- [vNext guide](docs/website-documentation.md): quickstart, configuration, authoring, and APIs
+- [Sample](sample/README.md)
 
-vNext includes breaking changes; review the migration guide before upgrading.
+vNext includes breaking changes; review the [migration guide](docs/website-documentation.md#upgrading-to-vnext) before upgrading.
 
 ## Support and license
 
