@@ -72,6 +72,38 @@ const sequence = [
   { route: "parent/child-2", title: "Child 2" },
 ];
 
+test("sample publication examples appear only in preview with their individual statuses", async ({ page, previewSite, site, localeSite }) => {
+  const examples = [
+    { route: "2026/09/26/draft-post/", title: "Draft post", badge: "draft", label: "Draft" },
+    { route: "2099/12/31/scheduled-post/", title: "Scheduled post", badge: "scheduled", label: "Scheduled on 2099-12-31" },
+    { route: "draft-page/", title: "Draft page", badge: "draft", label: "Draft" },
+  ];
+  for (const example of examples) {
+    expect((await page.goto(`${previewSite}/${example.route}`)).status()).toBe(200);
+    const badges = page.locator("article [data-publication-badge]");
+    await expect(badges).toHaveCount(1);
+    await expect(badges).toHaveAttribute("data-publication-badge", example.badge);
+    await expect(badges).toHaveText(example.label);
+    await expect(badges).toBeVisible();
+    expect((await page.request.get(`${site}/${example.route}`)).status()).toBe(404);
+    expect((await page.request.get(`${localeSite}/${example.route}`)).status()).toBe(404);
+    expect((await page.request.get(`${localeSite}/ko-kr/${example.route}`)).status()).toBe(404);
+  }
+  await expect(page.locator(".site-header nav").getByRole("link", { name: "Draft page", exact: true })).toBeVisible();
+  await expect(page.locator(".page-navigation")).toBeVisible();
+  await page.goto(`${previewSite}/`);
+  for (const example of examples.slice(0, 2)) {
+    const entry = page.locator(".post-list li").filter({ has: page.getByRole("link", { name: example.title, exact: true }) });
+    await expect(entry.locator("[data-publication-badge]")).toHaveText(example.label);
+  }
+  await page.goto(`${previewSite}/tags/publication-examples/`);
+  for (const example of examples) {
+    const entry = page.locator("[data-publication-entry]").filter({ has: page.getByRole("link", { name: example.title, exact: true }) });
+    await expect(entry.locator("[data-publication-badge]")).toHaveText(example.label);
+  }
+  expect((await page.request.get(`${site}/tags/publication-examples/`)).status()).toBe(404);
+});
+
 test("the generated reading sequence has working, labelled links and no endpoint placeholders", async ({ page, site }) => {
   for (const [index, current] of sequence.entries()) {
     const response = await page.goto(`${site}/${current.route}/`);

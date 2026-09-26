@@ -509,14 +509,19 @@ The [repository sample](../sample/README.md) uses local project references and t
 | Source | What to explore |
 | --- | --- |
 | [Hello, ScissorHands](../sample/contents/posts/hello-scissorhands.md) | Rich Markdown for desktop/mobile and light/dark comparisons |
+| [Draft post](../sample/contents/posts/draft-post.md) | `draft: true`; preview-only article, homepage entry, and tag entry |
+| [Scheduled post](../sample/contents/posts/scheduled-post.md) | `published: 2099-12-31`; scheduled preview badge and production withholding until eligible |
 | [About](../sample/contents/pages/about.md) | The first page in the sample reading sequence |
+| [Draft page](../sample/contents/pages/draft-page.md) | `draft: true` and navigation opt-in; preview-only page and reading-sequence entry |
 | [Korean About](../sample/contents/pages/ko-kr/about.md) | A paired translation with localized links, a primary-language opt-out, and a shared resource link |
 | [Parent](../sample/contents/pages/parent/index.md) | An index-first landing page with numbered child files and directories |
 | [Child](../sample/contents/pages/parent/01-child.md), [Visible Grandchild](../sample/contents/pages/parent/02-group/visible-grandchild.md), [Child 2](../sample/contents/pages/parent/03-child-2.md) | Cross-directory previous/next links; explicit slugs preserve routes despite filename-ordering prefixes |
 | [Hidden Grandchild](../sample/contents/pages/parent/02-group/hidden-grandchild.md) | Published, tagged content omitted from navigation and the reading sequence |
 | [Not found](../sample/contents/pages/not-found.md) | Custom root `404.html` content with locale inherited from the site |
 
-The default sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
+The production sequence is **About, Parent, Child, Visible Grandchild, Child 2**. Preview inserts **Draft page** between About and Parent. Set Visible Grandchild's `show_in_navigation` to false to remove the empty Group, or disable Parent to hide that entire branch. The endpoint links and visibility rules are described in [reading order](#reading-order-and-previousnext-links).
+
+In the normal sample preview, open `/2026/09/26/draft-post/`, `/2099/12/31/scheduled-post/`, and `/draft-page/`, or find the examples at `/tags/publication-examples/`. Both draft examples stay out of production builds; the scheduled post is withheld until its publication time. Their Korean fallback routes demonstrate localized badges alongside the translation-unavailable notice.
 
 The sample starts with an empty `Plugins` array, `Site.Locales: ["en-US", "ko-KR"]`, and complete English/Korean `Theme.Localization` entries. Its primary sequence stays unprefixed. `/ko-kr/about/` uses the [Korean translation](../sample/contents/pages/ko-kr/about.md); `/ko-kr/parent/` and other untranslated documents demonstrate the notice and English fallback. Set `Site.BaseUrl` to `/docs` or `/docs/` to explore subpath hosting. See [site configuration](#site-configuration) and [locale-specific sites](#locale-specific-sites). Emptying `Site.Locales` disables localization, but leaves locale-looking directories as ordinary content rather than excluding them.
 
