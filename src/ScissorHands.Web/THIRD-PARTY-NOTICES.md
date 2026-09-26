@@ -1,7 +1,6 @@
 # Third-party notices
 
-The built-in ScissorHands.NET theme is adapted from
-[PlainPage](https://github.com/ChurchTao/PlainPage).
+The built-in ScissorHands.NET theme is adapted from [PlainPage](https://github.com/ChurchTao/PlainPage).
 
 ## PlainPage
 

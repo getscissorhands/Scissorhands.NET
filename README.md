@@ -20,12 +20,12 @@ Stop preview with Ctrl+C, then run `dotnet run -- --build` to generate `dist`. P
 
 ## Packages
 
-| Package | Purpose |
-| --- | --- |
-| [Web](src/ScissorHands.Web/README.md) | Site generation, preview, and the built-in theme |
-| [Core](src/ScissorHands.Core/README.md) | Shared models and contracts |
-| [Theme](src/ScissorHands.Theme/README.md) | Theme authoring |
-| [Plugin](src/ScissorHands.Plugin/README.md) | Plugin authoring |
+| Package                                     | Purpose                                          |
+| ------------------------------------------- | ------------------------------------------------ |
+| [Web](src/ScissorHands.Web/README.md)       | Site generation, preview, and the built-in theme |
+| [Core](src/ScissorHands.Core/README.md)     | Shared models and contracts                      |
+| [Theme](src/ScissorHands.Theme/README.md)   | Theme authoring                                  |
+| [Plugin](src/ScissorHands.Plugin/README.md) | Plugin authoring                                 |
 
 ## Documentation and compatibility
 
