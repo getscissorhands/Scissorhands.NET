@@ -67,19 +67,23 @@ internal static partial class PublicationDateParser
         }
 
         var local = DateTime.SpecifyKind(parsed.DateTime, DateTimeKind.Unspecified);
-        if (timeZone.IsInvalidTime(local))
+        // TimeZoneInfo transitions have millisecond precision. Unix inclusive rule-end
+        // ticks can shift ambiguity checks by one tick; query at transition precision
+        // while retaining the full authored timestamp for the resulting instant.
+        var lookupTime = new DateTime(local.Ticks - local.Ticks % TimeSpan.TicksPerMillisecond, DateTimeKind.Unspecified);
+        if (timeZone.IsInvalidTime(lookupTime))
         {
             throw InvalidDate(value, sourcePath, $"The local time does not exist in Site:TimeZone '{timeZone.Id}' because of a clock change.");
         }
 
-        if (timeZone.IsAmbiguousTime(local))
+        if (timeZone.IsAmbiguousTime(lookupTime))
         {
             throw InvalidDate(value, sourcePath, $"The local time is ambiguous in Site:TimeZone '{timeZone.Id}' because of a clock change.");
         }
 
         try
         {
-            return new DateTimeOffset(local, timeZone.GetUtcOffset(local));
+            return new DateTimeOffset(local, timeZone.GetUtcOffset(lookupTime));
         }
         catch (ArgumentException exception)
         {

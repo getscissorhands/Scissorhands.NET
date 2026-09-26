@@ -118,6 +118,8 @@ public class PublicationDateParserTests
     [InlineData("2026-03-08T02:59:59.9999999", "does not exist")]
     [InlineData("2026-11-01T01:00:00", "ambiguous")]
     [InlineData("2026-11-01T01:30:00", "ambiguous")]
+    [InlineData("2026-11-01T01:59:59.999", "ambiguous")]
+    [InlineData("2026-11-01T01:59:59.9999998", "ambiguous")]
     [InlineData("2026-11-01T01:59:59.9999999", "ambiguous")]
     public void Given_GapOrOverlapLocalTime_When_Parse_Invoked_Then_It_Should_RequireExplicitOffset(
         string value, string reason)
@@ -135,6 +137,26 @@ public class PublicationDateParserTests
         exception.Message.ShouldContain("America/New_York");
         exception.Message.ShouldContain(reason);
         exception.Message.ShouldContain("explicit offset");
+    }
+
+    [Theory]
+    [InlineData("2026-03-08T01:59:59.9999999", "2026-03-08T01:59:59.9999999-05:00")]
+    [InlineData("2026-03-08T03:00:00.0000000", "2026-03-08T03:00:00.0000000-04:00")]
+    [InlineData("2026-03-08T03:00:00.0000001", "2026-03-08T03:00:00.0000001-04:00")]
+    [InlineData("2026-11-01T00:59:59.9999998", "2026-11-01T00:59:59.9999998-04:00")]
+    [InlineData("2026-11-01T00:59:59.9999999", "2026-11-01T00:59:59.9999999-04:00")]
+    [InlineData("2026-11-01T02:00:00.0000000", "2026-11-01T02:00:00.0000000-05:00")]
+    [InlineData("2026-11-01T02:00:00.0000001", "2026-11-01T02:00:00.0000001-05:00")]
+    [InlineData("2026-11-01T01:59:59.9999999-04:00", "2026-11-01T01:59:59.9999999-04:00")]
+    [InlineData("2026-11-01T01:59:59.9999999-05:00", "2026-11-01T01:59:59.9999999-05:00")]
+    public void Given_TicksAtDaylightSavingBoundaries_When_Parse_Invoked_Then_It_Should_PreserveValidOffsetsAndFullPrecision(
+        string value, string expected)
+    {
+        var timeZone = PublicationDateParser.ResolveTimeZone("America/New_York");
+
+        var result = PublicationDateParser.Parse(value, timeZone, SourcePath);
+
+        result.ToString("O", CultureInfo.InvariantCulture).ShouldBe(expected);
     }
 
     [Theory]

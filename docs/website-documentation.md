@@ -155,6 +155,8 @@ During generation, the engine sets `SiteManifest.IsPreview` to indicate preview 
 
 For example, `published: 2026-10-01` with `Site.TimeZone: Asia/Seoul` becomes eligible at `2026-09-30T15:00:00Z`. The authored October 1 date remains unchanged in dated URLs, translation pairing, and preview badges. Ordinary-page dates retain their existing parsing behavior and never activate scheduling.
 
+Timezone-rule lookups use millisecond transition precision to keep DST boundary classification consistent across platforms. The returned publication timestamp retains all authored fractional-second ticks; publication eligibility is not rounded.
+
 The `Plugins` array selects installed plugins by ID:
 
 ```json
