@@ -1,7 +1,7 @@
 ---
 title: Draft post
 description: A draft article available only in preview.
-published: 2026-09-26
+published: 2026-09-11
 draft: true
 tags:
   - sample

@@ -74,7 +74,7 @@ const sequence = [
 
 test("sample publication examples appear only in preview with their individual statuses", async ({ page, previewSite, site, localeSite }) => {
   const examples = [
-    { route: "2026/09/26/draft-post/", title: "Draft post", badge: "draft", label: "Draft" },
+    { route: "2026/09/11/draft-post/", title: "Draft post", badge: "draft", label: "Draft" },
     { route: "2099/12/31/scheduled-post/", title: "Scheduled post", badge: "scheduled", label: "Scheduled on 2099-12-31" },
     { route: "draft-page/", title: "Draft page", badge: "draft", label: "Draft" },
   ];
