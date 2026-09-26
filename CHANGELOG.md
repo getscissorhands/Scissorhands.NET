@@ -6,6 +6,21 @@ The original engine began on [2015-08-08](https://github.com/getscissorhands/Sci
 
 Preview releases belong to the `vnext` development line. Their inclusion here does not imply that the same implementation is present on `main`. Use the tag matching your installed package version.
 
+## v1.0.0-preview.20260927.1 - 2026-09-26
+
+[Release](https://github.com/getscissorhands/Scissorhands.NET/releases/tag/v1.0.0-preview.20260927.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260915.1...v1.0.0-preview.20260927.1)
+
+- **Breaking:** Preview now serves only under the configured `Site.BaseUrl`. Domain-root GET/HEAD requests redirect to the mounted homepage; other requests outside the prefix return 404 (#101).
+- **Breaking:** Removed `Site.UseLocaleInUrl`, replaced `Site.Locale` with ordered `Site.Locales`, and removed frontmatter `locale`. The first declared locale is primary with unprefixed routes; additional locales use matching directories immediately under `contents/pages/` or `contents/posts/`. Omitted, null, or empty `Locales` disables localization; legacy keys fail with migration guidance (#100, #108).
+- Added directory-based translation pairing, primary-content fallbacks at additional-locale URLs, localized home/tag collections and navigation, language switching, canonical URLs, and `hreflang` metadata. Authored internal page/post links follow the active locale unless explicitly opted out; shared resources and external links remain unchanged (#100, #108).
+- **Breaking:** Custom themes must forward `LocaleContext` and implement theme-owned localization components using the new base classes, including required fallback notices. Application-owned `Theme.Localization` must provide `TranslationUnavailable`, `Draft`, and a valid `ScheduledOn` template for every declared locale; missing messages or required rendered notices fail generation (#108, #110).
+- **Breaking:** Production builds now withhold future-scheduled posts as well as drafts. Added `Site.TimeZone` (default `UTC`) for date-only and offset-free publication values, with explicit offsets remaining authoritative and authored dates preserved in URLs. Publication is evaluated once per generation; reaching a scheduled time still requires a new build and deployment (#110).
+- Preview now includes draft posts/pages and scheduled posts, with localized draft/scheduled badges in affected content and home/tag listings. Translation previews inherit applicable primary status, while production uses eligible primary fallbacks or suppresses variants when the primary is ineligible. Never deploy preview output (#110).
+- **Breaking:** Custom themes must render the prepared publication-status badges in content and listing regions; missing or invalid required badges fail preview generation. Added immutable `ContentDocument.PublicationStatus`, `PublicationBadgeBase`, and injectable `TimeProvider` support (#110).
+- Added an owned-output ledger for in-place regeneration to remove withdrawn generated pages and handle route-shape changes without deleting unrelated files. Deployments must also remove withdrawn output (#108, #110).
+- Moved the runnable integration sample from `samples/ScissorHands.Sample/` to `sample/` and expanded it with translations, drafts, and scheduled content (#107, #108, #110).
+- Added a general request issue template, streamlined shell examples, reconstructed the tagged release history, and consolidated detailed authoring and migration documentation (#106, #108, #110).
+
 ## v1.0.0-preview.20260915.1 - 2026-09-15
 
 [Release](https://github.com/getscissorhands/Scissorhands.NET/releases/tag/v1.0.0-preview.20260915.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260914.1...v1.0.0-preview.20260915.1)
