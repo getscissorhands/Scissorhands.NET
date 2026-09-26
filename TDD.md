@@ -1,5 +1,21 @@
 # ScissorHands.NET - Technical design document
 
+## Current scope amendment: explicit locales and theme catalogs
+
+The [PRD](PRD.md#current-scope-amendment-explicit-locales-and-theme-catalogs) and [TRD](TRD.md#current-scope-amendment-explicit-locales-and-theme-catalogs) amendments supersede earlier locale/message configuration assumptions. Historical decisions and evidence below are not rewritten.
+
+Core adds immutable `ThemeLocalization` records and a defensive `ThemeManifest.Localization` snapshot; `SiteManifest.Locales` replaces the old scalar locale/message properties. Configuration binding diagnoses legacy keys and binds only application localization into the configured manifest. `LocaleConfiguration.Create(site)` supplies validated source-directory inventory without inferring locales from messages. Its theme-aware overload validates all active messages and templates, while `ApplyTo` composes the validated catalog with a package manifest without mutating either input.
+
+`ThemeService` uses the configured application catalog when loading package metadata. The generator validates/normalizes the effective catalog before source loading/rendering, including custom theme-service results. Theme components receive it through the existing theme cascade. The default badge component selects `LocaleContext.Locale` or the first declared locale and uses English defaults only when localization is disabled. Existing render-context `FallbackMessage` is populated from `TranslationUnavailable`; no rendering API rename or extra discovered view role is necessary. Publication status snapshots, timestamp interpretation, plugin ordering, output ownership, and machine-readable badge validation are unchanged.
+
+## Current scope amendment: scheduled publication and draft preview
+
+The [PRD](PRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) and [TRD](TRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) amendments for #109 supersede DES-002's metadata-only scheduling and unconditional preview draft removal, plus related navigation and locale-selection assumptions. Earlier design/approval/evidence records remain historical.
+
+`PublicationDateParser` resolves post timestamps into `DateTimeOffset` values using `SiteManifest.TimeZone` for offset-free input, rejecting DST gaps/ambiguities and preserving written calendar dates. Ordinary-page parsing is unchanged. `ContentLoader` validates pairs before mode-dependent draft filtering; future-post selection occurs in `StaticSiteGenerator` against a single injected `TimeProvider` reading. The previous constructor remains available with `TimeProvider.System`.
+
+The generator filters before preparing locale scopes, navigation, tags, and owned routes. In preview it attaches immutable `ContentDocument.PublicationStatus` snapshots with independent inherited draft/scheduled flags and the authored scheduled date, without rewriting authored `ContentMetadata`. Unaffected documents retain their identity; hook replacements retain the original prepared status. `PublicationBadgeBase` exposes status/date data and machine-readable attributes, not display wording or formats. Theme-owned Razor formats and localizes labels, passing them to `RenderContent(label)` for encoding and delivery receipts. The renderer compares exposed text with those receipts; final-HTML validation preserves the initially rendered labels across post-HTML hooks and separately validates status/date metadata and placement. The existing output ledger removes stale ineligible output during successful regeneration; no new transactional rollback or automatic publishing service is introduced.
+
 ## Current scope amendment: directory locales and fallback
 
 The [PRD](PRD.md#current-scope-amendment-directory-locales-and-fallback) and [TRD](TRD.md#current-scope-amendment-directory-locales-and-fallback) amendments for #104 supersede DES-013/DEC-004's earlier locale inventory, redirects, and no-fallback assumptions. The document-control and approval/evidence records below remain historical and are not retroactively extended.

@@ -13,6 +13,7 @@ public sealed class SiteManifest
     private const string HERO_IMAGE_URL = "https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/hero.jpg";
 
     private readonly string _baseUrl = BASE_URL;
+    private readonly IReadOnlyList<string> _locales = Array.Empty<string>();
 
     /// <summary>
     /// Defines the contents directory.
@@ -50,16 +51,19 @@ public sealed class SiteManifest
     public string? DescriptionInHtml { get; set; }
 
     /// <summary>
-    /// Gets the site locale.
+    /// Gets the ordered locale inventory. The first locale is primary; the remaining locales are additional.
+    /// An omitted, null, or empty collection disables localization.
     /// </summary>
-    public string? Locale { get; init; }
+    public IReadOnlyList<string> Locales
+    {
+        get => _locales;
+        init => _locales = Array.AsReadOnly((value ?? Array.Empty<string>()).ToArray());
+    }
 
     /// <summary>
-    /// Gets additional locales and their plain-text missing-translation notices.
-    /// Ignored when <see cref="Locale"/> is blank.
+    /// Gets the time zone used for publication dates without an explicit offset.
     /// </summary>
-    public IReadOnlyDictionary<string, string?> LocalizationFallbackMessages { get; init; }
-        = new Dictionary<string, string?>();
+    public string TimeZone { get; init; } = "UTC";
 
     /// <summary>
     /// Gets the site author.
@@ -97,9 +101,9 @@ public sealed class SiteManifest
     public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>
-    /// Gets whether an explicit primary locale enables localization.
+    /// Gets whether the locale inventory enables localization.
     /// </summary>
-    public bool IsLocalizationEnabled => !string.IsNullOrWhiteSpace(Locale);
+    public bool IsLocalizationEnabled => Locales.Count > 0;
 
     /// <summary>
     /// Gets a value indicating whether to use date in post URL or not.

@@ -33,7 +33,12 @@ public class StaticSiteGeneratorReadingOrderTests
         var post = new ContentDocument { Kind = ContentKind.Post, Metadata = new() { Title = "Post", Slug = "post", ShowInNavigation = true } };
         var notFound = Page("Not found", "404.html", visible: true);
         var expected = new[] { parent, child, grandchild, child2, sourceLessA, sourceLessZ };
-        var fixture = new Fixture([sourceLessZ, child2, suppressed, child, sourceLessA, hidden, grandchild, parent, draft, post, notFound]);
+        var documents = new List<ContentDocument> { sourceLessZ, child2, suppressed, child, sourceLessA, hidden, grandchild, parent, post, notFound };
+        if (!preview)
+        {
+            documents.Add(draft);
+        }
+        var fixture = new Fixture(documents);
 
         await fixture.BuildAsync(preview);
 

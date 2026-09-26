@@ -41,7 +41,7 @@ public class StaticSiteGeneratorTagContextTests
         {
             Title = "Site title",
             Description = "Site description",
-            Locale = useLocale ? "ko-KR" : null,
+            Locales = useLocale ? ["ko-KR"] : [],
             SiteUrl = "https://example.com",
             BaseUrl = baseUrl,
         };
@@ -85,7 +85,7 @@ public class StaticSiteGeneratorTagContextTests
             .Returns(call => $"<p>{call.ArgAt<string>(0)}</p>");
         var themeService = Substitute.For<IThemeService>();
         themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(new ThemeManifest { Slug = "default" });
+            .Returns(LocalizedThemeManifest.Create(site.Locales));
         var observations = new RouteObservations();
         var services = new ServiceCollection();
         services.AddLogging();

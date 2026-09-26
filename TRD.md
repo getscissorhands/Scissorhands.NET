@@ -1,5 +1,21 @@
 # ScissorHands.NET - Technical requirements document
 
+## Current scope amendment: explicit locales and theme catalogs
+
+[PRD's explicit-locale amendment](PRD.md#current-scope-amendment-explicit-locales-and-theme-catalogs) supersedes earlier locale inventory and message-validation requirements. `SiteManifest.Locales` snapshots the ordered array; primary is the first validated normalized item and additional locales come only from the remainder. Preserve format/safety checks, disabled-mode source treatment, URL stability, and nonmutating generation.
+
+Bind application `Theme.Localization` into localization data, not a replacement package manifest. `ThemeService` composes that data with package identity/assets and returns a fresh effective `ThemeManifest` with read-only localization. Generator-side validation also applies to custom theme-service results. Require complete messages for every declared locale, with contextual errors for missing/blank values, malformed templates, absent real `{0}` arguments, and unsupported indexes. Empty locale arrays use English defaults without extra routes or language annotations.
+
+Default-theme badges select the requested render locale's messages; fallback notices use its `TranslationUnavailable`. Do not change global culture, reinterpret the authored scheduled date, alter seven-role theme discovery, or let catalog keys enable locales. Cover binding, disabled mode, primary reversal, normalized duplicates, unused catalog entries, strict validation before rendering, immutable composition, and English/Japanese/Korean output in build/preview.
+
+## Current scope amendment: scheduled publication and draft preview
+
+[PRD's #109 amendment](PRD.md#current-scope-amendment-scheduled-publication-and-draft-preview) supersedes the prior draft/future-date obligations in TR-002/006/023. Preserve historical IDs, approvals, and outstanding wider gaps.
+
+Resolve offset-free post dates through validated `Site.TimeZone` (UTC by default), preserving authored dates and explicit offsets. Reject invalid configuration and DST gaps/ambiguities contextually. Capture one `TimeProvider` instant before generation work; filter production sources before locale selection, collections, navigation, hooks, and route planning. Preserve draft exclusion for the custom 404 and date-independent ordinary pages.
+
+Include draft posts/pages in preview, including opted-in page navigation. Prepare immutable per-document preview status before hooks, inheriting draft/scheduled status independently from the primary. Every theme must render encoded, nonempty theme-owned labels at the required document/listing locations, choosing its display formats and culture without changing the authored date. Validate required statuses, invariant machine-readable scheduled dates, and complete visible labels against actual theme delivery, not fixed English text. Missing required badges or altered/removed post-HTML output must fail actionably. Production contains no preview badges. Preserve primary gates, fallback notices, output ownership, cancellation, source safety, and URL/pair-date semantics. Cover boundaries with a controlled clock and verify stale-output withdrawal after rescheduling and preview-to-build regeneration.
+
 ## Current scope amendment: directory locales and fallback
 
 [PRD's #104 amendment](PRD.md#current-scope-amendment-directory-locales-and-fallback) supersedes the locale-specific obligations of TR-023 below, including prefixed primary routes, discovered frontmatter locales, and root/tag redirects. Preserve the existing IDs, approval records, historical baselines, and explicit wider gaps.

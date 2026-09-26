@@ -1,4 +1,5 @@
 using System.IO.Abstractions.TestingHelpers;
+using System.Text;
 
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
@@ -47,8 +48,7 @@ public class ContentLoaderLocaleTests
     {
         var fixture = new Fixture(new SiteManifest
         {
-            Locale = primary,
-            LocalizationFallbackMessages = new Dictionary<string, string?> { [additional] = "Unavailable" },
+            Locales = [primary, additional],
         });
         if (valid)
         {
@@ -65,24 +65,27 @@ public class ContentLoaderLocaleTests
     {
         var fixture = new Fixture(new SiteManifest
         {
-            Locale = "en-us",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "One", ["ko_KR"] = "Two" },
+            Locales = ["en-us", "ko-kr", "ko_KR"],
         });
         var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
         error.Message.ShouldContain("Duplicate locale");
     }
 
     [Theory]
-    [InlineData(null)]
-    [InlineData("")]
-    [InlineData("   ")]
-    public async Task Given_DisabledLocalization_When_Loaded_Then_It_Should_IgnoreDictionaryAndTreatFoldersAsOrdinary(string? locale)
+    [InlineData("{}")]
+    [InlineData("""{"Site":{"Locales":null}}""")]
+    [InlineData("""{"Site":{"Locales":[]}}""")]
+    public async Task Given_DisabledLocalization_When_LoadAsync_Invoked_Then_It_Should_IgnoreThemeCatalogAndTreatFoldersAsOrdinary(string siteConfiguration)
     {
-        var configuration = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        // Arrange
+        using var stream = new MemoryStream(Encoding.UTF8.GetBytes(siteConfiguration));
+        var configuration = new ConfigurationBuilder().AddJsonStream(stream).AddInMemoryCollection(new Dictionary<string, string?>
         {
-            ["Site:Locale"] = locale,
-            ["Site:LocalizationFallbackMessages:../invalid"] = null,
-            ["Site:LocalizationFallbackMessages:ko-kr"] = "Unavailable",
+            ["Site:Title"] = "Nonlocalized site",
+            ["Theme:Localization:../invalid:TranslationUnavailable"] = null,
+            ["Theme:Localization:ko-kr:TranslationUnavailable"] = "Unavailable",
+            ["Theme:Localization:ko-kr:Draft"] = "Draft",
+            ["Theme:Localization:ko-kr:ScheduledOn"] = "Scheduled on {0}",
         }).Build();
         var site = configuration.GetSection("Site").Get<SiteManifest>()!;
         site.IsLocalizationEnabled.ShouldBeFalse();
@@ -90,8 +93,10 @@ public class ContentLoaderLocaleTests
         fixture.Add("pages/ko-kr/about.md");
         fixture.Add("pages/it/about.md");
 
+        // Act
         var documents = await fixture.Load();
 
+        // Assert
         documents.Select(d => d.Metadata.Slug).ShouldBe(["it/about", "ko-kr/about"], ignoreOrder: true);
         documents.ShouldAllBe(d => d.Metadata.Locale == null);
     }
@@ -121,14 +126,22 @@ public class ContentLoaderLocaleTests
     }
 
     [Theory]
-    [InlineData(false, false, 2)]
-    [InlineData(false, true, 1)]
-    [InlineData(true, false, 0)]
-    [InlineData(true, true, 0)]
+    [InlineData(false, false, false, 2)]
+    [InlineData(false, false, true, 1)]
+    [InlineData(false, true, false, 0)]
+    [InlineData(false, true, true, 0)]
+    [InlineData(true, false, false, 2)]
+    [InlineData(true, false, true, 2)]
+    [InlineData(true, true, false, 2)]
+    [InlineData(true, true, true, 2)]
     public async Task Given_PrimaryAndTranslationDrafts_When_Loaded_Then_It_Should_ApplyThePrimaryGate(
-        bool primaryDraft, bool translatedDraft, int count)
+        bool preview, bool primaryDraft, bool translatedDraft, int count)
     {
-        var fixture = new Fixture();
+        var fixture = new Fixture(new SiteManifest
+        {
+            IsPreview = preview,
+            Locales = ["en-us", "ko-kr"],
+        });
         fixture.Add("pages/about.md", $"draft: {primaryDraft}");
         fixture.Add("pages/ko-kr/about.md", $"draft: {translatedDraft}");
         (await fixture.Load()).Count.ShouldBe(count);
@@ -209,6 +222,64 @@ public class ContentLoaderLocaleTests
         error.Message.ShouldContain("filesystem link");
     }
 
+    [Theory]
+    [InlineData("2026-09-25", 9)]
+    [InlineData("2026-09-25T09:00:00", 9)]
+    [InlineData("2026-09-25T09:00:00Z", 0)]
+    [InlineData("2026-09-25T09:00:00-04:00", -4)]
+    public async Task Given_PostFrontmatter_When_Loaded_Then_It_Should_ResolveTheZoneWithoutShiftingTheWrittenDate(
+        string published, int offsetHours)
+    {
+        var fixture = new Fixture(new SiteManifest { TimeZone = "Asia/Seoul", UseDateInPostUrl = true });
+        fixture.Add("posts/post.md", $"published: {published}");
+
+        var document = (await fixture.Load()).ShouldHaveSingleItem();
+
+        document.Metadata.Published.ShouldNotBeNull();
+        document.Metadata.Published.Value.Offset.ShouldBe(TimeSpan.FromHours(offsetHours));
+        document.Metadata.Slug.ShouldBe("2026/09/25/post");
+    }
+
+    [Theory]
+    [InlineData(false, "2026-03-08T02:30:00")]
+    [InlineData(true, "2026-03-08T02:30:00")]
+    [InlineData(false, "2026-11-01T01:30:00")]
+    [InlineData(true, "2026-11-01T01:30:00")]
+    public async Task Given_UnresolvedDaylightSavingTime_When_Loaded_Then_It_Should_ReportTheFieldAndSource(
+        bool preview, string published)
+    {
+        var fixture = new Fixture(new SiteManifest { IsPreview = preview, TimeZone = "America/New_York" });
+        fixture.Add("posts/post.md", $"published: {published}");
+
+        var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
+
+        error.Message.ShouldContain("published");
+        error.Message.ShouldContain("post.md");
+    }
+
+    [Fact]
+    public async Task Given_PageInDaylightSavingGap_When_Loaded_Then_It_Should_PreserveUnschedulingPageBehavior()
+    {
+        var fixture = new Fixture(new SiteManifest { TimeZone = "America/New_York" });
+        fixture.Add("pages/page.md", "published: 2026-03-08T02:30:00");
+
+        var document = (await fixture.Load()).ShouldHaveSingleItem();
+
+        document.Metadata.Published!.Value.Offset.ShouldBe(TimeSpan.Zero);
+    }
+
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task Given_InvalidTimeZoneWithoutContent_When_Loaded_Then_It_Should_FailConfigurationValidation(bool preview)
+    {
+        var fixture = new Fixture(new SiteManifest { IsPreview = preview, TimeZone = "not-a-time-zone" });
+
+        var error = await Should.ThrowAsync<InvalidDataException>(fixture.Load);
+
+        error.Message.ShouldContain("Site:TimeZone");
+    }
+
     [Fact]
     public async Task Given_Cancellation_When_Loaded_Then_It_Should_NotEnumerateContent()
     {
@@ -225,9 +296,8 @@ public class ContentLoaderLocaleTests
             Loader = new ContentLoader(new TestAppPaths(root, Contents, Path.Combine(root, "themes")), FileSystem,
                 site ?? new SiteManifest
                 {
-                    Locale = "en-us",
+                    Locales = ["en-us", "ko-kr"],
                     UseDateInPostUrl = true,
-                    LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Unavailable" },
                 }, Substitute.For<ILogger<ContentLoader>>());
         }
 

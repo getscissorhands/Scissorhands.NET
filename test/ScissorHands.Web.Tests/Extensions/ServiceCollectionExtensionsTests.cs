@@ -22,6 +22,24 @@ namespace ScissorHands.Web.Tests.Extensions;
 public class ServiceCollectionExtensionsTests
 {
     [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public void Given_PublicationClock_When_AddServicesInvoked_Then_It_Should_KeepAnExplicitClockOrUseSystem(bool configured)
+    {
+        var services = new ServiceCollection();
+        var clock = Substitute.For<TimeProvider>();
+        if (configured)
+        {
+            services.AddSingleton(clock);
+        }
+        services.AddServices(new ConfigurationBuilder().Build(), []);
+
+        using var provider = services.BuildServiceProvider();
+
+        provider.GetRequiredService<TimeProvider>().ShouldBeSameAs(configured ? clock : TimeProvider.System);
+    }
+
+    [Theory]
     [InlineData("/", "/")]
     [InlineData("/docs", "/docs/")]
     [InlineData("/docs/", "/docs/")]

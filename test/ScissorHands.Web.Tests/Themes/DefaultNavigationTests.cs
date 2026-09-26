@@ -61,8 +61,7 @@ public class DefaultNavigationTests
         var site = new SiteManifest
         {
             BaseUrl = "/site/",
-            Locale = "ja-jp",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable", ["ko-kr"] = "Korean unavailable" }
+            Locales = ["ja-jp", "en-us", "ko-kr"],
         };
 
         var cut = context.Render<MainLayout>(parameters => parameters
@@ -181,8 +180,7 @@ public class DefaultNavigationTests
 
         var site = new SiteManifest
         {
-            Locale = "ko-kr",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable" }
+            Locales = ["ko-kr", "en-us"],
         };
         var cut = context.Render<MainLayout>(parameters => parameters
             .Add(p => p.Site, site)

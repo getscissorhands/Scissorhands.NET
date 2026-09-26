@@ -145,7 +145,7 @@ public class ComponentRendererCascadingParametersTests
         var renderer = new ComponentRenderer(
             provider.GetRequiredService<IServiceScopeFactory>(),
             provider.GetRequiredService<ILoggerFactory>());
-        var site = new SiteManifest { BaseUrl = baseUrl, Locale = "ko-KR", IsPreview = preview };
+        var site = new SiteManifest { BaseUrl = baseUrl, Locales = ["ko-KR"], IsPreview = preview };
         var theme = new ThemeManifest
         {
             Name = "Minimal",

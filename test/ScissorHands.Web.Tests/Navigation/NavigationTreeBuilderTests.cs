@@ -101,9 +101,8 @@ public class NavigationTreeBuilderTests
 
         var tree = BuildTree(pages, new SiteManifest
         {
-            Locale = "ko-kr",
+            Locales = ["ko-kr", "en-us"],
             BaseUrl = "/site/",
-            LocalizationFallbackMessages = new Dictionary<string, string?> { ["en-us"] = "English unavailable" }
         });
 
         tree.ShouldHaveSingleItem().Title.ShouldBe(localePage ? "English" : "Docs");

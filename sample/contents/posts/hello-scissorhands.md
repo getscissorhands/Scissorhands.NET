@@ -1,7 +1,7 @@
 ---
 title: Hello, ScissorHands
 description: A sample post rendered from Markdown through the built-in Razor theme.
-published: 2026-09-11
+published: 2026-09-01
 tags:
   - dotnet
   - static-site

@@ -100,7 +100,7 @@ public class StaticSiteGeneratorLocaleTests
         missing.QuerySelector("[data-localization-fallback]").ShouldBeNull();
         fixture.Exists("ko-kr/404.html/index.html").ShouldBeFalse();
         fixture.Site.IsPreview.ShouldBe(preview);
-        fixture.Site.Locale.ShouldBe("en-us");
+        fixture.Site.Locales.ShouldBe(["en-us", "ko-kr"]);
     }
 
     [Theory]
@@ -118,11 +118,12 @@ public class StaticSiteGeneratorLocaleTests
         translated.QuerySelector("[data-localization-fallback]").ShouldBeNull();
         fixture.Add("pages/ko-kr/about.md", "title: Draft\ndraft: true");
         await fixture.Build(preview);
-        fixture.Html("ko-kr/about/index.html").QuerySelector("[data-localization-fallback]").ShouldNotBeNull();
+        using var draftTranslation = fixture.Html("ko-kr/about/index.html");
+        (draftTranslation.QuerySelector("[data-localization-fallback]") is null).ShouldBe(preview);
         fixture.Add("pages/about.md", "title: Withdrawn\ndraft: true");
         await fixture.Build(preview);
-        fixture.Exists("about/index.html").ShouldBeFalse();
-        fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
+        fixture.Exists("about/index.html").ShouldBe(preview);
+        fixture.Exists("ko-kr/about/index.html").ShouldBe(preview);
         fixture.Exists("tags/topic/index.html").ShouldBeFalse();
         fixture.Exists("ko-kr/tags/topic/index.html").ShouldBeFalse();
         fixture.Add("pages/ko-kr/about.md", "title: Ready translation");
@@ -167,14 +168,20 @@ public class StaticSiteGeneratorLocaleTests
     [InlineData(null)]
     [InlineData("")]
     [InlineData("  ")]
-    public async Task Given_BlankMessage_When_FallbackNeeded_Then_It_Should_FailButAllowCompleteTranslations(string? message)
+    public async Task Given_BlankMessage_When_BuildAsync_Invoked_Then_It_Should_FailEvenWithCompleteTranslations(string? message)
     {
+        // Arrange
         using var fixture = new Fixture(message: message);
         fixture.Add("pages/about.md");
+
+        // Act
         var error = await Should.ThrowAsync<InvalidDataException>(() => fixture.Build());
-        error.Message.ShouldContain("Site:LocalizationFallbackMessages:ko-kr");
         fixture.Add("pages/ko-kr/about.md");
-        await fixture.Build();
+        var translatedError = await Should.ThrowAsync<InvalidDataException>(() => fixture.Build());
+
+        // Assert
+        error.Message.ShouldContain("Theme:Localization:ko-kr:TranslationUnavailable");
+        translatedError.Message.ShouldContain("Theme:Localization:ko-kr:TranslationUnavailable");
     }
 
     [Fact]
@@ -526,7 +533,7 @@ public class StaticSiteGeneratorLocaleTests
         fixture.Exists("ko-kr/about/index.html").ShouldBeTrue();
         fixture.Exists("ko-kr/standalone/index.html").ShouldBeFalse();
 
-        await fixture.BuildWithSite(new SiteManifest { Locale = primary });
+        await fixture.BuildWithSite(new SiteManifest { Locales = primary is null ? [] : [primary] });
 
         fixture.Exists("about/index.html").ShouldBeTrue();
         fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
@@ -588,7 +595,7 @@ public class StaticSiteGeneratorLocaleTests
         links["Primary"].ShouldBe("target/?q=a%2Fb&x=1#heading");
         links["Korean"].ShouldBe("ko-kr/target/");
         links["Missing"].ShouldBe("missing/");
-        links["Draft"].ShouldBe("draft/");
+        links["Draft"].ShouldBe(preview ? "ko-kr/draft/" : "draft/");
         links["External"].ShouldBe("https://other.test/target/?q=1#heading");
         links["Image"].ShouldBe("images/sample.svg");
         (localized.QuerySelector("[data-localization-fallback]") is null).ShouldBe(hasTranslation);
@@ -614,10 +621,9 @@ public class StaticSiteGeneratorLocaleTests
             Site = new SiteManifest
             {
                 Title = "Site",
-                Locale = "en-us",
+                Locales = ["en-us", "ko-kr"],
                 BaseUrl = baseUrl,
                 SiteUrl = "https://example.test",
-                LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = message },
             };
             if (realMarkdown)
             {
@@ -630,7 +636,15 @@ public class StaticSiteGeneratorLocaleTests
                     .Returns("<p>Body <a href=\"/about/\">About</a></p>");
             }
             _theme = Substitute.For<IThemeService>();
-            _theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+            _theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest
+            {
+                Slug = "default",
+                Localization = new Dictionary<string, ThemeLocalization?>
+                {
+                    ["en-us"] = new() { TranslationUnavailable = "Translation unavailable.", Draft = "Draft", ScheduledOn = "Scheduled on {0}" },
+                    ["ko-kr"] = new() { TranslationUnavailable = message, Draft = "Draft", ScheduledOn = "Scheduled on {0}" },
+                },
+            });
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton(_theme);

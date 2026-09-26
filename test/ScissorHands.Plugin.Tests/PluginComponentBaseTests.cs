@@ -20,7 +20,7 @@ public class PluginComponentBaseTests
         using var context = new BunitContext();
         var locale = supplyValue ? new LocaleContext { Locale = "ko-kr", Route = "ko-kr/about", HomeUrl = "ko-kr/" } : null;
         var document = new ContentDocument { Metadata = new ContentMetadata { Slug = "ko-kr/about" } };
-        var site = new SiteManifest { Locale = "en-US" };
+        var site = new SiteManifest { Locales = ["en-US"] };
 
         // Act
         var cut = supplyCascade
@@ -40,7 +40,7 @@ public class PluginComponentBaseTests
         cut.Instance.BoundDocument.ShouldBeSameAs(document);
         cut.Instance.BoundSite.ShouldBeSameAs(site);
         cut.Instance.BoundPlugin.ShouldBeNull();
-        site.Locale.ShouldBe("en-US");
+        site.Locales.ShouldBe(["en-US"]);
     }
 
     [Fact]

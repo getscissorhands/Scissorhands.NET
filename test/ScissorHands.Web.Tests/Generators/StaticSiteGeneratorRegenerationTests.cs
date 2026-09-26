@@ -45,7 +45,7 @@ public class StaticSiteGeneratorRegenerationTests
         fixture.Manifest().ShouldNotContain("about/index.html");
 
         fixture.Source("ABOUT", draft: true);
-        await fixture.Build(preview);
+        await fixture.Build(false);
 
         fixture.Exists("ABOUT/index.html").ShouldBeFalse();
         fixture.Exists("about/index.html").ShouldBeFalse();
@@ -136,7 +136,7 @@ public class StaticSiteGeneratorRegenerationTests
 
         fixture.FailRoute = null;
         fixture.Source(route, draft: true);
-        await fixture.Build();
+        await fixture.Build(false);
 
         fixture.Exists(route + "/index.html").ShouldBeFalse();
         fixture.Exists("about/index.html").ShouldBeFalse();
@@ -185,11 +185,10 @@ public class StaticSiteGeneratorRegenerationTests
             var paths = new TestAppPaths(Root, Path.Combine(Root, "contents"), Path.Combine(Root, "themes"));
             var site = new SiteManifest
             {
-                Locale = "en-us",
-                LocalizationFallbackMessages = new Dictionary<string, string?> { ["ko-kr"] = "Translation unavailable." },
+                Locales = ["en-us", "ko-kr"],
             };
             var theme = Substitute.For<IThemeService>();
-            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
             var services = new ServiceCollection().AddLogging().AddSingleton(theme);
             _provider = services.BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());

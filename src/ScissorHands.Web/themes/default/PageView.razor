@@ -2,7 +2,8 @@
 @layout MainLayout
 
 <section class="page">
-    <article class="prose" lang="@LocaleContext?.ContentLocale">
+    <article class="prose" lang="@LocaleContext?.ContentLocale" @attributes="PublicationBadgeBase.GetRegionAttributes(Document, PublicationBadgePlacement.Detail)">
+        <PublicationBadges Placement="PublicationBadgePlacement.Detail" />
         @((MarkupString)Document?.Html!)
 
         @if (Document?.Metadata.Tags.Any() == true)

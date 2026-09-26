@@ -41,7 +41,7 @@ public class StaticSiteGeneratorNavigationTests
         var themesRoot = fileSystem.Path.Combine(baseRoot, "themes");
         var destination = fileSystem.Path.Combine(baseRoot, preview ? "preview" : "dist");
         var paths = new TestAppPaths(baseRoot, contentsRoot, themesRoot);
-        var site = new SiteManifest { BaseUrl = baseUrl, Locale = "en-us", UseDateInPostUrl = false };
+        var site = new SiteManifest { BaseUrl = baseUrl, Locales = ["en-us"], UseDateInPostUrl = false };
         const string aboutTitle = "About <script>alert(1)</script> & team";
         AddContent("pages", "zebra.md", "title: Zebra\nshow_in_navigation: true");
         AddContent("pages", "about.md", $"title: '{aboutTitle}'\nslug: guides/about & team\nshow_in_navigation: true");
@@ -64,7 +64,7 @@ public class StaticSiteGeneratorNavigationTests
         }
 
         var themeService = Substitute.For<IThemeService>();
-        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(themeService);
@@ -118,8 +118,12 @@ public class StaticSiteGeneratorNavigationTests
         {
             expectedPaths.Add("docs/deployment/index.html");
         }
+        if (preview)
+        {
+            expectedPaths.Add("draft/index.html");
+        }
         renderer.Navigations.Count.ShouldBe(expectedPaths.Count);
-        renderer.Navigations[0].Pages.Count.ShouldBe(missingDeployment ? 6 : 7);
+        renderer.Navigations[0].Pages.Count.ShouldBe((missingDeployment ? 6 : 7) + (preview ? 1 : 0));
 
         var parser = new HtmlParser();
         foreach (var path in expectedPaths)
@@ -142,6 +146,12 @@ public class StaticSiteGeneratorNavigationTests
                     "docs/deployment/github-pages", "docs/quickstart", "docs-other", "zebra", "tags",
                 ];
             }
+            if (preview)
+            {
+                var position = expectedTitles.IndexOf("Zebra");
+                expectedTitles.Insert(position, "Draft");
+                expectedUrls.Insert(position, "draft");
+            }
             links.Select(link => link.TextContent).ShouldBe(expectedTitles);
             links.Select(link => link.GetAttribute("href")).ShouldBe(expectedUrls);
             var docsItem = html.QuerySelector("nav a[href='docs']")!.Closest("li")!;
@@ -163,7 +173,7 @@ public class StaticSiteGeneratorNavigationTests
                 $"https://example.com{baseUrl}guides/about%20%26%20team");
         }
 
-        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "draft", "index.html")).ShouldBeFalse();
+        fileSystem.File.Exists(fileSystem.Path.Combine(destination, "draft", "index.html")).ShouldBe(preview);
         using var index = parser.ParseDocument(fileSystem.File.ReadAllText(fileSystem.Path.Combine(destination, "index.html")));
         index.QuerySelectorAll(".post-list .post-link").Select(link => link.TextContent).ShouldBe(["Post"]);
         site.IsPreview.ShouldBe(preview);
@@ -212,6 +222,12 @@ public class StaticSiteGeneratorNavigationTests
 
         void AssertNavigationTitles(string[] expected)
         {
+            if (preview)
+            {
+                var position = Array.IndexOf(expected, "Zebra");
+                position = position < 0 ? expected.Length - 1 : position;
+                expected = [.. expected[..position], "Draft", .. expected[position..]];
+            }
             foreach (var path in expectedPaths)
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));

@@ -72,7 +72,7 @@ public class LocaleContextTests
         var locale = supplyContext ? new LocaleContext { Locale = "ko-kr", Route = "ko-kr/about", HomeUrl = "ko-kr/" } : null;
         var document = new ContentDocument { Metadata = new ContentMetadata { Title = "Current" } };
         var documents = new[] { document };
-        var site = new SiteManifest { Locale = "en-US" };
+        var site = new SiteManifest { Locales = ["en-US"] };
         var navigation = new PageNavigation { Next = new PageNavigationLink { Title = "Next", Url = "ko-kr/next" } };
 
         // Act
@@ -103,7 +103,7 @@ public class LocaleContextTests
         page.PageNavigation.ShouldBeSameAs(navigation);
         page.NavigationPages.ShouldBeNull();
         page.NavigationTree.ShouldBeNull();
-        site.Locale.ShouldBe("en-US");
+        site.Locales.ShouldBe(["en-US"]);
         cut.FindComponent<IndexProbe>().Instance.Documents.ShouldBeSameAs(documents);
     }
 
@@ -132,24 +132,24 @@ public class LocaleContextTests
     }
 
     [Theory]
-    [InlineData(null, "ko-KR", "en-US", "ko-kr")]
-    [InlineData(null, " ", "en-US", "en-us")]
-    [InlineData(null, null, "en-US", "en-us")]
+    [InlineData(null, "ko-KR", new[] { "en-US" }, "ko-kr")]
+    [InlineData(null, " ", new[] { "en-US" }, "en-us")]
+    [InlineData(null, null, new[] { "en-US", "ko-KR" }, "en-us")]
     [InlineData(null, null, null, "")]
     [InlineData(null, "ko-KR", null, "")]
-    [InlineData(null, "ko-KR", "", "")]
-    [InlineData(null, null, "   ", "")]
+    [InlineData(null, "ko-KR", new string[0], "")]
+    [InlineData(null, null, new string[0], "")]
     [InlineData("fr-ca", "ko-KR", null, "")]
-    [InlineData("fr-ca", "ko-KR", "   ", "")]
-    [InlineData("fr-ca", "ko-KR", "en-US", "fr-ca")]
-    [InlineData("", "ko-KR", "en-US", "")]
-    public void Given_LocaleSources_When_CalculatePageLocale_Invoked_Then_It_Should_RequireConfiguredSiteLocale(
-        string? locale, string? documentLocale, string? siteLocale, string expected)
+    [InlineData("fr-ca", "ko-KR", new string[0], "")]
+    [InlineData("fr-ca", "ko-KR", new[] { "en-US" }, "fr-ca")]
+    [InlineData("", "ko-KR", new[] { "en-US" }, "")]
+    public void Given_LocaleSources_When_CalculatePageLocale_Invoked_Then_It_Should_RequireConfiguredSiteLocales(
+        string? locale, string? documentLocale, string[]? siteLocales, string expected)
     {
         // Arrange
         using var context = new BunitContext();
         context.Services.AddSingleton(Substitute.For<IThemeService>());
-        var site = siteLocale is null ? null : new SiteManifest { Locale = siteLocale };
+        var site = siteLocales is null ? null : new SiteManifest { Locales = siteLocales };
         var document = documentLocale is null ? null : new ContentDocument { Metadata = new ContentMetadata { Locale = documentLocale } };
 
         // Act
@@ -160,7 +160,7 @@ public class LocaleContextTests
 
         // Assert
         cut.Instance.CalculatedLocale.ShouldBe(expected);
-        site?.Locale.ShouldBe(siteLocale);
+        site?.Locales.ShouldBe(siteLocales);
         document?.Metadata.Locale.ShouldBe(documentLocale);
     }
 

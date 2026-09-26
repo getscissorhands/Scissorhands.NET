@@ -19,6 +19,49 @@ const test = base.extend({
       await server.close();
     }
   }, { scope: "worker" }],
+  previewSite: [async ({}, use) => {
+    const server = await startSampleServer({ prefix: "/docs", preview: true });
+    try {
+      await use(`${server.origin}/docs`);
+    } finally {
+      await server.close();
+    }
+  }, { scope: "worker" }],
+});
+
+test("preview shows draft and scheduled badges on documents and collection entries", async ({ page, previewSite }) => {
+  for (const palette of ["light", "dark"]) {
+    await page.goto(`${previewSite}/ko-kr/2099/01/01/scheduled-preview/`);
+    await page.evaluate(value => { document.documentElement.dataset.theme = value; }, palette);
+    const article = page.locator("article");
+    await expect(article.getByText("초안", { exact: true })).toBeVisible();
+    await expect(article.getByText("2099-01-01 공개 예정", { exact: true })).toBeVisible();
+    await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
+    const headingTop = await article.locator("h1").evaluate(element => element.getBoundingClientRect().top);
+    const badgeBottom = await article.getByText("2099-01-01 공개 예정", { exact: true })
+      .evaluate(element => element.getBoundingClientRect().bottom);
+    expect(badgeBottom).toBeLessThanOrEqual(headingTop);
+  }
+  for (const route of ["", "tags/preview-only/"]) {
+    await page.goto(`${previewSite}/${route}`);
+    const post = page.locator(".post-list li").filter({ has: page.getByRole("link", { name: "Scheduled preview", exact: true }) });
+    await expect(post.getByText("Draft", { exact: true })).toBeVisible();
+    await expect(post.getByText("Scheduled on 2099-01-01", { exact: true })).toBeVisible();
+  }
+  const taggedPage = page.locator(".page-list li").filter({ has: page.getByRole("link", { name: "Draft primary", exact: true }) });
+  await expect(taggedPage.getByText("Draft", { exact: true })).toBeVisible();
+  await page.goto(`${previewSite}/draft/`);
+  await expect(page.locator("article").getByText("Draft", { exact: true })).toBeVisible();
+  await expect(page.locator(".site-header nav").getByRole("link", { name: "Draft primary", exact: true })).toBeVisible();
+  await expect(page.locator(".page-navigation")).toBeVisible();
+  await page.goto(`${previewSite}/ko-kr/draft/`);
+  await expect(page.locator("article").getByText("초안", { exact: true })).toBeVisible();
+  await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
+  await page.goto(`${previewSite}/ja-jp/2099/01/01/scheduled-preview/`);
+  await expect(page.locator("article").getByText("下書き", { exact: true })).toBeVisible();
+  await expect(page.locator("article").getByText("2099-01-01に公開予定", { exact: true })).toBeVisible();
+  await expect(page.locator("article")).toHaveAttribute("lang", "en-us");
+  await expect(page.locator("[data-localization-fallback]")).toHaveText("このページは現在日本語翻訳を提供していません");
 });
 
 const sequence = [
@@ -28,6 +71,38 @@ const sequence = [
   { route: "parent/group/visible-grandchild", title: "Visible Grandchild" },
   { route: "parent/child-2", title: "Child 2" },
 ];
+
+test("sample publication examples appear only in preview with their individual statuses", async ({ page, previewSite, site, localeSite }) => {
+  const examples = [
+    { route: "2026/09/11/draft-post/", title: "Draft post", badge: "draft", label: "Draft" },
+    { route: "2099/12/31/scheduled-post/", title: "Scheduled post", badge: "scheduled", label: "Scheduled on 2099-12-31" },
+    { route: "draft-page/", title: "Draft page", badge: "draft", label: "Draft" },
+  ];
+  for (const example of examples) {
+    expect((await page.goto(`${previewSite}/${example.route}`)).status()).toBe(200);
+    const badges = page.locator("article [data-publication-badge]");
+    await expect(badges).toHaveCount(1);
+    await expect(badges).toHaveAttribute("data-publication-badge", example.badge);
+    await expect(badges).toHaveText(example.label);
+    await expect(badges).toBeVisible();
+    expect((await page.request.get(`${site}/${example.route}`)).status()).toBe(404);
+    expect((await page.request.get(`${localeSite}/${example.route}`)).status()).toBe(404);
+    expect((await page.request.get(`${localeSite}/ko-kr/${example.route}`)).status()).toBe(404);
+  }
+  await expect(page.locator(".site-header nav").getByRole("link", { name: "Draft page", exact: true })).toBeVisible();
+  await expect(page.locator(".page-navigation")).toBeVisible();
+  await page.goto(`${previewSite}/`);
+  for (const example of examples.slice(0, 2)) {
+    const entry = page.locator(".post-list li").filter({ has: page.getByRole("link", { name: example.title, exact: true }) });
+    await expect(entry.locator("[data-publication-badge]")).toHaveText(example.label);
+  }
+  await page.goto(`${previewSite}/tags/publication-examples/`);
+  for (const example of examples) {
+    const entry = page.locator("[data-publication-entry]").filter({ has: page.getByRole("link", { name: example.title, exact: true }) });
+    await expect(entry.locator("[data-publication-badge]")).toHaveText(example.label);
+  }
+  expect((await page.request.get(`${site}/tags/publication-examples/`)).status()).toBe(404);
+});
 
 test("the generated reading sequence has working, labelled links and no endpoint placeholders", async ({ page, site }) => {
   for (const [index, current] of sequence.entries()) {
