@@ -113,7 +113,7 @@ public abstract class MainLayoutBase : LayoutComponentBase
     /// Gets or sets the validated application theme settings for this generation.
     /// </summary>
     [Parameter]
-    public ThemeSettings? Settings { get; set; }
+    public ThemeSettings? ThemeSettings { get; set; }
 
     /// <summary>
     /// Gets or sets the <see cref="SiteManifest"/> instance.

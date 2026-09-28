@@ -653,7 +653,7 @@ public sealed class StaticSiteGenerator(
         {
             ["Plugins"] = plugins,
             ["Theme"] = theme,
-            ["Settings"] = settings,
+            [nameof(ScissorHands.Theme.MainLayoutBase.ThemeSettings)] = settings,
             ["Site"] = _options,
             ["NavigationPages"] = scope.Navigation.Pages,
             ["NavigationTree"] = scope.Navigation.Tree,

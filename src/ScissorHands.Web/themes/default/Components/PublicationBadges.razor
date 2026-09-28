@@ -22,7 +22,7 @@
 
 @code {
     [CascadingParameter]
-    public ThemeSettings? Settings { get; set; }
+    public ThemeSettings? ThemeSettings { get; set; }
 
     [CascadingParameter]
     public LocaleContext? LocaleContext { get; set; }
@@ -34,7 +34,7 @@
             return ThemeLocalization.English;
         }
         var locale = ContentUrlHelper.GetLocaleSegment(LocaleContext?.Locale ?? Site.Locales[0]);
-        if (Settings?.Localization.TryGetValue(locale, out var messages) != true || messages is null
+        if (ThemeSettings?.Localization.TryGetValue(locale, out var messages) != true || messages is null
             || string.IsNullOrWhiteSpace(messages.Draft) || string.IsNullOrWhiteSpace(messages.ScheduledOn))
         {
             throw new InvalidOperationException($"Theme:Localization:{locale} must supply Draft and ScheduledOn messages before rendering publication badges.");

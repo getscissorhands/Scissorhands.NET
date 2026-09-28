@@ -154,7 +154,7 @@ public class ComponentRendererCascadingParametersTests
             new Dictionary<string, object?>
             {
                 ["Site"] = provider.GetRequiredService<SiteManifest>(),
-                ["Settings"] = provider.GetRequiredService<ThemeSettings>(),
+                ["ThemeSettings"] = provider.GetRequiredService<ThemeSettings>(),
             },
             Xunit.TestContext.Current.CancellationToken);
 
@@ -192,7 +192,7 @@ public class ComponentRendererCascadingParametersTests
             {
                 ["Site"] = site,
                 ["Theme"] = new ThemeManifest { Slug = "default" },
-                ["Settings"] = settings,
+                ["ThemeSettings"] = settings,
                 ["Plugins"] = new[] { new PluginManifest { Id = "settings-probe" } },
             },
             Xunit.TestContext.Current.CancellationToken);
@@ -290,7 +290,7 @@ public class ComponentRendererCascadingParametersTests
             builder.OpenElement(0, "base");
             builder.AddAttribute(1, "href", Site!.BaseUrl);
             builder.CloseElement();
-            var image = Settings!.HeroImages.Single();
+            var image = ThemeSettings!.HeroImages.Single();
             builder.OpenElement(2, "img");
             builder.AddAttribute(3, "src", ContentUrlHelper.GetImageUrl(image.Source));
             builder.AddAttribute(4, "alt", image.Alt);
@@ -303,7 +303,7 @@ public class ComponentRendererCascadingParametersTests
     {
         protected override void BuildRenderTree(RenderTreeBuilder builder)
         {
-            builder.AddContent(0, $"View:{Settings!.Localization["ko-kr"]!.Draft}");
+            builder.AddContent(0, $"View:{ThemeSettings!.Localization["ko-kr"]!.Draft}");
             builder.OpenComponent<TestSettingsPlugin>(1);
             builder.AddAttribute(2, "Id", "settings-probe");
             builder.CloseComponent();

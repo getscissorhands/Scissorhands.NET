@@ -2,7 +2,7 @@
 
 ## Current scope amendment: separate theme settings from package metadata
 
-`ThemeService` loads only `ThemeManifest` package identity/assets and rejects `Localization` from `theme.json`. `AddConfigurations` creates authored `ThemeSettings`, then registers a singleton validated, normalized effective snapshot. The generator validates settings for direct/custom construction and passes its effective snapshot through a new `Settings` layout parameter; `CascadingMainLayoutBase` forwards it to theme/plugin view components and default publication badges. `LocaleConfiguration.ApplyTo` now copies application settings and hero images, not package metadata. Remove legacy `SiteManifest.HeroImage` and reject `Site:HeroImage` with migration guidance. No new view role, carousel rendering, or automatic changes to per-document heroes; older approvals and test counts below remain historical.
+`ThemeService` loads only `ThemeManifest` package identity/assets and rejects `Localization` from `theme.json`. `AddConfigurations` creates authored `ThemeSettings`, then registers a singleton validated, normalized effective snapshot. The generator validates settings for direct/custom construction and passes its effective snapshot through a `ThemeSettings` layout parameter; `CascadingMainLayoutBase` forwards it to theme/plugin view components and default publication badges. `LocaleConfiguration.ApplyTo` now copies application settings and hero images, not package metadata. Remove legacy `SiteManifest.HeroImage` and reject `Site:HeroImage` with migration guidance. No new view role, carousel rendering, or automatic changes to per-document heroes; older approvals and test counts below remain historical.
 
 ## Current scope amendment: application theme settings
 

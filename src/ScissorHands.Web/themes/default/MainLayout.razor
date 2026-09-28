@@ -1,7 +1,7 @@
 @using ScissorHands.Core.Models
 @inherits MainLayoutBase
 
-<CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" Settings="@Settings" Site="@Site">
+<CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" ThemeSettings="@ThemeSettings" Site="@Site">
     <!DOCTYPE html>
     <html lang="@(string.IsNullOrWhiteSpace(PageLocale) ? null : PageLocale)">
     <head>
