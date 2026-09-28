@@ -1,11 +1,17 @@
+using AngleSharp.Html.Parser;
+
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Rendering;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
+using ScissorHands.Plugin;
 using ScissorHands.Theme;
+using ScissorHands.Web.Extensions;
 using ScissorHands.Web.Renderers;
 
 namespace ScissorHands.Web.Tests.Renderers;
@@ -125,6 +131,80 @@ public class ComponentRendererCascadingParametersTests
         html.ShouldContain("Hello");
     }
 
+    [Fact]
+    public async Task Given_ConfiguredHeroImage_When_CustomThemeRendered_Then_It_Should_ReceiveSettingsAndRespectTheSiteBase()
+    {
+        var config = new ConfigurationBuilder().AddInMemoryCollection(new Dictionary<string, string?>
+        {
+            ["Site:BaseUrl"] = "/docs",
+            ["Theme:HeroImages:0:Source"] = "/images/first.svg",
+            ["Theme:HeroImages:0:Alt"] = "<illustration>",
+        }).Build();
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddConfigurations(config);
+        services.AddSingleton(Substitute.For<ScissorHands.Core.Services.IThemeService>());
+        using var provider = services.BuildServiceProvider();
+        var renderer = new ComponentRenderer(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILoggerFactory>());
+
+        var html = await renderer.RenderAsync<TestNavigationContent>(
+            typeof(TestThemeImageLayout),
+            new Dictionary<string, object?>
+            {
+                ["Site"] = provider.GetRequiredService<SiteManifest>(),
+                ["ThemeSettings"] = provider.GetRequiredService<ThemeSettings>(),
+            },
+            Xunit.TestContext.Current.CancellationToken);
+
+        html.ShouldContain("<base href=\"/docs/\"");
+        html.ShouldContain("src=\"images/first.svg\"");
+        html.ShouldContain("alt=\"&lt;illustration&gt;\"");
+        new Uri(new Uri("https://example.test/docs/"),
+            ContentUrlHelper.GetImageUrl(provider.GetRequiredService<ThemeSettings>().HeroImages.Single().Source))
+            .AbsoluteUri.ShouldBe("https://example.test/docs/images/first.svg");
+    }
+
+    [Fact]
+    public async Task Given_EffectiveThemeSettings_When_DefaultLayoutRenders_Then_ViewsAndPluginsShouldReceiveSettings()
+    {
+        var services = new ServiceCollection();
+        services.AddLogging();
+        services.AddSingleton(Substitute.For<ScissorHands.Core.Services.IThemeService>());
+        using var provider = services.BuildServiceProvider();
+        var renderer = new ComponentRenderer(
+            provider.GetRequiredService<IServiceScopeFactory>(),
+            provider.GetRequiredService<ILoggerFactory>());
+        var site = new SiteManifest { Locales = ["ko-kr"] };
+        var settings = new ThemeSettings
+        {
+            Localization = new Dictionary<string, ThemeLocalization?>
+            {
+                ["ko-kr"] = ThemeLocalization.English with { Draft = "초안" },
+            },
+            HeroImages = [new ThemeHeroImage { Source = "/images/hero.webp", Alt = "<Illustration>" }],
+        };
+
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Site"] = site,
+            ["Theme"] = new ThemeManifest { Slug = "default" },
+            ["ThemeSettings"] = settings,
+            ["Plugins"] = new[] { new PluginManifest { Id = "settings-probe" } },
+        };
+        var html = await renderer.RenderAsync<TestSettingsView>(
+            typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
+        var home = await renderer.RenderAsync<ScissorHands.Web.IndexView>(
+            typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
+
+        using var parsed = new HtmlParser().ParseDocument(html);
+        parsed.Body!.TextContent.ShouldContain("View:초안");
+        parsed.Body.TextContent.ShouldContain("Plugin:/images/hero.webp");
+        home.ShouldContain("src=\"images/hero.webp\"");
+        home.ShouldContain("alt=\"&lt;Illustration&gt;\"");
+    }
+
     [Theory]
     [InlineData("/", "/", false)]
     [InlineData("/", "/", true)]
@@ -204,6 +284,39 @@ public class ComponentRendererCascadingParametersTests
     private sealed class TestNavigationContent : ComponentBase
     {
         protected override void BuildRenderTree(RenderTreeBuilder builder) => builder.AddContent(0, "Content body");
+    }
+
+    private sealed class TestThemeImageLayout : MainLayoutBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.OpenElement(0, "base");
+            builder.AddAttribute(1, "href", Site!.BaseUrl);
+            builder.CloseElement();
+            var image = ThemeSettings!.HeroImages.Single();
+            builder.OpenElement(2, "img");
+            builder.AddAttribute(3, "src", ContentUrlHelper.GetImageUrl(image.Source));
+            builder.AddAttribute(4, "alt", image.Alt);
+            builder.CloseElement();
+            builder.AddContent(5, Body);
+        }
+    }
+
+    private sealed class TestSettingsView : IndexViewBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            builder.AddContent(0, $"View:{ThemeSettings!.Localization["ko-kr"]!.Draft}");
+            builder.OpenComponent<TestSettingsPlugin>(1);
+            builder.AddAttribute(2, "Id", "settings-probe");
+            builder.CloseComponent();
+        }
+    }
+
+    private sealed class TestSettingsPlugin : PluginComponentBase
+    {
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+            => builder.AddContent(0, $"Plugin:{ThemeSettings!.HeroImages.Single().Source}");
     }
 
     private sealed class TestCascadingLayout : LayoutComponentBase

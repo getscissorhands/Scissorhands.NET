@@ -25,6 +25,7 @@ namespace ScissorHands.Web.Extensions;
 public static class ServiceCollectionExtensions
 {
     private const string SITE_SETTINGS_SECTION_NAME = "Site";
+    private const string THEME_SETTINGS_SECTION_NAME = "Theme";
     private const string PLUGIN_SETTINGS_SECTION_NAME = "Plugins";
 
     /// <summary>
@@ -44,9 +45,14 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(siteManifest);
 
-        // Only the top-level application catalog is configuration. Package identity and
-        // assets still come from the theme selected by Site:Theme.
-        var localizationSection = config.GetSection("Theme:Localization");
+        // Package identity and assets still come from the theme selected by Site:Theme.
+        var themeSection = config.GetSection(THEME_SETTINGS_SECTION_NAME);
+        if (themeSection.Value is not null
+            && (themeSection.Value.Length > 0 || themeSection.GetChildren().Any()))
+        {
+            throw new InvalidDataException("Theme must be an object containing application theme settings.");
+        }
+        var localizationSection = themeSection.GetSection(nameof(ThemeSettings.Localization));
         var localizationEntries = localizationSection.GetChildren().ToArray();
         // Some providers flatten empty objects/arrays to a childless empty-string
         // marker. An authored empty string is indistinguishable through IConfiguration.
@@ -62,13 +68,78 @@ public static class ServiceCollectionExtensions
             // configuration path; unused catalog entries are not validated or activated.
             localization.Add(entry.Key, entry.Value is null ? entry.Get<ThemeLocalization>() : null);
         }
-        services.AddSingleton(new ThemeManifest { Localization = localization });
+        var heroImagesSection = themeSection.GetSection(nameof(ThemeSettings.HeroImages));
+        var heroImages = BindHeroImages(heroImagesSection);
+        var authoredSettings = new ThemeSettings { Localization = localization, HeroImages = heroImages };
+        services.AddSingleton(_ => LocaleConfiguration.Create(siteManifest, authoredSettings).ApplyTo(authoredSettings));
 
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
 
         services.AddSingleton(pluginManifests ?? []);
 
         return services;
+    }
+
+    private static IReadOnlyList<ThemeHeroImage> BindHeroImages(IConfigurationSection section)
+    {
+        var entries = section.GetChildren().ToArray();
+        if (section.Value is not null
+            && (section.Value.Length > 0 || entries.Length > 0))
+        {
+            throw new InvalidDataException("Theme:HeroImages must be an ordered array of image objects.");
+        }
+
+        var images = new List<ThemeHeroImage>(entries.Length);
+        for (var index = 0; index < entries.Length; index++)
+        {
+            var entry = entries[index];
+            if (entry.Key != index.ToString(System.Globalization.CultureInfo.InvariantCulture)
+                || entry.Value is not null)
+            {
+                throw new InvalidDataException($"{entry.Path} must be an image object at a contiguous zero-based index.");
+            }
+
+            var source = entry.GetSection(nameof(ThemeHeroImage.Source));
+            var alt = entry.GetSection(nameof(ThemeHeroImage.Alt));
+            if (source.GetChildren().Any() || string.IsNullOrWhiteSpace(source.Value))
+            {
+                throw new InvalidDataException($"{source.Path} must be a nonblank image path or HTTP(S) URL.");
+            }
+            if (alt.GetChildren().Any() || alt.Value is null)
+            {
+                throw new InvalidDataException($"{alt.Path} must be a string (use an empty string for a decorative image).");
+            }
+
+            ValidateHeroImageSource(source.Value, source.Path);
+            images.Add(new ThemeHeroImage { Source = source.Value, Alt = alt.Value });
+        }
+
+        return images;
+    }
+
+    private static void ValidateHeroImageSource(string source, string path)
+    {
+        if (!source.StartsWith('/') && Uri.TryCreate(source, UriKind.Absolute, out var absolute))
+        {
+            if (absolute.Scheme is not ("http" or "https") || string.IsNullOrEmpty(absolute.Host)
+                || !string.IsNullOrEmpty(absolute.UserInfo) || source != source.Trim())
+            {
+                throw new InvalidDataException($"{path} must be a site-relative image path or an HTTP(S) URL without credentials.");
+            }
+            return;
+        }
+
+        var localPath = source.Split(['?', '#'], 2)[0];
+        if (source != source.Trim() || source.StartsWith("//", StringComparison.Ordinal)
+            || localPath.TrimStart('/').Length == 0 || localPath.IndexOfAny(['\\', ':']) >= 0
+            || localPath.TrimStart('/').Split('/').Any(segment =>
+            {
+                var decoded = Uri.UnescapeDataString(segment);
+                return decoded is "." or ".." || decoded.IndexOfAny(['/', '\\']) >= 0;
+            }))
+        {
+            throw new InvalidDataException($"{path} must be a site-relative image path without traversal or an HTTP(S) URL.");
+        }
     }
 
     private static void ValidateSiteConfiguration(IConfigurationSection site)
@@ -80,6 +151,11 @@ public static class ServiceCollectionExtensions
             {
                 throw new InvalidDataException(
                     $"{child.Path} is no longer supported. Remove Site:Locale and Site:LocalizationFallbackMessages; migrate to the ordered Site:Locales array (primary first) and Theme:Localization:<locale> with TranslationUnavailable, Draft, and ScheduledOn.");
+            }
+            if (string.Equals(child.Key, "HeroImage", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException(
+                    $"{child.Path} is no longer supported. Move the image to Theme:HeroImages as an entry with Source and Alt.");
             }
         }
 

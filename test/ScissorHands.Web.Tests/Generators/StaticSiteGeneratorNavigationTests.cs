@@ -64,7 +64,8 @@ public class StaticSiteGeneratorNavigationTests
         }
 
         var themeService = Substitute.For<IThemeService>();
-        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
+        themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+        var settings = LocalizedThemeSettings.Create(site.Locales);
         var services = new ServiceCollection();
         services.AddLogging();
         services.AddSingleton(themeService);
@@ -91,7 +92,7 @@ public class StaticSiteGeneratorNavigationTests
             paths,
             fileSystem,
             site,
-            Substitute.For<ILogger<StaticSiteGenerator>>());
+            Substitute.For<ILogger<StaticSiteGenerator>>(), TimeProvider.System, settings);
 
         await BuildAsync();
 

@@ -1,9 +1,47 @@
+using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
 
 namespace ScissorHands.Web.Tests.Themes;
 
 public class DefaultViewUrlTests
 {
+    [Theory]
+    [InlineData("/images/sample.svg", "images/sample.svg", "https://example.com/site/images/sample.svg")]
+    [InlineData("https://cdn.example.com/hero.webp?v=1#focus", "https://cdn.example.com/hero.webp?v=1#focus", "https://cdn.example.com/hero.webp?v=1#focus")]
+    public void Given_SiteHeroImages_When_HomeRendered_Then_It_Should_RenderOnlyTheFirstWithEncodedAlt(
+        string source, string expectedSrc, string resolvedUrl)
+    {
+        using var context = new BunitContext();
+        var settings = new ThemeSettings
+        {
+            HeroImages =
+            [
+                new ThemeHeroImage { Source = source, Alt = "<Sample hero>" },
+                new ThemeHeroImage { Source = "/images/second.svg", Alt = "Second hero" },
+            ],
+        };
+
+        var cut = context.Render<IndexView>(parameters => parameters.AddCascadingValue(settings));
+
+        var image = cut.Find("img.site-hero-image");
+        image.GetAttribute("src").ShouldBe(expectedSrc);
+        image.GetAttribute("alt").ShouldBe("<Sample hero>");
+        cut.FindAll("img.site-hero-image").Count.ShouldBe(1);
+        new Uri(new Uri("https://example.com/site/"), expectedSrc).AbsoluteUri.ShouldBe(resolvedUrl);
+    }
+
+    [Fact]
+    public void Given_NoSiteHeroImages_When_HomeRendered_Then_It_Should_OmitTheHero()
+    {
+        using var context = new BunitContext();
+
+        var unconfigured = context.Render<IndexView>();
+        var empty = context.Render<IndexView>(parameters => parameters.AddCascadingValue(new ThemeSettings()));
+
+        unconfigured.FindAll("img.site-hero-image").ShouldBeEmpty();
+        empty.FindAll("img.site-hero-image").ShouldBeEmpty();
+    }
+
     [Theory]
     [InlineData("  Mixed Case  ", "tags/mixed%20case")]
     [InlineData(" C# ", "tags/c%23")]

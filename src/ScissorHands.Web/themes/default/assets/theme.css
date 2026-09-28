@@ -396,6 +396,13 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   font-size: 0.92rem;
 }
 
+.site-hero-image {
+  display: block;
+  max-height: 20rem;
+  margin: 0 auto 1.5rem;
+  object-fit: contain;
+}
+
 .site-introduction {
   margin-bottom: 2rem;
   font-size: 1.05rem;

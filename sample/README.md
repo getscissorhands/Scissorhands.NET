@@ -2,6 +2,8 @@
 
 A runnable sample using the built-in `default` theme and local project references. Requires the [repository SDK](../global.json).
 
+The homepages display the configured sample hero image; other themes can choose how to use [application theme settings](../docs/website-documentation.md#application-theme-settings).
+
 Run from `sample/`:
 
 ```bash

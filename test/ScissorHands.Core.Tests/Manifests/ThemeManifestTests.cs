@@ -25,8 +25,6 @@ public class ThemeManifestTests
         manifest.Scripts.ShouldNotBeNull();
         manifest.Scripts.ShouldBeEmpty();
 
-        manifest.Localization.ShouldNotBeNull();
-        manifest.Localization.ShouldBeEmpty();
     }
 
     [Fact]

@@ -14,6 +14,7 @@ dotnet add package ScissorHands.Core --prerelease
 ## Documentation
 
 - [Core API reference](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#core-api-reference)
+- [Application theme settings](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#application-theme-settings)
 - [Migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; vNext includes breaking changes
 
 ## License

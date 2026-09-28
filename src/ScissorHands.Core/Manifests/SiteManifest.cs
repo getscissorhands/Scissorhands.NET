@@ -10,7 +10,6 @@ public sealed class SiteManifest
     private const string SITE_AUTHOR = "The ScissorHands";
     private const string SITE_URL = "http://localhost:5000";
     private const string BASE_URL = "/";
-    private const string HERO_IMAGE_URL = "https://raw.githubusercontent.com/getscissorhands/Scissorhands.NET/refs/heads/vnext/assets/hero.jpg";
 
     private readonly string _baseUrl = BASE_URL;
     private readonly IReadOnlyList<string> _locales = Array.Empty<string>();
@@ -94,11 +93,6 @@ public sealed class SiteManifest
                               ? $"{value}/"
                               : value!;
     }
-
-    /// <summary>
-    /// Gets the site hero image.
-    /// </summary>
-    public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>
     /// Gets whether the locale inventory enables localization.

@@ -62,8 +62,6 @@ public class SiteManifestTests
         manifest.SiteUrl.ShouldNotBeNullOrWhiteSpace();
         Uri.TryCreate(manifest.SiteUrl, UriKind.Absolute, out _).ShouldBeTrue();
 
-        manifest.HeroImage.ShouldNotBeNullOrWhiteSpace();
-        Uri.TryCreate(manifest.HeroImage, UriKind.Absolute, out _).ShouldBeTrue();
     }
 
     [Fact]

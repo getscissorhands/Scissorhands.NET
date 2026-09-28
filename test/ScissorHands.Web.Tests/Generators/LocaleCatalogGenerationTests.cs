@@ -89,7 +89,7 @@ public class LocaleCatalogGenerationTests
     [InlineData(true)]
     public async Task Given_MissingMessagesOnAnEmptySite_When_Generated_Then_It_Should_FailBeforeRenderingEvenForPrimary(bool preview)
     {
-        using var fixture = new Fixture(["en-us"], new ThemeManifest());
+        using var fixture = new Fixture(["en-us"], new ThemeSettings());
 
         var error = await Should.ThrowAsync<InvalidDataException>(() => fixture.Build(preview));
 
@@ -141,13 +141,13 @@ public class LocaleCatalogGenerationTests
         private readonly MockFileSystem _files = new();
         private readonly string _output;
 
-        public Fixture(string[]? locales, ThemeManifest? applicationTheme = null)
+        public Fixture(string[]? locales, ThemeSettings? applicationTheme = null)
         {
             var root = Path.Combine(Path.GetPathRoot(Environment.CurrentDirectory)!, "catalog-generation");
             _paths = new TestAppPaths(root, Path.Combine(root, "contents"), Path.Combine(root, "themes"));
             _output = Path.Combine(root, "output");
             var site = new SiteManifest { Locales = locales!, Theme = "default", BaseUrl = "/docs/", SiteUrl = "https://example.test" };
-            ApplicationTheme = applicationTheme ?? new ThemeManifest
+            ApplicationTheme = applicationTheme ?? new ThemeSettings
             {
                 Localization = new Dictionary<string, ThemeLocalization?>
                 {
@@ -156,8 +156,8 @@ public class LocaleCatalogGenerationTests
                     ["ja-jp"] = new() { TranslationUnavailable = "日本語訳は現在利用できません。", Draft = "下書き", ScheduledOn = "{0}に公開予定" },
                 },
             };
-            var theme = new ThemeService(_paths, _files, site, ApplicationTheme, Substitute.For<ILogger<ThemeService>>());
-            _provider = new ServiceCollection().AddLogging().AddSingleton<IThemeService>(theme).BuildServiceProvider();
+            var theme = new ThemeService(_paths, _files, site, Substitute.For<ILogger<ThemeService>>());
+            _provider = new ServiceCollection().AddLogging().AddSingleton<IThemeService>(theme).AddSingleton(ApplicationTheme).BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());
             var plugins = Substitute.For<IPluginRunner>();
             plugins.Manifests.Returns([]);
@@ -165,10 +165,11 @@ public class LocaleCatalogGenerationTests
             plugins.RunPostMarkdownAsync(Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>()).Returns(call => call.ArgAt<ContentDocument>(0));
             plugins.RunPostHtmlAsync(Arg.Any<string>(), Arg.Any<ContentDocument>(), Arg.Any<CancellationToken>()).Returns(call => call.ArgAt<string>(0));
             _generator = new StaticSiteGenerator(new ContentLoader(_paths, _files, site, Substitute.For<ILogger<ContentLoader>>()),
-                new MarkdownService(), plugins, theme, renderer, _paths, _files, site, Substitute.For<ILogger<StaticSiteGenerator>>());
+                new MarkdownService(), plugins, theme, renderer, _paths, _files, site,
+                Substitute.For<ILogger<StaticSiteGenerator>>(), TimeProvider.System, ApplicationTheme);
         }
 
-        public ThemeManifest ApplicationTheme { get; }
+        public ThemeSettings ApplicationTheme { get; }
         public void Add(string path, string metadata, string markdown = "Body") =>
             _files.AddFile(Path.Combine(_paths.GetContentsRoot(), path), new MockFileData($"---\n{metadata}\n---\n{markdown}"));
         public bool Exists(string path) => _files.File.Exists(Path.Combine(_output, path));

@@ -42,6 +42,12 @@ public abstract class PageViewBase : ComponentBase
     public ThemeManifest? Theme { get; set; }
 
     /// <summary>
+    /// Gets or sets the validated application theme settings.
+    /// </summary>
+    [CascadingParameter]
+    public ThemeSettings? ThemeSettings { get; set; }
+
+    /// <summary>
     /// Gets or sets the <see cref="SiteManifest"/> instance.
     /// </summary>
     [CascadingParameter]
