@@ -62,7 +62,7 @@ public class PluginComponentBase : ComponentBase
     /// Gets or sets the validated application theme settings.
     /// </summary>
     [CascadingParameter]
-    protected ThemeSettings? Settings { get; set; }
+    protected ThemeSettings? ThemeSettings { get; set; }
 
     /// <summary>
     /// Gets or sets the cascaded <see cref="SiteManifest"/> instance.

@@ -313,7 +313,7 @@ public class ComponentRendererCascadingParametersTests
     private sealed class TestSettingsPlugin : PluginComponentBase
     {
         protected override void BuildRenderTree(RenderTreeBuilder builder)
-            => builder.AddContent(0, $"Plugin:{Settings!.HeroImages.Single().Source}");
+            => builder.AddContent(0, $"Plugin:{ThemeSettings!.HeroImages.Single().Source}");
     }
 
     private sealed class TestCascadingLayout : LayoutComponentBase

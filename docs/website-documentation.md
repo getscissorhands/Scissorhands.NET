@@ -1021,7 +1021,7 @@ Derive from `PluginComponentBase` when a theme renders plugin-specific output:
 
 Supply the component's required `Id`, for example `Id="reading-time"`. Its optional `Name` parameter is display text only.
 
-The base type provides the document, document collection, plugin manifests, package theme, effective application `Settings`, and site through cascading parameters. Forward `Settings` from the layout when a plugin component needs localization or hero images. Invalid component IDs, invalid manifest IDs, and duplicate manifest IDs fail rendering.
+The base type provides the document, document collection, plugin manifests, package theme, effective application `ThemeSettings`, and site through cascading parameters. Forward `Settings` from the layout when a plugin component needs localization or hero images; its protected property is named `ThemeSettings` to distinguish it from potential site or plugin settings. Invalid component IDs, invalid manifest IDs, and duplicate manifest IDs fail rendering.
 
 A valid component ID without a configured manifest leaves `Plugin` null, allowing disabled output to be omitted.
 
