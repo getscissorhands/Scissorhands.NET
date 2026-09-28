@@ -20,7 +20,8 @@ public class ThemeSettingsContractTests
         using var provider = Bind(json);
 
         var settings = provider.GetRequiredService<ThemeSettings>();
-        settings.Localization.ShouldBeEmpty();
+        settings.Localization.Keys.ShouldBe(["en"]);
+        settings.Localization["en"].ShouldBe(ThemeLocalization.English);
         settings.HeroImages.ShouldBeEmpty();
     }
 
@@ -41,10 +42,10 @@ public class ThemeSettingsContractTests
     {
         using var provider = Bind("""
             {
-              "Site": { "Theme": "custom" },
+              "Site": { "Theme": "custom", "Locales": ["en"] },
               "Theme": {
                 "Name": "Ignored application name",
-                "Localization": { "en": { "Draft": "Draft" } },
+                "Localization": { "en": { "TranslationUnavailable": "Unavailable", "Draft": "Draft", "ScheduledOn": "Scheduled on {0}" } },
                 "HeroImages": [
                   { "Source": "/images/first.svg", "Alt": "First" },
                   { "Source": "http://cdn.example.test/second.png", "Alt": "" }
@@ -54,23 +55,20 @@ public class ThemeSettingsContractTests
             """);
 
         var settings = provider.GetRequiredService<ThemeSettings>();
-        var manifest = provider.GetRequiredService<ThemeManifest>();
         settings.HeroImages.Select(image => image.Source).ShouldBe(
             ["/images/first.svg", "http://cdn.example.test/second.png"]);
         settings.HeroImages.Select(image => image.Alt).ShouldBe(["First", ""]);
-        settings.Localization["en"]!.Draft.ShouldBe("Draft");
-        manifest.Localization["en"]!.Draft.ShouldBe("Draft");
-        manifest.Localization.ShouldNotBeSameAs(settings.Localization);
-        manifest.Name.ShouldBeEmpty();
-        manifest.Slug.ShouldBeEmpty();
+        settings.Localization["en"]!.TranslationUnavailable.ShouldBe("Unavailable");
     }
 
     [Fact]
-    public void Given_LegacySiteHeroImage_When_Bound_Then_It_Should_NotPopulateThemeImages()
+    public void Given_LegacySiteHeroImage_When_Bound_Then_It_Should_ExplainMigration()
     {
-        using var provider = Bind("""{"Site":{"HeroImage":"/images/legacy.jpg"}}""");
+        var exception = Should.Throw<InvalidDataException>(() =>
+            Bind("""{"Site":{"HeroImage":"/images/legacy.jpg"}}"""));
 
-        provider.GetRequiredService<ThemeSettings>().HeroImages.ShouldBeEmpty();
+        exception.Message.ShouldContain("Site:HeroImage");
+        exception.Message.ShouldContain("Theme:HeroImages");
     }
 
     [Theory]

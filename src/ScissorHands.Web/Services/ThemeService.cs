@@ -1,13 +1,11 @@
 using System.IO.Abstractions;
 using System.Text.Json;
-using System.Text.Json.Serialization.Metadata;
 
 using Microsoft.Extensions.Logging;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Services;
 using ScissorHands.Web.Abstractions;
-using ScissorHands.Web.Localization;
 
 namespace ScissorHands.Web.Services;
 
@@ -16,24 +14,20 @@ namespace ScissorHands.Web.Services;
 /// </summary>
 /// <param name="paths"><see cref="IAppPaths"/> instance.</param>
 /// <param name="fileSystem"><see cref="IFileSystem"/> instance.</param>
-/// <param name="site"><see cref="SiteManifest"/> instance.</param>
-/// <param name="applicationTheme">The application catalog, not package metadata.</param>
 /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
-public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteManifest site, ThemeManifest applicationTheme, ILogger<ThemeService> logger) : IThemeService
+public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, ILogger<ThemeService> logger) : IThemeService
 {
     private readonly IAppPaths _paths = paths ?? throw new ArgumentNullException(nameof(paths));
     private readonly IFileSystem _fileSystem = fileSystem ?? throw new ArgumentNullException(nameof(fileSystem));
-    private readonly SiteManifest _site = site ?? throw new ArgumentNullException(nameof(site));
-    private readonly ThemeManifest _applicationTheme = applicationTheme ?? throw new ArgumentNullException(nameof(applicationTheme));
     private readonly ILogger<ThemeService> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
 
     /// <summary>
-    /// Creates a theme service without an application localization catalog.
-    /// Localized sites must use the overload accepting an application theme.
+    /// Creates a theme service using the existing site-aware constructor signature.
     /// </summary>
     public ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteManifest site, ILogger<ThemeService> logger)
-        : this(paths, fileSystem, site, new ThemeManifest(), logger)
+        : this(paths, fileSystem, logger)
     {
+        ArgumentNullException.ThrowIfNull(site);
     }
 
     /// <inheritdoc />
@@ -52,7 +46,7 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
             if (string.IsNullOrWhiteSpace(themeSlug)
                 || string.Equals(themeSlug, "default", StringComparison.OrdinalIgnoreCase))
             {
-                return ComposeManifest(new ThemeManifest { Name = "Default", Slug = "default" });
+                return new ThemeManifest { Name = "Default", Slug = "default" };
             }
 
             throw new FileNotFoundException($"Theme manifest was not found at '{manifestPath}'.", manifestPath);
@@ -61,19 +55,17 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
         try
         {
             var json = await _fileSystem.File.ReadAllTextAsync(manifestPath, cancellationToken);
-            var resolver = new DefaultJsonTypeInfoResolver();
-            resolver.Modifiers.Add(typeInfo =>
+            using var document = JsonDocument.Parse(json);
+            if (document.RootElement.ValueKind == JsonValueKind.Object
+                && document.RootElement.EnumerateObject().Any(property =>
+                    string.Equals(property.Name, "Localization", StringComparison.OrdinalIgnoreCase)))
             {
-                if (typeInfo.Type == typeof(ThemeManifest))
-                {
-                    // Package catalogs are not configuration, even when malformed or incomplete.
-                    var localization = typeInfo.Properties.Single(property => property.Name == nameof(ThemeManifest.Localization));
-                    typeInfo.Properties.Remove(localization);
-                }
-            });
+                throw new InvalidDataException(
+                    $"Theme manifest '{manifestPath}' must not define Localization. Move messages to the application's Theme:Localization section.");
+            }
             var manifest = JsonSerializer.Deserialize<ThemeManifest>(
                 json,
-                new JsonSerializerOptions { PropertyNameCaseInsensitive = true, TypeInfoResolver = resolver })
+                new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
                 ?? throw new InvalidDataException($"Theme manifest '{manifestPath}' is empty.");
 
             if (string.IsNullOrWhiteSpace(manifest.Name) || string.IsNullOrWhiteSpace(manifest.Slug))
@@ -87,7 +79,7 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
                     $"Theme manifest slug '{manifest.Slug}' does not match configured theme '{themeSlug}'.");
             }
 
-            return ComposeManifest(manifest);
+            return manifest;
         }
         catch (OperationCanceledException)
         {
@@ -98,9 +90,6 @@ public sealed class ThemeService(IAppPaths paths, IFileSystem fileSystem, SiteMa
             throw new InvalidDataException($"Theme manifest '{manifestPath}' contains invalid JSON.", ex);
         }
     }
-
-    private ThemeManifest ComposeManifest(ThemeManifest package)
-        => LocaleConfiguration.Create(_site, _applicationTheme).ApplyTo(package);
 
     /// <inheritdoc />
     [Obsolete("Use CopyAssetsAsync(string, string, CancellationToken). This overload will be removed in the next major version.")]

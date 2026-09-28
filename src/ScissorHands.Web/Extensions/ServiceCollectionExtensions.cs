@@ -45,8 +45,7 @@ public static class ServiceCollectionExtensions
 
         services.AddSingleton(siteManifest);
 
-        // Only the top-level application catalog is configuration. Package identity and
-        // assets still come from the theme selected by Site:Theme.
+        // Package identity and assets still come from the theme selected by Site:Theme.
         var themeSection = config.GetSection(THEME_SETTINGS_SECTION_NAME);
         if (themeSection.Value is not null
             && (themeSection.Value.Length > 0 || themeSection.GetChildren().Any()))
@@ -71,9 +70,8 @@ public static class ServiceCollectionExtensions
         }
         var heroImagesSection = themeSection.GetSection(nameof(ThemeSettings.HeroImages));
         var heroImages = BindHeroImages(heroImagesSection);
-        var themeSettings = new ThemeSettings { Localization = localization, HeroImages = heroImages };
-        services.AddSingleton(themeSettings);
-        services.AddSingleton(new ThemeManifest { Localization = themeSettings.Localization });
+        var authoredSettings = new ThemeSettings { Localization = localization, HeroImages = heroImages };
+        services.AddSingleton(_ => LocaleConfiguration.Create(siteManifest, authoredSettings).ApplyTo(authoredSettings));
 
         IEnumerable<PluginManifest>? pluginManifests = config.GetSection(PLUGIN_SETTINGS_SECTION_NAME).Get<List<PluginManifest>>();
 
@@ -153,6 +151,11 @@ public static class ServiceCollectionExtensions
             {
                 throw new InvalidDataException(
                     $"{child.Path} is no longer supported. Remove Site:Locale and Site:LocalizationFallbackMessages; migrate to the ordered Site:Locales array (primary first) and Theme:Localization:<locale> with TranslationUnavailable, Draft, and ScheduledOn.");
+            }
+            if (string.Equals(child.Key, "HeroImage", StringComparison.OrdinalIgnoreCase))
+            {
+                throw new InvalidDataException(
+                    $"{child.Path} is no longer supported. Move the image to Theme:HeroImages as an entry with Source and Alt.");
             }
         }
 

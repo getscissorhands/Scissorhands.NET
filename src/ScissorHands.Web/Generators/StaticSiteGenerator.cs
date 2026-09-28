@@ -33,6 +33,7 @@ namespace ScissorHands.Web.Generators;
 /// <param name="options"><see cref="SiteManifest"/> instance.</param>
 /// <param name="logger"><see cref="ILogger{T}"/> instance.</param>
 /// <param name="timeProvider">Clock supplying the generation's single publication reference instant.</param>
+/// <param name="themeSettings">Application-owned theme settings.</param>
 public sealed class StaticSiteGenerator(
         IContentLoader contentLoader,
         IMarkdownService markdownService,
@@ -43,7 +44,8 @@ public sealed class StaticSiteGenerator(
         IFileSystem fileSystem,
         SiteManifest options,
         ILogger<StaticSiteGenerator> logger,
-        TimeProvider timeProvider) : IStaticSiteGenerator
+        TimeProvider timeProvider,
+        ThemeSettings themeSettings) : IStaticSiteGenerator
 {
     private const string PAGE_NOT_FOUND_SLUG = "404.html";
 
@@ -58,6 +60,20 @@ public sealed class StaticSiteGenerator(
     private readonly string _configuredSiteUrl = options.SiteUrl;
     private readonly ILogger<StaticSiteGenerator> _logger = logger ?? throw new ArgumentNullException(nameof(logger));
     private readonly TimeProvider _timeProvider = timeProvider ?? throw new ArgumentNullException(nameof(timeProvider));
+    private readonly ThemeSettings _themeSettings = themeSettings ?? throw new ArgumentNullException(nameof(themeSettings));
+
+    /// <summary>
+    /// Creates a generator with the existing clock-aware constructor signature.
+    /// Localized sites must supply theme settings to the primary constructor.
+    /// </summary>
+    public StaticSiteGenerator(
+        IContentLoader contentLoader, IMarkdownService markdownService, IPluginRunner pluginRunner,
+        IThemeService themeService, IComponentRenderer renderer, IAppPaths paths, IFileSystem fileSystem,
+        SiteManifest options, ILogger<StaticSiteGenerator> logger, TimeProvider timeProvider)
+        : this(contentLoader, markdownService, pluginRunner, themeService, renderer, paths, fileSystem,
+            options, logger, timeProvider, new ThemeSettings())
+    {
+    }
 
     /// <summary>
     /// Creates a generator using the system clock.
@@ -90,8 +106,8 @@ public sealed class StaticSiteGenerator(
         _options.DescriptionInHtml = await _markdownService.ToHtmlAsync(_options.Description, trim: true, cancellationToken: cancellationToken);
         var plugins = _pluginRunner.Manifests;
         var theme = await _themeService.LoadManifestAsync(_options.Theme, cancellationToken);
-        var locales = LocaleConfiguration.Create(_options, theme);
-        theme = locales.ApplyTo(theme);
+        var locales = LocaleConfiguration.Create(_options, _themeSettings);
+        var settings = locales.ApplyTo(_themeSettings);
         if (locales.Primary is not null)
         {
             ValidateBaseUrl();
@@ -119,22 +135,22 @@ public sealed class StaticSiteGenerator(
         foreach (var scope in scopes)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            await RenderIndexAsync<TIndexView>(scope, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderIndexAsync<TIndexView>(scope, plugins, theme, settings, destination, layoutType, cancellationToken);
         }
 
-        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, notFoundOwner, defaultScope, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderNotFoundAsync<TNotFoundView>(notFoundDocument, notFoundOwner, defaultScope, plugins, theme, settings, destination, layoutType, cancellationToken);
 
         foreach (var scope in scopes)
         {
             foreach (var document in scope.Documents)
             {
-                await RenderDocumentAsync<TPostView, TPageView>(document, scope, plugins, theme, destination, layoutType, cancellationToken);
+                await RenderDocumentAsync<TPostView, TPageView>(document, scope, plugins, theme, settings, destination, layoutType, cancellationToken);
             }
         }
 
         foreach (var scope in scopes)
         {
-            await RenderTagPagesAsync<TTagListView, TTagView>(scope, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderTagPagesAsync<TTagListView, TTagView>(scope, plugins, theme, settings, destination, layoutType, cancellationToken);
         }
 
         CopyContentAssets(destination, outputs);
@@ -462,7 +478,7 @@ public sealed class StaticSiteGenerator(
         return false;
     }
 
-    private async Task RenderIndexAsync<TIndexView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderIndexAsync<TIndexView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TIndexView : ScissorHands.Theme.IndexViewBase
     {
         var posts = scope.Documents
@@ -470,7 +486,7 @@ public sealed class StaticSiteGenerator(
             .OrderByDescending(d => d.Metadata.Published ?? DateTimeOffset.MinValue)
             .ToList();
 
-        var parameters = CreateBaseParameters(plugins, theme, scope, scope.IndexDocument.Metadata.Slug);
+        var parameters = CreateBaseParameters(plugins, theme, settings, scope, scope.IndexDocument.Metadata.Slug);
         parameters["Documents"] = posts;
         if (scope.Locale is not null)
         {
@@ -491,7 +507,7 @@ public sealed class StaticSiteGenerator(
             publicationDocuments: posts, isListing: true);
     }
 
-    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, object owner, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderNotFoundAsync<TNotFoundView>(ContentDocument? notFoundDocument, object owner, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TNotFoundView : ScissorHands.Theme.NotFoundViewBase
     {
         ContentDocument documentToRender;
@@ -522,7 +538,7 @@ public sealed class StaticSiteGenerator(
             }
         }
 
-        var parameters = CreateBaseParameters(plugins, theme, scope, PAGE_NOT_FOUND_SLUG);
+        var parameters = CreateBaseParameters(plugins, theme, settings, scope, PAGE_NOT_FOUND_SLUG);
         parameters["Document"] = documentToRender;
 
         var rendered = await _renderer.RenderAsync<TNotFoundView>(layoutType, parameters, cancellationToken);
@@ -531,7 +547,7 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, documentToRender, scope.Outputs, owner, cancellationToken);
     }
 
-    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderDocumentAsync<TPostView, TPageView>(ContentDocument document, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TPostView : ScissorHands.Theme.PostViewBase
         where TPageView : ScissorHands.Theme.PageViewBase
     {
@@ -544,7 +560,7 @@ public sealed class StaticSiteGenerator(
             postMarkdown.Html = scope.LinkLocalizer.Localize(postMarkdown.Html, cancellationToken);
         }
 
-        var parameters = CreateBaseParameters(plugins, theme, scope, document.Metadata.Slug);
+        var parameters = CreateBaseParameters(plugins, theme, settings, scope, document.Metadata.Slug);
         scope.DocumentContexts.TryGetValue(document, out var documentContext);
         if (documentContext is not null)
         {
@@ -566,7 +582,7 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, postMarkdown, scope.Outputs, document, cancellationToken, documentContext);
     }
 
-    private async Task RenderTagPagesAsync<TTagListView, TTagView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPagesAsync<TTagListView, TTagView>(GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
         where TTagView : ScissorHands.Theme.TagViewBase
     {
@@ -579,19 +595,19 @@ public sealed class StaticSiteGenerator(
         var taggedDocuments = scope.Tags.ToDictionary(
             tag => tag.Tag,
             tag => ((IEnumerable<ContentDocument>)tag.Posts, (IEnumerable<ContentDocument>)tag.Pages));
-        await RenderTagListPageAsync<TTagListView>(taggedDocuments, scope, plugins, theme, destination, layoutType, cancellationToken);
+        await RenderTagListPageAsync<TTagListView>(taggedDocuments, scope, plugins, theme, settings, destination, layoutType, cancellationToken);
 
         foreach (var tag in scope.Tags)
         {
-            await RenderTagPageAsync<TTagView>(tag, scope, plugins, theme, destination, layoutType, cancellationToken);
+            await RenderTagPageAsync<TTagView>(tag, scope, plugins, theme, settings, destination, layoutType, cancellationToken);
         }
     }
 
-    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagListPageAsync<TTagListView>(IDictionary<string, (IEnumerable<ContentDocument> Posts, IEnumerable<ContentDocument> Pages)> taggedDocuments, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagListView : ScissorHands.Theme.TagListViewBase
     {
         var routeDocument = scope.TagIndexDocument;
-        var parameters = CreateBaseParameters(plugins, theme, scope, routeDocument.Metadata.Slug);
+        var parameters = CreateBaseParameters(plugins, theme, settings, scope, routeDocument.Metadata.Slug);
         parameters["Document"] = routeDocument;
         parameters["TaggedDocuments"] = taggedDocuments;
 
@@ -607,12 +623,12 @@ public sealed class StaticSiteGenerator(
         await WriteRenderedHtmlAsync(outputPath, rendered, tagListDocument, scope.Outputs, routeDocument, cancellationToken);
     }
 
-    private async Task RenderTagPageAsync<TTagView>(TagGroup tag, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, string destination, Type layoutType, CancellationToken cancellationToken)
+    private async Task RenderTagPageAsync<TTagView>(TagGroup tag, GenerationScope scope, IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, string destination, Type layoutType, CancellationToken cancellationToken)
         where TTagView : ScissorHands.Theme.TagViewBase
     {
         var routeDocument = tag.Document;
         var tagRoute = routeDocument.Metadata.Slug;
-        var parameters = CreateBaseParameters(plugins, theme, scope, tagRoute);
+        var parameters = CreateBaseParameters(plugins, theme, settings, scope, tagRoute);
         parameters["Document"] = routeDocument;
         parameters["Tag"] = tag.Tag;
         parameters["TaggedPosts"] = tag.Posts;
@@ -631,12 +647,13 @@ public sealed class StaticSiteGenerator(
             publicationDocuments: tag.Posts.Concat(tag.Pages), isListing: true);
     }
 
-    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, GenerationScope scope, string route)
+    private Dictionary<string, object?> CreateBaseParameters(IEnumerable<PluginManifest> plugins, ThemeManifest theme, ThemeSettings settings, GenerationScope scope, string route)
     {
         var parameters = new Dictionary<string, object?>
         {
             ["Plugins"] = plugins,
             ["Theme"] = theme,
+            ["Settings"] = settings,
             ["Site"] = _options,
             ["NavigationPages"] = scope.Navigation.Pages,
             ["NavigationTree"] = scope.Navigation.Tree,

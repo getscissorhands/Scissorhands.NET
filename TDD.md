@@ -1,5 +1,9 @@
 # ScissorHands.NET - Technical design document
 
+## Current scope amendment: separate theme settings from package metadata
+
+`ThemeService` loads only `ThemeManifest` package identity/assets and rejects `Localization` from `theme.json`. `AddConfigurations` creates authored `ThemeSettings`, then registers a singleton validated, normalized effective snapshot. The generator validates settings for direct/custom construction and passes its effective snapshot through a new `Settings` layout parameter; `CascadingMainLayoutBase` forwards it to theme/plugin view components and default publication badges. `LocaleConfiguration.ApplyTo` now copies application settings and hero images, not package metadata. Remove legacy `SiteManifest.HeroImage` and reject `Site:HeroImage` with migration guidance. No new view role, carousel rendering, or automatic changes to per-document heroes; older approvals and test counts below remain historical.
+
 ## Current scope amendment: application theme settings
 
 `ThemeSettings` in Core models application-owned top-level `Theme` data separately from `ThemeManifest` package metadata and its effective localization catalog. `AddConfigurations` binds validated `HeroImages` entries and the existing authored localization dictionary, registers an immutable-input snapshot for DI injection in custom Razor themes, and still supplies the existing application `ThemeManifest.Localization` to `ThemeService` for effective catalog composition. Each `ThemeHeroImage` has `Source` and `Alt`; URL validation precedes rendering, with local images resolved base-relatively by the existing helper. No theme view or plugin hook signature changes, and the built-in theme does not gain hero markup. `SiteManifest.HeroImage` remains obsolete with its previous value for older consumers; the sample moves to one entry in the new collection. Historical localization evidence below remains scoped to its original contract.

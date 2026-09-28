@@ -636,18 +636,20 @@ public class StaticSiteGeneratorLocaleTests
                     .Returns("<p>Body <a href=\"/about/\">About</a></p>");
             }
             _theme = Substitute.For<IThemeService>();
-            _theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest
+            _theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
+                .Returns(new ThemeManifest { Slug = "default" });
+            var settings = new ThemeSettings
             {
-                Slug = "default",
                 Localization = new Dictionary<string, ThemeLocalization?>
                 {
                     ["en-us"] = new() { TranslationUnavailable = "Translation unavailable.", Draft = "Draft", ScheduledOn = "Scheduled on {0}" },
                     ["ko-kr"] = new() { TranslationUnavailable = message, Draft = "Draft", ScheduledOn = "Scheduled on {0}" },
                 },
-            });
+            };
             var services = new ServiceCollection();
             services.AddLogging();
             services.AddSingleton(_theme);
+            services.AddSingleton(settings);
             _provider = services.BuildServiceProvider();
             _renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());
             Plugins.Manifests.Returns([]);
@@ -659,7 +661,8 @@ public class StaticSiteGeneratorLocaleTests
 
         private StaticSiteGenerator CreateGenerator(SiteManifest? site = null) => new(
             new ContentLoader(_paths, FileSystem, site ?? Site, Substitute.For<ILogger<ContentLoader>>()),
-            _markdown, Plugins, _theme, _renderer, _paths, FileSystem, site ?? Site, Substitute.For<ILogger<StaticSiteGenerator>>());
+            _markdown, Plugins, _theme, _renderer, _paths, FileSystem, site ?? Site, Substitute.For<ILogger<StaticSiteGenerator>>(),
+            TimeProvider.System, _provider.GetRequiredService<ThemeSettings>());
         public MockFileSystem FileSystem { get; } = new();
         public SiteManifest Site { get; }
         public string Destination { get; }

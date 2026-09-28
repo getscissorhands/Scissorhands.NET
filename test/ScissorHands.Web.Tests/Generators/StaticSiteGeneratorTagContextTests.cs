@@ -85,7 +85,8 @@ public class StaticSiteGeneratorTagContextTests
             .Returns(call => $"<p>{call.ArgAt<string>(0)}</p>");
         var themeService = Substitute.For<IThemeService>();
         themeService.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-            .Returns(LocalizedThemeManifest.Create(site.Locales));
+            .Returns(new ThemeManifest { Slug = "default" });
+        var settings = LocalizedThemeSettings.Create(site.Locales);
         var observations = new RouteObservations();
         var services = new ServiceCollection();
         services.AddLogging();
@@ -117,7 +118,7 @@ public class StaticSiteGeneratorTagContextTests
             });
         var generator = new StaticSiteGenerator(
             loader, markdownService, pluginRunner, themeService, renderer, paths, fileSystem, site,
-            Substitute.For<ILogger<StaticSiteGenerator>>());
+            Substitute.For<ILogger<StaticSiteGenerator>>(), TimeProvider.System, settings);
 
         // Act
         await generator.BuildAsync<MainLayout, IndexView, PostView, PageView, NotFoundView, ProbeTagListView, ProbeTagView>(

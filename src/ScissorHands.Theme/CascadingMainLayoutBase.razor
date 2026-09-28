@@ -1,15 +1,17 @@
 <CascadingValue Value="Site">
     <CascadingValue Value="Theme">
-        <CascadingValue Value="Plugins">
-            <CascadingValue Value="Document">
-                <CascadingValue Value="Documents">
-                    <CascadingValue Name="TaggedDocuments" Value="TaggedDocuments">
-                        <CascadingValue Name="Tag" Value="Tag">
-                            <CascadingValue Name="TaggedPosts" Value="TaggedPosts">
-                                <CascadingValue Name="TaggedPages" Value="TaggedPages">
-                                    <CascadingValue TValue="PageNavigation" Value="PageNavigation">
-                                        <CascadingValue TValue="LocaleContext" Value="LocaleContext">
-                                            @ChildContent
+        <CascadingValue Value="Settings">
+            <CascadingValue Value="Plugins">
+                <CascadingValue Value="Document">
+                    <CascadingValue Value="Documents">
+                        <CascadingValue Name="TaggedDocuments" Value="TaggedDocuments">
+                            <CascadingValue Name="Tag" Value="Tag">
+                                <CascadingValue Name="TaggedPosts" Value="TaggedPosts">
+                                    <CascadingValue Name="TaggedPages" Value="TaggedPages">
+                                        <CascadingValue TValue="PageNavigation" Value="PageNavigation">
+                                            <CascadingValue TValue="LocaleContext" Value="LocaleContext">
+                                                @ChildContent
+                                            </CascadingValue>
                                         </CascadingValue>
                                     </CascadingValue>
                                 </CascadingValue>
@@ -92,6 +94,12 @@
     /// </summary>
     [Parameter]
     public ThemeManifest? Theme { get; set; }
+
+    /// <summary>
+    /// Gets or sets the validated application theme settings.
+    /// </summary>
+    [Parameter]
+    public ThemeSettings? Settings { get; set; }
 
     /// <summary>
     /// Gets or sets the current <see cref="SiteManifest"/> instance.

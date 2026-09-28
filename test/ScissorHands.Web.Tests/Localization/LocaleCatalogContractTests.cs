@@ -32,13 +32,13 @@ public class LocaleCatalogContractTests
         services.AddConfigurations(config);
         using var provider = services.BuildServiceProvider();
         var site = provider.GetRequiredService<SiteManifest>();
-        var theme = provider.GetRequiredService<ThemeManifest>();
-        var locales = LocaleConfiguration.Create(site, theme);
+        var settings = provider.GetRequiredService<ThemeSettings>();
+        var locales = LocaleConfiguration.Create(site, settings);
 
         // Assert
         site.Locales.ShouldBeEmpty();
         site.IsLocalizationEnabled.ShouldBeFalse();
-        theme.Localization.ShouldBeEmpty();
+        settings.Localization.Keys.ShouldBe(["en"]);
         locales.Primary.ShouldBeNull();
         locales.AdditionalLocales.ShouldBeEmpty();
         locales.GetDirectoryLocale("en").ShouldBeNull();
@@ -194,7 +194,7 @@ public class LocaleCatalogContractTests
     }
 
     [Fact]
-    public void Given_ApplicationThemeSection_When_AddConfigurations_Invoked_Then_It_Should_BindOnlyCatalogAsSingleton()
+    public void Given_ApplicationThemeSection_When_AddConfigurations_Invoked_Then_It_Should_BindEffectiveSettingsAsSingleton()
     {
         // Arrange
         using var stream = new MemoryStream(Encoding.UTF8.GetBytes("""
@@ -219,21 +219,17 @@ public class LocaleCatalogContractTests
         services.AddConfigurations(config);
         using var provider = services.BuildServiceProvider();
         var site = provider.GetRequiredService<SiteManifest>();
-        var theme = provider.GetRequiredService<ThemeManifest>();
-        var locales = LocaleConfiguration.Create(site, theme);
+        var settings = provider.GetRequiredService<ThemeSettings>();
+        var locales = LocaleConfiguration.Create(site, settings);
 
         // Assert
         site.Theme.ShouldBe("package");
         site.Locales.ShouldBe([" EN_us ", "ko-KR"]);
-        theme.ShouldBeSameAs(provider.GetRequiredService<ThemeManifest>());
-        theme.Name.ShouldBeEmpty();
-        theme.Slug.ShouldBeEmpty();
-        theme.Version.ShouldBe("1.0.0");
-        theme.Description.ShouldBeNull();
-        theme.Stylesheets.ShouldBeEmpty();
-        theme.Scripts.ShouldBeEmpty();
-        theme.Localization["ja-JP"].ShouldBeNull();
-        theme.Localization["fr-FR"].ShouldBeNull();
+        settings.ShouldBeSameAs(provider.GetRequiredService<ThemeSettings>());
+        settings.Localization.Keys.ShouldBe(["en-us", "ko-kr"]);
+        settings.Localization["en-us"]!.TranslationUnavailable.ShouldBe("Unavailable");
+        settings.Localization["ko-kr"]!.Draft.ShouldBe("초안");
+        settings.HeroImages.ShouldBeEmpty();
         locales.Localization.Keys.ShouldBe(["en-us", "ko-kr"]);
         locales.GetFallbackMessage("KO_kr").ShouldBe("번역 없음");
         locales.GetDirectoryLocale("ja-jp").ShouldBeNull();
@@ -290,7 +286,7 @@ public class LocaleCatalogContractTests
         var site = new SiteManifest { Locales = ["en"], IsPreview = preview };
 
         // Act
-        var exception = Should.Throw<InvalidDataException>(() => LocaleConfiguration.Create(site, new ThemeManifest()));
+        var exception = Should.Throw<InvalidDataException>(() => LocaleConfiguration.Create(site, new ThemeSettings()));
 
         // Assert
         exception.Message.ShouldContain("Theme:Localization:en");
@@ -312,11 +308,8 @@ public class LocaleCatalogContractTests
         var config = new ConfigurationBuilder().AddJsonStream(stream).Build();
         var services = new ServiceCollection().AddConfigurations(config);
         using var provider = services.BuildServiceProvider();
-        var site = provider.GetRequiredService<SiteManifest>();
-        var theme = provider.GetRequiredService<ThemeManifest>();
-
         // Act
-        var exception = Should.Throw<InvalidDataException>(() => LocaleConfiguration.Create(site, theme));
+        var exception = Should.Throw<InvalidDataException>(() => provider.GetRequiredService<ThemeSettings>());
 
         // Assert
         exception.Message.ShouldContain("Theme:Localization:en");
@@ -342,7 +335,7 @@ public class LocaleCatalogContractTests
             _ => ThemeLocalization.English with { ScheduledOn = value },
         };
         var site = new SiteManifest { Locales = ["en", "ko"] };
-        var theme = new ThemeManifest
+        var theme = new ThemeSettings
         {
             Localization = new Dictionary<string, ThemeLocalization?>
             {
@@ -409,7 +402,7 @@ public class LocaleCatalogContractTests
     {
         // Arrange
         var site = new SiteManifest { Locales = ["en", "ko"] };
-        var theme = new ThemeManifest
+        var theme = new ThemeSettings
         {
             Localization = new Dictionary<string, ThemeLocalization?>
             {
@@ -438,7 +431,7 @@ public class LocaleCatalogContractTests
     {
         // Arrange
         var site = new SiteManifest { Locales = ["en-us"] };
-        var theme = new ThemeManifest
+        var theme = new ThemeSettings
         {
             Localization = new Dictionary<string, ThemeLocalization?>
             {
@@ -468,6 +461,6 @@ public class LocaleCatalogContractTests
         exception.Message.ShouldContain("Theme:Localization:ko:TranslationUnavailable");
     }
 
-    private static ThemeManifest CreateTheme(string locale, ThemeLocalization messages)
+    private static ThemeSettings CreateTheme(string locale, ThemeLocalization messages)
         => new() { Localization = new Dictionary<string, ThemeLocalization?> { [locale] = messages } };
 }

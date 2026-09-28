@@ -188,7 +188,8 @@ public class StaticSiteGeneratorRegenerationTests
                 Locales = ["en-us", "ko-kr"],
             };
             var theme = Substitute.For<IThemeService>();
-            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(LocalizedThemeManifest.Create(site.Locales));
+            theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>()).Returns(new ThemeManifest { Slug = "default" });
+            var settings = LocalizedThemeSettings.Create(site.Locales);
             var services = new ServiceCollection().AddLogging().AddSingleton(theme);
             _provider = services.BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());
@@ -204,7 +205,8 @@ public class StaticSiteGeneratorRegenerationTests
                     : call.ArgAt<string>(0));
             _generator = new StaticSiteGenerator(
                 new ContentLoader(paths, Files, site, Substitute.For<ILogger<ContentLoader>>()),
-                markdown, plugins, theme, renderer, paths, Files, site, Substitute.For<ILogger<StaticSiteGenerator>>());
+                markdown, plugins, theme, renderer, paths, Files, site, Substitute.For<ILogger<StaticSiteGenerator>>(),
+                TimeProvider.System, settings);
         }
 
         public IFileSystem Files { get; }

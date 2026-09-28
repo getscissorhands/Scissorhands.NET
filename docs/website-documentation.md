@@ -150,7 +150,7 @@ For production, configure the static host to mount `dist/` at the intended prefi
 
 During generation, the engine sets `SiteManifest.IsPreview` to indicate preview or production output. It also populates `DescriptionInHtml` from the site description.
 
-`SiteManifest.HeroImage` is retained as an obsolete compatibility property, including its original remote default. The engine and built-in theme do not render it or copy it into the new settings. New themes should use the optional top-level `Theme.HeroImages` collection below; existing custom themes that read `SiteManifest.HeroImage` continue to see the legacy value.
+`SiteManifest.HeroImage` has been removed. `Site:HeroImage` fails configuration binding with migration guidance; use optional top-level `Theme.HeroImages` instead. Per-document `hero_image` frontmatter is unaffected.
 
 `Site.TimeZone` accepts system timezone identifiers such as `Asia/Seoul` and `America/New_York`. Omission selects UTC, never the machine's local timezone; an invalid or blank configured identifier fails generation. For post `published` values, date-only input means midnight at the start of that date in the site timezone, and an offset-free datetime uses the same timezone. Supply a complete calendar date with a four-digit year; partial dates, time-only values, and two-digit years are rejected rather than filled from the machine's date/calendar settings. Explicit `Z` or numeric offsets identify the instant directly and are not reinterpreted. Ambiguous or nonexistent offset-free daylight-saving times fail with source/field context; supply an explicit offset to disambiguate.
 
@@ -178,7 +178,7 @@ The `Plugins` array selects installed plugins by ID:
 
 ### Application theme settings
 
-Top-level `Theme` is bound to the public `ScissorHands.Core.Manifests.ThemeSettings` contract and registered as a singleton. Its read-only `Localization` catalog retains authored entries; its optional, ordered `HeroImages` collection supplies site-wide image choices to a selected theme. Each image has a `Source` (site-relative path or HTTP(S) URL) and an explicitly configured `Alt` string (empty for decorative images):
+Top-level `Theme` is bound to the public `ScissorHands.Core.Manifests.ThemeSettings` contract. The engine validates and normalizes its `Localization` catalog against `Site.Locales` before registering the effective read-only settings snapshot as a singleton; unused catalog entries cannot activate locales. Its optional, ordered `HeroImages` collection supplies site-wide image choices to a selected theme. Each image has a `Source` (site-relative path or HTTP(S) URL) and an explicitly configured `Alt` string (empty for decorative images):
 
 ```json
 {
@@ -191,7 +191,7 @@ Top-level `Theme` is bound to the public `ScissorHands.Core.Manifests.ThemeSetti
 }
 ```
 
-Omit `HeroImages` or use `[]` for no images; one entry represents a single image, while multiple entries retain their configured order. Paths such as `/images/first.webp` resolve below `Site.BaseUrl` when rendered with `ContentUrlHelper.GetImageUrl`; HTTP(S) URLs remain absolute. Blank sources, unsafe schemes, network-relative URLs, path traversal, missing `Alt`, and malformed array entries fail with a `Theme:HeroImages` configuration path. No image is rendered automatically, and `HeroImages` does not specify rotation, captions, links, or timing. Themes can inject `ThemeSettings` from DI and decide whether and how to render the entries; render `Alt` with Razor's normal encoding. `ThemeManifest.Localization`, by contrast, is the validated effective locale catalog for rendering, not a replacement for the application settings.
+Omit `HeroImages` or use `[]` for no images; one entry represents a single image, while multiple entries retain their configured order. Paths such as `/images/first.webp` resolve below `Site.BaseUrl` when rendered with `ContentUrlHelper.GetImageUrl`; HTTP(S) URLs remain absolute. Blank sources, unsafe schemes, network-relative URLs, path traversal, missing `Alt`, and malformed array entries fail with a `Theme:HeroImages` configuration path. No image is rendered automatically, and `HeroImages` does not specify rotation, captions, links, or timing. Themes can inject the effective `ThemeSettings` from DI or use the `Settings` layout/cascading parameter; render `Alt` with Razor's normal encoding. Package `ThemeManifest` contains no application settings.
 
 ### Locale-specific sites
 
@@ -258,7 +258,7 @@ Locale identifiers normalize case and underscores/forward slashes to hyphens. Re
 
 Use actual arrays/objects in JSON. Some configuration providers flatten empty arrays/objects to a childless empty-string marker; that marker is accepted as empty because `IConfiguration` cannot distinguish it from an authored `""`. Nonempty scalars, invalid array elements, and mixed scalar/child shapes are rejected. This is a provider representation limitation, not a recommendation to use strings for collections.
 
-**Manifest composition:** the selected theme's `theme.json` remains authoritative for identity, version, slug, stylesheets, and scripts. Application `Theme.Localization` is composed into a fresh effective `ThemeManifest.Localization` read-only snapshot; it does not replace package metadata/assets or mutate input collections. Localization in a package manifest cannot mask missing required application configuration. With no locales declared, effective messages use the English defaults under the `en` catalog key without enabling an `en` route.
+**Manifest and settings separation:** the selected theme's `theme.json` supplies identity, version, slug, stylesheets, and scripts. `ThemeService` returns package metadata without application settings; a `Localization` key in `theme.json` fails with migration guidance. The validated application `ThemeSettings.Localization` is a fresh read-only snapshot, leaving the authored configuration and package metadata unchanged. With no locales declared, effective messages use the English defaults under the `en` catalog key without enabling an `en` route. Direct generator callers must supply `ThemeSettings` to the constructor accepting it when enabling locales.
 
 **Pairing:** match the content kind and complete locale-relative filename/path: `pages/guides/start.md` pairs with `pages/ko-kr/guides/start.md`, not a differently named file with the same slug. Both resolved slugs must match without the additional prefix. Explicit slugs remain supported, including a matching additional prefix that is stripped before date composition. Nested page `index.md` inference is relative to the locale root; root-level `index.md` remains route `index`. Documents cannot claim generated destinations or primary routes under an active additional-locale prefix.
 
@@ -644,6 +644,7 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
     LocaleContext="@LocaleContext"
     Plugins="@Plugins"
     Theme="@Theme"
+    Settings="@Settings"
     Site="@Site">
     <!DOCTYPE html>
     <html lang="@(string.IsNullOrWhiteSpace(PageLocale) ? null : PageLocale)">
@@ -659,6 +660,8 @@ Inherit from `MainLayoutBase` and pass content data through `CascadingMainLayout
 ```
 
 `MainLayoutBase` calculates page title and description from the site/document. When `Site.Locales` is empty, `CalculatePageLocale()` returns an empty string without assuming a language from English message defaults, document metadata, or render context; the built-in layout omits the HTML `lang` attribute. When locales are declared, the active `LocaleContext` takes precedence, otherwise explicit document metadata falls back to the first site locale. Override `CalculatePageTitle()`, `CalculatePageDescription()`, or `CalculatePageLocale()` to customize those values.
+
+`Settings` is the generation-validated application `ThemeSettings` snapshot. Forward it through `CascadingMainLayoutBase` so child view and plugin components receive the effective localization catalog and optional hero images. Existing seven theme view roles do not change.
 
 Rendered Markdown is available as `ContentDocument.Html`. Rendering it with `MarkupString` is an explicit raw-HTML trust boundary; render metadata through ordinary Razor expressions so it remains encoded.
 
@@ -783,7 +786,7 @@ Define a theme-owned component derived from `ScissorHands.Theme.Components.Publi
 
 The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
 
-The effective `ThemeManifest.Localization` catalog is already available through the existing theme cascade. Select messages using `LocaleContext.Locale` for requested-language UI, falling back to the first declared site locale when no render context exists; never select the fallback document's content language. The default component uses the configured `Draft` and complete `ScheduledOn` template and keeps its explicit invariant ISO display date. If `Site.Locales` is empty, it uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
+The effective `ThemeSettings.Localization` catalog is available through the `Settings` cascade or DI. Select messages using `LocaleContext.Locale` for requested-language UI, falling back to the first declared site locale when no render context exists; never select the fallback document's content language. The default component uses the configured `Draft` and complete `ScheduledOn` template and keeps its explicit invariant ISO display date. If `Site.Locales` is empty, it uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
 
 Render `RenderContent(label)`, not raw HTML or only a plain label expression: it encodes the theme's nonempty text and records delivery of that text. Receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The default Razor component formats the date as invariant `yyyy-MM-dd` and selects the requested locale's configured wording, using English defaults only with no locales declared. Another theme can use `MMM dd, yyyy`, `dd/MM/yyyy`, or another explicit cultural format. Do not implicitly depend on the build machine's culture or convert the authored date to another timezone. Both statuses remain required when both flags apply.
 
@@ -1018,7 +1021,7 @@ Derive from `PluginComponentBase` when a theme renders plugin-specific output:
 
 Supply the component's required `Id`, for example `Id="reading-time"`. Its optional `Name` parameter is display text only.
 
-The base type provides the document, document collection, plugin manifests, theme, and site through cascading parameters. Invalid component IDs, invalid manifest IDs, and duplicate manifest IDs fail rendering.
+The base type provides the document, document collection, plugin manifests, package theme, effective application `Settings`, and site through cascading parameters. Forward `Settings` from the layout when a plugin component needs localization or hero images. Invalid component IDs, invalid manifest IDs, and duplicate manifest IDs fail rendering.
 
 A valid component ID without a configured manifest leaves `Plugin` null, allowing disabled output to be omitted.
 
@@ -1125,7 +1128,7 @@ var site = new SiteManifest
 
 `SiteManifest.Locales` snapshots its input, treats null as empty, and enables localization only when nonempty. Validation rejects invalid members; the model does not silently skip them.
 
-`ThemeManifest` describes the selected theme, its assets, and the effective application localization snapshot:
+`ThemeManifest` describes only the selected theme package and its assets:
 
 ```csharp
 var theme = new ThemeManifest
@@ -1134,16 +1137,12 @@ var theme = new ThemeManifest
     Slug = "my-theme",
     Stylesheets = ["/assets/theme.css"],
     Scripts = ["/assets/theme.js"],
-    Localization = new Dictionary<string, ThemeLocalization?>
-    {
-        ["en-us"] = ThemeLocalization.English,
-    },
 };
 ```
 
-`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization. `Localization` is a defensive read-only dictionary snapshot of immutable `ThemeLocalization` records. Configured records have nullable `TranslationUnavailable`, `Draft`, and `ScheduledOn` fields so omitted values can be diagnosed rather than silently defaulted. `ThemeLocalization.English` supplies the explicit English default record. Application configuration supplies the catalog to `ThemeService` for composition with package metadata; custom `IThemeService` implementations must return complete effective messages for declared locales.
+`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization. Custom `IThemeService` implementations return package metadata only; the engine independently validates the application theme settings before rendering.
 
-`ThemeSettings` describes the top-level application `Theme` section separately from the package manifest. `Localization` and `HeroImages` are defensive read-only snapshots. `ThemeHeroImage` is an immutable `Source`/`Alt` record; the built-in theme does not currently consume the optional image collection. Themes can use `@inject ThemeSettings Settings` (with `ScissorHands.Core.Manifests` imported) and `ContentUrlHelper.GetImageUrl(image.Source)` for image URLs; the URL helper preserves absolute HTTP(S) URLs and converts rooted image paths to base-relative paths, but is not a general URL sanitizer. Configuration binding validates the shared image contract before it reaches themes.
+`ThemeSettings` describes the top-level application `Theme` section separately from the package manifest. Its `Localization` and `HeroImages` are defensive read-only snapshots; the engine prepares normalized, validated locale messages before supplying the effective settings to rendering. Configured `ThemeLocalization` records have nullable `TranslationUnavailable`, `Draft`, and `ScheduledOn` fields so omissions can be diagnosed; `ThemeLocalization.English` supplies the default when localization is disabled. `ThemeHeroImage` is an immutable `Source`/`Alt` record; the built-in theme does not currently consume the optional image collection. Views inheriting Theme base classes can use their cascaded `Settings`; application themes can also use `@inject ThemeSettings Settings` (with `ScissorHands.Core.Manifests` imported) and `ContentUrlHelper.GetImageUrl(image.Source)` for image URLs. The URL helper preserves absolute HTTP(S) URLs and converts rooted image paths to base-relative paths, but is not a general URL sanitizer. Configuration binding validates the shared image contract before it reaches themes.
 
 `PluginManifest` describes configured plugin options:
 
@@ -1208,7 +1207,7 @@ Theme asset collections are defensively copied during initialization. Existing o
 
 The existing one-argument `IThemeService` methods are still present but obsolete. Move integrations to the cancellation-aware overloads.
 
-`SiteManifest.HeroImage` is obsolete but remains callable, including its old default; there is no implicit mapping to `ThemeSettings.HeroImages`. For new themes, move `Site:HeroImage` to one `Theme:HeroImages` entry with `Source` and `Alt`, and inject `ThemeSettings` instead of reading the site property. Existing themes that read the old property keep working until a future breaking removal. The per-document `hero_image` frontmatter and `ContentMetadata.HeroImage` are unchanged.
+`SiteManifest.HeroImage` and `ThemeManifest.Localization` have been removed. Migrate a former `Site:HeroImage` value to one `Theme:HeroImages` entry with `Source` and `Alt`; leaving the key in `Site` now fails configuration binding. Move any package `theme.json` `Localization` entry to application `Theme:Localization`; package catalogs now fail at theme load. Theme authors should read `Settings.Localization` rather than `Theme.Localization` and forward `Settings="@Settings"` through custom cascading layouts. Custom `IThemeService` implementations return package metadata only. The former five-argument `ThemeService` constructor taking an application `ThemeManifest` is removed; use the site-aware four-argument constructor or register through `AddConfigurations`. Direct generator callers with declared locales must pass a `ThemeSettings` catalog to the clock-and-settings constructor; the previously available constructors remain for locale-free sites. The per-document `hero_image` frontmatter and `ContentMetadata.HeroImage` are unchanged.
 
 ### Name-based plugin identity
 
@@ -1273,7 +1272,7 @@ Remove every frontmatter `locale` field, including on the shared 404. Keep prima
 
 Move old fallback-message values into `Theme.Localization[locale].TranslationUnavailable`, then supply `Draft` and a valid `ScheduledOn` template for every declared locale, including primary. Blank/missing messages fail before rendering even when fallback or badges are not currently needed; package/English/parent-culture defaults do not fill gaps for declared locales. Additional locale routes exist even before translations do, but only `Site.Locales` enables them. Removing a declaration leaves files in that folder as ordinary nested content, so remove or mark them draft if they should not publish. In builds, draft/scheduled primaries suppress active translations and fallback never uses ineligible primary content. Preview includes drafts and scheduled posts with inherited status badges; a missing primary still suppresses translations.
 
-In C#, replace `SiteManifest.Locale` initializers with `Locales = [...]` and use its first element for primary-language selection. Remove `LocalizationFallbackMessages` initializers and supply complete `ThemeManifest.Localization` data. The effective manifest composes application messages with package identity/assets without changing theme discovery or explicit `AddLayouts` overrides. The existing `LocaleContext.FallbackMessage` and fallback-banner fragment remain rendering APIs; their value now comes from `TranslationUnavailable`.
+In C#, replace `SiteManifest.Locale` initializers with `Locales = [...]` and use its first element for primary-language selection. Remove `LocalizationFallbackMessages` initializers and supply complete `ThemeSettings.Localization` data. The engine validates application messages separately from package identity/assets without changing theme discovery or explicit `AddLayouts` overrides. The existing `LocaleContext.FallbackMessage` and fallback-banner fragment remain rendering APIs; their value now comes from `TranslationUnavailable`.
 
 Custom themes must forward `LocaleContext`, import `ScissorHands.Theme.Components`, and provide their own components derived from `LanguageSwitcherBase`, `LocalizationMetadataBase`, and `LocalizationFallbackBannerBase`. The former concrete localization components in the Theme package are replaced by these bases; Razor implementations now belong to the default theme or the consuming theme. No new required view-discovery role is added. Render the banner's encoded `FallbackMessageContent` with `BannerAttributes`, annotate actual content language, and retain Home/Tags helpers. Missing fallback notices fail rendering. Existing seven view roles and public URL helpers remain. Authored internal document links now follow the active additional locale; add `{data-localize="false"}` to intentional primary-language links. Resources, external links and explicit configured-locale targets remain unchanged. Plugins receive requested and actual language in context and should not prepend another locale. Prepared collections/context remain pre-hook snapshots, not automatically recomputed after plugin metadata changes.
 

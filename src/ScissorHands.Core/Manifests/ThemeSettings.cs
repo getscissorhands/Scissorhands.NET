@@ -18,7 +18,10 @@ public sealed class ThemeSettings
     public IReadOnlyDictionary<string, ThemeLocalization?> Localization
     {
         get => _localization;
-        init => _localization = ThemeLocalizationSnapshot.Create(value);
+        init => _localization = value is null
+            ? ReadOnlyDictionary<string, ThemeLocalization?>.Empty
+            : new ReadOnlyDictionary<string, ThemeLocalization?>(
+                new Dictionary<string, ThemeLocalization?>(value, StringComparer.Ordinal));
     }
 
     /// <summary>

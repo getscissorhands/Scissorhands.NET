@@ -1,5 +1,9 @@
 # ScissorHands.NET - Technical requirements document
 
+## Current scope amendment: separate theme settings from package metadata
+
+Remove `ThemeManifest.Localization` and `SiteManifest.HeroImage` and reject their legacy package/configuration inputs with contextual migration errors. Keep `ThemeManifest` restricted to theme package identity/assets; validate and normalize `ThemeSettings.Localization` against `Site.Locales` before rendering, including custom theme-service paths, without mutating authored settings or enabling routes from catalog keys. Supply the effective settings through the layout and component cascade as well as DI, retaining optional hero-image order and existing status/fallback checks. Existing locale-free generator constructors remain; direct localized callers must supply a theme-settings catalog. This explicit breaking amendment supersedes earlier composition and compatibility notes without rewriting historical approvals or unrelated obsolete methods.
+
 ## Current scope amendment: application theme settings
 
 Bind top-level `Theme.Localization` and optional `Theme.HeroImages` into a defensive read-only `ThemeSettings` snapshot registered for themes via DI. Preserve the effective `ThemeManifest.Localization` composition, package identity/assets, locale validation and seven-role theme contract. Require each image to supply a nonblank safe site-relative source or HTTP(S) URL and an explicit alternative-text string (empty only for decoration); reject malformed arrays, traversal and unsafe schemes with contextual paths. Do not render images implicitly or change per-document hero metadata. Keep the legacy site-level property callable and obsolete rather than removing it as an unrequested breaking change. This amendment supersedes any earlier implication that the application theme catalog has no public settings type.

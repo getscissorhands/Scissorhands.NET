@@ -2,11 +2,10 @@ using ScissorHands.Core.Manifests;
 
 namespace ScissorHands.Web.Tests.TestDoubles;
 
-internal static class LocalizedThemeManifest
+internal static class LocalizedThemeSettings
 {
-    public static ThemeManifest Create(IEnumerable<string> locales, string? translationUnavailable = "Translation unavailable.") => new()
+    public static ThemeSettings Create(IEnumerable<string> locales, string? translationUnavailable = "Translation unavailable.") => new()
     {
-        Slug = "default",
         Localization = locales.ToDictionary(
             locale => locale.Replace('_', '-').ToLowerInvariant(),
             _ => (ThemeLocalization?)new ThemeLocalization

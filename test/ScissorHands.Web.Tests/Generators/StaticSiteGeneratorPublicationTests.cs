@@ -328,7 +328,8 @@ public class StaticSiteGeneratorPublicationTests
             var options = site ?? new SiteManifest();
             var theme = Substitute.For<ScissorHands.Core.Services.IThemeService>();
             theme.LoadManifestAsync(Arg.Any<string>(), Arg.Any<CancellationToken>())
-                .Returns(LocalizedThemeManifest.Create(options.Locales, "Korean translation unavailable."));
+                .Returns(new ThemeManifest { Slug = "default" });
+            var settings = LocalizedThemeSettings.Create(options.Locales, "Korean translation unavailable.");
             _provider = new ServiceCollection().AddLogging().AddSingleton(theme).BuildServiceProvider();
             var renderer = new ComponentRenderer(_provider.GetRequiredService<IServiceScopeFactory>(), _provider.GetRequiredService<ILoggerFactory>());
             Plugins.Manifests.Returns([]);
@@ -342,7 +343,7 @@ public class StaticSiteGeneratorPublicationTests
             _generator = new StaticSiteGenerator(
                 new ContentLoader(_paths, Files, options, Substitute.For<ILogger<ContentLoader>>()),
                 new MarkdownService(), Plugins, theme, renderer, _paths, Files, options,
-                Substitute.For<ILogger<StaticSiteGenerator>>(), Clock);
+                Substitute.For<ILogger<StaticSiteGenerator>>(), Clock, settings);
         }
 
         public MockFileSystem Files { get; } = new();

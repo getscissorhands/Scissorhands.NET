@@ -57,7 +57,7 @@ public class DefaultPublicationLocalizationTests
 
         var error = Should.Throw<InvalidOperationException>(() => context.Render<PublicationBadges>(parameters => parameters
             .AddCascadingValue(new SiteManifest { Locales = ["ko-kr"], IsPreview = true })
-            .AddCascadingValue(new ThemeManifest())
+            .AddCascadingValue(new ThemeSettings())
             .AddCascadingValue(new ContentDocument { PublicationStatus = new PublicationStatus { Route = "post", IsDraft = true } })));
 
         error.Message.ShouldContain("Theme:Localization:ko-kr");
@@ -70,7 +70,7 @@ public class DefaultPublicationLocalizationTests
         const string label = "<img src=x onerror=alert(1)> 초안";
         var rendered = context.Render<PublicationBadges>(parameters => parameters
             .AddCascadingValue(new SiteManifest { Locales = ["ko-kr"], IsPreview = true })
-            .AddCascadingValue(new ThemeManifest
+            .AddCascadingValue(new ThemeSettings
             {
                 Localization = new Dictionary<string, ThemeLocalization?>
                 {
@@ -83,7 +83,7 @@ public class DefaultPublicationLocalizationTests
         rendered.Find("[data-publication-badge='draft']").TextContent.ShouldBe(label);
     }
 
-    private static ThemeManifest Catalog() => new()
+    private static ThemeSettings Catalog() => new()
     {
         Localization = new Dictionary<string, ThemeLocalization?>
         {

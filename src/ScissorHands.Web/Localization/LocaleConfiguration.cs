@@ -62,9 +62,9 @@ internal sealed partial class LocaleConfiguration
         return new(primary, additional.AsReadOnly(), ReadOnlyDictionary<string, ThemeLocalization?>.Empty);
     }
 
-    public static LocaleConfiguration Create(SiteManifest site, ThemeManifest theme)
+    public static LocaleConfiguration Create(SiteManifest site, ThemeSettings settings)
     {
-        ArgumentNullException.ThrowIfNull(theme);
+        ArgumentNullException.ThrowIfNull(settings);
         var inventory = Create(site);
         if (inventory.Primary is null)
         {
@@ -73,7 +73,7 @@ internal sealed partial class LocaleConfiguration
 
         var active = new HashSet<string>(inventory.AdditionalLocales, StringComparer.Ordinal) { inventory.Primary };
         var configured = new Dictionary<string, ThemeLocalization?>(StringComparer.Ordinal);
-        foreach (var (key, value) in theme.Localization)
+        foreach (var (key, value) in settings.Localization)
         {
             var locale = ContentUrlHelper.GetLocaleSegment(key);
             // Catalog entries never declare routes or activate otherwise undeclared locales.
@@ -120,20 +120,15 @@ internal sealed partial class LocaleConfiguration
     }
 
     /// <summary>
-    /// Creates an effective theme with the package identity and assets and this locale catalog.
-    /// For localized sites, use <see cref="Create(SiteManifest, ThemeManifest)"/> before applying.
+    /// Creates effective application theme settings with the validated locale catalog.
+    /// For localized sites, use <see cref="Create(SiteManifest, ThemeSettings)"/> before applying.
     /// </summary>
-    public ThemeManifest ApplyTo(ThemeManifest package)
+    public ThemeSettings ApplyTo(ThemeSettings settings)
     {
-        ArgumentNullException.ThrowIfNull(package);
-        return new ThemeManifest
+        ArgumentNullException.ThrowIfNull(settings);
+        return new ThemeSettings
         {
-            Name = package.Name,
-            Version = package.Version,
-            Description = package.Description,
-            Slug = package.Slug,
-            Stylesheets = package.Stylesheets,
-            Scripts = package.Scripts,
+            HeroImages = settings.HeroImages,
             Localization = Localization,
         };
     }
