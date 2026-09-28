@@ -6,6 +6,13 @@ The original engine began on [2015-08-08](https://github.com/getscissorhands/Sci
 
 Preview releases belong to the `vnext` development line. Their inclusion here does not imply that the same implementation is present on `main`. Use the tag matching your installed package version.
 
+## v1.0.0-preview.20260928.1 - 2026-09-29
+
+[Release](https://github.com/getscissorhands/Scissorhands.NET/releases/tag/v1.0.0-preview.20260928.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260927.1...v1.0.0-preview.20260928.1)
+
+- **Breaking:** Removed `SiteManifest.HeroImage` and `ThemeManifest.Localization`. Application-owned `ThemeSettings.Localization` is validated separately from package metadata; old `Site:HeroImage` and package `theme.json` localization settings fail with migration guidance. Custom themes must forward `ThemeSettings` through their layouts, and direct generator callers with declared locales must supply it (#112).
+- Added optional, ordered `Theme:HeroImages` entries with `Source` and `Alt` for zero, one, or multiple site-wide images. The built-in theme displays the first configured image on primary and localized homepages, while themes without images retain their previous home markup. The sample now displays its configured hero image (#112).
+
 ## v1.0.0-preview.20260927.1 - 2026-09-26
 
 [Release](https://github.com/getscissorhands/Scissorhands.NET/releases/tag/v1.0.0-preview.20260927.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260915.1...v1.0.0-preview.20260927.1)
