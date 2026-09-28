@@ -16,6 +16,7 @@ dotnet add package ScissorHands.Theme --prerelease
 Themes must supply all seven view roles and required notices/status badges; missing required output fails generation.
 
 - [Theme authoring and contracts](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#theme-authoring)
+- [Application theme settings](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#application-theme-settings)
 - [Migration guide](https://github.com/getscissorhands/Scissorhands.NET/blob/vnext/docs/website-documentation.md#upgrading-to-vnext) - review before upgrading; vNext includes breaking changes
 
 ## License

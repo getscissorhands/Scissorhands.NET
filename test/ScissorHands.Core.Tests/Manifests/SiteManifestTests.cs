@@ -62,8 +62,10 @@ public class SiteManifestTests
         manifest.SiteUrl.ShouldNotBeNullOrWhiteSpace();
         Uri.TryCreate(manifest.SiteUrl, UriKind.Absolute, out _).ShouldBeTrue();
 
+#pragma warning disable CS0618
         manifest.HeroImage.ShouldNotBeNullOrWhiteSpace();
         Uri.TryCreate(manifest.HeroImage, UriKind.Absolute, out _).ShouldBeTrue();
+#pragma warning restore CS0618
     }
 
     [Fact]

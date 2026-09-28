@@ -96,8 +96,9 @@ public sealed class SiteManifest
     }
 
     /// <summary>
-    /// Gets the site hero image.
+    /// Gets the legacy site hero image. Use ThemeSettings.HeroImages for new themes.
     /// </summary>
+    [Obsolete("Use ThemeSettings.HeroImages from the top-level Theme configuration instead.")]
     public string? HeroImage { get; init; } = HERO_IMAGE_URL;
 
     /// <summary>

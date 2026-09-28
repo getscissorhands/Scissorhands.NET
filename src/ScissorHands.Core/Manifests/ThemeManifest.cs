@@ -62,9 +62,15 @@ public sealed class ThemeManifest
     public IReadOnlyDictionary<string, ThemeLocalization?> Localization
     {
         get => _localization;
-        init => _localization = value is null
+        init => _localization = ThemeLocalizationSnapshot.Create(value);
+    }
+}
+
+internal static class ThemeLocalizationSnapshot
+{
+    public static IReadOnlyDictionary<string, ThemeLocalization?> Create(IReadOnlyDictionary<string, ThemeLocalization?>? value)
+        => value is null
             ? ReadOnlyDictionary<string, ThemeLocalization?>.Empty
             : new ReadOnlyDictionary<string, ThemeLocalization?>(
                 new Dictionary<string, ThemeLocalization?>(value, StringComparer.Ordinal));
-    }
 }

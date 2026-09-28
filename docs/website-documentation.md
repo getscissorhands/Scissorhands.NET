@@ -133,7 +133,6 @@ The `Site` section in `appsettings.json` provides site-wide settings. Individual
 | `Description` | Site description; the engine also makes its rendered HTML available |
 | `Locales` | Ordered locale array; the first is primary, and omitted/null/empty disables localization without declaring an implicit locale |
 | `Author` | Site-level author information available to themes |
-| `HeroImage` | Site-level hero image reference available to themes and plugins |
 | `Theme` | Theme slug; use `default` for the built-in theme |
 | `SiteUrl` | Public site URL |
 | `BaseUrl` | Site base path, such as `/`, `/project` or `/project/`; path prefixes normalize to a trailing slash |
@@ -150,6 +149,8 @@ Preview serves generated files only at the effective path prefix. With either `/
 For production, configure the static host to mount `dist/` at the intended prefix and serve directory indexes. Do not copy output into an additional prefix directory or prepend `BaseUrl` to already base-relative links.
 
 During generation, the engine sets `SiteManifest.IsPreview` to indicate preview or production output. It also populates `DescriptionInHtml` from the site description.
+
+`SiteManifest.HeroImage` is retained as an obsolete compatibility property, including its original remote default. The engine and built-in theme do not render it or copy it into the new settings. New themes should use the optional top-level `Theme.HeroImages` collection below; existing custom themes that read `SiteManifest.HeroImage` continue to see the legacy value.
 
 `Site.TimeZone` accepts system timezone identifiers such as `Asia/Seoul` and `America/New_York`. Omission selects UTC, never the machine's local timezone; an invalid or blank configured identifier fails generation. For post `published` values, date-only input means midnight at the start of that date in the site timezone, and an offset-free datetime uses the same timezone. Supply a complete calendar date with a four-digit year; partial dates, time-only values, and two-digit years are rejected rather than filled from the machine's date/calendar settings. Explicit `Z` or numeric offsets identify the instant directly and are not reinterpreted. Ambiguous or nonexistent offset-free daylight-saving times fail with source/field context; supply an explicit offset to disambiguate.
 
@@ -174,6 +175,23 @@ The `Plugins` array selects installed plugins by ID:
 ```
 
 `Name` is optional display metadata. Options are plugin-specific; validate and interpret them in the plugin rather than assuming every plugin supports the same keys. Installed plugins without a matching manifest remain disabled.
+
+### Application theme settings
+
+Top-level `Theme` is bound to the public `ScissorHands.Core.Manifests.ThemeSettings` contract and registered as a singleton. Its read-only `Localization` catalog retains authored entries; its optional, ordered `HeroImages` collection supplies site-wide image choices to a selected theme. Each image has a `Source` (site-relative path or HTTP(S) URL) and an explicitly configured `Alt` string (empty for decorative images):
+
+```json
+{
+  "Theme": {
+    "HeroImages": [
+      { "Source": "/images/first.webp", "Alt": "A mountain at sunrise" },
+      { "Source": "https://cdn.example.com/second.webp", "Alt": "" }
+    ]
+  }
+}
+```
+
+Omit `HeroImages` or use `[]` for no images; one entry represents a single image, while multiple entries retain their configured order. Paths such as `/images/first.webp` resolve below `Site.BaseUrl` when rendered with `ContentUrlHelper.GetImageUrl`; HTTP(S) URLs remain absolute. Blank sources, unsafe schemes, network-relative URLs, path traversal, missing `Alt`, and malformed array entries fail with a `Theme:HeroImages` configuration path. No image is rendered automatically, and `HeroImages` does not specify rotation, captions, links, or timing. Themes can inject `ThemeSettings` from DI and decide whether and how to render the entries; render `Alt` with Razor's normal encoding. `ThemeManifest.Localization`, by contrast, is the validated effective locale catalog for rendering, not a replacement for the application settings.
 
 ### Locale-specific sites
 
@@ -1123,7 +1141,9 @@ var theme = new ThemeManifest
 };
 ```
 
-`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization. `Localization` is a defensive read-only dictionary snapshot of immutable `ThemeLocalization` records. Configured records have nullable `TranslationUnavailable`, `Draft`, and `ScheduledOn` fields so omitted values can be diagnosed rather than silently defaulted. `ThemeLocalization.English` supplies the explicit English default record. Application configuration binds only the catalog, then `ThemeService` composes it with the package's metadata; custom `IThemeService` implementations must return complete effective messages for declared locales.
+`Stylesheets` and `Scripts` are non-null `IReadOnlyList<string>` collections and are defensively copied during initialization. `Localization` is a defensive read-only dictionary snapshot of immutable `ThemeLocalization` records. Configured records have nullable `TranslationUnavailable`, `Draft`, and `ScheduledOn` fields so omitted values can be diagnosed rather than silently defaulted. `ThemeLocalization.English` supplies the explicit English default record. Application configuration supplies the catalog to `ThemeService` for composition with package metadata; custom `IThemeService` implementations must return complete effective messages for declared locales.
+
+`ThemeSettings` describes the top-level application `Theme` section separately from the package manifest. `Localization` and `HeroImages` are defensive read-only snapshots. `ThemeHeroImage` is an immutable `Source`/`Alt` record; the built-in theme does not currently consume the optional image collection. Themes can use `@inject ThemeSettings Settings` (with `ScissorHands.Core.Manifests` imported) and `ContentUrlHelper.GetImageUrl(image.Source)` for image URLs; the URL helper preserves absolute HTTP(S) URLs and converts rooted image paths to base-relative paths, but is not a general URL sanitizer. Configuration binding validates the shared image contract before it reaches themes.
 
 `PluginManifest` describes configured plugin options:
 
@@ -1187,6 +1207,8 @@ The following changes affect source and binary compatibility:
 Theme asset collections are defensively copied during initialization. Existing object initializers still work, but callers must treat manifest collections as immutable inputs.
 
 The existing one-argument `IThemeService` methods are still present but obsolete. Move integrations to the cancellation-aware overloads.
+
+`SiteManifest.HeroImage` is obsolete but remains callable, including its old default; there is no implicit mapping to `ThemeSettings.HeroImages`. For new themes, move `Site:HeroImage` to one `Theme:HeroImages` entry with `Source` and `Alt`, and inject `ThemeSettings` instead of reading the site property. Existing themes that read the old property keep working until a future breaking removal. The per-document `hero_image` frontmatter and `ContentMetadata.HeroImage` are unchanged.
 
 ### Name-based plugin identity
 

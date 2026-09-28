@@ -1,5 +1,9 @@
 # ScissorHands.NET - Technical requirements document
 
+## Current scope amendment: application theme settings
+
+Bind top-level `Theme.Localization` and optional `Theme.HeroImages` into a defensive read-only `ThemeSettings` snapshot registered for themes via DI. Preserve the effective `ThemeManifest.Localization` composition, package identity/assets, locale validation and seven-role theme contract. Require each image to supply a nonblank safe site-relative source or HTTP(S) URL and an explicit alternative-text string (empty only for decoration); reject malformed arrays, traversal and unsafe schemes with contextual paths. Do not render images implicitly or change per-document hero metadata. Keep the legacy site-level property callable and obsolete rather than removing it as an unrequested breaking change. This amendment supersedes any earlier implication that the application theme catalog has no public settings type.
+
 ## Current scope amendment: explicit locales and theme catalogs
 
 [PRD's explicit-locale amendment](PRD.md#current-scope-amendment-explicit-locales-and-theme-catalogs) supersedes earlier locale inventory and message-validation requirements. `SiteManifest.Locales` snapshots the ordered array; primary is the first validated normalized item and additional locales come only from the remainder. Preserve format/safety checks, disabled-mode source treatment, URL stability, and nonmutating generation.

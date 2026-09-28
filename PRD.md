@@ -1,5 +1,9 @@
 # ScissorHands.NET - Product requirements document
 
+## Current scope amendment: application theme settings
+
+The top-level application `Theme` section now has a public `ThemeSettings` contract in Core, separate from package `theme.json` metadata. Preserve `Theme.Localization` and its existing validated composition into the effective `ThemeManifest`; this supersedes the earlier statement below that there is no separate settings model. An optional ordered `Theme.HeroImages` collection supplies zero, one, or many site-wide `Source`/`Alt` entries for themes to render if they choose. Do not make hero rendering mandatory or add a carousel behavior to the generator. Retain `SiteManifest.HeroImage` as an obsolete compatibility property, without implicitly mapping its remote default into the new collection; document migration for theme authors. Historical approvals and evidence below are not verification of this new contract.
+
 ## Current scope amendment: explicit locales and theme catalogs
 
 The latest [#109 settlement](https://github.com/getscissorhands/Scissorhands.NET/issues/109#issuecomment-5836161464) supersedes the earlier `Site.Locale` and `LocalizationFallbackMessages` configuration contracts below. Preserve historical IDs, approvals, evidence, and wider gaps rather than treating old results as verification of this migration.
