@@ -1,7 +1,13 @@
+@using ScissorHands.Core.Urls
 @inherits IndexViewBase
 @layout MainLayout
 
 <section class="home prose">
+    @if (ThemeSettings?.HeroImages.FirstOrDefault() is { } hero)
+    {
+        <img class="site-hero-image" src="@ContentUrlHelper.GetImageUrl(hero.Source)" alt="@hero.Alt" />
+    }
+
     @if (!string.IsNullOrWhiteSpace(Site?.DescriptionInHtml))
     {
         <div class="site-introduction">@((MarkupString)Site.DescriptionInHtml)</div>

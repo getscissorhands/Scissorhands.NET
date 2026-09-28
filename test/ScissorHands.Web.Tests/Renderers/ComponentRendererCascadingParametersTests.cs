@@ -183,23 +183,26 @@ public class ComponentRendererCascadingParametersTests
             {
                 ["ko-kr"] = ThemeLocalization.English with { Draft = "초안" },
             },
-            HeroImages = [new ThemeHeroImage { Source = "/images/hero.webp", Alt = "Illustration" }],
+            HeroImages = [new ThemeHeroImage { Source = "/images/hero.webp", Alt = "<Illustration>" }],
         };
 
+        var parameters = new Dictionary<string, object?>
+        {
+            ["Site"] = site,
+            ["Theme"] = new ThemeManifest { Slug = "default" },
+            ["ThemeSettings"] = settings,
+            ["Plugins"] = new[] { new PluginManifest { Id = "settings-probe" } },
+        };
         var html = await renderer.RenderAsync<TestSettingsView>(
-            typeof(ScissorHands.Web.MainLayout),
-            new Dictionary<string, object?>
-            {
-                ["Site"] = site,
-                ["Theme"] = new ThemeManifest { Slug = "default" },
-                ["ThemeSettings"] = settings,
-                ["Plugins"] = new[] { new PluginManifest { Id = "settings-probe" } },
-            },
-            Xunit.TestContext.Current.CancellationToken);
+            typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
+        var home = await renderer.RenderAsync<ScissorHands.Web.IndexView>(
+            typeof(ScissorHands.Web.MainLayout), parameters, Xunit.TestContext.Current.CancellationToken);
 
         using var parsed = new HtmlParser().ParseDocument(html);
         parsed.Body!.TextContent.ShouldContain("View:초안");
         parsed.Body.TextContent.ShouldContain("Plugin:/images/hero.webp");
+        home.ShouldContain("src=\"images/hero.webp\"");
+        home.ShouldContain("alt=\"&lt;Illustration&gt;\"");
     }
 
     [Theory]
