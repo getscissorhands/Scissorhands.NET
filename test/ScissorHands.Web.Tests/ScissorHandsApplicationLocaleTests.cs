@@ -207,7 +207,7 @@ public class ScissorHandsApplicationLocaleTests
                 }
                 foreach (var route in new[] { "404.html", "images/sample.svg", "themes/default/assets/css/theme.css", "themes/default/assets/js/theme.js",
                              "themes/default/assets/images/icons/moon.svg", "themes/default/assets/images/icons/sun.svg",
-                             "themes/default/assets/images/icons/chevron-down.svg" })
+                             "themes/default/assets/images/icons/chevron-down.svg", "themes/default/assets/images/icons/github.svg" })
                 {
                     using var response = await client.GetAsync(baseUrl + route, cancellationToken);
                     response.StatusCode.ShouldBe(HttpStatusCode.OK, route);

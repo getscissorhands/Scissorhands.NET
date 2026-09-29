@@ -366,11 +366,36 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   background: var(--background);
 }
 
+.site-header nav .github-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: var(--toggle);
+}
+
+.github-link:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+.github-icon {
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  -webkit-mask: url("../images/icons/github.svg") center / contain no-repeat;
+  mask: url("../images/icons/github.svg") center / contain no-repeat;
+}
+
 #theme-toggle {
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
-  margin-left: auto;
   padding: 0.25rem;
   border: 0;
   background: transparent;
@@ -577,6 +602,12 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   .navigation-list {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  nav[data-navigation-enhanced] .language-switcher-list {
+    position: static;
+    max-width: 100%;
+    margin-top: 0.5rem;
   }
 
   nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-children {

@@ -25,3 +25,10 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+## Simple Icons
+
+The GitHub icon at `themes/default/assets/images/icons/github.svg` comes from
+[Simple Icons](https://simpleicons.org/) and is licensed under
+[CC0 1.0](https://github.com/simple-icons/simple-icons/blob/develop/LICENSE.md).
+GitHub is a trademark of GitHub, Inc.

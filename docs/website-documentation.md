@@ -626,6 +626,7 @@ Example `theme.json`:
 
 Stylesheet and script collections are non-null, read-only, and defensively copied during initialization. Treat manifest collections as immutable input.
 The built-in theme keeps its stylesheet at `assets/css/theme.css`, script at `assets/js/theme.js`, and decorative SVG icons at `assets/images/icons/`. The stylesheet references the icons relative to its own directory, so they resolve at root and subpath mounts.
+Its top navigation links to the ScissorHands.NET repository with a [Simple Icons GitHub icon](../src/ScissorHands.Web/THIRD-PARTY-NOTICES.md#simple-icons).
 
 ### Main layout and cascading data
 

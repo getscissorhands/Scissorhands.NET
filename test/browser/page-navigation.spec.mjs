@@ -79,6 +79,7 @@ test("decorative theme icons load and controls work at root and subpath", async 
       ["moon", "#theme-toggle .moon-icon"],
       ["sun", "#theme-toggle .sun-icon"],
       ["chevron-down", ".navigation-toggle .navigation-icon"],
+      ["github", ".github-link .github-icon"],
     ]) {
       const asset = await page.request.get(`${origin}/themes/default/assets/images/icons/${icon}.svg`);
       expect(asset.status()).toBe(200);
@@ -87,6 +88,18 @@ test("decorative theme icons load and controls work at root and subpath", async 
       expect(mask).toContain(`images/icons/${icon}.svg`);
     }
 
+    const github = page.getByRole("link", { name: "ScissorHands.NET on GitHub" });
+    await expect(github).toBeVisible();
+    await expect(github).toHaveAttribute("href", "https://github.com/getscissorhands/Scissorhands.NET");
+    for (const theme of ["light", "dark"]) {
+      await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
+      const colors = await github.evaluate(link => ({
+        link: getComputedStyle(link).color,
+        icon: getComputedStyle(link.querySelector(".github-icon")).backgroundColor,
+      }));
+      expect(colors.icon).toBe(colors.link);
+    }
+    await page.evaluate(() => { document.documentElement.dataset.theme = "light"; });
     await expect(page.locator("#theme-toggle .moon-icon")).toBeVisible();
     await page.locator("#theme-toggle").click();
     await expect(page.locator("#theme-toggle .sun-icon")).toBeVisible();
