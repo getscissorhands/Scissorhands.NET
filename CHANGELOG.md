@@ -6,6 +6,14 @@ The original engine began on [2015-08-08](https://github.com/getscissorhands/Sci
 
 Preview releases belong to the `vnext` development line. Their inclusion here does not imply that the same implementation is present on `main`. Use the tag matching your installed package version.
 
+## v1.0.0-preview.20260930.1 - 2026-09-30
+
+[Tag](https://github.com/getscissorhands/Scissorhands.NET/tree/v1.0.0-preview.20260930.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260928.1...v1.0.0-preview.20260930.1)
+
+- Exposed requested-locale `PublicationBadgeBase.PublicationMessages` from validated application theme settings, using English when localization is disabled. The built-in badges use the shared API while themes retain control of visible labels, date formatting, and markup (#114).
+- **Breaking:** Moved the built-in theme's stylesheet and script from `assets/theme.css` and `assets/theme.js` to `assets/css/theme.css` and `assets/js/theme.js`. Update hard-coded asset URLs and CSS selectors targeting the former standalone language switcher (#114).
+- Moved the language switcher into the top navigation as an accessible disclosure dropdown with links available without JavaScript. Organized the theme's Razor components and external SVG icons, including a repository link with a credited Simple Icons GitHub icon (#114).
+
 ## v1.0.0-preview.20260928.1 - 2026-09-29
 
 [Release](https://github.com/getscissorhands/Scissorhands.NET/releases/tag/v1.0.0-preview.20260928.1) | [Changes](https://github.com/getscissorhands/Scissorhands.NET/compare/v1.0.0-preview.20260927.1...v1.0.0-preview.20260928.1)
