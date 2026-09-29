@@ -4,7 +4,8 @@
     return;
   }
 
-  const toggles = [...navigation.querySelectorAll(".navigation-toggle")];
+  const languageToggle = navigation.querySelector(".language-switcher-toggle");
+  const toggles = [...navigation.querySelectorAll(".navigation-toggle, .language-switcher-toggle")];
 
   function setExpanded(toggle, expanded) {
     const submenu = document.getElementById(toggle.getAttribute("aria-controls"));
@@ -28,6 +29,14 @@
     toggle.hidden = false;
     toggle.addEventListener("click", () => {
       const expanded = toggle.getAttribute("aria-expanded") !== "true";
+      if (toggle === languageToggle) {
+        closeAll();
+        setExpanded(toggle, expanded);
+        return;
+      }
+      if (languageToggle) {
+        setExpanded(languageToggle, false);
+      }
       const siblings = toggle.closest("li").parentElement.querySelectorAll(":scope > li > .navigation-link > .navigation-toggle");
       siblings.forEach(sibling => {
         if (sibling !== toggle) {
@@ -39,13 +48,15 @@
   });
   navigation.dataset.navigationEnhanced = "true";
 
-  navigation.addEventListener("keydown", event => {
+  document.addEventListener("keydown", event => {
     if (event.key !== "Escape") {
       return;
     }
 
-    const toggle = event.target.closest(".navigation-item")?.querySelector(":scope > .navigation-link > .navigation-toggle[aria-expanded='true']")
-      ?? event.target.closest(".navigation-children")?.parentElement.querySelector(":scope > .navigation-link > .navigation-toggle");
+    const toggle = event.target.closest(".language-switcher")?.querySelector(".language-switcher-toggle[aria-expanded='true']")
+      ?? event.target.closest(".navigation-item")?.querySelector(":scope > .navigation-link > .navigation-toggle[aria-expanded='true']")
+      ?? event.target.closest(".navigation-children")?.parentElement.querySelector(":scope > .navigation-link > .navigation-toggle")
+      ?? (languageToggle?.getAttribute("aria-expanded") === "true" ? languageToggle : null);
     if (toggle) {
       event.preventDefault();
       setExpanded(toggle, false);

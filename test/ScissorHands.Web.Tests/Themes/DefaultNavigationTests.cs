@@ -10,6 +10,36 @@ namespace ScissorHands.Web.Tests.Themes;
 public class DefaultNavigationTests
 {
     [Fact]
+    public void Given_DefaultTheme_When_Rendered_Then_It_Should_KeepDecorativeIconsOutOfInlineMarkup()
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+        var cut = context.Render<MainLayout>(parameters => parameters
+            .Add(p => p.Site, new SiteManifest())
+            .Add(p => p.Theme, new ThemeManifest())
+            .Add(p => p.NavigationTree, new[]
+            {
+                new NavigationNode
+                {
+                    Title = "Guides", Path = "guides",
+                    Children = [new() { Title = "Start", Path = "guides/start", Url = "guides/start" }],
+                },
+            }));
+
+        cut.FindAll("svg").ShouldBeEmpty();
+        cut.Find("#theme-toggle").GetAttribute("aria-label").ShouldBe("Switch color theme");
+        cut.FindAll("#theme-toggle .theme-icon").Count.ShouldBe(2);
+        cut.FindAll("#theme-toggle .theme-icon").All(icon => icon.GetAttribute("aria-hidden") == "true").ShouldBeTrue();
+        var github = cut.Find(".github-link");
+        github.GetAttribute("href").ShouldBe("https://github.com/getscissorhands/Scissorhands.NET");
+        github.GetAttribute("aria-label").ShouldBe("ScissorHands.NET on GitHub");
+        github.QuerySelector(".github-icon")?.GetAttribute("aria-hidden").ShouldBe("true");
+        var toggle = cut.Find(".navigation-toggle");
+        toggle.GetAttribute("aria-controls").ShouldBe("navigation-submenu-guides");
+        toggle.QuerySelector(".navigation-icon")?.GetAttribute("aria-hidden").ShouldBe("true");
+    }
+
+    [Fact]
     public void Given_PreparedTree_When_Rendered_Then_It_Should_PreserveTheEngineStructureAndOrder()
     {
         using var context = new BunitContext();
@@ -72,8 +102,8 @@ public class DefaultNavigationTests
 
         var topLevelPages = cut.FindAll(".navigation-list > .navigation-item");
         topLevelPages.Count.ShouldBe(nested ? 1 : 2);
-        var parentItem = cut.FindAll("nav a").Single(link => link.TextContent == "Parent").Closest("li")!;
-        var childLink = cut.FindAll("nav a").Single(link => link.TextContent == "Child");
+        var parentItem = cut.FindAll(".navigation-list a").Single(link => link.TextContent == "Parent").Closest("li")!;
+        var childLink = cut.FindAll(".navigation-list a").Single(link => link.TextContent == "Child");
         parentItem.QuerySelectorAll("a").Contains(childLink).ShouldBe(nested);
         if (nested)
         {
@@ -107,26 +137,26 @@ public class DefaultNavigationTests
         label.Closest("a").ShouldBeNull();
         label.Closest("li")!.QuerySelectorAll(":scope > ul > li > .navigation-link > a")
             .Select(link => link.TextContent).ShouldBe(["GitHub Pages", "Netlify"]);
-        cut.FindAll("nav a[href='docs/deployment']").ShouldBeEmpty();
+        cut.FindAll(".navigation-list a[href='docs/deployment']").ShouldBeEmpty();
         cut.Instance.NavigationPages.Count.ShouldBe(3);
 
         cut.Render(parameters => parameters.Add(p => p.NavigationTree, BuildTree([docs, github])));
 
         cut.Find(".navigation-label").TextContent.ShouldBe("Deployment");
-        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "GitHub Pages", "Tags"]);
+        cut.FindAll(".navigation-list a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "GitHub Pages", "Tags"]);
 
         cut.Render(parameters => parameters.Add(p => p.NavigationTree,
             BuildTree([docs, Page("Deploy the site", "docs/deployment"), github])));
 
         cut.FindAll(".navigation-label").ShouldBeEmpty();
-        cut.Find("nav a[href='docs/deployment']").TextContent.ShouldBe("Deploy the site");
+        cut.Find(".navigation-list a[href='docs/deployment']").TextContent.ShouldBe("Deploy the site");
 
         cut.Render(parameters => parameters.Add(p => p.NavigationTree, BuildTree([docs])));
 
         cut.FindAll(".navigation-label").ShouldBeEmpty();
         cut.FindAll(".navigation-children").ShouldBeEmpty();
         cut.FindAll(".navigation-toggle").ShouldBeEmpty();
-        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "Tags"]);
+        cut.FindAll(".navigation-list a").Select(link => link.TextContent).ShouldBe(["Home", "Docs", "Tags"]);
     }
 
     [Fact]
@@ -141,7 +171,7 @@ public class DefaultNavigationTests
 
         cut.FindAll(".navigation-label").Select(label => label.TextContent).ShouldBe(["Docs", "Deployment"]);
         cut.FindAll(".navigation-list > .navigation-item").ShouldHaveSingleItem();
-        cut.FindAll("nav a").Select(link => link.GetAttribute("href"))
+        cut.FindAll(".navigation-list a").Select(link => link.GetAttribute("href"))
             .ShouldBe([".", "docs/deployment/github-pages", "tags"]);
         cut.FindAll(".navigation-toggle").Count.ShouldBe(2);
     }
@@ -189,9 +219,9 @@ public class DefaultNavigationTests
 
         cut.FindAll(".navigation-label").Select(label => label.TextContent).ShouldBe(["Docs"]);
         cut.FindAll(".navigation-list > .navigation-item").ShouldHaveSingleItem();
-        cut.FindAll("nav a").Select(link => link.TextContent)
+        cut.FindAll(".navigation-list a").Select(link => link.TextContent)
             .ShouldBe(localePage ? ["Home", "English", "Quickstart", "Tags"] : ["Home", "Quickstart", "Tags"]);
-        cut.Find("nav a[href='en-us/docs/quickstart']").ShouldNotBeNull();
+        cut.Find(".navigation-list a[href='en-us/docs/quickstart']").ShouldNotBeNull();
     }
 
     [Fact]
@@ -212,7 +242,7 @@ public class DefaultNavigationTests
 
         cut.FindAll(".navigation-item").ShouldBeEmpty();
         cut.FindAll(".navigation-toggle").ShouldBeEmpty();
-        cut.FindAll("nav a").Select(link => link.TextContent).ShouldBe(["Home", "Tags"]);
+        cut.FindAll(".navigation-list a").Select(link => link.TextContent).ShouldBe(["Home", "Tags"]);
     }
 
     private static IReadOnlyList<NavigationNode> BuildTree(IReadOnlyList<ContentDocument> pages, SiteManifest? site = null)

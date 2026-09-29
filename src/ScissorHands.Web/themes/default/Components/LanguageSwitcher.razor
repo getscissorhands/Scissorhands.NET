@@ -1,9 +1,14 @@
+@namespace ScissorHands.Web
 @inherits LanguageSwitcherBase
 
 @if (Links.Count > 1)
 {
-    <nav class="@($"language-switcher {Class}".TrimEnd())" aria-label="@AriaLabel">
-        <ul>
+    <div class="@($"language-switcher {Class}".TrimEnd())">
+        <button class="language-switcher-toggle" type="button" aria-expanded="false" aria-controls="language-switcher-list" hidden>
+            @AriaLabel
+            <span class="navigation-icon" aria-hidden="true"></span>
+        </button>
+        <ul id="language-switcher-list" class="language-switcher-list" aria-label="@AriaLabel">
             @foreach (var link in Links)
             {
                 <li>
@@ -12,5 +17,5 @@
                 </li>
             }
         </ul>
-    </nav>
+    </div>
 }

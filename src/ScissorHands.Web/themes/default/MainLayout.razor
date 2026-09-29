@@ -1,4 +1,3 @@
-@using ScissorHands.Core.Models
 @inherits MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" ThemeSettings="@ThemeSettings" Site="@Site">
@@ -35,25 +34,22 @@
             <nav aria-label="Primary navigation">
                 <ul class="navigation-list">
                     <li><a href="@GetHomeUrl()">Home</a></li>
-                    @RenderNavigation(NavigationTree)
+                    <NavigationItems Nodes="@NavigationTree" />
                     @if (GetTagIndexUrl() is { } tagIndexUrl)
                     {
                         <li><a href="@tagIndexUrl">Tags</a></li>
                     }
                 </ul>
+                <LanguageSwitcher />
+                <a class="github-link" href="https://github.com/getscissorhands/Scissorhands.NET" aria-label="ScissorHands.NET on GitHub" title="ScissorHands.NET on GitHub">
+                    <span class="github-icon" aria-hidden="true"></span>
+                </a>
                 <button id="theme-toggle" type="button" aria-label="Switch color theme" title="Switch color theme">
-                    <svg class="theme-icon moon-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"></path>
-                    </svg>
-                    <svg class="theme-icon sun-icon" viewBox="0 0 24 24" aria-hidden="true">
-                        <circle cx="12" cy="12" r="4"></circle>
-                        <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"></path>
-                    </svg>
+                    <span class="theme-icon moon-icon" aria-hidden="true"></span>
+                    <span class="theme-icon sun-icon" aria-hidden="true"></span>
                 </button>
             </nav>
         </header>
-
-        <LanguageSwitcher />
 
         <main>
             <LocalizationFallbackBanner />
@@ -76,39 +72,3 @@
     </body>
     </html>
 </CascadingMainLayoutBase>
-
-@code {
-    private RenderFragment RenderNavigation(IReadOnlyList<NavigationNode> nodes) => @<text>
-        @foreach (var item in nodes)
-        {
-            var hasChildren = item.Children.Count > 0;
-            var submenuId = $"navigation-submenu-{item.Path}";
-            <li class="navigation-item">
-                <div class="navigation-link">
-                    @if (item.Url is not null)
-                    {
-                        <a href="@item.Url">@item.Title</a>
-                    }
-                    else
-                    {
-                        <span class="navigation-label">@item.Title</span>
-                    }
-                    @if (hasChildren)
-                    {
-                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@submenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path d="m4 6 4 4 4-4"></path>
-                            </svg>
-                        </button>
-                    }
-                </div>
-                @if (hasChildren)
-                {
-                    <ul class="navigation-children" id="@submenuId">
-                        @RenderNavigation(item.Children)
-                    </ul>
-                }
-            </li>
-        }
-    </text>;
-}

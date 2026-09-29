@@ -73,16 +73,51 @@
   overflow-wrap: anywhere;
 }
 
-.language-switcher ul {
+.language-switcher {
+  position: relative;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.language-switcher-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  color: var(--text);
+  background: var(--surface);
+  font: inherit;
+  cursor: pointer;
+}
+
+.language-switcher-toggle .navigation-icon {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.language-switcher-toggle .navigation-icon,
+.navigation-toggle .navigation-icon {
+  background-color: currentColor;
+  -webkit-mask: url("../images/icons/chevron-down.svg") center / contain no-repeat;
+  mask: url("../images/icons/chevron-down.svg") center / contain no-repeat;
+}
+
+.language-switcher-toggle[aria-expanded="true"] .navigation-icon {
+  transform: rotate(180deg);
+}
+
+.language-switcher-list {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem;
-  margin: 0 0 1.5rem;
+  margin: 0;
   padding: 0;
   list-style: none;
 }
 
-.language-switcher a {
+.language-switcher-list a {
   display: inline-block;
   padding: 0.4rem 0.7rem;
   border: 1px solid var(--border);
@@ -92,14 +127,35 @@
   overflow-wrap: anywhere;
 }
 
-.language-switcher a[aria-current="true"] {
+.language-switcher-list a[aria-current="true"] {
   font-weight: bold;
   text-decoration: underline;
 }
 
-.language-switcher a:focus-visible {
+.language-switcher-toggle:focus-visible,
+.language-switcher-list a:focus-visible {
   outline: 3px solid var(--text);
   outline-offset: 3px;
+}
+
+.language-switcher-toggle[hidden],
+.language-switcher-list[hidden] {
+  display: none;
+}
+
+nav[data-navigation-enhanced] .language-switcher-list {
+  position: absolute;
+  z-index: 11;
+  inset-inline-end: 0;
+  top: 100%;
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 0.35rem;
+  background: var(--background);
 }
 
 html {
@@ -271,15 +327,12 @@ pre code {
   cursor: pointer;
 }
 
-.navigation-toggle svg {
+.navigation-toggle .navigation-icon {
   width: 1rem;
   height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
 }
 
-.navigation-toggle[aria-expanded="true"] svg {
+.navigation-toggle[aria-expanded="true"] .navigation-icon {
   transform: rotate(180deg);
 }
 
@@ -313,11 +366,36 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   background: var(--background);
 }
 
+.site-header nav .github-link {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  margin-left: auto;
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  color: var(--toggle);
+}
+
+.github-link:focus-visible {
+  outline: 3px solid var(--text);
+  outline-offset: 3px;
+}
+
+.github-icon {
+  width: 100%;
+  height: 100%;
+  background-color: currentColor;
+  -webkit-mask: url("../images/icons/github.svg") center / contain no-repeat;
+  mask: url("../images/icons/github.svg") center / contain no-repeat;
+}
+
 #theme-toggle {
   flex-shrink: 0;
   width: 2rem;
   height: 2rem;
-  margin-left: auto;
   padding: 0.25rem;
   border: 0;
   background: transparent;
@@ -328,16 +406,22 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
 .theme-icon {
   width: 100%;
   height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  background-color: currentColor;
   transition: transform 180ms ease;
 }
 
 #theme-toggle:hover .theme-icon {
   transform: rotate(-12deg);
+}
+
+.moon-icon {
+  -webkit-mask: url("../images/icons/moon.svg") center / contain no-repeat;
+  mask: url("../images/icons/moon.svg") center / contain no-repeat;
+}
+
+.sun-icon {
+  -webkit-mask: url("../images/icons/sun.svg") center / contain no-repeat;
+  mask: url("../images/icons/sun.svg") center / contain no-repeat;
 }
 
 .sun-icon,
@@ -518,6 +602,12 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
   .navigation-list {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  nav[data-navigation-enhanced] .language-switcher-list {
+    position: static;
+    max-width: 100%;
+    margin-top: 0.5rem;
   }
 
   nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-children {

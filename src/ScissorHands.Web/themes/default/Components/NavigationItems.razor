@@ -1,0 +1,30 @@
+@namespace ScissorHands.Web
+@foreach (var item in Nodes)
+{
+    var hasChildren = item.Children.Count > 0;
+    var submenuId = $"navigation-submenu-{item.Path}";
+    <li class="navigation-item">
+        <div class="navigation-link">
+            @if (item.Url is not null)
+            {
+                <a href="@item.Url">@item.Title</a>
+            }
+            else
+            {
+                <span class="navigation-label">@item.Title</span>
+            }
+            @if (hasChildren)
+            {
+                <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@submenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
+                    <span class="navigation-icon" aria-hidden="true"></span>
+                </button>
+            }
+        </div>
+        @if (hasChildren)
+        {
+            <ul class="navigation-children" id="@submenuId">
+                <NavigationItems Nodes="@item.Children" />
+            </ul>
+        }
+    </li>
+}

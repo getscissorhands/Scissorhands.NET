@@ -160,7 +160,7 @@ public class StaticSiteGeneratorTagContextTests
             html.QuerySelector("meta[property='og:url']")!.GetAttribute("content").ShouldBe(expectedUrl);
             PublicationUrl(site, hookDocuments[route]).ShouldBe(expectedUrl);
             html.QuerySelector("meta[name='route-preview']")!.GetAttribute("content").ShouldBe(preview.ToString());
-            html.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent).ShouldBe(["Home", "Page title", "Tags"]);
+            html.QuerySelectorAll(".site-header nav .navigation-list a").Select(link => link.TextContent).ShouldBe(["Home", "Page title", "Tags"]);
             html.QuerySelectorAll(".page-navigation").ShouldBeEmpty();
             html.QuerySelector("h1")!.TextContent.ShouldBe(route == prefix + "tags" ? "Tags" : $"#{hookTitle["Tag: ".Length..]}");
             html.QuerySelectorAll("tools").ShouldBeEmpty();

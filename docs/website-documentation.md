@@ -625,6 +625,8 @@ Example `theme.json`:
 ```
 
 Stylesheet and script collections are non-null, read-only, and defensively copied during initialization. Treat manifest collections as immutable input.
+The built-in theme keeps its stylesheet at `assets/css/theme.css`, script at `assets/js/theme.js`, and decorative SVG icons at `assets/images/icons/`. The stylesheet references the icons relative to its own directory, so they resolve at root and subpath mounts.
+Its top navigation links to the ScissorHands.NET repository with a [Simple Icons GitHub icon](../src/ScissorHands.Web/THIRD-PARTY-NOTICES.md#simple-icons).
 
 ### Main layout and cascading data
 
@@ -769,24 +771,29 @@ Normal generation supplies both navigation parameters automatically. For compati
 
 All themes must render prepared preview status for affected posts/pages and their homepage/tag-list entries. `ContentDocument.PublicationStatus` is an immutable pre-hook snapshot: `Route` identifies the generated document, `IsDraft` includes inherited primary draft status, and nullable `ScheduledDate` is the authored date when this post or its primary is future-scheduled. `IsScheduled` and `HasBadges` are derived flags. Production, custom 404, and unaffected content have no required badges. Do not infer status from wall-clock time, `Metadata.Draft` alone, or converted dates in theme code.
 
-Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind` (`draft` or `scheduled`), nullable `ScheduledDate`, required machine-readable `Attributes`, and `RenderContent(themeLabel)` for encoded delivery. The base does not supply human-readable wording or a display date format. For example, a theme can choose:
+Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind` (`draft` or `scheduled`), nullable `ScheduledDate`, required machine-readable `Attributes`, and `RenderContent(themeLabel)` for encoded delivery. The protected `PublicationMessages` property resolves the application's `Draft` and `ScheduledOn` messages for the requested render locale; the theme still chooses the visible date format and markup. For example:
 
 ```razor
 @using System.Globalization
 @inherits PublicationBadgeBase
 
-@foreach (var badge in Badges)
+@if (Badges.Count > 0)
 {
-    var label = badge.ScheduledDate is { } date
-        ? $"Planned for {date.ToString("MMM dd, yyyy", CultureInfo.GetCultureInfo("en-US"))}"
-        : "Draft";
-    <span class="my-status" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
+    var messages = PublicationMessages;
+    @foreach (var badge in Badges)
+    {
+        var label = badge.ScheduledDate is { } date
+            ? string.Format(CultureInfo.InvariantCulture, messages.ScheduledOn!,
+                date.ToString("MMM dd, yyyy", CultureInfo.GetCultureInfo("en-US")))
+            : messages.Draft!;
+        <span class="my-status" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
+    }
 }
 ```
 
 The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
 
-The effective `ThemeSettings.Localization` catalog is available through the `ThemeSettings` cascade or DI. Select messages using `LocaleContext.Locale` for requested-language UI, falling back to the first declared site locale when no render context exists; never select the fallback document's content language. The default component uses the configured `Draft` and complete `ScheduledOn` template and keeps its explicit invariant ISO display date. If `Site.Locales` is empty, it uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
+Forward `ThemeSettings` and `LocaleContext` through the cascading layout. `PublicationMessages` uses `LocaleContext.Locale` for requested-language UI (even on a primary-content fallback), or the first declared site locale when no render context exists; it does not select the fallback document's content language. The engine validates all three required messages and the complete `ScheduledOn` template before rendering; direct component renders with an incomplete catalog fail with the `Theme:Localization:<locale>` path. If `Site.Locales` is empty, `PublicationMessages` uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. The default component keeps its explicit invariant ISO display date. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
 
 Render `RenderContent(label)`, not raw HTML or only a plain label expression: it encodes the theme's nonempty text and records delivery of that text. Receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The default Razor component formats the date as invariant `yyyy-MM-dd` and selects the requested locale's configured wording, using English defaults only with no locales declared. Another theme can use `MMM dd, yyyy`, `dd/MM/yyyy`, or another explicit cultural format. Do not implicitly depend on the build machine's culture or convert the authored date to another timezone. Both statuses remain required when both flags apply.
 
@@ -807,7 +814,7 @@ Generation prepares collections, effective statuses, and locale contexts before 
 
 ### Language switcher
 
-Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `LanguageSwitcher.razor` places ordinary accessible links between the site header and `<main>`, needs no JavaScript, and renders nothing when localization is disabled or only one destination language exists.
+Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `Components/LanguageSwitcher.razor` places a disclosure dropdown beside the page links in the top navigation. Its button opens a list of ordinary language links using the same progressive enhancement as page navigation; the links remain visible without JavaScript. It renders nothing when localization is disabled or only one destination language exists.
 
 The engine supplies supported locale identifiers, current requested locale, and valid targets through `LocaleContext.SwitchLanguageUrls`; themes must not reconstruct URLs or infer translation availability.
 
@@ -819,7 +826,7 @@ The engine supplies supported locale identifiers, current requested locale, and 
 | Tag page | Same tag in that locale if generated, otherwise its homepage |
 | Shared `404.html` | Selected locale homepage; there are no localized 404 copies |
 
-Each prepared link's `IsCurrent` reflects the requested locale, not a fallback article's language. The built-in markup maps it to `aria-current="true"` and includes `lang`, `hreflang`, and `tabindex="0"`; these links are not SEO `rel="alternate"` declarations. Custom themes should preserve accessible, no-JavaScript switching while choosing their own markup. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
+Each prepared link's `IsCurrent` reflects the requested locale, not a fallback article's language. The built-in dropdown marks the current link with `aria-current="true"` and includes `lang`, `hreflang`, and `tabindex="0"`; these links are not SEO `rel="alternate"` declarations. Custom themes should preserve accessible, no-JavaScript switching while choosing their own markup. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
 
 `LanguageSwitcherBase` provides native-language label defaults using .NET culture names, for example English, 한국어 and 日本語. Multiple variants of the same language use full native culture names to distinguish their region/script. Themes may override `GetNativeLabel` or use these inherited parameters without changing routing:
 
@@ -827,7 +834,7 @@ Each prepared link's `IsCurrent` reflects the requested locale, not a fallback a
 | --- | --- |
 | `Labels` | Optional `IReadOnlyDictionary<string, string>` of normalized locale to plain-text label; blank labels fail; render labels using normal encoded Razor expressions |
 | `LocaleOrder` | Optional `IReadOnlyList<string>` of locales to display first, followed by remaining destinations in engine order |
-| `AriaLabel` | Accessible navigation name; defaults to `Language` and can be localized by the theme |
+| `AriaLabel` | Disclosure button/list label; defaults to `Language` and can be localized by the theme |
 | `Class` | Optional theme CSS classes; the built-in markup adds them alongside `language-switcher` |
 
 These display settings neither enable locales nor change their identifiers, destinations, or publication eligibility. The default engine order is primary language followed by additional locales in ordinal order.
