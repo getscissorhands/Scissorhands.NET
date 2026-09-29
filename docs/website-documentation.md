@@ -674,46 +674,24 @@ The engine supplies two layout parameters:
 
 Each node exposes `Title`, `Path`, `Url`, and read-only `Children`. A null `Url` denotes a non-clickable group. Do not turn its `Path` into a link.
 
-The following rendering fragment can be used inside a layout derived from `MainLayoutBase`:
+For a working hierarchy without theme-specific styling or JavaScript, import `ScissorHands.Theme.Components` and use the optional `PlainNavigationItems` component inside a layout derived from `MainLayoutBase`:
 
 ```razor
-@using ScissorHands.Core.Models
+@using ScissorHands.Theme.Components
 
 <nav aria-label="Primary navigation">
     <ul>
         <li><a href="@GetHomeUrl()">Home</a></li>
-        @RenderNodes(NavigationTree)
+        <PlainNavigationItems Nodes="@NavigationTree" />
         @if (GetTagIndexUrl() is { } tagIndexUrl)
         {
             <li><a href="@tagIndexUrl">Tags</a></li>
         }
     </ul>
 </nav>
-
-@code {
-    private RenderFragment RenderNodes(IReadOnlyList<NavigationNode> nodes) => @<text>
-        @foreach (var node in nodes)
-        {
-            <li>
-                @if (node.Url is not null)
-                {
-                    <a href="@node.Url">@node.Title</a>
-                }
-                else
-                {
-                    <span>@node.Title</span>
-                }
-                @if (node.Children.Count > 0)
-                {
-                    <ul>@RenderNodes(node.Children)</ul>
-                }
-            </li>
-        }
-    </text>;
-}
 ```
 
-Both collections default to empty lists. They are layout-only parameters, not content-view attributes or automatic cascading values. `Documents` remains the ordered post collection for the home view. Implicit groups are not added to `NavigationPages`.
+`PlainNavigationItems` renders encoded link titles, non-clickable group labels, and always-visible nested lists. It expects engine-prepared base-relative node URLs and rejects absolute, scheme-based, or malformed links supplied directly. It emits no outer `<nav>` or root `<ul>`; the layout supplies the landmark, home/tag links, and any styles. It is optional, not an eighth required theme role. Themes can render `NavigationTree` differently; the built-in theme keeps its own disclosure buttons and styles. Both collections default to empty lists. They are layout-only parameters, not content-view attributes or automatic cascading values. `Documents` remains the ordered post collection for the home view. Implicit groups are not added to `NavigationPages`.
 
 ### Locale render context
 
