@@ -89,6 +89,85 @@ public class PublicationBadgeBaseTests
     }
 
     [Fact]
+    public void Given_RequestedLocaleOnFallback_When_BadgesRendered_Then_It_Should_ExposeRequestedMessagesWithoutChoosingDateFormat()
+    {
+        using var context = new BunitContext();
+        var receipt = new PublicationBadgeBase.RenderReceipt();
+        var document = new ContentDocument
+        {
+            Metadata = new ContentMetadata { Locale = "en-us" },
+            PublicationStatus = new PublicationStatus { Route = "post", IsDraft = true, ScheduledDate = new DateOnly(2026, 9, 26) },
+        };
+
+        var cut = context.Render<ConfiguredBadges>(parameters => parameters
+            .AddCascadingValue(new SiteManifest { Locales = ["en-us", "ko-kr"], IsPreview = true })
+            .AddCascadingValue(new LocaleContext { Locale = "KO_KR", ContentLocale = "en-us", IsFallback = true })
+            .AddCascadingValue(new ThemeSettings
+            {
+                Localization = new Dictionary<string, ThemeLocalization?>
+                {
+                    ["en-us"] = ThemeLocalization.English,
+                    ["ko-kr"] = new() { TranslationUnavailable = "없음", Draft = "초안", ScheduledOn = "{0} 공개 예정" },
+                },
+            })
+            .AddCascadingValue(document)
+            .AddCascadingValue(receipt)
+            .Add(component => component.DateFormat, "dd MMM yyyy"));
+
+        cut.Find("[data-publication-badge='draft']").TextContent.ShouldBe("초안");
+        var scheduled = cut.Find("[data-publication-badge='scheduled']");
+        scheduled.TextContent.ShouldBe("26 Sep 2026 공개 예정");
+        scheduled.GetAttribute("data-publication-date").ShouldBe("2026-09-26");
+        receipt.GetRenderedText("post", PublicationBadgePlacement.Detail, "scheduled").ShouldBe("26 Sep 2026 공개 예정");
+    }
+
+    [Theory]
+    [InlineData(true, "초안")]
+    [InlineData(false, "Draft")]
+    public void Given_NoRenderLocale_When_BadgesRendered_Then_It_Should_UsePrimaryOrEnglish(bool declared, string expected)
+    {
+        using var context = new BunitContext();
+        var cut = context.Render<ConfiguredBadges>(parameters => parameters
+            .AddCascadingValue(new SiteManifest { Locales = declared ? ["ko-kr"] : [], IsPreview = true })
+            .AddCascadingValue(new ThemeSettings
+            {
+                Localization = new Dictionary<string, ThemeLocalization?>
+                {
+                    ["ko-kr"] = new() { TranslationUnavailable = "없음", Draft = "초안", ScheduledOn = "{0} 공개 예정" },
+                },
+            })
+            .AddCascadingValue(new ContentDocument { PublicationStatus = new PublicationStatus { Route = "post", IsDraft = true } }));
+
+        cut.Find("[data-publication-badge='draft']").TextContent.ShouldBe(expected);
+    }
+
+    [Theory]
+    [InlineData("TranslationUnavailable")]
+    [InlineData("Draft")]
+    [InlineData("ScheduledOn")]
+    public void Given_IncompleteDeclaredLocale_When_BadgesRenderedDirectly_Then_It_Should_ReportConfigurationPath(string missing)
+    {
+        using var context = new BunitContext();
+        var messages = missing switch
+        {
+            "TranslationUnavailable" => ThemeLocalization.English with { TranslationUnavailable = null },
+            "Draft" => ThemeLocalization.English with { Draft = null },
+            _ => ThemeLocalization.English with { ScheduledOn = null },
+        };
+
+        var error = Should.Throw<InvalidOperationException>(() => context.Render<ConfiguredBadges>(parameters => parameters
+            .AddCascadingValue(new SiteManifest { Locales = ["ko-kr"], IsPreview = true })
+            .AddCascadingValue(new ThemeSettings
+            {
+                Localization = new Dictionary<string, ThemeLocalization?> { ["ko-kr"] = messages },
+            })
+            .AddCascadingValue(new ContentDocument { PublicationStatus = new PublicationStatus { Route = "post", IsDraft = true } })));
+
+        error.Message.ShouldContain("Theme:Localization:ko-kr");
+        error.Message.ShouldContain(missing);
+    }
+
+    [Fact]
     public void Given_ThemeLabelContainingHtml_When_Rendered_Then_It_Should_EncodeAndRecordTheLabel()
     {
         using var context = new BunitContext();
@@ -210,6 +289,33 @@ public class PublicationBadgeBaseTests
                 var label = badge.ScheduledDate is { } date
                     ? $"{ScheduledPrefix} {date.ToString(DateFormat, Culture)}"
                     : DraftLabel;
+                builder.OpenElement(0, "strong");
+                builder.AddMultipleAttributes(1, badge.Attributes);
+                builder.AddContent(2, badge.RenderContent(label));
+                builder.CloseElement();
+            }
+        }
+    }
+
+    public sealed class ConfiguredBadges : PublicationBadgeBase
+    {
+        [Parameter]
+        public string DateFormat { get; set; } = "yyyy-MM-dd";
+
+        protected override void BuildRenderTree(RenderTreeBuilder builder)
+        {
+            if (Badges.Count == 0)
+            {
+                return;
+            }
+
+            var messages = PublicationMessages;
+            foreach (var badge in Badges)
+            {
+                var label = badge.ScheduledDate is { } date
+                    ? string.Format(CultureInfo.InvariantCulture, messages.ScheduledOn!,
+                        date.ToString(DateFormat, CultureInfo.InvariantCulture))
+                    : messages.Draft!;
                 builder.OpenElement(0, "strong");
                 builder.AddMultipleAttributes(1, badge.Attributes);
                 builder.AddContent(2, badge.RenderContent(label));

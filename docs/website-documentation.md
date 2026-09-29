@@ -769,24 +769,29 @@ Normal generation supplies both navigation parameters automatically. For compati
 
 All themes must render prepared preview status for affected posts/pages and their homepage/tag-list entries. `ContentDocument.PublicationStatus` is an immutable pre-hook snapshot: `Route` identifies the generated document, `IsDraft` includes inherited primary draft status, and nullable `ScheduledDate` is the authored date when this post or its primary is future-scheduled. `IsScheduled` and `HasBadges` are derived flags. Production, custom 404, and unaffected content have no required badges. Do not infer status from wall-clock time, `Metadata.Draft` alone, or converted dates in theme code.
 
-Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind` (`draft` or `scheduled`), nullable `ScheduledDate`, required machine-readable `Attributes`, and `RenderContent(themeLabel)` for encoded delivery. The base does not supply human-readable wording or a display date format. For example, a theme can choose:
+Define a theme-owned component derived from `ScissorHands.Theme.Components.PublicationBadgeBase`. It receives the cascading `Document`/`Site` by default; set `Content` and `Placement="PublicationBadgePlacement.Listing"` for an individual collection entry. Each prepared `Badges` item exposes `Kind` (`draft` or `scheduled`), nullable `ScheduledDate`, required machine-readable `Attributes`, and `RenderContent(themeLabel)` for encoded delivery. The protected `PublicationMessages` property resolves the application's `Draft` and `ScheduledOn` messages for the requested render locale; the theme still chooses the visible date format and markup. For example:
 
 ```razor
 @using System.Globalization
 @inherits PublicationBadgeBase
 
-@foreach (var badge in Badges)
+@if (Badges.Count > 0)
 {
-    var label = badge.ScheduledDate is { } date
-        ? $"Planned for {date.ToString("MMM dd, yyyy", CultureInfo.GetCultureInfo("en-US"))}"
-        : "Draft";
-    <span class="my-status" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
+    var messages = PublicationMessages;
+    @foreach (var badge in Badges)
+    {
+        var label = badge.ScheduledDate is { } date
+            ? string.Format(CultureInfo.InvariantCulture, messages.ScheduledOn!,
+                date.ToString("MMM dd, yyyy", CultureInfo.GetCultureInfo("en-US")))
+            : messages.Draft!;
+        <span class="my-status" @attributes="badge.Attributes">@badge.RenderContent(label)</span>
+    }
 }
 ```
 
 The default theme keeps its [PublicationBadges component](../src/ScissorHands.Web/themes/default/Components/PublicationBadges.razor) in its `Components/` directory.
 
-The effective `ThemeSettings.Localization` catalog is available through the `ThemeSettings` cascade or DI. Select messages using `LocaleContext.Locale` for requested-language UI, falling back to the first declared site locale when no render context exists; never select the fallback document's content language. The default component uses the configured `Draft` and complete `ScheduledOn` template and keeps its explicit invariant ISO display date. If `Site.Locales` is empty, it uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
+Forward `ThemeSettings` and `LocaleContext` through the cascading layout. `PublicationMessages` uses `LocaleContext.Locale` for requested-language UI (even on a primary-content fallback), or the first declared site locale when no render context exists; it does not select the fallback document's content language. The engine validates all three required messages and the complete `ScheduledOn` template before rendering; direct component renders with an incomplete catalog fail with the `Theme:Localization:<locale>` path. If `Site.Locales` is empty, `PublicationMessages` uses `ThemeLocalization.English` rather than inferring a locale from catalog keys. The default component keeps its explicit invariant ISO display date. No global culture mutation, second `.resx` catalog, or mandatory `DateFormat` configuration key is involved.
 
 Render `RenderContent(label)`, not raw HTML or only a plain label expression: it encodes the theme's nonempty text and records delivery of that text. Receipts prevent a theme from satisfying the contract by inheritance alone or lookalike authored Markdown. The default Razor component formats the date as invariant `yyyy-MM-dd` and selects the requested locale's configured wording, using English defaults only with no locales declared. Another theme can use `MMM dd, yyyy`, `dd/MM/yyyy`, or another explicit cultural format. Do not implicitly depend on the build machine's culture or convert the authored date to another timezone. Both statuses remain required when both flags apply.
 

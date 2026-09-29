@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Components;
 
 using ScissorHands.Core.Manifests;
 using ScissorHands.Core.Models;
+using ScissorHands.Core.Urls;
 
 namespace ScissorHands.Theme.Components;
 
@@ -28,6 +29,18 @@ public abstract class PublicationBadgeBase : ComponentBase
     [CascadingParameter]
     public SiteManifest? Site { get; set; }
 
+    /// <summary>
+    /// Gets the validated application settings supplied by the layout.
+    /// </summary>
+    [CascadingParameter]
+    public ThemeSettings? ThemeSettings { get; set; }
+
+    /// <summary>
+    /// Gets the requested render locale, which may differ from the content locale.
+    /// </summary>
+    [CascadingParameter]
+    public LocaleContext? LocaleContext { get; set; }
+
     [CascadingParameter]
     public RenderReceipt? Receipt { get; set; }
 
@@ -44,6 +57,33 @@ public abstract class PublicationBadgeBase : ComponentBase
     /// Gets the prepared status data. Supply theme-owned text to each badge's RenderContent helper.
     /// </summary>
     protected IReadOnlyList<Badge> Badges { get; private set; } = [];
+
+    /// <summary>
+    /// Gets the application's badge messages for the requested locale, or English when localization is disabled.
+    /// Themes choose how to format the scheduled date and render the messages.
+    /// </summary>
+    protected ThemeLocalization PublicationMessages
+    {
+        get
+        {
+            if (Site?.IsLocalizationEnabled != true)
+            {
+                return ThemeLocalization.English;
+            }
+
+            var locale = ContentUrlHelper.GetLocaleSegment(LocaleContext?.Locale ?? Site.Locales[0]);
+            if (ThemeSettings?.Localization.TryGetValue(locale, out var messages) != true || messages is null
+                || string.IsNullOrWhiteSpace(messages.TranslationUnavailable)
+                || string.IsNullOrWhiteSpace(messages.Draft)
+                || string.IsNullOrWhiteSpace(messages.ScheduledOn))
+            {
+                throw new InvalidOperationException(
+                    $"Theme:Localization:{locale} must supply TranslationUnavailable, Draft, and ScheduledOn messages before rendering publication badges.");
+            }
+
+            return messages;
+        }
+    }
 
     /// <summary>
     /// Gets attributes for the article containing detail content, or the individual listing entry.
