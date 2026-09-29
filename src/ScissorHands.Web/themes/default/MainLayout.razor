@@ -34,7 +34,7 @@
             <nav aria-label="Primary navigation">
                 <ul class="navigation-list">
                     <li><a href="@GetHomeUrl()">Home</a></li>
-                    @RenderNavigation(NavigationTree)
+                    <NavigationItems Nodes="@NavigationTree" />
                     @if (GetTagIndexUrl() is { } tagIndexUrl)
                     {
                         <li><a href="@tagIndexUrl">Tags</a></li>
