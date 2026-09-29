@@ -1,4 +1,3 @@
-@using ScissorHands.Core.Models
 @inherits MainLayoutBase
 
 <CascadingMainLayoutBase Documents="@Documents" TaggedDocuments="@TaggedDocuments" Tag="@Tag" TaggedPosts="@TaggedPosts" TaggedPages="@TaggedPages" Document="@Document" PageNavigation="@PageNavigation" LocaleContext="@LocaleContext" Plugins="@Plugins" Theme="@Theme" ThemeSettings="@ThemeSettings" Site="@Site">
@@ -76,39 +75,3 @@
     </body>
     </html>
 </CascadingMainLayoutBase>
-
-@code {
-    private RenderFragment RenderNavigation(IReadOnlyList<NavigationNode> nodes) => @<text>
-        @foreach (var item in nodes)
-        {
-            var hasChildren = item.Children.Count > 0;
-            var submenuId = $"navigation-submenu-{item.Path}";
-            <li class="navigation-item">
-                <div class="navigation-link">
-                    @if (item.Url is not null)
-                    {
-                        <a href="@item.Url">@item.Title</a>
-                    }
-                    else
-                    {
-                        <span class="navigation-label">@item.Title</span>
-                    }
-                    @if (hasChildren)
-                    {
-                        <button class="navigation-toggle" type="button" aria-expanded="false" aria-controls="@submenuId" aria-label="@($"Toggle {item.Title} pages")" hidden>
-                            <svg viewBox="0 0 16 16" aria-hidden="true">
-                                <path d="m4 6 4 4 4-4"></path>
-                            </svg>
-                        </button>
-                    }
-                </div>
-                @if (hasChildren)
-                {
-                    <ul class="navigation-children" id="@submenuId">
-                        @RenderNavigation(item.Children)
-                    </ul>
-                }
-            </li>
-        }
-    </text>;
-}
