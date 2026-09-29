@@ -812,7 +812,7 @@ Generation prepares collections, effective statuses, and locale contexts before 
 
 ### Language switcher
 
-Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `LanguageSwitcher.razor` places ordinary accessible links between the site header and `<main>`, needs no JavaScript, and renders nothing when localization is disabled or only one destination language exists.
+Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `Components/LanguageSwitcher.razor` places ordinary accessible links between the site header and `<main>`, needs no JavaScript, and renders nothing when localization is disabled or only one destination language exists.
 
 The engine supplies supported locale identifiers, current requested locale, and valid targets through `LocaleContext.SwitchLanguageUrls`; themes must not reconstruct URLs or infer translation availability.
 
