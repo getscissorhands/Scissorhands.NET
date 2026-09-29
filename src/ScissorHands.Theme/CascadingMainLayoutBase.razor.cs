@@ -5,7 +5,7 @@ using ScissorHands.Core.Models;
 
 namespace ScissorHands.Theme;
 
-public partial class CascadingMainLayoutBase
+public partial class CascadingMainLayoutBase : ComponentBase
 {
     /// <summary>
     /// Gets or sets the child content.
