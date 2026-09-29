@@ -179,7 +179,7 @@ test("locale collections select translations or fallbacks without changing prima
   await page.goto(`${localeSite}/`);
   await expect(page.locator(".post-link")).toHaveText(["English post", "Hello, ScissorHands"]);
   await expect(page.locator(".site-title")).toHaveAttribute("href", ".");
-  await expect(page.locator(".site-header nav a")).toHaveText(["Home", ...sequence.map(item => item.title), "Tags"]);
+  await expect(page.locator(".site-header nav .navigation-list a")).toHaveText(["Home", ...sequence.map(item => item.title), "Tags"]);
   await page.getByRole("link", { name: "Tags", exact: true }).click();
   await expect(page).toHaveURL(`${localeSite}/tags/`);
   await page.locator("main a[href='tags/dotnet']").click();
@@ -196,7 +196,7 @@ test("locale collections select translations or fallbacks without changing prima
 
   await page.goto(`${localeSite}/ko-kr/`);
   await expect(page.locator(".post-link")).toHaveText(["Korean post", "Hello, ScissorHands"]);
-  await expect(page.locator(".site-header nav a")).toHaveText(["Home", "소개", ...sequence.slice(1).map(item => item.title), "Tags"]);
+  await expect(page.locator(".site-header nav .navigation-list a")).toHaveText(["Home", "소개", ...sequence.slice(1).map(item => item.title), "Tags"]);
   await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
   await page.goto(`${localeSite}/ko-kr/about/`);
   await expect(page.locator("[data-localization-fallback]")).toHaveCount(0);
@@ -236,7 +236,7 @@ test("configured locales work without translations but primary drafts and orphan
   await page.goto(`${localeSite}/ja-jp/`);
   await expect(page.locator("html")).toHaveAttribute("lang", "ja-jp");
   await expect(page.locator(".post-link")).toHaveText(["English post", "Hello, ScissorHands"]);
-  await expect(page.locator(".site-header nav a")).toHaveText(["Home", ...sequence.map(item => item.title), "Tags"]);
+  await expect(page.locator(".site-header nav .navigation-list a")).toHaveText(["Home", ...sequence.map(item => item.title), "Tags"]);
   for (const route of ["draft/", "ko-kr/draft/", "ja-jp/orphan/", "de-de/", "tags/korean-only/"]) {
     expect((await page.request.get(`${localeSite}/${route}`)).status()).toBe(404);
   }
@@ -252,8 +252,10 @@ for (const prefixed of [false, true]) {
     try {
       const page = await context.newPage();
       await page.goto(`${origin}/about/`);
-      const switcher = page.getByRole("navigation", { name: "Language", exact: true });
+      const switcher = page.locator(".site-header nav .language-switcher");
       await expect(switcher).toBeVisible();
+      await expect(switcher.locator(".language-switcher-toggle")).toBeHidden();
+      await expect(switcher.locator(".language-switcher-list")).toBeVisible();
       await expect(switcher.locator("a[lang='en-us']")).toHaveText("English");
       await expect(switcher.locator("a[lang='ko-kr']")).toHaveText("한국어");
       await switcher.locator("a[lang='ko-kr']").click();
@@ -292,7 +294,7 @@ test("generated pages switch to available counterparts or locale homepages", asy
     ]) {
       await page.goto(`${localeSite}/${route}`);
       await expect(page.getByRole("note")).toHaveCount(0);
-      await page.getByRole("navigation", { name: "Language", exact: true }).locator(`a[lang="${locale}"]`).click();
+      await page.locator(`.language-switcher-list a[lang="${locale}"]`).click();
       await expect(page).toHaveURL(`${localeSite}/${target}`);
       await expect(page.getByRole("note")).toHaveCount(0);
     }
@@ -304,12 +306,52 @@ test("generated pages switch to available counterparts or locale homepages", asy
 
 test("keyboard users can follow the language switcher", async ({ page, site }) => {
   await page.goto(`${site}/parent/`);
-  const nav = page.getByRole("navigation", { name: "Language", exact: true });
-  await nav.locator("a[lang='en-us']").focus();
+  const toggle = page.locator(".language-switcher-toggle");
+  await toggle.focus();
+  await page.keyboard.press("Enter");
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
   await page.keyboard.press("Tab");
-  await expect(nav.locator("a[lang='ko-kr']")).toBeFocused();
+  await expect(page.locator(".language-switcher-list a[lang='en-us']")).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(page.locator(".language-switcher-list a[lang='ko-kr']")).toBeFocused();
   await page.keyboard.press("Enter");
   await expect(page).toHaveURL(`${site}/ko-kr/parent/`);
+});
+
+test("top navigation language dropdown follows requested routes at root and subpath", async ({ page, site, localeSite }) => {
+  for (const origin of [site, localeSite]) {
+    await page.goto(`${origin}/about/`);
+    await page.locator(".language-switcher-toggle").click();
+    await page.locator(".language-switcher-list a[lang='ko-kr']").click();
+    await expect(page).toHaveURL(`${origin}/ko-kr/about/`);
+    await expect(page.locator(".language-switcher-list a[aria-current='true']")).toHaveAttribute("lang", "ko-kr");
+  }
+});
+
+test("language dropdown closes on Escape and when another navigation menu opens", async ({ page, site }) => {
+  await page.goto(`${site}/parent/`);
+  const toggle = page.locator(".language-switcher-toggle");
+  const list = page.locator(".language-switcher-list");
+  await expect(toggle).toBeVisible();
+  await expect(list).toBeHidden();
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(list).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(toggle).toBeFocused();
+  await expect(list).toBeHidden();
+
+  await toggle.click();
+  await page.locator(".navigation-toggle").first().click();
+  await expect(list).toBeHidden();
+
+  const pageToggle = page.locator(".navigation-toggle").first();
+  await expect(pageToggle).toHaveAttribute("aria-expanded", "true");
+  await toggle.click();
+  await expect(pageToggle).toHaveAttribute("aria-expanded", "false");
+  await page.locator("main").click();
+  await expect(list).toBeHidden();
 });
 
 for (const theme of ["light", "dark"]) {
@@ -317,10 +359,12 @@ for (const theme of ["light", "dark"]) {
     await page.goto(`${localeSite}/ko-kr/about/`);
     await page.addStyleTag({ content: "*, *::before, *::after { transition: none !important; }" });
     await page.evaluate(value => { document.documentElement.dataset.theme = value; }, theme);
-    const links = page.locator(".language-switcher a");
-    for (const link of await links.all()) {
-      await link.focus();
-      const rendered = await link.evaluate(element => {
+    await page.locator(".language-switcher-toggle").click();
+    await page.keyboard.press("Tab");
+    const controls = page.locator(".language-switcher-toggle, .language-switcher-list a");
+    for (const control of await controls.all()) {
+      await control.focus();
+      const rendered = await control.evaluate(element => {
         const layers = [];
         for (let current = element; current; current = current.parentElement) {
           const style = getComputedStyle(current);

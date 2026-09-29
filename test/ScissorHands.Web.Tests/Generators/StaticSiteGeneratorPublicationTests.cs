@@ -80,7 +80,7 @@ public class StaticSiteGeneratorPublicationTests
             using var home = fixture.Html(prefix + "index.html");
             home.QuerySelector(".post-list li")!.TextContent.ShouldContain("Draft");
             home.QuerySelector(".post-list li")!.TextContent.ShouldContain("Scheduled on 2026-09-25");
-            home.QuerySelectorAll(".site-header nav a").Select(a => a.TextContent).ShouldBe(["Home", "Draft page", "Next", "Tags"]);
+            home.QuerySelectorAll(".site-header nav .navigation-list a").Select(a => a.TextContent).ShouldBe(["Home", "Draft page", "Next", "Tags"]);
             using var tag = fixture.Html(prefix + "tags/topic/index.html");
             tag.QuerySelector(".post-list li")!.TextContent.ShouldContain("Scheduled on 2026-09-25");
             tag.QuerySelector(".page-list li")!.TextContent.ShouldContain("Draft");

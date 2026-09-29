@@ -148,7 +148,7 @@ public class ScissorHandsApplicationLocaleTests
                 home.DocumentElement.GetAttribute("lang").ShouldBe(useLocale ? "en-us" : null);
                 home.QuerySelector("base")!.GetAttribute("href").ShouldBe(baseUrl);
                 home.QuerySelectorAll(".post-link").Select(link => link.TextContent).ShouldBe(["English post"]);
-                home.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent)
+                home.QuerySelectorAll(".site-header nav .navigation-list a").Select(link => link.TextContent)
                     .ShouldBe(["Home", "English start", "English next", "Tags"]);
                 using var buildHome = parser.ParseDocument(await File.ReadAllTextAsync(
                     Path.Combine(dist, localePrefix.Replace('/', Path.DirectorySeparatorChar), "index.html"), cancellationToken));
@@ -172,7 +172,7 @@ public class ScissorHandsApplicationLocaleTests
                 {
                     using var korean = parser.ParseDocument(await client.GetStringAsync($"{baseUrl}ko-kr/", cancellationToken));
                     korean.QuerySelectorAll(".post-link").Select(link => link.TextContent).ShouldBe(["Korean post"]);
-                    korean.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent)
+                    korean.QuerySelectorAll(".site-header nav .navigation-list a").Select(link => link.TextContent)
                         .ShouldBe(["Home", "Korean start", "English next", "Tags"]);
                     foreach (var route in new[] { "tags", "tags/shared" })
                     {

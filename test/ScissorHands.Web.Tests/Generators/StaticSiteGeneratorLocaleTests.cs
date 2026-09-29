@@ -131,7 +131,7 @@ public class StaticSiteGeneratorLocaleTests
         await fixture.Build(preview);
         fixture.Exists("ko-kr/about/index.html").ShouldBeFalse();
         using var home = fixture.Html("ko-kr/index.html");
-        home.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent).ShouldBe(["Home"]);
+        home.QuerySelectorAll(".site-header nav .navigation-list a").Select(link => link.TextContent).ShouldBe(["Home"]);
     }
 
     [Theory]

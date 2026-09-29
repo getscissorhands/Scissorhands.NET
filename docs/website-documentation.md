@@ -813,7 +813,7 @@ Generation prepares collections, effective statuses, and locale contexts before 
 
 ### Language switcher
 
-Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `Components/LanguageSwitcher.razor` places ordinary accessible links between the site header and `<main>`, needs no JavaScript, and renders nothing when localization is disabled or only one destination language exists.
+Define a theme-owned Razor component with `@inherits LanguageSwitcherBase` and place it in the shared cascading layout, outside the main content article. The base provides prepared `Links` without emitting HTML; themes choose their own structure. The built-in `Components/LanguageSwitcher.razor` places a disclosure dropdown beside the page links in the top navigation. Its button opens a list of ordinary language links using the same progressive enhancement as page navigation; the links remain visible without JavaScript. It renders nothing when localization is disabled or only one destination language exists.
 
 The engine supplies supported locale identifiers, current requested locale, and valid targets through `LocaleContext.SwitchLanguageUrls`; themes must not reconstruct URLs or infer translation availability.
 
@@ -825,7 +825,7 @@ The engine supplies supported locale identifiers, current requested locale, and 
 | Tag page | Same tag in that locale if generated, otherwise its homepage |
 | Shared `404.html` | Selected locale homepage; there are no localized 404 copies |
 
-Each prepared link's `IsCurrent` reflects the requested locale, not a fallback article's language. The built-in markup maps it to `aria-current="true"` and includes `lang`, `hreflang`, and `tabindex="0"`; these links are not SEO `rel="alternate"` declarations. Custom themes should preserve accessible, no-JavaScript switching while choosing their own markup. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
+Each prepared link's `IsCurrent` reflects the requested locale, not a fallback article's language. The built-in dropdown marks the current link with `aria-current="true"` and includes `lang`, `hreflang`, and `tabindex="0"`; these links are not SEO `rel="alternate"` declarations. Custom themes should preserve accessible, no-JavaScript switching while choosing their own markup. Generated home/tag pages and the shared 404 still do not receive fallback banners or paired-document SEO.
 
 `LanguageSwitcherBase` provides native-language label defaults using .NET culture names, for example English, 한국어 and 日本語. Multiple variants of the same language use full native culture names to distinguish their region/script. Themes may override `GetNativeLabel` or use these inherited parameters without changing routing:
 
@@ -833,7 +833,7 @@ Each prepared link's `IsCurrent` reflects the requested locale, not a fallback a
 | --- | --- |
 | `Labels` | Optional `IReadOnlyDictionary<string, string>` of normalized locale to plain-text label; blank labels fail; render labels using normal encoded Razor expressions |
 | `LocaleOrder` | Optional `IReadOnlyList<string>` of locales to display first, followed by remaining destinations in engine order |
-| `AriaLabel` | Accessible navigation name; defaults to `Language` and can be localized by the theme |
+| `AriaLabel` | Disclosure button/list label; defaults to `Language` and can be localized by the theme |
 | `Class` | Optional theme CSS classes; the built-in markup adds them alongside `language-switcher` |
 
 These display settings neither enable locales nor change their identifiers, destinations, or publication eligibility. The default engine order is primary language followed by additional locales in ordinal order.

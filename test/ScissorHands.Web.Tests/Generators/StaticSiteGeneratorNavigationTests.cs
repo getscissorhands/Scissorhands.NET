@@ -132,7 +132,7 @@ public class StaticSiteGeneratorNavigationTests
             var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
             fileSystem.File.Exists(outputPath).ShouldBeTrue(path);
             using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
-            var links = html.QuerySelectorAll(".site-header nav a");
+            var links = html.QuerySelectorAll(".site-header nav .navigation-list a");
             var expectedTitles = new List<string> { "Home", aboutTitle, "Side docs", "Docs", "GitHub Pages", "Quickstart", "Zebra", "Tags" };
             var expectedUrls = new List<string>
             {
@@ -233,7 +233,7 @@ public class StaticSiteGeneratorNavigationTests
             {
                 var outputPath = fileSystem.Path.Combine(destination, path.Replace('/', fileSystem.Path.DirectorySeparatorChar));
                 using var html = parser.ParseDocument(fileSystem.File.ReadAllText(outputPath));
-                html.QuerySelectorAll(".site-header nav a").Select(link => link.TextContent).ShouldBe(expected);
+                html.QuerySelectorAll(".site-header nav .navigation-list a").Select(link => link.TextContent).ShouldBe(expected);
                 if (expected.Length == 2)
                 {
                     html.QuerySelectorAll(".navigation-item").ShouldBeEmpty();
