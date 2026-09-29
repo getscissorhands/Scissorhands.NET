@@ -271,15 +271,15 @@ pre code {
   cursor: pointer;
 }
 
-.navigation-toggle svg {
+.navigation-toggle .navigation-icon {
   width: 1rem;
   height: 1rem;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
+  background-color: currentColor;
+  -webkit-mask: url("../images/icons/chevron-down.svg") center / contain no-repeat;
+  mask: url("../images/icons/chevron-down.svg") center / contain no-repeat;
 }
 
-.navigation-toggle[aria-expanded="true"] svg {
+.navigation-toggle[aria-expanded="true"] .navigation-icon {
   transform: rotate(180deg);
 }
 
@@ -328,16 +328,22 @@ nav[data-navigation-enhanced] .navigation-list > .navigation-item > .navigation-
 .theme-icon {
   width: 100%;
   height: 100%;
-  fill: none;
-  stroke: currentColor;
-  stroke-width: 2;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+  background-color: currentColor;
   transition: transform 180ms ease;
 }
 
 #theme-toggle:hover .theme-icon {
   transform: rotate(-12deg);
+}
+
+.moon-icon {
+  -webkit-mask: url("../images/icons/moon.svg") center / contain no-repeat;
+  mask: url("../images/icons/moon.svg") center / contain no-repeat;
+}
+
+.sun-icon {
+  -webkit-mask: url("../images/icons/sun.svg") center / contain no-repeat;
+  mask: url("../images/icons/sun.svg") center / contain no-repeat;
 }
 
 .sun-icon,

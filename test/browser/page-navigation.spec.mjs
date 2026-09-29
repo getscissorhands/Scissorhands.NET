@@ -72,6 +72,34 @@ const sequence = [
   { route: "parent/child-2", title: "Child 2" },
 ];
 
+test("decorative theme icons load and controls work at root and subpath", async ({ page, site, localeSite }) => {
+  for (const origin of [site, localeSite]) {
+    expect((await page.goto(`${origin}/parent/`)).status()).toBe(200);
+    for (const [icon, selector] of [
+      ["moon", "#theme-toggle .moon-icon"],
+      ["sun", "#theme-toggle .sun-icon"],
+      ["chevron-down", ".navigation-toggle .navigation-icon"],
+    ]) {
+      const asset = await page.request.get(`${origin}/themes/default/assets/images/icons/${icon}.svg`);
+      expect(asset.status()).toBe(200);
+      expect(await asset.text()).toContain("<svg ");
+      const mask = await page.locator(selector).first().evaluate(element => getComputedStyle(element).maskImage);
+      expect(mask).toContain(`images/icons/${icon}.svg`);
+    }
+
+    await expect(page.locator("#theme-toggle .moon-icon")).toBeVisible();
+    await page.locator("#theme-toggle").click();
+    await expect(page.locator("#theme-toggle .sun-icon")).toBeVisible();
+    await expect(page.locator("#theme-toggle .moon-icon")).toBeHidden();
+
+    const toggle = page.locator(".navigation-toggle").first();
+    await expect(toggle).toBeVisible();
+    await toggle.click();
+    await expect(toggle).toHaveAttribute("aria-expanded", "true");
+    await expect(page.locator(`#${await toggle.getAttribute("aria-controls")}`)).toBeVisible();
+  }
+});
+
 test("sample publication examples appear only in preview with their individual statuses", async ({ page, previewSite, site, localeSite }) => {
   const examples = [
     { route: "2026/09/11/draft-post/", title: "Draft post", badge: "draft", label: "Draft" },
@@ -212,7 +240,7 @@ test("configured locales work without translations but primary drafts and orphan
   for (const route of ["draft/", "ko-kr/draft/", "ja-jp/orphan/", "de-de/", "tags/korean-only/"]) {
     expect((await page.request.get(`${localeSite}/${route}`)).status()).toBe(404);
   }
-  for (const route of ["tags/english-only/", "ko-kr/tags/korean-only/", "ja-jp/tags/english-only/", "images/sample.svg", "themes/default/assets/theme.css"]) {
+  for (const route of ["tags/english-only/", "ko-kr/tags/korean-only/", "ja-jp/tags/english-only/", "images/sample.svg", "themes/default/assets/css/theme.css"]) {
     expect((await page.request.get(`${localeSite}/${route}`)).status()).toBe(200);
   }
 });

@@ -4,9 +4,9 @@
   "description": "A fast, responsive, text-focused theme adapted from PlainPage.",
   "slug": "default",
   "stylesheets": [
-    "/assets/theme.css"
+    "/assets/css/theme.css"
   ],
   "scripts": [
-    "/assets/theme.js"
+    "/assets/js/theme.js"
   ]
 }

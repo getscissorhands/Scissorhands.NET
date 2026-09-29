@@ -53,8 +53,8 @@ public class ScissorHandsApplicationTests
                 ["tags/index.html"] = "tags",
                 ["tags/sample/index.html"] = "sample tag",
                 ["404.html"] = "not found document",
-                ["themes/default/assets/theme.css"] = "body { color: black; }",
-                ["themes/default/assets/theme.js"] = "console.log('theme');",
+                ["themes/default/assets/css/theme.css"] = "body { color: black; }",
+                ["themes/default/assets/js/theme.js"] = "console.log('theme');",
                 ["images/sample.svg"] = "<svg xmlns=\"http://www.w3.org/2000/svg\"></svg>"
             };
             var ready = new TaskCompletionSource(TaskCreationOptions.RunContinuationsAsynchronously);
@@ -112,7 +112,7 @@ public class ScissorHandsApplicationTests
                     (await client.GetStringAsync($"{baseUrl}{asset.Key}", cancellationToken)).ShouldBe(asset.Value);
                 }
 
-                using var headRequest = new HttpRequestMessage(HttpMethod.Head, $"{baseUrl}themes/default/assets/theme.css");
+                using var headRequest = new HttpRequestMessage(HttpMethod.Head, $"{baseUrl}themes/default/assets/css/theme.css");
                 using var headResponse = await client.SendAsync(headRequest, cancellationToken);
                 headResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
                 headResponse.Content.Headers.ContentType!.MediaType.ShouldBe("text/css");
@@ -149,13 +149,13 @@ public class ScissorHandsApplicationTests
                     using var mountRedirect = await client.GetAsync($"{baseUrl.TrimEnd('/')}?from=preview", cancellationToken);
                     mountRedirect.StatusCode.ShouldBe(HttpStatusCode.MovedPermanently);
                     mountRedirect.Headers.Location.ShouldBe(new Uri($"{address}{baseUrl}?from=preview"));
-                    foreach (var outsidePath in new[] { $"/{route}/", $"/{route}", $"/{postRoute}/", "/tags/", "/404.html", "/themes/default/assets/theme.css", "/themes/default/assets/theme.js", "/images/sample.svg" })
+                    foreach (var outsidePath in new[] { $"/{route}/", $"/{route}", $"/{postRoute}/", "/tags/", "/404.html", "/themes/default/assets/css/theme.css", "/themes/default/assets/js/theme.js", "/images/sample.svg" })
                     {
                         using var outsideResponse = await client.GetAsync(outsidePath, cancellationToken);
                         outsideResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound, outsidePath);
                         outsideResponse.Headers.Location.ShouldBeNull();
                     }
-                    using var outsideHead = new HttpRequestMessage(HttpMethod.Head, "/themes/default/assets/theme.css");
+                    using var outsideHead = new HttpRequestMessage(HttpMethod.Head, "/themes/default/assets/css/theme.css");
                     using var outsideHeadResponse = await client.SendAsync(outsideHead, cancellationToken);
                     outsideHeadResponse.StatusCode.ShouldBe(HttpStatusCode.NotFound);
                     using var nonmatchingPrefix = await client.GetAsync($"{baseUrl.TrimEnd('/')}-other/{route}/", cancellationToken);

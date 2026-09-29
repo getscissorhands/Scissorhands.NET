@@ -10,6 +10,32 @@ namespace ScissorHands.Web.Tests.Themes;
 public class DefaultNavigationTests
 {
     [Fact]
+    public void Given_DefaultTheme_When_Rendered_Then_It_Should_KeepDecorativeIconsOutOfInlineMarkup()
+    {
+        using var context = new BunitContext();
+        context.Services.AddSingleton(Substitute.For<IThemeService>());
+        var cut = context.Render<MainLayout>(parameters => parameters
+            .Add(p => p.Site, new SiteManifest())
+            .Add(p => p.Theme, new ThemeManifest())
+            .Add(p => p.NavigationTree, new[]
+            {
+                new NavigationNode
+                {
+                    Title = "Guides", Path = "guides",
+                    Children = [new() { Title = "Start", Path = "guides/start", Url = "guides/start" }],
+                },
+            }));
+
+        cut.FindAll("svg").ShouldBeEmpty();
+        cut.Find("#theme-toggle").GetAttribute("aria-label").ShouldBe("Switch color theme");
+        cut.FindAll("#theme-toggle .theme-icon").Count.ShouldBe(2);
+        cut.FindAll("#theme-toggle .theme-icon").All(icon => icon.GetAttribute("aria-hidden") == "true").ShouldBeTrue();
+        var toggle = cut.Find(".navigation-toggle");
+        toggle.GetAttribute("aria-controls").ShouldBe("navigation-submenu-guides");
+        toggle.QuerySelector(".navigation-icon")?.GetAttribute("aria-hidden").ShouldBe("true");
+    }
+
+    [Fact]
     public void Given_PreparedTree_When_Rendered_Then_It_Should_PreserveTheEngineStructureAndOrder()
     {
         using var context = new BunitContext();

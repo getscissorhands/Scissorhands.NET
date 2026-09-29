@@ -205,7 +205,9 @@ public class ScissorHandsApplicationLocaleTests
                     home.QuerySelector(".language-switcher").ShouldBeNull();
                     page.QuerySelector("article a")!.GetAttribute("href").ShouldBe("next/?q=a%2Fb#content");
                 }
-                foreach (var route in new[] { "404.html", "images/sample.svg", "themes/default/assets/theme.css", "themes/default/assets/theme.js" })
+                foreach (var route in new[] { "404.html", "images/sample.svg", "themes/default/assets/css/theme.css", "themes/default/assets/js/theme.js",
+                             "themes/default/assets/images/icons/moon.svg", "themes/default/assets/images/icons/sun.svg",
+                             "themes/default/assets/images/icons/chevron-down.svg" })
                 {
                     using var response = await client.GetAsync(baseUrl + route, cancellationToken);
                     response.StatusCode.ShouldBe(HttpStatusCode.OK, route);
@@ -215,7 +217,7 @@ public class ScissorHandsApplicationLocaleTests
                         outside.StatusCode.ShouldBe(HttpStatusCode.NotFound, route);
                     }
                 }
-                using var cssHead = new HttpRequestMessage(HttpMethod.Head, baseUrl + "themes/default/assets/theme.css");
+                using var cssHead = new HttpRequestMessage(HttpMethod.Head, baseUrl + "themes/default/assets/css/theme.css");
                 using var cssResponse = await client.SendAsync(cssHead, cancellationToken);
                 cssResponse.StatusCode.ShouldBe(HttpStatusCode.OK);
                 (await cssResponse.Content.ReadAsStringAsync(cancellationToken)).ShouldBeEmpty();

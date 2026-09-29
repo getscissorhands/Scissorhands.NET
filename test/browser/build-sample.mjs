@@ -108,7 +108,7 @@ async function buildPreview() {
       const address = output.match(/Now listening on: (http:\/\/127\.0\.0\.1:\d+)/)?.[1];
       if (address) {
         const response = await fetch(`${address}/docs/2099/01/01/scheduled-preview/`);
-        const script = await fetch(`${address}/docs/themes/default/assets/theme.js`);
+        const script = await fetch(`${address}/docs/themes/default/assets/js/theme.js`);
         if (response.ok && script.ok && (await response.text()).includes("Scheduled on 2099-01-01")) {
           ready = true;
           break;
