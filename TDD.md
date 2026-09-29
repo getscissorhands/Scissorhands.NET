@@ -6,8 +6,6 @@
 
 As an additive theme API, `PublicationBadgeBase.PublicationMessages` resolves requested-locale badge messages from the validated application settings (or English when localization is disabled), removing lookup code from the default component. Themes still own visible date formatting, label composition, and markup; the base does not prescribe them. The earlier badge-base description below records the previous contract.
 
-Theme authors may opt into `PlainNavigationItems` for a semantic, unstyled rendering of the prepared `NavigationTree`, with the enclosing landmark and list supplied by their layout. The built-in theme retains its disclosure controls and styling; this adds no required component role or engine dependency on a specific navigation UI.
-
 ## Current scope amendment: application theme settings
 
 `ThemeSettings` in Core models application-owned top-level `Theme` data separately from `ThemeManifest` package metadata and its effective localization catalog. `AddConfigurations` binds validated `HeroImages` entries and the existing authored localization dictionary, registers an immutable-input snapshot for DI injection in custom Razor themes, and still supplies the existing application `ThemeManifest.Localization` to `ThemeService` for effective catalog composition. Each `ThemeHeroImage` has `Source` and `Alt`; URL validation precedes rendering, with local images resolved base-relatively by the existing helper. No theme view or plugin hook signature changes, and the built-in theme does not gain hero markup. `SiteManifest.HeroImage` remains obsolete with its previous value for older consumers; the sample moves to one entry in the new collection. Historical localization evidence below remains scoped to its original contract.
